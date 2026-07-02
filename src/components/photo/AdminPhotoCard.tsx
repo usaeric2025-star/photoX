@@ -22,6 +22,7 @@ interface AdminPhotoCardProps {
   canPin?: boolean;
   canPinGlobal?: boolean;
   priority?: boolean;
+  isGroupDetail?: boolean;
 }
 
 export const AdminPhotoCard = memo(function AdminPhotoCard({
@@ -36,6 +37,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   canPin,
   canPinGlobal,
   priority = false,
+  isGroupDetail = false,
 }: AdminPhotoCardProps) {
   const isMultiSelect = useIsMultiSelect();
   const isPhotoSelected = useIsPhotoSelected(photo.id);
@@ -76,6 +78,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
         photo={photo} 
         isPinned={!!photo.isPinned} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
+        isGroupDetail={isGroupDetail}
       />
       {(actualCanPin && !isMultiSelect) && (
         <PinButton photoId={photo.id} isPinned={!!photo.isPinned} />
@@ -99,5 +102,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
          prev.photo.groupName === next.photo.groupName &&
          prev.canPinGlobal === next.canPinGlobal &&
          prev.showGroupsCollapsed === next.showGroupsCollapsed &&
+         prev.hideGroupBadge === next.hideGroupBadge &&
+         prev.isGroupDetail === next.isGroupDetail &&
          prev.hasSearchQuery === next.hasSearchQuery;
 });

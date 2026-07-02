@@ -12,10 +12,12 @@ export const PhotoStatusBadges = ({
   photo,
   isPinned,
   hideGroupBadge,
+  isGroupDetail = false,
 }: {
   photo: PhotoListItem;
   isPinned: boolean;
   hideGroupBadge?: boolean;
+  isGroupDetail?: boolean;
 }) => {
   const { lang } = useTranslation();
   const isManagement = useIsManagement();
@@ -29,12 +31,12 @@ export const PhotoStatusBadges = ({
       {/* Pinned Status */}
       {isPinned && (
         <div className="bg-primary text-white p-1.5 rounded-full shadow-lg border border-white/40 mb-0.5">
-          <Icon name="pin" size={12} className="fill-current" />
+          <Icon name="heart" size={12} className="fill-current" />
         </div>
       )}
 
       {/* Group Cover Badge */}
-      {isManagement && photo.isGroupCover && (
+      {isManagement && photo.isGroupCover && isGroupDetail && (
         <div className="bg-amber-500/95 text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight">
           <Icon name="image" size={11} className="shrink-0" />
           <span>{coverLabel}</span>

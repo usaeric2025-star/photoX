@@ -76,5 +76,6 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
          prev.photo.imageUrl === next.photo.imageUrl &&
          prev.photo.createdAt === next.photo.createdAt &&
          prev.showGroupsCollapsed === next.showGroupsCollapsed &&
+         prev.hideGroupBadge === next.hideGroupBadge &&
          prev.hasSearchQuery === next.hasSearchQuery;
 });

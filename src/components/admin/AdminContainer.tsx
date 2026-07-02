@@ -1,52 +1,50 @@
 import { logger } from '#lib/logger.js';
 import React, { useEffect } from 'react';
-import { AdminPhotoGrid } from '#src/components/photo/AdminPhotoGrid.js';
-import { SelectionToolbar } from '#src/features/selection/index.js';
-import { useTranslation, useColumns, usePhotoGrid, useFilters } from '#src/hooks/index.js';
+import { PhotoWall, usePhotoWall } from '#src/features/photo-wall/index.js';
+import { useTranslation, useColumns, useFilters } from '#src/hooks/index.js';
 import { AdminEmptyState } from '#src/pages/AdminPage/AdminEmptyState.js';
 import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
-import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
-import { useUI, uiStore } from '#lib/store/index.js';
+import { useUI } from '#lib/store/index.js';
 
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });
-  const hasFilters = !!filters.search || (filters.category && filters.category !== 'all' && filters.category !== '') || (filters.tags && filters.tags.length > 0);
   const isAggregated = filters.showGroupsCollapsed;
   
-  const photoGridData = usePhotoGrid({
+  const filtersObj = React.useMemo(() => ({
     categoryId: (filters.category && filters.category !== 'all' && filters.category !== '') ? filters.category : undefined,
     tagId: filters.tags?.[0],
     searchQuery: filters.search,
     sortOrder: filters.sort,
-    onlyGroupsCover: isAggregated
-  }, 'admin');
+    onlyGroupsCover: isAggregated,
+    isAdminMode: true
+  }), [filters.category, filters.tags, filters.search, filters.sort, isAggregated]);
+
+  const { photos, total, isLoading, error, refresh } = usePhotoWall(filtersObj);
   
   const { uiTranslations: labels } = useTranslation();
   const { columns } = useColumns();
   const adminActions = useAdminMaintenance();
-  
-  const { open: openLightbox } = useLightbox();
-  
-  const photos = React.useMemo(() => photoGridData.photos || [], [photoGridData.photos]);
-  const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
-  const handlePhotoClick = (photoId: string, index: number) => {
-      openLightbox(lightboxItems, index);
-  };
+  const patch = useUI(s => s.patch);
+  useEffect(() => {
+    if (total !== undefined) {
+      patch({ totalCount: total });
+    }
+  }, [total, patch]);
   
-  if (photoGridData.isError) {
+  if (error) {
     return (
       <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative justify-center items-center p-8" id="main-admin-error-screen">
         <ErrorBoundary fallback={null}>
-          <PhotoErrorDisplay error={photoGridData.error} onRetry={() => photoGridData.refetch()} />
+          <PhotoErrorDisplay error={error} onRetry={refresh} />
         </ErrorBoundary>
       </div>
     );
   }
 
-  if (photoGridData.photos.length === 0 && !photoGridData.isPending) {
+  if (photos.length === 0 && !isLoading) {
     return (
       <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" id="main-admin-screen">
         <AdminEmptyState labels={labels} />
@@ -56,18 +54,13 @@ export function AdminContainer() {
   
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" id="main-admin-screen">
-       <div className="flex-1 min-h-0 relative">
-          <div className="absolute inset-0">
-            <AdminPhotoGrid 
-              {...photoGridData}
-              columns={columns}
-              filters={filters}
-              onPhotoClick={handlePhotoClick}
-              error={photoGridData.error}
-              onRetry={() => photoGridData.refetch()}
-            />
-          </div>
+       <div className="flex-1 min-h-0 relative overflow-y-auto">
+          <PhotoWall 
+            mode="admin"
+            filters={filtersObj}
+          />
        </div>
     </div>
   );
 }
+

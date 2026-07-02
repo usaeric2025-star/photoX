@@ -2,7 +2,6 @@ export * from './useTagSorting.js';
 
 // Modularized business hooks
 export * from './usePhotos.js';
-export * from './usePhotoGrid.js';
 export * from './usePhoto.js';
 export * from './usePhotoMutations.js';
 export * from './useInvalidatePhotos.js';

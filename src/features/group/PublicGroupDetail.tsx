@@ -1,91 +1,69 @@
-import React, { useRef } from 'react';
-import { motion } from 'lite-sleek';
-import { logger } from '#lib/logger.js';
+import React, { useRef, useEffect } from 'react';
 import { useAppRouter } from '#lib/router/index.js';
 import { useGroupData } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
-import { Photo, Group, Category } from '#src/types/index.js';
-import { PhotoGridContent } from '#src/components/photo/PhotoGridContent.js';
-import { PublicPhotoCard } from '#src/components/photo/PublicPhotoCard.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
-import { useFilters, useTranslation, useCategories } from '#src/hooks/index.js';
+import { useFilters, useTranslation } from '#src/hooks/index.js';
 import { PublicGroupHeader } from './components/PublicGroupHeader.js';
 import { Button } from '#src/components/shared/Button.js';
-import { useUI, uiStore, useSignal, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+import { useUI } from '#lib/store/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
-import { useColumns } from '#src/hooks/index.js';
-import { FilterBar } from '#src/features/filters/index.js';
-
-function PublicPhotoGrid({ photos, categories, onPhotoClick, gridRef }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void; gridRef?: React.Ref<any> }) {
-  const columns = useSignal(gridColumnsSignal) as number;
-  
-  const renderItem = React.useCallback((photo: PhotoListItem, index: number) => {
-    return (
-      <motion.div
-        initial={{ opacity: 0, transform: 'translateY(10px)' }}
-        animate={{ opacity: 1, transform: 'translateY(0)' }}
-        transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
-        className="w-full h-full p-[1px]"
-      >
-        <PublicPhotoCard 
-          photo={photo} 
-          onClick={(e: any) => onPhotoClick(photo.id, index, e)} 
-          showGroupsCollapsed={false}
-          hasSearchQuery={false}
-        />
-      </motion.div>
-    );
-  }, [onPhotoClick]);
-
-  return (
-    <PhotoGridContent 
-      photos={photos}
-      dataVersion="1"
-      isPending={false}
-      isFetching={false}
-      isFetchingNextPage={false}
-      hasNextPage={false}
-      fetchNextPage={() => {}}
-      columns={columns}
-      renderItem={renderItem}
-      gridRef={gridRef}
-    />
-  );
-}
+import { PhotoWallGrid } from '#src/features/photo-wall/components/PhotoWallGrid.js';
+import { photoWallStore } from '#src/features/photo-wall/signal.js';
 
 export function PublicGroupDetailPage() {
   const { params } = useAppRouter();
-  const { groupId: fGroupId, photoId, setPhotoId } = useFilters();
-  const groupId = ((params as { slug?: string }).slug) || fGroupId;
+  const { groupId: fGroupId, photoId } = useFilters();
+  
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  const pathSlug = pathname.startsWith('/group/') ? pathname.split('/group/')[1]?.replace(/\/$/, '') : undefined;
+  const groupId = pathSlug || ((params as { slug?: string }).slug) || fGroupId;
   
   const [anchor, setAnchor] = React.useState(true);
-  const { categories } = useCategories();
-  const { lang, uiTranslations: t } = useTranslation();
+  const { uiTranslations: t } = useTranslation();
   
-  const { group, photos: rawPhotos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: false });
+  const { 
+    group, 
+    photos: rawPhotos, 
+    totalCount, 
+    loading, 
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage 
+  } = useGroupData({ groupId, isAdmin: false });
 
   const photos = React.useMemo(() => rawPhotos || [], [rawPhotos]);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const showWhatsAppChoice = useUI(s => s.showWhatsAppChoice);
   const patchUI = useUI(s => s.patch);
   const { open: openLightbox } = useLightbox();
   const { data: settings } = usePublicSettings();
   const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
 
+  const handlePhotoClick = React.useCallback((photo: PhotoListItem) => {
+    const index = photos.findIndex(p => p.id === photo.id);
+    openLightbox(lightboxItems, index >= 0 ? index : 0);
+  }, [photos, lightboxItems, openLightbox]);
+
+  // Sync mode and click handler to photoWallStore
+  useEffect(() => {
+    photoWallStore.setState({
+      mode: 'public',
+      onPhotoClick: handlePhotoClick,
+    });
+  }, [handlePhotoClick]);
+
   // Anchoring effect
   React.useEffect(() => {
     if (anchor && photoId && !loading && photos.length > 0) {
-      // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         const element = document.querySelector(`[data-photo-id="${photoId}"]`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Add a temporary highlight effect 
           element.classList.add('ring-4', 'ring-primary', 'scale-95');
           setTimeout(() => {
              element.classList.remove('ring-4', 'ring-primary', 'scale-95');
-             // Clear anchor from URL so it doesn't trigger again on reload
              setAnchor(false);
           }, 2000);
         }
@@ -93,14 +71,6 @@ export function PublicGroupDetailPage() {
       return () => clearTimeout(timer);
     }
   }, [anchor, photoId, loading, photos.length]);
-
-  const handlePhotoClick = (id: string, index: number) => {
-      openLightbox(lightboxItems, index);
-  };
-
-  const handleScrollToTop = () => {
-    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   if (loading) {
     return (
@@ -124,11 +94,16 @@ export function PublicGroupDetailPage() {
           photoCount={totalCount} 
         />
       </div>
-      {/* FilterBar removed */}
-      <div className="flex-1 relative bg-slate-50">
-        <div className="absolute inset-0">
-          <PublicPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} gridRef={scrollContainerRef} />
-        </div>
+      <div className="flex-1 bg-slate-50 overflow-y-auto p-1 sm:p-2 relative">
+        <PhotoWallGrid 
+          photos={photos} 
+          hasMore={!!hasNextPage} 
+          isLoading={loading}
+          isLoadingMore={!!isFetchingNextPage} 
+          loadMore={fetchNextPage || (() => {})} 
+          hideGroupBadge={true}
+          isGroupDetail={true}
+        />
       </div>
 
       <WhatsAppDialog 

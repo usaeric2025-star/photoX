@@ -12,6 +12,12 @@ import type {
 
 export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  nextCursor?: string | null;
+}
+
 export type PhotoListItem = ApiPhotoListItem;
 
 export interface FilterOptions {

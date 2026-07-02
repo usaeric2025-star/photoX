@@ -1,21 +1,12 @@
-import React, { useState } from 'react';
-import { motion } from 'lite-sleek';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppRouter } from '#lib/router/index.js';
 import { useGroupData } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
-import { Photo, Group, ProductGroup, Dimension, Category } from '#src/types/index.js';
-import { PhotoGridContent } from '#src/components/photo/PhotoGridContent.js';
-import { AdminPhotoCard } from '#src/components/photo/AdminPhotoCard.js';
+import { Photo } from '#src/types/index.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
-import { useFilters, useTranslation, useCategories, usePermission } from '#src/hooks/index.js';
-import { getTranslatedCategoryName } from '#src/services/category/utils.js';
-import { PageHeader } from '#src/components/ui/PageHeader.js';
-import { useSignal, uiStore, useUI, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
-// import { batchModeSignal } from '#lib/store/index.js'; // 移除此行
-import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
+import { useFilters, useTranslation } from '#src/hooks/index.js';
+import { useIsMultiSelect } from '#src/hooks/index.js';
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
-import { useAdminBatchActions } from '#src/hooks/admin/useAdminBatch.js';
-import { translations } from '#src/locales/index.js';
 import { GroupSettingsDialog } from '#src/components/groups/GroupSettingsDialog.js';
 import { useGroupDraft } from '#src/components/groups/useGroupDraft.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
@@ -23,72 +14,35 @@ import { AdminGroupHeader } from './components/AdminGroupHeader.js';
 import { Button } from '#src/components/shared/Button.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
-import { useColumns } from '#src/hooks/index.js';
-import { FilterBar } from '#src/features/filters/index.js';
-
-function AdminPhotoGrid({ photos, categories, onPhotoClick }: { photos: PhotoListItem[]; categories?: Category[]; onPhotoClick: (id: string, index: number, e?: React.MouseEvent) => void }) {
-  const isMultiSelect = useIsMultiSelect();
-  const { toggleSelect } = useSelectionActions();
-  const columns = useSignal(gridColumnsSignal) as number;
-  const { can } = usePermission();
-  const canPinGlobal = can('photo:toggle-pinned');
-
-  const renderItem = React.useCallback((photo: PhotoListItem, index: number) => {
-    return (
-      <motion.div
-        initial={{ opacity: 0, transform: 'translateY(10px)' }}
-        animate={{ opacity: 1, transform: 'translateY(0)' }}
-        transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
-        className="w-full h-full p-[1px]"
-      >
-        <AdminPhotoCard 
-          photo={photo} 
-          onClick={(e: any) => {
-            if (isMultiSelect) {
-              toggleSelect(photo.id);
-            } else {
-              onPhotoClick(photo.id, index, e);
-            }
-          }} 
-          showGroupsCollapsed={false}
-          hasSearchQuery={false}
-          canPinGlobal={canPinGlobal}
-        />
-      </motion.div>
-    );
-  }, [isMultiSelect, toggleSelect, onPhotoClick, canPinGlobal]);
-
-  return (
-    <PhotoGridContent 
-      photos={photos}
-      dataVersion="1" // Groups usually load all at once, versioning not critical here
-      isPending={false}
-      isFetching={false}
-      isFetchingNextPage={false}
-      hasNextPage={false}
-      fetchNextPage={() => {}}
-      columns={columns}
-      renderItem={renderItem}
-    />
-  );
-}
+import { PhotoWallGrid } from '#src/features/photo-wall/components/PhotoWallGrid.js';
+import { photoWallStore } from '#src/features/photo-wall/signal.js';
 
 export function AdminGroupDetailPage() {
   const { params, navigate } = useAppRouter();
-  const { groupId: fGroupId, photoId, setPhotoId, setModal } = useFilters();
-  const groupId = (params as { id?: string }).id || fGroupId;
+  const { groupId: fGroupId, photoId } = useFilters();
   
-  const { group, photos, totalCount, loading, error } = useGroupData({ groupId, isAdmin: true });
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  const pathId = pathname.startsWith('/admin/group/') ? pathname.split('/admin/group/')[1]?.replace(/\/$/, '') : undefined;
+  const groupId = pathId || (params as { id?: string }).id || fGroupId;
+  
+  const { 
+    group, 
+    photos: rawPhotos, 
+    totalCount, 
+    loading, 
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage 
+  } = useGroupData({ groupId, isAdmin: true });
+  const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
 
-  const { lang, uiTranslations: t } = useTranslation();
-  const { categories = [] } = useCategories();
+  const { uiTranslations: t } = useTranslation();
   const { anchor, setAnchor } = useFilters();
 
   // Redirect to admin index if group is not found or error occurs
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading) {
-      // If loading is finished and group is null, it's a 404.
-      // If there's an error containing "not found", it's a 404.
       const isNotFound = group === null || (error && (error.toLowerCase().includes('not found') || error.includes('找不到')));
       
       if (isNotFound) {
@@ -99,71 +53,55 @@ export function AdminGroupDetailPage() {
   }, [loading, group, error, navigate]);
 
   const { open: openLightbox } = useLightbox();
-  const lightboxItems = React.useMemo(() => photosToLightboxSlides(photos), [photos]);
+  const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
+
+  const handlePhotoClick = useCallback((photo: PhotoListItem) => {
+    const index = photos.findIndex(p => p.id === photo.id);
+    openLightbox(lightboxItems, index >= 0 ? index : 0);
+  }, [photos, lightboxItems, openLightbox]);
+
+  // Sync mode and click handler to photoWallStore
+  useEffect(() => {
+    photoWallStore.setState({
+      mode: 'admin',
+      onPhotoClick: handlePhotoClick,
+    });
+  }, [handlePhotoClick]);
 
   // Anchoring effect
-  React.useEffect(() => {
-    if (anchor && photoId && !loading && (photos || []).length > 0) {
-      // Small delay to ensure DOM is ready
+  useEffect(() => {
+    if (anchor && photoId && !loading && photos.length > 0) {
       const timer = setTimeout(() => {
         const element = document.querySelector(`[data-photo-id="${photoId}"]`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Add a temporary highlight effect 
           element.classList.add('ring-4', 'ring-primary', 'scale-95');
           setTimeout(() => {
              element.classList.remove('ring-4', 'ring-primary', 'scale-95');
-             // Clear anchor from URL so it doesn't trigger again on reload
              setAnchor(false);
           }, 2000);
         }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [anchor, photoId, loading, (photos || []).length]);
+  }, [anchor, photoId, loading, photos.length]);
 
   const [showAdminTools, setShowAdminTools] = useState(false);
   const isMultiSelect = useIsMultiSelect();
 
   const adminActions = useAdminMaintenance();
   
-  const handleBatchDelete = async (ids: string[]) => {
-    for (const id of ids) {
-      await adminActions.deletePhoto.mutateAsync(id);
-    }
-  };
-
-  const handleBatchHide = async (ids: string[]) => {
-    await adminActions.batchUpdate.mutateAsync({
-      ids,
-      updates: { is_hidden: true }
-    });
-  };
-
   const { groupData, setGroupData, handleUpdateGroupData } = useGroupDraft(
     groupId,
     photos as unknown as Photo[],
     async (_id, _data) => {}
   );
   const { update, dissolve } = useGroupMutations();
-  const { deletePhoto, updatePhoto } = adminActions;
   
   const handleUpdateTitle = async (newName: string) => {
     if (groupId) {
       await update.mutateAsync({ id: groupId, updates: { name: newName } });
     }
-  };
-  
-  const openEditDrawer = (id: string) => { 
-    const p = photos.find(p => p.id === id);
-    if (p) {
-      setModal('edit');
-      setPhotoId(p.id);
-    }
-  };
-
-  const handlePhotoClick = (id: string, index: number) => {
-      openLightbox(lightboxItems, index);
   };
 
   if (loading) {
@@ -211,10 +149,16 @@ export function AdminGroupDetailPage() {
           onUpdateTitle={handleUpdateTitle}
         />
       </div>
-      <div className={`flex-1 relative bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''}`}>
-        <div className="absolute inset-0">
-          <AdminPhotoGrid photos={photos} categories={categories} onPhotoClick={handlePhotoClick} />
-        </div>
+      <div className={`flex-1 bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''} overflow-y-auto p-1 sm:p-2 relative`}>
+        <PhotoWallGrid 
+          photos={photos} 
+          hasMore={!!hasNextPage} 
+          isLoading={loading}
+          isLoadingMore={!!isFetchingNextPage} 
+          loadMore={fetchNextPage || (() => {})} 
+          hideGroupBadge={true}
+          isGroupDetail={true}
+        />
       </div>
 
       {showAdminTools && (

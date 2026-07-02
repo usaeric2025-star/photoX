@@ -44,6 +44,7 @@
     "browser-image-compression": "2.0.2",
     "clsx": "2.1.0",
     "dayjs": "1.11.21",
+    "dream-masonry": "^0.1.2",
     "drizzle-orm": "0.45.2",
     "hono": "4.12.26",
     "lite-sleek": "1.1.0",

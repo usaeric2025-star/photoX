@@ -70,7 +70,12 @@ export function usePhotoCard({
       return;
     }
 
-    const isAlreadyOnGroupPage = route.name === 'publicGroup' || route.name === 'adminGroup' || (route.params as Record<string, string>).groupId;
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    const isAlreadyOnGroupPage = 
+      route.name === 'publicGroup' || 
+      route.name === 'adminGroup' || 
+      pathname.includes('/group/') ||
+      (route.params as Record<string, string>).groupId;
     const shouldGoToGroup = photo.groupId && showGroupsCollapsed && !isAlreadyOnGroupPage;
 
     if (shouldGoToGroup) {
