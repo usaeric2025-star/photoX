@@ -104,26 +104,27 @@ ai.post("/analyze", async (c) => {
     if (!finalImageUrl) return errorResponse(c, "Image URL is required for analysis", 400);
 
     // Use safer query approach - select only what we need and handle errors per-table
-    let catRef: { id: number; nameZh: string | null }[] = [];
-    let tagRef: { id: string | number; name: string | null; aliases?: string[] | null }[] = [];
+    let catRef: { id: number; nameZh: string | null; nameEn?: string | null; nameMs?: string | null }[] = [];
+    let tagRef: { id: string | number; name: string | null }[] = [];
     let groupRef: { id: string; name: unknown; status: string | null; createdAt: Date | null }[] = [];
 
     try {
-        const [catData, tagData, groupData] = await Promise.all([
-            db.select({ id: categories.id, nameZh: categories.nameZh }).from(categories).limit(200),
-            db.select({ id: tags.id, name: tags.name }).from(tags).limit(500),
-            db.select({ id: groupsTable.id, name: groupsTable.name, status: groupsTable.status, createdAt: groupsTable.createdAt })
-                .from(groupsTable)
-                .where(eq(groupsTable.status, 'confirmed'))
-                .orderBy(desc(groupsTable.createdAt))
-                .limit(40),
+        const [catData, tagData] = await Promise.all([
+            db.select({ 
+                id: categories.id, 
+                nameZh: categories.nameZh,
+                nameEn: categories.nameEn,
+                nameMs: categories.nameMs
+            }).from(categories).limit(200),
+            db.select({ 
+                id: tags.id, 
+                name: tags.name 
+            }).from(tags).limit(500),
         ]);
         catRef = catData;
         tagRef = tagData;
-        groupRef = groupData;
     } catch (err: unknown) {
         logger.warn("AI Analyze: Background context fetch failed partially:", err);
-        // Continue with whatever we managed to fetch (empty arrays if everything failed)
     }
 
     const provider = await getAIProvider();
@@ -131,9 +132,16 @@ ai.post("/analyze", async (c) => {
     const model = modelConfig || 'google/gemini-2.5-flash-lite';
     
     const context = {
-        categories: catRef.map(c => ({ id: c.id, name: c.nameZh, zh: c.nameZh })).slice(0, 50),
-        tags: tagRef.map(t => ({ id: t.id, name: t.name, aliases: t.aliases || [] })).slice(0, 100),
-        groups: groupRef.map(g => ({ id: g.id, name: typeof g.name === 'object' ? (g.name as Record<string, string> | null)?.zh : g.name })),
+        categories: catRef.map(c => ({ 
+            id: c.id, 
+            zh: c.nameZh, 
+            en: c.nameEn, 
+            ms: c.nameMs 
+        })).slice(0, 100),
+        tags: tagRef.map(t => ({ 
+            id: t.id, 
+            name: t.name 
+        })).slice(0, 150),
     };
     
     const prompt = AI_PROMPTS.ANALYZE_PHOTO(context);
@@ -271,9 +279,14 @@ ai.post("/cluster-photos", async (c) => {
             finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
         }
 
+        // Prepare localized name and description
+        const groupName = typeof g.name === 'string' ? g.name : JSON.stringify(g.name);
+        const groupDesc = JSON.stringify(g.description);
+
         const [groupData] = await db.insert(groupsTable).values([{
             id: groupId,
-            name: "GROUP",
+            name: groupName,
+            description: groupDesc,
             status: 'confirmed',
             userId: finalUserId,
             createdAt: new Date()

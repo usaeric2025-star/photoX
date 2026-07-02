@@ -6,16 +6,7 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs24.x"
-    }
-  },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    },
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"

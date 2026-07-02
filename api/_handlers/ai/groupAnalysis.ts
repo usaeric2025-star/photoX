@@ -8,10 +8,12 @@ import { executeAITask } from '../../_lib/ai/executor.js';
 // 1. 輸出 Schema（與提示詞嚴格對應）
 export const GroupAnalysisSchema = v.object({
   groups: v.array(v.object({
-    name: v.string(), // 中文
-    name_en: v.string(),
-    name_ms: v.string(),
-    description: v.string(),
+    name: v.string(), // English
+    description: v.object({
+      zh: v.string(),
+      en: v.string(),
+      ms: v.string()
+    }),
     photoIds: v.array(v.string())
   }))
 });
@@ -23,12 +25,23 @@ const buildPrompt = (photoCount: number, photoList: string) => `你是一個專�
 分析以下 ${photoCount} 張照片，將它們分組為產品系列。
 
 ## ⚠️ 硬性要求（違反將導致處理失敗）
-1. 輸出純 JSON，不要包含 Markdown 代碼塊、註釋或其他文字。
-2. 格式嚴格匹配以下 Schema（ArkType 相容）：
-   { "groups": [{ "name": "中文名稱", "name_en": "English", "name_ms": "Bahasa Malaysia", "description": "描述", "photoIds": ["UUID"] }] }
-3. 完整性校驗：每張照片的 ID 回傳總數必須等於輸入的 ${photoCount} 個，且每個 ID 必須屬於輸入列表。
-4. 禁止使用「其他」「雜項」「未分類」等佔位詞。
-5. 合組數量建議 2-8 個，視內容而定。
+1. **名稱規範**：name 必須為英文。
+2. **描述規範**：以中文為核心撰寫描述，並提供英文與馬來文翻譯。
+3. **多語言支援**：description 必須包含 中文 (zh)、英文 (en) 和 馬來文 (ms)。
+4. 輸出純 JSON，不要包含 Markdown 代碼塊、註釋或其他文字。
+5. 格式嚴格匹配以下 Schema：
+   { 
+     "groups": [
+       { 
+         "name": "English Name", 
+         "description": { "zh": "中文描述", "en": "English Description", "ms": "Penerangan Melayu" }, 
+         "photoIds": ["UUID"] 
+       }
+     ] 
+   }
+6. 完整性校驗：每張照片的 ID 回傳總數必須等於輸入的 ${photoCount} 個，且每個 ID 必須屬於輸入列表。
+7. 禁止使用「其他」「雜項」「未分類」等佔位詞。
+8. 合組數量建議 2-8 個，視內容而定。
 
 ## 判斷標準
 - 視覺風格、拍攝場景一致 → 同一組
