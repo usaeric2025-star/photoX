@@ -15,6 +15,7 @@ import { aiAnalysisSignal } from '#lib/ai/executor.js';
 import { showToast } from "#lib/ui/toast.js";
 import { ErrorFactory } from "#lib/error/ErrorFactory.js";
 import { usePhotoEditAI } from "./usePhotoEditAI.js";
+import { useGroupMutations } from "#src/hooks/group/index.js";
 
 interface DialogHeaderProps {
   onClose: () => void;
@@ -36,6 +37,7 @@ export function DialogHeader({
   const isAnalyzing = aiState.status === 'processing';
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
+  const { setCover } = useGroupMutations();
   const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();
   const { mutateAsync: deletePhoto } = usePhotoDelete();
   
@@ -101,13 +103,16 @@ export function DialogHeader({
               return (
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     const newState = !active;
                     form.setFieldValue('isGroupCover', newState);
-                    showToast.success(newState ? '已设为封面' : '已取消封面');
+                    if (newState && detailPhoto?.groupId && editPhotoId) {
+                      await setCover.mutateAsync({ groupId: detailPhoto.groupId, photoId: editPhotoId });
+                    }
                   }}
                   title={l.cover}
-                  className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${active ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"}`}
+                  disabled={setCover.isPending}
+                  className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${active ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"} ${setCover.isPending ? "opacity-50 cursor-wait" : ""}`}
                 >
                   <Icon name="star" size={20} className={active ? "fill-white" : "fill-transparent"} />
                 </button>

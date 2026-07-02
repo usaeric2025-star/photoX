@@ -24,7 +24,7 @@ function SelectionCounter({ count }: { count: number }) {
 
 // --- Main component ---
 
-export function SelectionToolbar({ className = '', groupId }: { className?: string; groupId?: string }) {
+export function SelectionToolbar({ className = '', groupId: propGroupId }: { className?: string; groupId?: string }) {
   const selectedCount = useSelectionCount();
   const selectedIds = useSelectedIds();
   const isMultiSelect = useIsMultiSelect();
@@ -38,6 +38,15 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
 
   const combineMutation = useGroupPhotosMutation();
   const removeMutation = useRemoveFromGroupMutation();
+
+  // Smart groupId detection from URL if not provided
+  const groupId = React.useMemo(() => {
+    if (propGroupId) return propGroupId;
+    if (typeof window === 'undefined') return undefined;
+    const path = window.location.pathname;
+    const match = path.match(/\/(admin\/)?group\/([^\/]+)/);
+    return match ? match[2] : undefined;
+  }, [propGroupId]);
 
   // ✅ 使用計算後的 Selector
   const activeTasks = useSignal(activeTaskCountSignal);
@@ -68,31 +77,32 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
 
   const handleManualGroup = async () => {
     if (selectedCount === 0 || isAnyPending) return;
+    
+    const idsToGroup = [...selectedIds];
+    const count = selectedCount;
+    
+    // Clear selection immediately for a responsive feel
+    clearSelection();
+    
     try {
-      await combineMutation.mutateAsync({ photoIds: selectedIds });
-      import('#lib/ui/toast.js').then(({ showToast }) => {
-        showToast.success(`成功將 ${selectedCount} 張照片合併為一組`);
-      });
-      clearSelection();
+      await combineMutation.mutateAsync({ photoIds: idsToGroup });
     } catch (err: any) {
-      import('#lib/ui/toast.js').then(({ showToast }) => {
-        showToast.error(`合組失敗: ${err.message}`);
-      });
+      // Errors handled by mutation hook
     }
   };
 
   const handleRemoveFromGroup = async () => {
     if (selectedCount === 0 || isAnyPending || !groupId) return;
+    
+    const idsToRemove = [...selectedIds];
+    
+    // Clear selection immediately
+    clearSelection();
+    
     try {
-      await removeMutation.mutateAsync({ photoIds: selectedIds, groupId });
-      import('#lib/ui/toast.js').then(({ showToast }) => {
-        showToast.success(`成功將 ${selectedCount} 張照片移出合組`);
-      });
-      clearSelection();
+      await removeMutation.mutateAsync({ photoIds: idsToRemove, groupId });
     } catch (err: any) {
-      import('#lib/ui/toast.js').then(({ showToast }) => {
-        showToast.error(`移出合組失敗: ${err.message}`);
-      });
+      // Errors handled by mutation hook
     }
   };
 

@@ -157,6 +157,9 @@ export const groupPhotos = async (
 };
 
 export const movePhotosToGroup = async (photoIds: string[], targetGroupId: string | null): Promise<void> => {
+  if (targetGroupId === null) {
+      return removePhotosFromGroup(photoIds, ''); // Fallback but better use the dedicated function
+  }
   const res = await api.groups['move-photos'].$post({
       json: { photoIds, targetGroupId }
   });
@@ -176,6 +179,13 @@ export const movePhotosToGroup = async (photoIds: string[], targetGroupId: strin
     }
     throw err;
   }
+};
+
+export const removePhotosFromGroup = async (photoIds: string[], groupId: string): Promise<void> => {
+  const res = await api.groups['remove-photos'].$delete({
+      json: { photoIds, groupId }
+  });
+  if (!res.ok) throw new Error('Remove photos from group failed');
 };
 
 export const setPhotoAsGroupCover = async (photoId: string | null, groupId: string): Promise<void> => {

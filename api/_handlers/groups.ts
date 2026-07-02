@@ -129,16 +129,20 @@ export const groups = new Hono()
           targetGroupId, 
           userId, 
           groupData, 
-          photoIds
+          photoIds: rawPhotoIds,
+          sourceGroupIds: rawSourceGroupIds
       } = check.output;
+
+      const photoIds = rawPhotoIds ? (Array.isArray(rawPhotoIds) ? rawPhotoIds : [rawPhotoIds]) : [];
+      const sourceGroupIds = rawSourceGroupIds ? (Array.isArray(rawSourceGroupIds) ? rawSourceGroupIds : [rawSourceGroupIds]) : [];
       
       const mergedGroupData = { ...(groupData as Record<string, unknown>), id: targetGroupId };
       
-      let sourceGroupIds: string[] = [];
+      let finalSourceGroupIds: string[] = [];
       let ungroupedValidIds: string[] = [];
       let dbUserId: string | null = null;
 
-      if (photoIds && photoIds.length > 0) {
+      if (photoIds.length > 0) {
         const sourcePhotos = await db.select({
             id: furnitureItems.id,
             groupId: furnitureItems.groupId,
@@ -150,9 +154,10 @@ export const groups = new Hono()
         if (sourcePhotos.length > 0) {
            dbUserId = sourcePhotos[0].userId;
         }
-        sourceGroupIds = Array.from(new Set(
-          sourcePhotos.map(p => p.groupId).filter((gid): gid is string => !!gid && gid !== targetGroupId)
-        )) as string[];
+        finalSourceGroupIds = Array.from(new Set([
+          ...sourceGroupIds,
+          ...sourcePhotos.map(p => p.groupId).filter((gid): gid is string => !!gid && gid !== targetGroupId)
+        ])) as string[];
         ungroupedValidIds = photoIds.filter(pid => {
           const p = sourcePhotos.find(x => x.id === pid);
           return !p?.groupId;
@@ -222,17 +227,17 @@ export const groups = new Hono()
           .where(inArray(furnitureItems.id, ungroupedValidIds));
       }
 
-      if (sourceGroupIds && sourceGroupIds.length > 0) {
+      if (finalSourceGroupIds && finalSourceGroupIds.length > 0) {
         await db.update(furnitureItems)
           .set({ groupId: targetGroupId, isGroupCover: false })
-          .where(inArray(furnitureItems.groupId, sourceGroupIds));
+          .where(inArray(furnitureItems.groupId, finalSourceGroupIds));
 
         try {
-            await db.execute(sql`SELECT merge_groups(${sourceGroupIds}, ${targetGroupId})`);
+            await db.execute(sql`SELECT merge_groups(${finalSourceGroupIds}, ${targetGroupId})`);
         } catch (rpcErr) {}
       }
 
-      const affectedGroupIds = [targetGroupId, ...(sourceGroupIds || [])];
+      const affectedGroupIds = [targetGroupId, ...(finalSourceGroupIds || [])];
       await syncGroupCoversAndCount(affectedGroupIds);
       await refreshPhotosView();
 
@@ -240,10 +245,15 @@ export const groups = new Hono()
   })
   .post('/move-photos', async (c) => {
     const body = await c.req.json();
-    const check = v.safeParse(v.object({ photoIds: v.array(v.string()), targetGroupId: v.nullable(v.string()) }), body);
+    const check = v.safeParse(v.object({ 
+        photoIds: v.union([v.string(), v.array(v.string())]), 
+        targetGroupId: v.nullable(v.string()) 
+    }), body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
-    const { photoIds, targetGroupId } = check.output;
+    const { photoIds: rawPhotoIds, targetGroupId } = check.output;
+    const photoIds = Array.isArray(rawPhotoIds) ? rawPhotoIds : [rawPhotoIds];
+
     // Fetch snapshots before move
     const sourcePhotos = await db.select({ groupId: furnitureItems.groupId })
         .from(furnitureItems)
@@ -265,6 +275,29 @@ export const groups = new Hono()
 
     // Reconcile groups
     await syncGroupCoversAndCount(affectedGroupIds);
+    await refreshPhotosView();
+
+    return successResponse(c, null);
+  })
+  .delete('/remove-photos', async (c) => {
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({ 
+        photoIds: v.union([v.string(), v.array(v.string())]), 
+        groupId: v.string() 
+    }), body);
+    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+
+    const { photoIds: rawPhotoIds, groupId } = check.output;
+    const photoIds = Array.isArray(rawPhotoIds) ? rawPhotoIds : [rawPhotoIds];
+
+    await db.update(furnitureItems)
+        .set({ groupId: null, isGroupCover: false })
+        .where(and(
+            eq(furnitureItems.groupId, groupId),
+            inArray(furnitureItems.id, photoIds)
+        ));
+
+    await syncGroupCoversAndCount([groupId]);
     await refreshPhotosView();
 
     return successResponse(c, null);

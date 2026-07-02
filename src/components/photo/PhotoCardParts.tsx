@@ -22,9 +22,25 @@ export const PhotoStatusBadges = ({
   
   const shouldShowGroup = !hideGroupBadge && photo.groupId;
   const hiddenLabel = lang === 'zh' ? '已隐藏' : lang === 'ms' ? 'Sembunyi' : 'Hidden';
+  const coverLabel = lang === 'zh' ? '封面' : lang === 'ms' ? 'Kulit' : 'Cover';
 
   return (
     <div className="absolute top-2 left-2 flex flex-col items-start gap-1 pointer-events-none select-none">
+      {/* Pinned Status */}
+      {isPinned && (
+        <div className="bg-primary text-white p-1.5 rounded-full shadow-lg border border-white/40 mb-0.5">
+          <Icon name="pin" size={12} className="fill-current" />
+        </div>
+      )}
+
+      {/* Group Cover Badge */}
+      {isManagement && photo.isGroupCover && (
+        <div className="bg-amber-500/95 text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight">
+          <Icon name="image" size={11} className="shrink-0" />
+          <span>{coverLabel}</span>
+        </div>
+      )}
+
       {/* Group Badge - Apple Style: pill, backdrop-blur */}
       {shouldShowGroup && typeof photo.memberCount === 'number' && photo.memberCount > 1 && (
         <div className={cn(

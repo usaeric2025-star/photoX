@@ -20,11 +20,10 @@ export interface UIStoreState {
   uploadModeDialogOpen: boolean;
   isTaskDrawerOpen: boolean;
   isSidebarOpen: boolean;
-  pendingPhoto: any | null;
+  pendingPhotoId: string | null;
   pendingFiles: FileList | File[] | null;
   activeDialogCount: number;
   fatalError: Error | null;
-  currentEditingPhoto: Photo | null;
   gridColumns: number;
   totalCount: number;
   
@@ -85,11 +84,10 @@ export const uiStore = createStore<UIStoreState>({
   uploadModeDialogOpen: false,
   isTaskDrawerOpen: false,
   isSidebarOpen: false,
-  pendingPhoto: null,
+  pendingPhotoId: null,
   pendingFiles: null,
   activeDialogCount: 0,
   fatalError: null,
-  currentEditingPhoto: null,
   gridColumns: 3,
   totalCount: 0,
   lightboxSlides: [],
@@ -162,7 +160,6 @@ export function useUIStore<T = UIStoreState>(selector?: (state: UIStoreState) =>
 export const useAppLang = () => useStore(uiStore, (s: UIStoreState) => s.appLang) as 'zh' | 'en' | 'ms';
 
 // ============ UI 狀態 Signal (Derived from uiStore) ============
-export const currentEditingPhoto = signal<UIStoreState, 'currentEditingPhoto'>(uiStore, 'currentEditingPhoto');
 export const appLangSignal = signal<UIStoreState, 'appLang'>(uiStore, 'appLang');
 
 // Sync language to DOM

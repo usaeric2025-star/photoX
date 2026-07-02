@@ -45,6 +45,7 @@ export const listHandler = (app: Hono) => {
                     isPinned: !!d.isPinned,
                     isHidden: !!d.isHidden,
                     isCover: !!d.isGroupCover || (d.groupCoverPhotoId === d.id),
+                    isGroupCover: !!d.isGroupCover || (d.groupCoverPhotoId === d.id),
                     createdAt: d.createdAt 
                         ? (typeof d.createdAt === 'string' ? d.createdAt : (d.createdAt as unknown as Date).toISOString()) 
                         : null,

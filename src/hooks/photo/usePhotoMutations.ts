@@ -30,12 +30,14 @@ export const usePhotoEditMutation = () => {
       
       return res as Photo;
     },
-    onSuccess: () => {
+    onSuccess: (data, { id }) => {
       showToast.success(t.photoUpdated);
       appQuery.invalidatePhotos();
     },
-    onError: (err) => {
+    onError: (err, { id }) => {
       ErrorFactory.handle(err, { context: 'photo-update' });
+      // Rollback is handled by invalidatePhotos usually, but we force it here
+      appQuery.invalidatePhotos();
     }
   });
 };
@@ -47,15 +49,17 @@ export const usePhotoDelete = () => {
   
   return useAppMutation({
     mutationFn: async (ids: string | string[]) => {
-      return await deleteMany(Array.isArray(ids) ? ids : [ids]);
+      const idArray = Array.isArray(ids) ? ids : [ids];
+      return await deleteMany(idArray);
     },
     onSuccess: () => {
-      showToast.success(t.photoDeleted);
+      showToast.success(t.photoDeleted || '照片已刪除');
       clearSelection();
       appQuery.invalidatePhotos();
     },
     onError: (err) => {
       ErrorFactory.handle(err, { context: 'photo-delete' });
+      appQuery.invalidatePhotos();
     }
   });
 };
@@ -63,6 +67,8 @@ export const usePhotoDelete = () => {
 // 3. 批量编辑
 export const usePhotoBatchEdit = () => {
   const { uiTranslations: t } = useTranslation();
+  const { clearSelection } = useSelectionActions();
+
   return useAppMutation({
     mutationFn: async ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => {
       const { tags, ...coreUpdates } = updates;
@@ -80,11 +86,14 @@ export const usePhotoBatchEdit = () => {
       return res;
     },
     onSuccess: (res) => {
-      showToast.success(typeof t.batchUpdateSuccess === 'function' ? t.batchUpdateSuccess(Array.isArray(res) ? res.length : 0) : t.batchUpdateSuccess);
+      const count = Array.isArray(res) ? res.length : 0;
+      showToast.success(typeof t.batchUpdateSuccess === 'function' ? t.batchUpdateSuccess(count) : (t.batchUpdateSuccess || `成功更新 ${count} 張照片`));
+      clearSelection();
       appQuery.invalidatePhotos();
     },
     onError: (err) => {
       ErrorFactory.handle(err, { context: 'photo-batch-update' });
+      appQuery.invalidatePhotos();
     }
   });
 };
@@ -104,6 +113,7 @@ export const useTogglePin = () => {
     },
     onError: (err) => {
       ErrorFactory.handle(err, { context: 'photo-toggle-pin' });
+      appQuery.invalidatePhotos();
     }
   });
 };

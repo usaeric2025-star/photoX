@@ -108,7 +108,7 @@ export function usePhotoCard({
         }
         if ('vibrate' in navigator) navigator.vibrate(50);
       } else {
-        patch({ showWhatsAppChoice: true, pendingPhoto: photo });
+        patch({ showWhatsAppChoice: true, pendingPhotoId: photo.id });
       }
     }
   });

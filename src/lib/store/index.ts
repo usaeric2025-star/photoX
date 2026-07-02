@@ -2,7 +2,6 @@ export { useSignal, useStore } from '@storve/react';
 
 // UI 狀態 (Signals)
 export { 
-  currentEditingPhoto, 
    appLangSignal as appLang,
   lightboxSlides, lightboxCurrentIndex,
    

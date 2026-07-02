@@ -10,7 +10,7 @@ import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { useFilters, useTranslation, useCategories, usePermission } from '#src/hooks/index.js';
 import { getTranslatedCategoryName } from '#src/services/category/utils.js';
 import { PageHeader } from '#src/components/ui/PageHeader.js';
-import { useSignal, uiStore, useUI, currentEditingPhoto, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+import { useSignal, uiStore, useUI, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
 // import { batchModeSignal } from '#lib/store/index.js'; // 移除此行
 import { useIsMultiSelect, useSelectionActions } from '#src/features/selection/index.js';
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
@@ -21,6 +21,7 @@ import { useGroupDraft } from '#src/components/groups/useGroupDraft.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
 import { AdminGroupHeader } from './components/AdminGroupHeader.js';
 import { Button } from '#src/components/shared/Button.js';
+import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
 import { useColumns } from '#src/hooks/index.js';
 import { FilterBar } from '#src/features/filters/index.js';
@@ -85,16 +86,14 @@ export function AdminGroupDetailPage() {
 
   // Redirect to admin index if group is not found or error occurs
   React.useEffect(() => {
-    if (!loading && (!group || error)) {
-      // Only redirect if we definitely don't have a group after loading finished
-      const isNotFound = error?.includes('找不到') || error?.toLowerCase().includes('not found') || !group;
+    if (!loading) {
+      // If loading is finished and group is null, it's a 404.
+      // If there's an error containing "not found", it's a 404.
+      const isNotFound = group === null || (error && (error.toLowerCase().includes('not found') || error.includes('找不到')));
       
       if (isNotFound) {
-        toast.error(error || '該分組不存在或已被刪除，正在跳轉回管理頁面...');
-        const timer = setTimeout(() => {
-          navigate.admin();
-        }, 2000);
-        return () => clearTimeout(timer);
+        toast.error('該分組不存在或已被刪除，正在跳轉回管理頁面...');
+        navigate.admin();
       }
     }
   }, [loading, group, error, navigate]);
@@ -158,7 +157,6 @@ export function AdminGroupDetailPage() {
   const openEditDrawer = (id: string) => { 
     const p = photos.find(p => p.id === id);
     if (p) {
-      currentEditingPhoto.set(p as any);
       setModal('edit');
       setPhotoId(p.id);
     }
@@ -170,7 +168,7 @@ export function AdminGroupDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-1 sm:p-2 lg:p-4 w-full h-full">
+      <div className="p-1 sm:p-2 lg:p-4 w-full h-full bg-slate-50">
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
            {Array.from({ length: 18 }).map((_, i) => (
              <div key={i} className="aspect-square w-full bg-surface-soft rounded-xl border border-border-soft animate-shimmer" />
@@ -179,8 +177,29 @@ export function AdminGroupDetailPage() {
       </div>
     );
   }
-  if (error) return <div className="p-4 text-red-500">{t.errorPrefix}{error}</div>;
-  if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">{t.groupNotFound}</div><Button onClick={() => window.history.back()}>{t.goBack}</Button></div>;
+  
+  if (error || !group) {
+    const isNotFound = group === null || (error && (error.toLowerCase().includes('not found') || error.includes('找不到')));
+    
+    return (
+      <div className="p-4 flex flex-col justify-center items-center h-full bg-slate-50 text-center">
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <Icon name="search" size={32} className="text-slate-300" />
+        </div>
+        <div className="text-xl font-semibold text-slate-800 mb-2">
+          {isNotFound ? '分組不存在或已合併' : t.errorPrefix}
+        </div>
+        <div className="text-slate-500 max-w-xs mb-6">
+          {isNotFound 
+            ? '該分組可能已被刪除、解散或合併至其他分組。正在跳轉回管理頁面...' 
+            : error}
+        </div>
+        <Button onClick={() => navigate.admin()} className="min-w-[120px]">
+          {t.goBack}
+        </Button>
+      </div>
+    );
+  }
   
   return (
     <div className="bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">

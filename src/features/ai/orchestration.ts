@@ -3,8 +3,7 @@ import { translateFields } from './translationService.js';
 import { updatePhoto } from '#src/services/photo/index.js';
 import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '#src/services/tag/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands.js';
-import { updateGroup } from '#src/services/group/commands.js';
+import { analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands.js';
 import { resolveTagNamesToIds } from '#src/services/tag/completion.js';
 import { withTimeout } from '#lib/utils.js';
 import { logger } from '#lib/logger.js';
@@ -49,7 +48,6 @@ const analyzeAndSavePhoto = async (
       name: (nameObj.en || nameObj.zh || '').substring(0, 200),
       description: descObj,
       categoryId: analysisData.category_id ? String(analysisData.category_id) : (photo.categoryId || null),
-      groupId: analysisData.group_id ? String(analysisData.group_id) : (photo.groupId || null),
       dimensions: analysisData.dimensions || [],
       metadata: {
         ...(photo.metadata as Record<string, unknown> || {}),
@@ -90,39 +88,11 @@ const analyzeAndSavePhoto = async (
   }
 };
 
-interface GroupAnalysisResponse {
-  name?: unknown;
-  description?: unknown;
-}
-
-const analyzeAndSaveGroup = async (
-  groupId: string,
-  photos: Photo[]
-): Promise<unknown> => {
-  try {
-    const analysis = (await withTimeout(analyzeGroup(photos), 120000, 'AI Analyze Group Materials & Colors')) as GroupAnalysisResponse; // 120s
-    const { name: nameObj } = await mapAiToMultilingual(
-      analysis.name,
-      analysis.description
-    );
-
-    const res = await updateGroup(groupId, {
-      name: (nameObj.en || nameObj.zh || '').substring(0, 200)
-    } as unknown as Partial<ProductGroup>);
-
-    return res;
-  } catch (err) {
-    throw ErrorFactory.fatal((err as Error).message || '合组分析失败', { context: 'analyzeAndSaveGroup' });
-  }
-};
-
 export async function runBatchAnalysis({
   targetPhotos,
-  groupId,
   onProgress
 }: {
   targetPhotos: Photo[];
-  groupId?: string;
   onProgress: (progress: number, message?: string) => void;
 }) {
   const totalPhotosToProcess = targetPhotos.length;
@@ -130,7 +100,7 @@ export async function runBatchAnalysis({
 
   for (let i = 0; i < targetPhotos.length; i++) {
     const p = targetPhotos[i];
-    const currentProgress = ((i) / totalPhotosToProcess) * (groupId ? 0.7 : 1);
+    const currentProgress = ((i) / totalPhotosToProcess);
 
     try {
       onProgress(currentProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
@@ -141,29 +111,9 @@ export async function runBatchAnalysis({
     }
   }
 
-  let groupSuccess = false;
-  if (groupId) {
-    onProgress(0.75, '正在總結整个合组...');
-    try {
-      const response = await api.photos['by-ids'].$post({ json: { ids: targetPhotos.map(p => p.id) } });
-      const body = await response.json();
-      const photos = (body.success ? body.data || [] : []) as Photo[];
-      
-      if (photos.length > 0) {
-        onProgress(0.85, '生成合组名称与描述...');
-        await analyzeAndSaveGroup(groupId, photos);
-        groupSuccess = true;
-        await appQuery.invalidatePhotos();
-      }
-    } catch (e) {
-      logger.warn('[AI Group] Batch summary failed', e);
-    }
-  } else {
-    // Grouping logic removed as per user request
-    onProgress(0.9, '分析完成');
-    await appQuery.invalidatePhotos();
-  }
-
+  onProgress(0.9, '分析完成');
+  await appQuery.invalidatePhotos();
   onProgress(1, '分析流程完成');
-  return { successCount, groupSuccess };
+  
+  return { successCount, groupSuccess: false };
 }

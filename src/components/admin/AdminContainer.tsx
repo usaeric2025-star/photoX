@@ -68,7 +68,6 @@ export function AdminContainer() {
             />
           </div>
        </div>
-       <SelectionToolbar />
     </div>
   );
 }

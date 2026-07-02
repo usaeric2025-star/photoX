@@ -69,9 +69,9 @@ export function VirtualizedGrid<T extends { id: string | number }>({
   return (
     <div className="w-full h-full relative overflow-hidden">
       <VList 
-        key={`vlist-${columns}-${items.length > 0 ? 'active' : 'empty'}`}
+        key={`vlist-${columns}`}
         ref={containerRef}
-        bufferSize={3000}
+        bufferSize={1200}
         onScroll={handleScroll} 
         onScrollEnd={handleScrollEnd}
         style={{ height: '100%', width: '100%' }}
@@ -102,7 +102,9 @@ export function VirtualizedGrid<T extends { id: string | number }>({
             })}
           </div>
         ))}
-        {footer && <div className="w-full pb-20">{footer}</div>}
+        {/* Spacer for bottom toolbar and mobile safe area */}
+        <div className="w-full h-40 pointer-events-none" aria-hidden="true" />
+        {footer && <div className="w-full pb-10">{footer}</div>}
       </VList>
     </div>
   );

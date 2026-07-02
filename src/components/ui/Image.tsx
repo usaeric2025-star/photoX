@@ -62,26 +62,27 @@ export function Image({
 
     return (
         <div className={cn("relative overflow-hidden bg-surface-mute w-full h-full", containerClassName)}>
-            {/* 1. Static placeholder */}
-            {!isLoaded && !lqipSrc && (
-                <div className="absolute inset-0 bg-surface-base z-10" />
-            )}
-
-            {/* 2. Low Quality Image Placeholder */}
-            {!isLoaded && lqipSrc && (
-                <img
-                    src={lqipSrc}
-                    alt=""
-                    className={cn(
-                        "absolute inset-0 w-full h-full object-cover object-center z-10",
-                        className?.includes('object-contain') && 'object-contain',
-                        className?.includes('object-fill') && 'object-fill'
+            {/* 1. Placeholder / LQIP */}
+            {!isLoaded && (
+                <div className="absolute inset-0 z-10">
+                    {lqipSrc ? (
+                        <img
+                            src={lqipSrc}
+                            alt=""
+                            className={cn(
+                                "w-full h-full object-cover object-center",
+                                className?.includes('object-contain') && 'object-contain',
+                                className?.includes('object-fill') && 'object-fill'
+                            )}
+                            aria-hidden="true"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-surface-base" />
                     )}
-                    aria-hidden="true"
-                />
+                </div>
             )}
 
-            {/* 3. Final Image */}
+            {/* 2. Final Image */}
             <img
                 ref={imgRef}
                 src={src}
@@ -89,7 +90,7 @@ export function Image({
                 onLoad={handleLoad}
                 className={cn(
                     "absolute inset-0 w-full h-full object-cover object-center z-20",
-                    !disableFade && "transition-opacity duration-200 ease-out",
+                    !disableFade && "transition-opacity duration-300 ease-out",
                     (isLoaded || disableFade) ? "opacity-100" : "opacity-0",
                     className
                 )}

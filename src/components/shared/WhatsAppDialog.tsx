@@ -3,7 +3,7 @@ import { NativeDialog } from '#src/components/ui/NativeDialog.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useTranslation } from '#src/hooks/index.js';
+import { useTranslation, usePhoto } from '#src/hooks/index.js';
 
 interface WhatsAppDialogProps {
   open: boolean;
@@ -12,7 +12,8 @@ interface WhatsAppDialogProps {
 
 export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   const { data: settings } = usePublicSettings();
-  const pendingPhoto = useUI(s => s.pendingPhoto);
+  const pendingPhotoId = useUI(s => s.pendingPhotoId);
+  const { data: pendingPhoto } = usePhoto(pendingPhotoId || '');
   const { uiTranslations: t } = useTranslation();
 
   const options = React.useMemo(() => {

@@ -120,7 +120,7 @@ export default function PublicPage() {
         )}
         <button
           onClick={() => {
-            patch({ showWhatsAppChoice: true, pendingPhoto: null });
+            patch({ showWhatsAppChoice: true, pendingPhotoId: null });
           }}
           type="button"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"

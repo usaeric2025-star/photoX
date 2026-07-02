@@ -108,6 +108,7 @@ export const PhotoListItemSchema = v.object({
     tags: v.array(v.string()),
     isPinned: v.optional(v.boolean()),
     isHidden: v.optional(v.boolean()),
+    isGroupCover: v.optional(v.boolean()),
     isCover: v.optional(v.boolean()),
     createdAt: v.optional(v.nullable(v.string()))
 });
