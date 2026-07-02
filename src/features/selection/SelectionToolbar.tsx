@@ -79,14 +79,32 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
 
   const handleManualGroup = async () => {
     if (selectedCount === 0 || isAnyPending) return;
-    await combineMutation.mutateAsync({ photoIds: selectedIds });
-    clearSelection();
+    try {
+      await combineMutation.mutateAsync({ photoIds: selectedIds });
+      import('#lib/ui/toast.js').then(({ showToast }) => {
+        showToast.success(`成功將 ${selectedCount} 張照片合併為一組`);
+      });
+      clearSelection();
+    } catch (err: any) {
+      import('#lib/ui/toast.js').then(({ showToast }) => {
+        showToast.error(`合組失敗: ${err.message}`);
+      });
+    }
   };
 
   const handleRemoveFromGroup = async () => {
     if (selectedCount === 0 || isAnyPending || !groupId) return;
-    await removeMutation.mutateAsync({ photoIds: selectedIds, groupId });
-    clearSelection();
+    try {
+      await removeMutation.mutateAsync({ photoIds: selectedIds, groupId });
+      import('#lib/ui/toast.js').then(({ showToast }) => {
+        showToast.success(`成功將 ${selectedCount} 張照片移出合組`);
+      });
+      clearSelection();
+    } catch (err: any) {
+      import('#lib/ui/toast.js').then(({ showToast }) => {
+        showToast.error(`移出合組失敗: ${err.message}`);
+      });
+    }
   };
 
   const handleBatchDeleteClick = async () => {

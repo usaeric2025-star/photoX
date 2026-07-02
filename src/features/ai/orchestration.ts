@@ -47,8 +47,8 @@ const analyzeAndSavePhoto = async (
     const updateResult = await updatePhoto(photo.id, {
       name: nameObj.en || nameObj.zh || '',
       description: descObj,
-      category_id: analysisData.category_id ? String(analysisData.category_id) : null,
-      group_id: analysisData.group_id ? String(analysisData.group_id) : null,
+      categoryId: analysisData.category_id ? String(analysisData.category_id) : (photo.categoryId || null),
+      groupId: analysisData.group_id ? String(analysisData.group_id) : (photo.groupId || null),
       dimensions: analysisData.dimensions || [],
       metadata: {
         ...(photo.metadata as Record<string, unknown> || {}),
@@ -89,7 +89,7 @@ const analyzeAndSavePhoto = async (
   }
 };
 
-const autoGroupPhotos = async (
+export const autoGroupPhotos = async (
   photoIds: string[]
 ): Promise<unknown> => {
   try {
@@ -112,6 +112,7 @@ const autoGroupPhotos = async (
     const updatedPhotos = (refreshBody.success ? refreshBody.data || [] : []) as Photo[];
 
     const analysis = await analyzeGroup(updatedPhotos);
+
     const { name: nameObj, description: descObj } = await mapAiToMultilingual(
       analysis.name,
       analysis.description
@@ -200,6 +201,29 @@ export async function runBatchAnalysis({
       }
     } catch (e) {
       logger.warn('[AI Group] Batch summary failed', e);
+    }
+  } else {
+    onProgress(0.75, '正在將照片自動合組...');
+    try {
+      const response = await api.photos['by-ids'].$post({ json: { ids: targetPhotos.map(p => p.id) } });
+      const body = await response.json();
+      const photos = (body.success ? body.data || [] : []) as Photo[];
+      
+      if (photos.length > 0) {
+        onProgress(0.85, '生成合组名称与描述...');
+        const analysis = await analyzeGroup(photos);
+        const { name: nameObj, description: descObj } = await mapAiToMultilingual(
+          analysis.name,
+          analysis.description
+        );
+        await groupPhotos(targetPhotos.map(p => p.id), undefined, {
+          name: nameObj.en || nameObj.zh || '',
+          description: descObj.en || descObj.zh || ''
+        });
+        groupSuccess = true;
+      }
+    } catch (e) {
+      logger.warn('[AI Group] Auto grouping failed', e);
     }
   }
 

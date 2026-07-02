@@ -34,13 +34,6 @@ export function usePhotoUpload() {
           groupId: groupId,
         },
         execute: executeBatchUpload(fileArray, userId, { groupId }),
-        onComplete: (result) => {
-          if (result && result.length > 0) {
-            showToast.success(`上傳完成，共 ${result.length} 張`);
-          } else {
-            showToast.info(`上傳已完成（重複照片已自動略過）`);
-          }
-        },
         onError: (err) => {
           ErrorFactory.handle(err, { context: 'usePhotoUpload.uploadFiles' });
         }

@@ -15,6 +15,7 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
     // Fields that should be strictly cast to booleans
     const booleanFields = ['isGroupCover', 'is_group_cover', 'isPinned', 'is_pinned', 'isHidden', 'is_hidden', 'isAnalyzing', 'is_analyzing'];
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     // Process all potential nullish values
     const isNullish = (val: any): boolean => {
         if (val === null || val === undefined) return true;
@@ -26,6 +27,11 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
                    trimmed.toLowerCase() === 'uncategorized';
         }
         return false;
+    };
+
+    const isUUIDish = (val: any): boolean => {
+        if (!val || typeof val !== 'string') return false;
+        return uuidRegex.test(val.trim());
     };
 
     // 1. Map common snake_case keys to camelCase to prevent them from being dropped by VALID_KEYS
@@ -65,6 +71,13 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
         if (field in sanitized) {
             const val = sanitized[field];
             sanitized[field] = isNullish(val) ? null : val;
+            
+            // Strictly enforce UUID structure on UUID relations to prevent database 500 errors
+            if (sanitized[field] && (field === 'groupId' || field === 'manufacturerId')) {
+                if (!isUUIDish(sanitized[field])) {
+                    sanitized[field] = null;
+                }
+            }
         }
     }
 

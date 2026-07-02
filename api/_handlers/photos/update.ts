@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, furnitureItems, groups as groupsTable } from '../../_lib/db/index.js';
+import { db, furnitureItems, groups as groupsTable, categories, manufacturers } from '../../_lib/db/index.js';
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
@@ -36,6 +36,28 @@ export const updateHandler = (app: Hono) => {
         }
 
         const mappedUpdates = sanitizePhotoPayload(updates);
+
+        if (mappedUpdates.groupId) {
+            const groupRows = await db.select({ id: groupsTable.id }).from(groupsTable).where(eq(groupsTable.id, mappedUpdates.groupId)).limit(1);
+            if (groupRows.length === 0) {
+                await db.insert(groupsTable).values({
+                    id: mappedUpdates.groupId,
+                    name: '新商品组 (New Group)',
+                    userId: 'system',
+                    status: 'draft',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
+        }
+        if (mappedUpdates.categoryId) {
+            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedUpdates.categoryId)).limit(1);
+            if (catRows.length === 0) mappedUpdates.categoryId = null;
+        }
+        if (mappedUpdates.manufacturerId) {
+            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedUpdates.manufacturerId)).limit(1);
+            if (manRows.length === 0) mappedUpdates.manufacturerId = null;
+        }
 
         const data = await db
             .update(furnitureItems)
@@ -86,6 +108,28 @@ export const updateHandler = (app: Hono) => {
 
         const mappedUpdates = sanitizePhotoPayload(updates);
         mappedUpdates.updatedAt = new Date();
+
+        if (mappedUpdates.groupId) {
+            const groupRows = await db.select({ id: groupsTable.id }).from(groupsTable).where(eq(groupsTable.id, mappedUpdates.groupId)).limit(1);
+            if (groupRows.length === 0) {
+                await db.insert(groupsTable).values({
+                    id: mappedUpdates.groupId,
+                    name: '新商品组 (New Group)',
+                    userId: 'system',
+                    status: 'draft',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
+        }
+        if (mappedUpdates.categoryId) {
+            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedUpdates.categoryId)).limit(1);
+            if (catRows.length === 0) mappedUpdates.categoryId = null;
+        }
+        if (mappedUpdates.manufacturerId) {
+            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedUpdates.manufacturerId)).limit(1);
+            if (manRows.length === 0) mappedUpdates.manufacturerId = null;
+        }
 
         // Remove unupdatable keys if they were accidentally passed
         delete mappedUpdates.id;
