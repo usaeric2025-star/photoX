@@ -4,11 +4,32 @@ import { AppLink } from '#src/components/router/AppLink.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useUI } from '#lib/store/index.js';
 import { translations } from '#src/locales/index.js';
+import { api } from '#src/lib/api.js';
 
 export const NotFoundPage = () => {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
+
+  React.useEffect(() => {
+    // Report frontend 404 to backend system logs
+    if (pathname && pathname !== '/') {
+      api.system['log-error'].$post({
+        json: {
+          message: `[Client 404] Page Not Found: ${pathname}`,
+          level: 'error',
+          operation: 'client.404',
+          metadata: {
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+          }
+        }
+      }).catch((err) => {
+        console.warn('Failed to report client 404 to server:', err);
+      });
+    }
+  }, [pathname]);
   
   // Categorize the 404 cause based on the current pathname
   const getCauseDetails = () => {

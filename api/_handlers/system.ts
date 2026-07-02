@@ -59,4 +59,23 @@ export const system = new Hono()
     } catch (err) {
         return errorResponse(c, err);
     }
+  })
+  .post('/log-error', async (c) => {
+    try {
+        const { message, level, operation, metadata } = await c.req.json();
+        const { db, systemLogs } = await import('../_lib/db/index.js');
+        
+        await db.insert(systemLogs).values({
+            message: message || '[Client Logs] Empty Message',
+            level: level || 'error',
+            operation: operation || 'client.error',
+            metadata: metadata || {},
+            createdAt: new Date()
+        });
+        
+        return successResponse(c, { success: true });
+    } catch (err) {
+        console.error('[log-error] Failed to insert client error log:', err);
+        return errorResponse(c, err);
+    }
   });

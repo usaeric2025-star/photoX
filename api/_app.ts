@@ -36,6 +36,12 @@ apiApp.onError((err, c) => {
     return errorResponse(c, err, 500);
 });
 
+// ✅ 統一 404 路由不存在處理，紀錄至錯誤日誌並回傳標準 JSON
+apiApp.notFound((c) => {
+    const err = new Error(`API 路由不存在 (Route Not Found): [${c.req.method}] ${c.req.path}`);
+    return errorResponse(c, err, 404);
+});
+
 apiApp.use('*', cors());
 
 // 全域中間件（含錯誤處理、Auth、Materialized View 刷新）

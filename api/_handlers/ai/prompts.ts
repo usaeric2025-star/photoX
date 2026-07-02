@@ -19,8 +19,6 @@ Based on the individual photo details, provide a cohesive summary for the entire
 Output JSON with:
 - name: { en, zh, ms } (Cohesive name for the product series)
 - description: { en, zh, ms } (Brief but professional description for the group)
-- colors: Array of primary colors (e.g., ["Oak", "White"])
-- materials: Array of primary materials (e.g., ["Solid Wood", "MDF"])
 
 Ensure the translations for name and description are accurate for English, Chinese, and Malay.
 `,

@@ -132,8 +132,6 @@ export const autoGroupPhotos = async (
 interface GroupAnalysisResponse {
   name?: unknown;
   description?: unknown;
-  colors?: string[];
-  materials?: string[];
 }
 
 const analyzeAndSaveGroup = async (
@@ -142,17 +140,13 @@ const analyzeAndSaveGroup = async (
 ): Promise<unknown> => {
   try {
     const analysis = (await withTimeout(analyzeGroup(photos), 120000, 'AI Analyze Group Materials & Colors')) as GroupAnalysisResponse; // 120s
-    const { colors, materials } = analysis;
-
     const { name: nameObj, description: descObj } = await mapAiToMultilingual(
       analysis.name,
       analysis.description
     );
 
     const res = await updateGroup(groupId, {
-      name: nameObj.en || nameObj.zh || '',
-      colors,
-      materials
+      name: nameObj.en || nameObj.zh || ''
     } as unknown as Partial<ProductGroup>);
 
     return res;
