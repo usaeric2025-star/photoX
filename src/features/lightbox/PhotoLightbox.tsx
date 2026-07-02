@@ -130,6 +130,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
           onNext={handleNext}
           onPrev={handlePrev}
           onClose={onClose}
+          photos={photos}
         />
 
         {/* Thumbnails */}

@@ -38,8 +38,13 @@ export const updateHandler = (app: Hono) => {
 
         for (const [key, val] of Object.entries(updates)) {
             let parsedVal = val;
-            if (key === 'categoryId' && typeof val === 'string') {
-                parsedVal = parseInt(val, 10);
+            if (['categoryId', 'groupId', 'manufacturerId', 'description', 'descriptionTranslations'].includes(key)) {
+                if (val === null || val === undefined || val === '' || val === 'null' || val === 'uncategorized' || val === 'undefined') {
+                    parsedVal = null;
+                } else if (key === 'categoryId') {
+                    const parsed = typeof val === 'string' ? parseInt(val, 10) : Number(val);
+                    parsedVal = isNaN(parsed) ? null : parsed;
+                }
             }
             mappedUpdates[key] = parsedVal;
         }
@@ -96,9 +101,13 @@ export const updateHandler = (app: Hono) => {
         for (const [key, val] of Object.entries(updates)) {
             if (['id', 'createdAt', 'updatedAt'].includes(key)) continue;
             let parsedVal = val;
-            if (key === 'categoryId' && typeof val === 'string') {
-                parsedVal = parseInt(val, 10);
-                if (isNaN(parsedVal as number)) parsedVal = null;
+            if (['categoryId', 'groupId', 'manufacturerId', 'description', 'descriptionTranslations'].includes(key)) {
+                if (val === null || val === undefined || val === '' || val === 'null' || val === 'uncategorized' || val === 'undefined') {
+                    parsedVal = null;
+                } else if (key === 'categoryId') {
+                    const parsed = typeof val === 'string' ? parseInt(val, 10) : Number(val);
+                    parsedVal = isNaN(parsed) ? null : parsed;
+                }
             }
             mappedUpdates[key] = parsedVal;
         }

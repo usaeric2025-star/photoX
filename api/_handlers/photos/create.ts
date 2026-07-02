@@ -46,7 +46,7 @@ export const createHandler = (app: Hono) => {
             // Skip createdAt and updatedAt from client to avoid type/mismatch errors and let backend generate them
             if (['createdAt', 'updatedAt'].includes(key)) continue;
 
-            if (['categoryId', 'groupId', 'manufacturerId'].includes(key)) {
+            if (['categoryId', 'groupId', 'manufacturerId', 'description', 'descriptionTranslations'].includes(key)) {
                 if (val === null || val === undefined || val === '' || val === 'null' || val === 'uncategorized' || val === 'undefined') {
                     mappedPayload[key] = null;
                 } else if (key === 'categoryId') {
@@ -57,6 +57,14 @@ export const createHandler = (app: Hono) => {
                 }
             } else {
                 mappedPayload[key] = val;
+            }
+        }
+
+        // Explicitly guarantee missing or nullish targets are null
+        const keysToNull = ['categoryId', 'groupId', 'manufacturerId', 'description', 'descriptionTranslations'];
+        for (const k of keysToNull) {
+            if (mappedPayload[k] === undefined || mappedPayload[k] === '' || mappedPayload[k] === 'null' || mappedPayload[k] === 'undefined') {
+                mappedPayload[k] = null;
             }
         }
 

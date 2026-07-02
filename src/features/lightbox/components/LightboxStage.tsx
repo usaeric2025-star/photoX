@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Image } from '#src/components/ui/Image.js';
 import { getThumbnailUrl } from '#src/services/mappers/utils.js';
 
@@ -9,6 +9,7 @@ interface LightboxStageProps {
   onNext: () => void;
   onPrev: () => void;
   onClose: () => void;
+  photos: any[];
 }
 
 export function LightboxStage({
@@ -17,18 +18,36 @@ export function LightboxStage({
   totalPhotos,
   onNext,
   onPrev,
-  onClose
+  onClose,
+  photos
 }: LightboxStageProps) {
   // Swipe gesture state
   const [pointerStartX, setPointerStartX] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState<number>(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  
   const minSwipeDistance = 50;
 
+  // Reset zoom when active photo index changes
+  useEffect(() => {
+    setIsZoomed(false);
+  }, [currentIndex]);
+
   const onPointerDown = (e: React.PointerEvent) => {
-    // Only track primary pointer (usually touch or left click)
-    if (!e.isPrimary) return;
+    // Only track primary pointer (usually touch or left click) and don't drag if zoomed in
+    if (!e.isPrimary || isZoomed) return;
     setPointerStartX(e.clientX);
+    setDragOffset(0);
+    setIsSwiping(true);
     // Capture pointer to track outside bounds
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (pointerStartX === null) return;
+    const diff = e.clientX - pointerStartX;
+    setDragOffset(diff);
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
@@ -42,14 +61,25 @@ export function LightboxStage({
     }
     
     setPointerStartX(null);
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    setDragOffset(0);
+    setIsSwiping(false);
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch (err) {}
   };
 
   const onPointerCancel = (e: React.PointerEvent) => {
     setPointerStartX(null);
+    setDragOffset(0);
+    setIsSwiping(false);
     try {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch (err) {}
+  };
+
+  const handleToggleZoom = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsZoomed(!isZoomed);
   };
 
   // Derive photo data
@@ -63,32 +93,73 @@ export function LightboxStage({
   // Create LQIP (120 as instructed by user)
   const lqipSrc = getThumbnailUrl(key, 120) || undefined;
 
+  // Preload adjacent images
+  const nextIdx = (currentIndex + 1) % totalPhotos;
+  const prevIdx = (currentIndex - 1 + totalPhotos) % totalPhotos;
+
+  const getSlideKey = (slide: any) => {
+    if (!slide) return '';
+    const d = (slide.original || slide) as any;
+    return d.imageUrl || d.uri || (slide as any).src;
+  };
+
+  const nextKey = getSlideKey(photos[nextIdx]);
+  const prevKey = getSlideKey(photos[prevIdx]);
+
+  const nextSrc = nextKey ? (getThumbnailUrl(nextKey, 800) || nextKey) : '';
+  const prevSrc = prevKey ? (getThumbnailUrl(prevKey, 800) || prevKey) : '';
+
   return (
     <div 
       className="flex-1 relative flex items-center justify-center overflow-hidden touch-none"
       onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
       onClick={onClose} // Clicking the background closes it
     >
       <div
         key={currentIndex}
-        className="absolute inset-0 flex items-center justify-center p-4 sm:p-12 md:p-16"
+        className="absolute inset-0 flex items-center justify-center p-4 sm:p-12 md:p-16 animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to background
       >
-        {/* Main Image */}
-        <div className="relative w-full h-full flex items-center justify-center">
-          <Image
-            src={src}
-            lqipSrc={lqipSrc}
-            alt={title}
-            disableFade={true}
-            loading="eager"
-            containerClassName="bg-transparent"
-            className="object-contain drop-shadow-2xl"
-          />
+        {/* Main Image Container */}
+        <div 
+          className="relative w-full h-full flex items-center justify-center select-none"
+          style={{
+            transform: isSwiping ? `translateX(${dragOffset}px)` : 'translateX(0px)',
+            transition: isSwiping ? 'none' : 'transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+          }}
+        >
+          <div 
+            className="w-full h-full flex items-center justify-center cursor-pointer"
+            onDoubleClick={handleToggleZoom}
+            onClick={(e) => {
+              // On touch devices single tap can toggle zoom, or just double-click
+              // For safety and compatibility with onClose, we stop propagation of click on the image
+              e.stopPropagation();
+            }}
+          >
+            <Image
+              src={src}
+              lqipSrc={lqipSrc}
+              alt={title}
+              disableFade={true}
+              loading="eager"
+              containerClassName="bg-transparent"
+              className={`object-contain max-w-full max-h-full drop-shadow-2xl transition-all duration-300 select-none ${isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in'}`}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Hidden preloading container */}
+      {totalPhotos > 1 && (
+        <div className="hidden" aria-hidden="true">
+          {nextSrc && <img src={nextSrc} alt="" />}
+          {prevSrc && <img src={prevSrc} alt="" />}
+        </div>
+      )}
     </div>
   );
 }
