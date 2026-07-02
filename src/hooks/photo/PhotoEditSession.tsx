@@ -2,6 +2,7 @@ import { logger } from '#lib/logger.js';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { useAppForm } from '#lib/forms/useAppForm.js';
+import { useCategories, useManufacturers } from '#src/hooks/index.js';
 import { usePhoto } from './usePhoto.js';
 import { usePhotoEditMutation } from './usePhotoMutations.js';
 import { PhotoEditSchema, type PhotoEditFormData } from '#src/schemas/photoEdit.js';
@@ -34,6 +35,8 @@ export const PhotoEditSessionProvider = ({
 }: PhotoEditSessionProps) => {
   const { data: photo, isPending } = usePhoto(photoId);
   const updateMutation = usePhotoEditMutation();
+  const { categories = [] } = useCategories();
+  const { manufacturers = [] } = useManufacturers();
   
   const toSingleString = (val: unknown) => {
     if (typeof val === 'object' && val !== null) {
@@ -73,6 +76,14 @@ export const PhotoEditSessionProvider = ({
   }, [photo]);
 
   const onSubmit = useCallback(async (values: PhotoEditFormData) => {
+    // Validate selections against existing arrays
+    if (values.categoryId && !categories.find(c => String(c.id) === String(values.categoryId))) {
+      values.categoryId = null;
+    }
+    if (values.manufacturerId && !manufacturers.find(m => String(m.id) === String(values.manufacturerId))) {
+      values.manufacturerId = null;
+    }
+
     // Auto-generate itemCode if missing
     if (!values.itemCode) {
       const newCode = generateItemCode();
@@ -93,7 +104,7 @@ export const PhotoEditSessionProvider = ({
     });
     
     onSuccess?.();
-  }, [photoId, photo?.tags, photo?.createdAt, updateMutation, onSuccess]);
+  }, [photoId, photo?.tags, photo?.createdAt, updateMutation, onSuccess, categories, manufacturers]);
 
   const formObj = useAppForm({
     schema: PhotoEditSchema,

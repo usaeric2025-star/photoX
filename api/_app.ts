@@ -30,6 +30,9 @@ export const apiApp = new Hono();
 // ✅ 統一錯誤處理
 apiApp.onError((err, c) => {
     console.error('[API Error]', err);
+    if (err.message?.toLowerCase().includes('foreign key')) {
+        err.message = '关联数据不存在，请刷新页面后重试 (Foreign Key Error)';
+    }
     return errorResponse(c, err, 500);
 });
 

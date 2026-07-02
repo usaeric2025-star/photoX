@@ -45,6 +45,23 @@ export const createHandler = (app: Hono) => {
         // Apply our sanitized logic to cleanse relations and avoid SQL constraints
         const mappedPayload = sanitizePhotoPayload(payload);
 
+        // Validate foreign keys to fallback instead of failing
+        const { eq } = await import('drizzle-orm');
+        const { groups, categories, manufacturers } = await import('../../_lib/db/schema.js');
+
+        if (mappedPayload.groupId) {
+            const groupRows = await db.select({ id: groups.id }).from(groups).where(eq(groups.id, mappedPayload.groupId)).limit(1);
+            if (groupRows.length === 0) mappedPayload.groupId = null;
+        }
+        if (mappedPayload.categoryId) {
+            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedPayload.categoryId)).limit(1);
+            if (catRows.length === 0) mappedPayload.categoryId = null;
+        }
+        if (mappedPayload.manufacturerId) {
+            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedPayload.manufacturerId)).limit(1);
+            if (manRows.length === 0) mappedPayload.manufacturerId = null;
+        }
+
         // Remove createdAt/updatedAt if accidentally passed from client
         delete mappedPayload.createdAt;
         delete mappedPayload.updatedAt;
