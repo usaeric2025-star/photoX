@@ -3,7 +3,7 @@ import { cn } from '#lib/utils.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { useIsManagement } from '#src/hooks/index.js';
 import { Image } from '#src/components/ui/Image.js';
-import { getThumbnailUrl } from '#src/services/mappers/utils.js';
+import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 
 export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement> {
   item: PhotoListItem;
@@ -81,10 +81,9 @@ export const PhotoCardBase = ({
         isSelected ? "scale-[0.92] rounded-md" : "scale-100 rounded-[2px]",
       )}>
         <Image
-          src={getThumbnailUrl(
+          src={getPhotoThumb(
             item.imageUrl, 
-            imgVariant === 'md' ? 400 : 120, 
-            imgVariant === 'md' ? 400 : 120, 
+            imgVariant === 'md' ? 'MD' : 'SM', 
             item.imageHash || (item as any).image_hash
           )}
           alt={getDisplayString(item.name)}

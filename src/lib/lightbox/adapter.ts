@@ -1,11 +1,11 @@
 import { PhotoListItem } from '#src/types/api.js';
+import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import type { LightboxSlide } from './types.js';
-import { getThumbnailUrl } from '#src/services/mappers/utils.js';
 
 export function photosToLightboxSlides(photos: PhotoListItem[]): LightboxSlide[] {
   return photos.map(photo => ({
     id: photo.id,
-    src: getThumbnailUrl(photo.imageUrl, 800, 800, photo.imageHash) || photo.imageUrl,
+    src: getPhotoThumb(photo.imageUrl, 'LG', photo.imageHash),
     title: photo.name,
     description: photo.description || '',
     groupName: photo.groupName || undefined,

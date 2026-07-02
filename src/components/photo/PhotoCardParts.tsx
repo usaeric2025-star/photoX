@@ -28,7 +28,7 @@ export const PhotoStatusBadges = ({
       {/* Group Badge - Apple Style: pill, backdrop-blur */}
       {shouldShowGroup && typeof photo.memberCount === 'number' && photo.memberCount > 1 && (
         <div className={cn(
-          "px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-sm backdrop-blur-xl transition-all duration-300 min-w-[36px] justify-center",
+          "px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-sm transition-all duration-300 min-w-[36px] justify-center",
           "bg-surface-overlay text-text-main border border-white/40"
         )}>
           <Icon name="layers" size={11} className="shrink-0 text-primary" />
@@ -40,7 +40,7 @@ export const PhotoStatusBadges = ({
 
       {/* Hidden Status - Apple Style */}
       {isManagement && photo.isHidden && (
-        <div className="bg-danger/95 backdrop-blur-md text-text-on-primary px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm border border-white/20 uppercase tracking-tight">
+        <div className="bg-danger/95 text-text-on-primary px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm border border-white/20 uppercase tracking-tight">
           <Icon name="shield-alert" size={12} className="shrink-0" />
           <span>{hiddenLabel}</span>
         </div>

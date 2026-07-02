@@ -18,16 +18,23 @@
 - **API 路由**: 必須透過 Hono RPC (`hc`) 呼叫，嚴禁手動拼接 `/api/xxx`。
 
 ## 3. UI 與錯誤處理
+- **效能控制**: 
+  - **嚴禁使用 backdrop-blur**: 在燈箱 (Lightbox)、長列表、照片網格 (Photo Grid) 等效能敏感區域，嚴禁使用 `backdrop-blur` (毛玻璃) 濾鏡。統一使用帶透明度的實色背景 (如 `bg-black/80`)。
+  - **動畫控制**: 複雜列表動畫必須使用 `lite-sleek` 或純 CSS，禁止在大規模 DOM 節點上使用高開銷的 JS 動畫。
 - **錯誤處理**: 所有錯誤統一使用 `ErrorFactory.handle`，禁止 `console.error` 散落各處。
 - **Toast**: 統一使用 `sonner` (`toast.success` 等)。
 - **彈窗**: 使用 `src/components/ui/Modal.tsx` (基於原生 `<dialog>`)，嚴禁 createPortal 或 z-index 模擬。
 
 ## 4. 圖片載入 (Worker 唯一來源)
-- 圖片 URL 必須透過 `getThumbnailUrl(key, width)` 產生：
-  - 主圖 (如燈箱): `getThumbnailUrl(key, 800)`
-  - 縮圖 (如軌道/卡片): `getThumbnailUrl(key, 120)`
-- **禁止**直接使用 R2 原始 URL (`image_url`) 作為縮圖。
-- 圖片元件統一使用 `Image` 組件 (支援骨架屏漸進淡入)。
+- **尺寸標準 (嚴格遵循)**:
+  - **主圖 (燈箱/全屏)**: `getThumbnailUrl(key, 800)`
+  - **中圖 (網格 MD 變體)**: `getThumbnailUrl(key, 400)`
+  - **縮圖 (網格 SM 變體/軌道/卡片)**: `getThumbnailUrl(key, 120)`
+- **加載策略**:
+  - **優先級 (Priority)**: 視圖首屏前 12 張圖片、燈箱當前/相鄰圖片，必須設置 `priority={true}` 以優化 LCP。
+  - **緩存一致性**: 必須傳入 `imageHash` 給 `getThumbnailUrl` 以支持 CDN 緩存刷新。
+- **禁止直接使用 R2 原始 URL** (`image_url`) 作為縮圖。
+- **組件規範**: 統一使用 `Image` 組件，利用其內置的骨架屏與漸進淡入效果。
 
 ## 5. ES Module 導入規範 (後端)
 - 導入時**必須指定具體檔案與 `.js` 結尾** (如 `import { db } from '../_lib/db/index.js'`)。

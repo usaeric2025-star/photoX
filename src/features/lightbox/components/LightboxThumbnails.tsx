@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { getThumbnailUrl } from '#src/services/mappers/utils.js';
+import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
 
 interface LightboxThumbnailsProps {
@@ -45,7 +46,7 @@ export function LightboxThumbnails({
           const photoData = (p.original || p) as any;
           const key = photoData.imageUrl || photoData.uri || (p as any).src;
           const hash = photoData.imageHash || photoData.image_hash;
-          const thumb = getThumbnailUrl(key, 120, 120, hash) || key;
+          const thumb = getPhotoThumb(key, 'SM', hash);
           const isActive = idx === currentIndex;
           const isNear = Math.abs(idx - currentIndex) <= 2;
           

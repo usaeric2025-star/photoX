@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
+import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
-import { getThumbnailUrl } from '#src/services/mappers/utils.js';
 
 interface LightboxStageProps {
   currentPhoto: any;
@@ -88,11 +88,9 @@ export function LightboxStage({
   const key = photoData.imageUrl || photoData.uri || (currentPhoto as any).src;
   const hash = photoData.imageHash || photoData.image_hash;
   
-  // Use high resolution for Lightbox (800 as instructed by user)
-  const src = getThumbnailUrl(key, 800, 800, hash) || key;
-
-  // Create LQIP (120 as instructed by user)
-  const lqipSrc = getThumbnailUrl(key, 120, 120, hash) || undefined;
+  // Use standardized thumb helper
+  const src = getPhotoThumb(key, 'LG', hash);
+  const lqipSrc = getPhotoThumb(key, 'SM', hash);
 
   // Preload adjacent images with a slight delay to prioritize current image
   const [shouldPreload, setShouldPreload] = useState(false);
@@ -116,8 +114,8 @@ export function LightboxStage({
   const nextInfo = getSlideInfo(photos[nextIdx]);
   const prevInfo = getSlideInfo(photos[prevIdx]);
 
-  const nextSrc = nextInfo.key ? (getThumbnailUrl(nextInfo.key, 800, 800, nextInfo.hash) || nextInfo.key) : '';
-  const prevSrc = prevInfo.key ? (getThumbnailUrl(prevInfo.key, 800, 800, prevInfo.hash) || prevInfo.key) : '';
+  const nextSrc = nextInfo.key ? getPhotoThumb(nextInfo.key, 'LG', nextInfo.hash) : '';
+  const prevSrc = prevInfo.key ? getPhotoThumb(prevInfo.key, 'LG', prevInfo.hash) : '';
 
   return (
     <div 
