@@ -77,7 +77,7 @@ export function PhotoWallGrid({
   ), []);
 
   return (
-    <div ref={containerRef} className="w-full h-full relative">
+    <div ref={containerRef} className="w-full">
       <DreamMasonry
         key={scrollParent ? 'resolved' : 'pending'}
         items={photos as any}

@@ -1,15 +1,12 @@
 import React from 'react';
+import { cn } from '#lib/utils.js';
 
-export function CardSkeleton() {
+export function CardSkeleton({ className }: { className?: string }) {
   return (
-    <div className="aspect-square w-full bg-surface-soft rounded-[4px] overflow-hidden relative border border-border-soft animate-pulse">
-      <div className="absolute bottom-0 left-0 w-full p-3 space-y-2 bg-gradient-to-t from-black/10 to-transparent">
-        <div className="h-4 w-3/4 bg-white/10 rounded-full" />
-        <div className="flex gap-2">
-          <div className="h-2 w-12 bg-white/5 rounded-full" />
-          <div className="h-2 w-12 bg-white/5 rounded-full" />
-        </div>
-      </div>
+    <div className={cn("w-full h-full bg-surface-mute animate-pulse relative overflow-hidden", className)}>
+       <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-surface-soft border-t-primary rounded-full animate-spin"></div>
+       </div>
     </div>
   );
 }

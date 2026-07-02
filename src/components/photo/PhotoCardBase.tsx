@@ -87,6 +87,7 @@ export const PhotoCardBase = ({
             imgVariant === 'md' ? 'MD' : 'SM', 
             item.imageHash || (item as any).image_hash
           )}
+          lqipSrc={(item as any).lqip}
           alt={getDisplayString(item.name)}
           priority={priority}
           className={cn(
