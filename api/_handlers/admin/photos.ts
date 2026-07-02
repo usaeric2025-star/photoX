@@ -21,10 +21,13 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
     if (!photoId) return errorResponse(c, "photoId is required", 400);
 
     // 1. Try querying ai_audit_logs first
-    let auditLog = await db.query.aiAuditLogs.findFirst({
-        where: eq(aiAuditLogs.photoId, photoId),
-        orderBy: [desc(aiAuditLogs.createdAt)]
-    });
+    let auditLog = null;
+    if (!photoId.startsWith('temp-')) {
+        auditLog = await db.query.aiAuditLogs.findFirst({
+            where: eq(aiAuditLogs.photoId, photoId),
+            orderBy: [desc(aiAuditLogs.createdAt)]
+        });
+    }
 
     // If no direct audit log matches, check for fallback records avoiding FK issues
     if (!auditLog) {
@@ -115,10 +118,13 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
     }
 
     // 3. Last fallback: Check furniture_items metadata column
-    const item = await db.query.furnitureItems.findFirst({
-        columns: { metadata: true },
-        where: eq(furnitureItems.id, photoId)
-    });
+    let item = null;
+    if (!photoId.startsWith('temp-')) {
+        item = await db.query.furnitureItems.findFirst({
+            columns: { metadata: true },
+            where: eq(furnitureItems.id, photoId)
+        });
+    }
 
     if (item?.metadata && (item.metadata as Record<string, unknown>).ai_raw) {
         return c.json({

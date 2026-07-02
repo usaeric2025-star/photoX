@@ -60,7 +60,7 @@ const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
     // 写入数据库 (符合最新的 schema)
     try {
       await db.insert(aiAuditLogs).values({
-        photoId: data.photoId || null,
+        photoId: (data.photoId && !data.photoId.startsWith('temp-')) ? data.photoId : null,
         model: data.model,
         promptVersion: data.promptVersion || 'v1',
         cleanedOutput: jsonOutput,

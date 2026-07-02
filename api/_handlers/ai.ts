@@ -92,7 +92,7 @@ ai.post("/analyze", async (c) => {
     const { photoId, imageUrl } = check.output;
     let finalImageUrl = imageUrl;
 
-    if (photoId) {
+    if (photoId && !photoId.startsWith('temp-')) {
         const photo = await db.query.furnitureItems.findFirst({
             columns: { imageUrl: true },
             where: eq(furnitureItems.id, photoId)
@@ -240,16 +240,21 @@ ai.post("/cluster-photos", async (c) => {
     const user = c.get('user' as never) as HonoContextUser | undefined;
     const userId = user?.id;
 
-    // 1. AI 識別
-    const parsed = await processGroupAnalysis(check.output.photoIds);
+    // 1. AI 識別 - 排除臨時 ID
+    const realPhotoIds = (check.output.photoIds || []).filter(id => !id.startsWith('temp-'));
+    if (realPhotoIds.length === 0) {
+        return successResponse(c, []);
+    }
+    
+    const parsed = await processGroupAnalysis(realPhotoIds);
     const createdGroups: (typeof groupsTable.$inferSelect)[] = [];
-
+    
     // Optimize: Fetch a valid user_id
     let dbUserId: string | undefined = undefined;
-    if (check.output.photoIds && check.output.photoIds.length > 0) {
+    if (realPhotoIds.length > 0) {
         const sourcePhoto = await db.query.furnitureItems.findFirst({
             columns: { userId: true },
-            where: inArray(furnitureItems.id, check.output.photoIds)
+            where: inArray(furnitureItems.id, realPhotoIds)
         });
         if (sourcePhoto?.userId) {
             dbUserId = sourcePhoto.userId;
