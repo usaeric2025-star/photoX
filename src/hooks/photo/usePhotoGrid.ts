@@ -29,7 +29,7 @@ export function usePhotoGrid(filters: PhotoListFilters, mode: 'admin' | 'public'
 
   // ✅ Sync total count with global state
   useEffect(() => {
-    if (totalCount !== undefined && totalCount > 0) {
+    if (totalCount !== undefined) {
       patch({ totalCount });
     }
   }, [totalCount, patch]);

@@ -63,9 +63,7 @@ export async function getPhotosList(params: PhotoListParams) {
     const pattern = searchQuery?.trim() ? `%${searchQuery.trim()}%` : null;
     if (pattern) {
         whereClauses.push(or(
-            ilike(sql`${furnitureItems.name}->>'zh'`, pattern),
-            ilike(sql`${furnitureItems.name}->>'en'`, pattern),
-            ilike(sql`${furnitureItems.name}->>'ms'`, pattern),
+            ilike(furnitureItems.name, pattern),
             ilike(furnitureItems.manualCode, pattern),
             ilike(furnitureItems.modelNumber, pattern),
             ilike(furnitureItems.itemCode, pattern),

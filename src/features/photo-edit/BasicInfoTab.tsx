@@ -3,7 +3,8 @@ import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSession
 import { Icon } from '#src/components/ui/Icon.js';
 import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
 import { useTranslation, useFilters, usePhoto } from '#src/hooks/index.js';
-import { OptimizedImage } from '#src/components/shared/OptimizedImage.js';
+import { Image } from '#src/components/ui/Image.js';
+import { getThumbnailUrl } from '#src/services/mappers/utils.js';
 import { showToast } from '#lib/ui/toast.js';
 import { NativeDialog } from '#src/components/ui/NativeDialog.js';
 import { Field } from '@tanstack/react-form';
@@ -27,7 +28,11 @@ export function BasicInfoTab() {
                className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative group cursor-zoom-in"
                onClick={openZoom}
               >
-                <OptimizedImage src={previewSrc} className="w-full h-full object-contain" alt="Preview" />
+                <Image 
+                  src={getThumbnailUrl(previewSrc, 120, 120, detailPhoto?.imageHash)} 
+                  className="w-full h-full object-contain" 
+                  alt="Preview" 
+                />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                    <Icon name="maximize-2" className="text-white drop-shadow-md" size={20} />
                 </div>
@@ -141,9 +146,8 @@ export function BasicInfoTab() {
             >
               <Icon name="x" size={24} />
             </button>
-            <OptimizedImage 
-              src={previewSrc || undefined} 
-              eager
+            <Image 
+              src={getThumbnailUrl(previewSrc || '', 800, undefined, detailPhoto?.imageHash)} 
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
               alt="Zoomed" 
             />

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { getThumbnailUrl } from '#src/services/mappers/utils.js';
+import { Image } from '#src/components/ui/Image.js';
 
 interface LightboxThumbnailsProps {
   photos: any[];
@@ -53,7 +54,7 @@ export function LightboxThumbnails({
               aria-label={`Select photo ${idx + 1}`}
               aria-current={isActive}
             >
-              <img src={thumb} className="w-full h-full object-cover" alt="" loading="lazy" />
+              <Image src={thumb} className="w-full h-full object-cover" alt="" />
             </button>
           );
         })}

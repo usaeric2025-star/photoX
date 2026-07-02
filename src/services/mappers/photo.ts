@@ -92,7 +92,7 @@ export function mapSupabasePhoto(item: any, allTags?: Tag[]): Photo {
       name: (item.name && typeof item.name === 'object') ? ((item.name as any).en || (item.name as any).zh || '') : (item.name || ''),
       categoryId: item.categoryId || item.category_id || null,
       manufacturerId: item.manufacturerId || item.manufacturer_id || null,
-      description: (item.description && typeof item.description === 'object') ? item.description : { zh: String(item.description || '') },
+      description: mapTranslationField(item.description || item.descriptionTranslations),
       imageUrl,
       thumbnailSmUrl: getThumbnailUrl(imageUrl, 200, undefined, imageHash),
       thumbnailMdUrl: getThumbnailUrl(imageUrl, 800, undefined, imageHash),

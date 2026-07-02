@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Image } from '#src/components/ui/Image.js';
+import { getThumbnailUrl } from '#src/services/mappers/utils.js';
 
 interface LightboxStageProps {
   currentPhoto: any;
@@ -56,20 +57,11 @@ export function LightboxStage({
   const title = (currentPhoto as any).title || photoData.name || 'Photo';
   const key = photoData.imageUrl || photoData.uri || (currentPhoto as any).src;
   
-  // Use high resolution for Lightbox
-  const url = new URL(key, window.location.origin);
-  if (url.searchParams.has('w')) {
-    url.searchParams.set('w', '1200');
-  } else {
-    url.searchParams.append('w', '1200');
-  }
-  const src = url.toString();
+  // Use high resolution for Lightbox (800 as instructed by user)
+  const src = getThumbnailUrl(key, 800) || key;
 
-  // Create LQIP
-  const lqipUrl = new URL(key, window.location.origin);
-  lqipUrl.searchParams.set('w', '50');
-  lqipUrl.searchParams.delete('h');
-  const lqipSrc = lqipUrl.toString();
+  // Create LQIP (120 as instructed by user)
+  const lqipSrc = getThumbnailUrl(key, 120) || undefined;
 
   return (
     <div 

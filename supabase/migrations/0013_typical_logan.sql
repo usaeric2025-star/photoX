@@ -1,0 +1,1 @@
+ALTER TABLE "furniture_items" ALTER COLUMN "description" SET DATA TYPE jsonb;

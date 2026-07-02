@@ -58,19 +58,91 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
     return processedUrl;
 }
 
-export const mapTranslationField = (value: unknown) => {
-  if (typeof value === 'string') {
-    return { zh: cleanTranslationPrefixes(value).trim(), en: '', ms: '' };
-  } else if (value && typeof value === 'object') {
-    let obj = value as Record<string, unknown>;
-    if (obj.zh && typeof obj.zh === 'object' && obj.zh !== null && ('zh' in obj.zh || 'en' in obj.zh || 'ms' in obj.zh)) {
-      obj = obj.zh as Record<string, unknown>;
+export const mapTranslationField = (value: unknown): { zh: string; en: string; ms: string } => {
+  if (!value) return { zh: '', en: '', ms: '' };
+
+  let target: any = value;
+
+  // If it's a string, try parsing it as JSON first
+  if (typeof target === 'string') {
+    const trimmed = target.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        target = JSON.parse(trimmed);
+      } catch (e) {
+        // Not valid JSON, keep as is
+      }
     }
+  }
+
+  // Now, if it's an object, we handle it
+  if (target && typeof target === 'object') {
+    let zhVal = target.zh;
+    let enVal = target.en;
+    let msVal = target.ms;
+
+    // Helper to unwrap possible serialized JSON strings inside values
+    const unwrapValue = (val: any): any => {
+      if (typeof val === 'string') {
+        const trimmed = val.trim();
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+          try {
+            return JSON.parse(trimmed);
+          } catch (e) {
+            // keep as string
+          }
+        }
+      }
+      return val;
+    };
+
+    const unwrappedZh = unwrapValue(zhVal);
+    const unwrappedEn = unwrapValue(enVal);
+    const unwrappedMs = unwrapValue(msVal);
+
+    // If unwrapping any returned a full translation object, use that!
+    if (unwrappedZh && typeof unwrappedZh === 'object' && ('zh' in unwrappedZh || 'en' in unwrappedZh || 'ms' in unwrappedZh)) {
+      return {
+        zh: cleanTranslationPrefixes(String(unwrappedZh.zh || '')).trim(),
+        en: cleanTranslationPrefixes(String(unwrappedZh.en || '')).trim(),
+        ms: cleanTranslationPrefixes(String(unwrappedZh.ms || '')).trim(),
+      };
+    }
+    if (unwrappedEn && typeof unwrappedEn === 'object' && ('zh' in unwrappedEn || 'en' in unwrappedEn || 'ms' in unwrappedEn)) {
+      return {
+        zh: cleanTranslationPrefixes(String(unwrappedEn.zh || '')).trim(),
+        en: cleanTranslationPrefixes(String(unwrappedEn.en || '')).trim(),
+        ms: cleanTranslationPrefixes(String(unwrappedEn.ms || '')).trim(),
+      };
+    }
+    if (unwrappedMs && typeof unwrappedMs === 'object' && ('zh' in unwrappedMs || 'en' in unwrappedMs || 'ms' in unwrappedMs)) {
+      return {
+        zh: cleanTranslationPrefixes(String(unwrappedMs.zh || '')).trim(),
+        en: cleanTranslationPrefixes(String(unwrappedMs.en || '')).trim(),
+        ms: cleanTranslationPrefixes(String(unwrappedMs.ms || '')).trim(),
+      };
+    }
+
+    // Otherwise, just get string values
+    const getFinalStr = (val: any) => {
+      if (!val) return '';
+      if (typeof val === 'object') {
+        return cleanTranslationPrefixes(String(val.zh || val.en || val.ms || '')).trim();
+      }
+      return cleanTranslationPrefixes(String(val)).trim();
+    };
+
     return {
-      zh: cleanTranslationPrefixes(String(obj.zh || '')).trim(),
-      en: cleanTranslationPrefixes(String(obj.en || '')).trim(),
-      ms: cleanTranslationPrefixes(String(obj.ms || '')).trim(),
+      zh: getFinalStr(zhVal || target.zh_CN || target.zh_TW || ''),
+      en: getFinalStr(enVal),
+      ms: getFinalStr(msVal || target.my || target.id || ''),
     };
   }
-  return value;
+
+  // If it's just a raw string (and couldn't be parsed as JSON)
+  return {
+    zh: cleanTranslationPrefixes(String(target)).trim(),
+    en: '',
+    ms: '',
+  };
 };
