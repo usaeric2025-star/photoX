@@ -28,16 +28,25 @@ export const appQuery = {
   /**
    * Invalidate all photo-related queries
    */
-  invalidatePhotos: () => {
-    return swrMutate(
+  invalidatePhotos: async () => {
+    // 1. Invalidate using pattern matching
+    await swrMutate(
       (key: import('swr').Key) => {
         if (!key) return false;
         const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-        return keyStr.includes('photos') || keyStr.includes('groups') || keyStr.includes('storage') || keyStr.includes('ai-audit');
+        // Include list, count, detail, groups, and audit queries
+        return keyStr.includes('photos') || 
+               keyStr.includes('groups') || 
+               keyStr.includes('storage') || 
+               keyStr.includes('ai-audit') ||
+               keyStr.includes('ai-result');
       },
       undefined,
       { revalidate: true }
     );
+    
+    // 2. Also try to force a global revalidation signal if any component is listening to a version
+    // (Future-proofing for complex state)
   }
 };
 

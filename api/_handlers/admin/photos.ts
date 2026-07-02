@@ -41,24 +41,36 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
     if (auditLog) {
         let rawResult = '';
         
+        // Try various possible raw keys
         if (auditLog.rawOutput) {
             rawResult = typeof auditLog.rawOutput === 'object' 
                 ? JSON.stringify(auditLog.rawOutput, null, 2)
                 : String(auditLog.rawOutput);
         }
+        
         if (!rawResult && auditLog.cleanedOutput) {
             rawResult = typeof auditLog.cleanedOutput === 'object' 
                 ? JSON.stringify(auditLog.cleanedOutput, null, 2)
                 : String(auditLog.cleanedOutput);
         }
+        
+        // If still nothing, check metadata column if it exists in auditLog (future proofing)
+        if (!rawResult && (auditLog as any).metadata) {
+            const meta = (auditLog as any).metadata as Record<string, unknown>;
+            const possibleRaw = meta.raw_output || meta.raw_result || meta.rawText || meta.text;
+            if (possibleRaw) {
+                rawResult = typeof possibleRaw === 'object' ? JSON.stringify(possibleRaw, null, 2) : String(possibleRaw);
+            }
+        }
+
         if (!rawResult) {
             rawResult = JSON.stringify({
                 status: auditLog.status || "success",
                 model: auditLog.model || "Gemini-2.0",
                 prompt_version: auditLog.promptVersion || "v1",
                 analysis_timestamp: auditLog.createdAt,
-                warning: "Raw stream was unreachable, reconstructed from structured database values.",
-                structured_data: auditLog.cleanedOutput || {}
+                warning: "Raw stream was unreachable, reconstructed from metadata.",
+                data_present: !!auditLog.cleanedOutput
             }, null, 2);
         }
 
@@ -88,37 +100,39 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
     }
 
     const logRecord = rawLogs?.[0];
-    if (!logRecord || !logRecord.metadata) {
-        // 3. Last fallback: Check furniture_items metadata column
-        const item = await db.query.furnitureItems.findFirst({
-            columns: { metadata: true },
-            where: eq(furnitureItems.id, photoId)
-        });
+    if (logRecord && logRecord.metadata) {
+        const metadata = logRecord.metadata as Record<string, unknown>;
+        // Try all common keys for raw AI output
+        const rawOutput = metadata.raw_output || metadata.raw_result || metadata.rawText || metadata.text || metadata.ai_raw;
+        const resultObj = {
+            photoId: photoId,
+            rawResult: typeof rawOutput === 'object' ? JSON.stringify(rawOutput, null, 2) : (rawOutput as string) || '',
+            parsedData: metadata.parsed_data || metadata.cleaned_output || metadata.result || null,
+            createdAt: logRecord.createdAt
+        };
 
-        if (item?.metadata && (item.metadata as Record<string, unknown>).ai_raw) {
-            return c.json({
-                success: true,
-                data: {
-                    photoId: photoId,
-                    rawResult: (item.metadata as Record<string, unknown>).ai_raw,
-                    parsedData: null,
-                    createdAt: null
-                }
-            });
-        }
-
-        return c.json({ success: true, data: null });
+        return c.json({ success: true, data: resultObj });
     }
 
-    const metadata = logRecord.metadata as Record<string, unknown> | null;
-    const resultObj = {
-        photoId: photoId,
-        rawResult: (metadata?.raw_result as string) || '',
-        parsedData: (metadata?.parsed_data as unknown) || null,
-        createdAt: logRecord.createdAt
-    };
+    // 3. Last fallback: Check furniture_items metadata column
+    const item = await db.query.furnitureItems.findFirst({
+        columns: { metadata: true },
+        where: eq(furnitureItems.id, photoId)
+    });
 
-    return c.json({ success: true, data: resultObj });
+    if (item?.metadata && (item.metadata as Record<string, unknown>).ai_raw) {
+        return c.json({
+            success: true,
+            data: {
+                photoId: photoId,
+                rawResult: (item.metadata as Record<string, unknown>).ai_raw as string,
+                parsedData: null,
+                createdAt: null
+            }
+        });
+    }
+
+    return c.json({ success: true, data: null });
 });
 
 adminPhotos.post("/photo/update", async (c) => {

@@ -27,7 +27,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     setLightboxIndex
   } = useLightbox();
   
-  const photos = (props.photos && props.photos.length > 0) ? props.photos : hookSlides;
+  const sourcePhotos = (props.photos && props.photos.length > 0) ? props.photos : hookSlides;
   const currentIndex = props.initialIndex ?? hookIndex;
   const isOpen = props.isOpen ?? hookIsOpen;
   const onClose = props.onClose || hookClose;
@@ -48,31 +48,39 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     }
   }, [isOpen]);
 
+  // ✅ Deep Link support: if we have an ID but no slides, use a dummy slide that we'll populate with usePhoto details if needed
+  // (Note: usePhoto logic is already inside components like LightboxInfo and Stage handles its own loading)
+  
+  // If we have an ID but no photos list (e.g. direct refresh), we need to show at least one slide to render the stage
+  const effectivePhotos = (sourcePhotos.length === 0 && isOpen) 
+    ? [{ id: (props as any).photoId || '' }] 
+    : sourcePhotos;
+
   const handleNext = useCallback(() => {
-    if (photos.length <= 1) return;
-    const nextIdx = (currentIndex + 1) % photos.length;
+    if (effectivePhotos.length <= 1) return;
+    const nextIdx = (currentIndex + 1) % effectivePhotos.length;
     setLightboxIndex(nextIdx);
     
     // Update URL if applicable
-    const photoData = photos[nextIdx]?.original || photos[nextIdx];
+    const photoData = effectivePhotos[nextIdx]?.original || effectivePhotos[nextIdx];
     const id = (photoData as any)?.id;
     if (id) {
       setPhotoId(id);
     }
-  }, [photos, currentIndex, setLightboxIndex, setPhotoId]);
+  }, [effectivePhotos, currentIndex, setLightboxIndex, setPhotoId]);
 
   const handlePrev = useCallback(() => {
-    if (photos.length <= 1) return;
-    const prevIdx = (currentIndex - 1 + photos.length) % photos.length;
+    if (effectivePhotos.length <= 1) return;
+    const prevIdx = (currentIndex - 1 + effectivePhotos.length) % effectivePhotos.length;
     setLightboxIndex(prevIdx);
     
     // Update URL if applicable
-    const photoData = photos[prevIdx]?.original || photos[prevIdx];
+    const photoData = effectivePhotos[prevIdx]?.original || effectivePhotos[prevIdx];
     const id = (photoData as any)?.id;
     if (id) {
       setPhotoId(id);
     }
-  }, [photos, currentIndex, setLightboxIndex, setPhotoId]);
+  }, [effectivePhotos, currentIndex, setLightboxIndex, setPhotoId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -86,9 +94,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleNext, handlePrev, onClose]);
 
-  if (!isOpen || photos.length === 0) return null;
-
-  const currentPhoto = photos[currentIndex];
+  if (!isOpen) return null;
+  if (effectivePhotos.length === 0) return null;
+  
+  const activePhoto = effectivePhotos[currentIndex] || effectivePhotos[0];
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col font-sans select-none">
@@ -104,9 +113,9 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
       <div className="relative z-[120] flex-1 flex flex-col h-full">
         {/* Header Controls */}
         <LightboxHeader
-          currentPhoto={currentPhoto}
+          currentPhoto={activePhoto}
           currentIndex={currentIndex}
-          totalPhotos={photos.length}
+          totalPhotos={effectivePhotos.length}
           showInfo={showInfo}
           isAdmin={isAdmin}
           onToggleInfo={() => setShowInfo(!showInfo)}
@@ -116,7 +125,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
 
         {/* Info Panel */}
         <LightboxInfo
-          currentPhoto={currentPhoto}
+          currentPhoto={activePhoto}
           showInfo={showInfo}
           lang={lang}
           onLangChange={setLang}
@@ -124,23 +133,23 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
 
         {/* Main Stage */}
         <LightboxStage
-          currentPhoto={currentPhoto}
+          currentPhoto={activePhoto}
           currentIndex={currentIndex}
-          totalPhotos={photos.length}
+          totalPhotos={effectivePhotos.length}
           onNext={handleNext}
           onPrev={handlePrev}
           onClose={onClose}
-          photos={photos}
+          photos={effectivePhotos}
         />
 
         {/* Thumbnails */}
         <LightboxThumbnails
-          photos={photos}
+          photos={effectivePhotos}
           currentIndex={currentIndex}
           isOpen={isOpen}
           onSelect={(idx) => {
             setLightboxIndex(idx);
-            const photoData = photos[idx]?.original || photos[idx];
+            const photoData = effectivePhotos[idx]?.original || effectivePhotos[idx];
             const id = (photoData as any)?.id;
             if (id) setPhotoId(id);
           }}
