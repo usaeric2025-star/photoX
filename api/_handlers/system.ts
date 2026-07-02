@@ -47,4 +47,16 @@ export const system = new Hono()
   })
   .get('/test-ping', (c) => {
     return successResponse(c, { message: 'pong', env: process.env.NODE_ENV });
+  })
+  .get('/debug-db-errors', async (c) => {
+    try {
+        const { db } = await import('../_lib/db/index.js');
+        const { desc } = await import('drizzle-orm');
+        const { systemLogs } = await import('../_lib/db/schema.js');
+        
+        const logs = await db.select().from(systemLogs).orderBy(desc(systemLogs.createdAt)).limit(15);
+        return successResponse(c, { logs });
+    } catch (err) {
+        return errorResponse(c, err);
+    }
   });

@@ -3,15 +3,27 @@ import { ErrorCode } from '../../../shared/errorCodes.js';
 
 export const errorFactory = {
   wrap(err: unknown, operation: string, code: ErrorCode | string = ErrorCode.INTERNAL_ERROR): AppError {
-    const error = err as Error;
-    const message = error.message || String(err);
+    const error = err as any;
+    let message = error?.message || String(err);
+    const context: Record<string, any> = { operation };
+    
+    if (error && typeof error === 'object') {
+        const dbDetail = error.detail || error.hint || error.where || '';
+        if (dbDetail) {
+            message = `${message} (Detail: ${dbDetail})`;
+        }
+        if (error.code) {
+            context.postgresCode = error.code;
+        }
+    }
+    
     return new AppError({
       message: `[${operation}] ${message}`,
       code,
       category: ErrorCategory.RUNTIME,
       severity: ErrorSeverity.ERROR,
       cause: error instanceof Error ? error : undefined,
-      context: { operation }
+      context
     });
   },
   

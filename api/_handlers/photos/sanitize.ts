@@ -12,6 +12,9 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
     // Fields that should be string-based UUID/text or null
     const nullableFields = ['groupId', 'manufacturerId', 'description', 'descriptionTranslations'];
 
+    // Fields that should be strictly cast to booleans
+    const booleanFields = ['isGroupCover', 'isPinned', 'isHidden', 'isAnalyzing'];
+
     // Process all potential nullish values
     const isNullish = (val: any): boolean => {
         if (val === null || val === undefined) return true;
@@ -46,5 +49,35 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
         }
     }
 
-    return sanitized;
+    // 3. Sanitize boolean fields
+    for (const field of booleanFields) {
+        if (field in sanitized) {
+            const val = sanitized[field];
+            if (val === 'true' || val === true || val === 1 || val === '1') {
+                sanitized[field] = true;
+            } else if (val === 'false' || val === false || val === 0 || val === '0' || isNullish(val)) {
+                sanitized[field] = false;
+            } else {
+                sanitized[field] = !!val;
+            }
+        }
+    }
+
+    // 4. Filter out any unexpected non-schema fields to prevent SQL column-not-exist errors
+    const VALID_KEYS = new Set([
+      'id', 'userId', 'name', 'description', 'categoryId', 'manufacturerId',
+      'groupId', 'isGroupCover', 'isPinned', 'imageUrl', 'imageHash', 'price',
+      'note', 'type', 'isHidden', 'itemCode', 'manualCode', 'modelNumber',
+      'descriptionTranslations', 'isAnalyzing', 'subCategory', 'dimensions',
+      'groupOrder', 'metadata', 'updatedAt', 'createdAt', 'nameSearchable'
+    ]);
+
+    const filtered: Record<string, any> = {};
+    for (const key of Object.keys(sanitized)) {
+        if (VALID_KEYS.has(key)) {
+            filtered[key] = sanitized[key];
+        }
+    }
+
+    return filtered;
 }
