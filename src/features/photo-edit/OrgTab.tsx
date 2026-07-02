@@ -30,7 +30,7 @@ export function OrgTab() {
   return (
     <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
       
-      <AppField form={form} name="is_hidden">
+      <AppField form={form} name="isHidden">
         {({ value, onChange }) => (
           <section className="space-y-4">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">显示状态 / VISIBILITY</h3>
@@ -80,7 +80,7 @@ export function OrgTab() {
           subtitle="MANUFACTURER" 
           onAction={() => setAddMfrOpen(true)} 
         />
-        <ManufacturerSelect form={form} name="manufacturer_id" manufacturers={manufacturers} />
+        <ManufacturerSelect form={form} name="manufacturerId" manufacturers={manufacturers} />
       </section>
 
       <PromptDialog

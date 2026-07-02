@@ -115,7 +115,10 @@ export async function getPhotosList(params: PhotoListParams) {
     }
     
     if (manufacturerId !== undefined && manufacturerId !== null) {
-        whereClauses.push(eq(furnitureItems.manufacturerId, String(manufacturerId)));
+        const mId = String(manufacturerId).trim();
+        if (mId !== '' && mId.toLowerCase() !== 'null' && mId.toLowerCase() !== 'undefined' && mId.toLowerCase() !== 'uncategorized') {
+            whereClauses.push(eq(furnitureItems.manufacturerId, mId));
+        }
     }
 
     const finalWhere = and(...whereClauses.filter((c): c is SQL => !!c));
