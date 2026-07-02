@@ -153,6 +153,8 @@ export async function getPhotosList(params: PhotoListParams) {
     // 2. Data Fetch
     // isHidden should default to the very end of the list (false/null first, true last)
     const hiddenOrder = sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`;
+    // isPinned should be at the very top (true first, false/null last)
+    const pinnedOrder = sql`case when ${furnitureItems.isPinned} = true then 0 else 1 end asc`;
     const primaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.createdAt) : desc(furnitureItems.createdAt);
     const secondaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.id) : desc(furnitureItems.id);
 
@@ -166,7 +168,7 @@ export async function getPhotosList(params: PhotoListParams) {
         .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
         .leftJoin(categories, eq(furnitureItems.categoryId, categories.id))
         .where(finalWhere)
-        .orderBy(hiddenOrder, primaryOrder, secondaryOrder)
+        .orderBy(hiddenOrder, pinnedOrder, primaryOrder, secondaryOrder)
         .limit(limit)
         .execute();
 
