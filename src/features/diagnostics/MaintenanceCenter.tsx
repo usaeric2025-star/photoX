@@ -45,6 +45,12 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
+            issueId="repair_integrity"
+            title="修复数据库约束与一致性" 
+            description="针对 ai_audit_logs 约束进行热修复，并重新计算所有合组的封面与成员数量。解决照片合组后消失的问题。"
+            onSuccess={onSuccess}
+          />
+          <MaintenanceTool 
             issueId="cleanup"
             title="全域系統日誌清理" 
             description="清除 30 天以前的系統日誌與 90 天之前的審計日誌，節省資料庫空間。"

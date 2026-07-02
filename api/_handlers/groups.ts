@@ -33,7 +33,7 @@ export const groups = new Hono()
     const insertData = {
         ...groupData,
         name: "GROUP",
-        status: (groupData.status as "draft" | "confirmed" | "rejected") || 'confirmed',
+        status: (groupData.status as "draft" | "active" | "rejected") || 'active',
         userId: inputUserId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -45,11 +45,33 @@ export const groups = new Hono()
   .put('/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
-    const check = v.safeParse(v.object({ updates: v.omit(GroupReqSchema, ["id"]) }), body);
+    
+    // Use flexible schema to allow objects for name/description (will be normalized)
+    const FlexibleUpdateSchema = v.object({
+        updates: v.object({
+            name: v.optional(v.union([v.string(), v.record(v.string(), v.unknown())])),
+            description: v.optional(v.union([v.string(), v.record(v.string(), v.unknown())])),
+            status: v.optional(v.string()),
+            coverPhotoId: v.optional(v.nullable(v.string()))
+        })
+    });
+
+    const check = v.safeParse(FlexibleUpdateSchema, body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { updates } = check.output;
-    const updatesObj = updates as Record<string, unknown>;
+    const updatesObj = { ...updates } as Record<string, unknown>;
+
+    // Normalize name to string
+    if (updatesObj.name && typeof updatesObj.name === 'object') {
+        const n = updatesObj.name as Record<string, unknown>;
+        updatesObj.name = String(n.en || n.zh || n.ms || '');
+    }
+
+    // Normalize description to string
+    if (updatesObj.description && typeof updatesObj.description === 'object') {
+        updatesObj.description = JSON.stringify(updatesObj.description);
+    }
 
     const [data] = await db.update(groupsTable)
         .set({ ...updatesObj, updatedAt: new Date() })
@@ -110,10 +132,8 @@ export const groups = new Hono()
           photoIds
       } = check.output;
       
-      // Ensure groupData has the id aligned with targetGroupId to satisfy TS and db
       const mergedGroupData = { ...(groupData as Record<string, unknown>), id: targetGroupId };
       
-      // Optimize: Compute sourceGroupIds and ungroupedValidIds directly on the server
       let sourceGroupIds: string[] = [];
       let ungroupedValidIds: string[] = [];
       let dbUserId: string | null = null;
@@ -147,8 +167,28 @@ export const groups = new Hono()
         const { id: _, ...groupDataWithoutId } = mergedGroupData;
         let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
         if (!finalUserId) {
-            // Fallback user id
            finalUserId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
+        }
+
+        let finalName = "GROUP";
+        if ((groupDataWithoutId as Record<string, unknown>).name) {
+            const rawName = (groupDataWithoutId as Record<string, unknown>).name;
+            if (typeof rawName === 'string') {
+                finalName = rawName;
+            } else if (rawName && typeof rawName === 'object') {
+                const n = rawName as Record<string, unknown>;
+                finalName = String(n.en || n.zh || n.ms || '');
+            }
+        }
+
+        let finalDesc: string | null = null;
+        if ((groupDataWithoutId as Record<string, unknown>).description !== undefined) {
+            const rawDesc = (groupDataWithoutId as Record<string, unknown>).description;
+            if (typeof rawDesc === 'string') {
+                finalDesc = rawDesc;
+            } else if (rawDesc && typeof rawDesc === 'object') {
+                finalDesc = JSON.stringify(rawDesc);
+            }
         }
 
         const groupDataToInsert = {
@@ -156,9 +196,9 @@ export const groups = new Hono()
             userId: finalUserId,
             createdAt: new Date(),
             updatedAt: new Date(),
-            status: ((groupDataWithoutId as Record<string, unknown>).status as string) || 'confirmed',
-            name: "GROUP",
-            description: ((groupDataWithoutId as Record<string, unknown>).description as string) || null,
+            status: 'active',
+            name: finalName,
+            description: finalDesc,
             coverPhotoId: ((groupDataWithoutId as Record<string, unknown>).coverPhotoId as string) || null,
         };
 
@@ -176,29 +216,22 @@ export const groups = new Hono()
             .where(eq(groupsTable.id, targetGroupId));
       }
 
-      // Update photos FIRST
       if (ungroupedValidIds && ungroupedValidIds.length > 0) {
         await db.update(furnitureItems)
           .set({ groupId: targetGroupId, isGroupCover: false })
           .where(inArray(furnitureItems.id, ungroupedValidIds));
       }
 
-      // Merge groups
       if (sourceGroupIds && sourceGroupIds.length > 0) {
-        // 1. Move ALL photos from source groups to target group
         await db.update(furnitureItems)
           .set({ groupId: targetGroupId, isGroupCover: false })
           .where(inArray(furnitureItems.groupId, sourceGroupIds));
 
-        // 2. Call RPC as a fallback or for metadata cleanup
         try {
             await db.execute(sql`SELECT merge_groups(${sourceGroupIds}, ${targetGroupId})`);
-        } catch (rpcErr) {
-            // Ignore RPC failure if photos moved manually
-        }
+        } catch (rpcErr) {}
       }
 
-      // Reconcile and synchronize
       const affectedGroupIds = [targetGroupId, ...(sourceGroupIds || [])];
       await syncGroupCoversAndCount(affectedGroupIds);
       await refreshPhotosView();
@@ -294,31 +327,45 @@ export const groups = new Hono()
     return successResponse(c, null);
   })
   .post('/repair-integrity', async (c) => {
-    const groups = await db.select({ id: groupsTable.id }).from(groupsTable);
+    // 1. Fix schema constraint
+    try {
+        await db.execute(sql`ALTER TABLE ai_audit_logs ALTER COLUMN photo_id DROP NOT NULL`);
+    } catch (e) {
+        // Ignore if already nullable
+    }
+
+    // 2. Set all confirmed to active
+    await db.update(groupsTable)
+        .set({ status: 'active' })
+        .where(eq(groupsTable.status, 'confirmed'));
+
+    // 3. Optimize: Find groups with <= 1 photo using a single query
+    const groupStats = await db.select({
+        id: groupsTable.id,
+        photoCount: sql<number>`cast(count(${furnitureItems.id}) as int)`
+    })
+    .from(groupsTable)
+    .leftJoin(furnitureItems, eq(groupsTable.id, furnitureItems.groupId))
+    .groupBy(groupsTable.id);
 
     let dissolved = 0;
     let synced = 0;
     let deleted = 0;
 
-    for (const group of groups) {
-      const [{ count: actualCount }] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(furnitureItems)
-        .where(eq(furnitureItems.groupId, group.id));
-
-      if (Number(actualCount) <= 1) {
-        if (Number(actualCount) === 1) {
-          await db.update(furnitureItems)
-            .set({ groupId: null, isGroupCover: false, isPinned: false })
-            .where(eq(furnitureItems.groupId, group.id));
-          dissolved++;
-        }
-        await db.delete(groupsTable).where(eq(groupsTable.id, group.id));
-        deleted++;
-      } else {
-        synced++;
+    const groupsToProcess = groupStats.filter(g => g.photoCount <= 1);
+    
+    for (const group of groupsToProcess) {
+      if (group.photoCount === 1) {
+        await db.update(furnitureItems)
+          .set({ groupId: null, isGroupCover: false, isPinned: false })
+          .where(eq(furnitureItems.groupId, group.id));
+        dissolved++;
       }
+      await db.delete(groupsTable).where(eq(groupsTable.id, group.id));
+      deleted++;
     }
+
+    synced = groupStats.length - groupsToProcess.length;
 
     await refreshPhotosView();
 

@@ -114,6 +114,8 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   // SWR Cache Key components (Aligned with PhotoListReqSchema)
   const queryKey = useMemo(() => {
     const catId = (query.cat && query.cat !== 'all') ? Number(query.cat) : undefined;
+    const isBatchMode = options.enableBatch && !!query.batch;
+    
     return {
       searchQuery: query.q || undefined,
       categoryId: (catId !== undefined && !isNaN(catId)) ? catId : undefined,
@@ -122,6 +124,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
       status: options.enableStatus ? query.status : undefined,
       isHidden: options.enableStatus ? (query.status === 'hidden' ? true : (query.status === 'active' ? false : undefined)) : undefined,
       isAdminMode: options.enableStatus || options.enableBatch,
+      onlyUngrouped: isBatchMode ? true : undefined,
       groupId: query.groupId || undefined,
     };
   }, [query.q, query.cat, query.tag, query.sort, query.status, query.batch, query.groupId, options.enableStatus, options.enableBatch]);

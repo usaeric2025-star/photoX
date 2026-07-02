@@ -66,17 +66,6 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
     navigate.adminBatchEdit();
   };
 
-  const handleBatchAiGroup = async () => {
-    if (selectedCount === 0 || isAnyPending) return;
-    
-    // Fetch photos by selectedIds before analysis
-    const response = await api.photos['by-ids'].$post({ json: { ids: selectedIds } });
-    const data = await response.json();
-    const targetPhotos = data.success ? data.data : [];
-    
-    await handleBatchAiAnalyze(targetPhotos as any[], groupId);
-  };
-
   const handleManualGroup = async () => {
     if (selectedCount === 0 || isAnyPending) return;
     try {
@@ -162,7 +151,6 @@ export function SelectionToolbar({ className = '', groupId }: { className?: stri
           isDeleting={deletePhoto.isMutating}
           onRemoveFromGroup={handleRemoveFromGroup}
           onManualGroup={handleManualGroup}
-          onBatchAiGroup={handleBatchAiGroup}
           onBatchEdit={handleBatchEdit}
           onBatchDelete={handleBatchDeleteClick}
         />

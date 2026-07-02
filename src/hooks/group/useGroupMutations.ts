@@ -4,7 +4,7 @@ import {
   updateGroup, 
   deleteGroup, 
   setPhotoAsGroupCover, 
-  groupPhotos, 
+  groupPhotos,
   movePhotosToGroup,
   ungroupPhotos
 } from '#src/services/group/commands.js';
@@ -50,14 +50,6 @@ export function useGroupMutations() {
     }
   });
 
-  const combineMutation = useAppMutation({
-    mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => 
-      groupPhotos(args.photoIds, args.targetGroupId),
-    onSuccess: () => {
-      invalidatePhotos();
-    }
-  });
-
   const movePhotosMutation = useAppMutation({
     mutationFn: (args: { groupId: string; photoIds: string[] }) => 
       movePhotosToGroup(args.photoIds, args.groupId),
@@ -72,6 +64,14 @@ export function useGroupMutations() {
     mutationFn: ungroupPhotos,
     onSuccess: () => {
       appQuery.mutate(queryKeys.groups.all);
+      invalidatePhotos();
+    }
+  });
+
+  const combineMutation = useAppMutation({
+    mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => 
+      groupPhotos(args.photoIds, args.targetGroupId),
+    onSuccess: () => {
       invalidatePhotos();
     }
   });
@@ -101,6 +101,9 @@ export const useGroupPhotosMutation = () => {
   };
 };
 
+/**
+ * Legacy/Component aliases for SelectionToolbar
+ */
 export const useRemoveFromGroupMutation = () => {
   const { movePhotos, isMutating } = useGroupMutations();
   return { 

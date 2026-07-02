@@ -14,7 +14,6 @@ interface SelectionToolbarActionsProps {
   isDeleting: boolean;
   onRemoveFromGroup: () => void;
   onManualGroup: () => void;
-  onBatchAiGroup: () => void;
   onBatchEdit: () => void;
   onBatchDelete: () => void;
 }
@@ -31,7 +30,6 @@ export function SelectionToolbarActions({
   isDeleting,
   onRemoveFromGroup,
   onManualGroup,
-  onBatchAiGroup,
   onBatchEdit,
   onBatchDelete,
 }: SelectionToolbarActionsProps) {
@@ -74,23 +72,6 @@ export function SelectionToolbarActions({
           </span>
         </button>
       )}
-
-      {/* AI 智能合組 */}
-      <button
-        onClick={onBatchAiGroup}
-        disabled={selectedCount === 0 || isAnyPending}
-        className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-        title="AI 智能分析合組"
-      >
-        {activeTasks > 0 ? (
-          <LoadingSpinner size="xs" className="text-purple-600 shrink-0" />
-        ) : (
-          <Icon name="sparkles" size={14} className="text-purple-600 animate-pulse shrink-0" />
-        )}
-        <span className="shrink-0">
-          {isMd ? 'AI 智能合組' : isSm ? 'AI 合組' : 'AI'}
-        </span>
-      </button>
 
       {/* 批量編輯 */}
       <button

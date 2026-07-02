@@ -61,11 +61,11 @@ export async function createGroup(data: Partial<ProductGroup> & { name: string |
 }
 
 export async function updateGroup(id: string, updates: Partial<ProductGroup>): Promise<ProductGroup> {
-  v.parse(v.partial(GroupReqSchema), { ...updates, id });
-
   const userId = await getCurrentUserId();
   const dbUpdates = mapToDb(updates as unknown as Record<string, unknown>, userId);
   
+  v.parse(v.partial(GroupReqSchema), { ...dbUpdates, id });
+
   const res = await api.groups[':id'].$put({
       param: { id },
       json: { updates: dbUpdates }
@@ -121,7 +121,8 @@ export const groupPhotos = async (
   const groupData = {
     id: targetGroupId,
     name: finalName,
-    status: 'confirmed' as 'confirmed' | 'draft',
+    description: metadata?.description ? (typeof metadata.description === 'object' ? JSON.stringify(metadata.description) : metadata.description) : null,
+    status: 'active' as 'active' | 'draft',
   };
 
   const groupPhotosRes = await api.groups['group-photos'].$post({

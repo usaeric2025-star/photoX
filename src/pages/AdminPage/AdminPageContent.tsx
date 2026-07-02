@@ -45,7 +45,7 @@ export function AdminPageContent() {
     if (pathname.startsWith('/admin/batch-edit')) return 'batch';
     if (pathname.startsWith('/admin/tasks')) return 'tasks';
     if (pathname.startsWith('/admin/error-logs')) return 'error-logs';
-    if (pathname.startsWith('/admin/diagnose')) return 'diagnose';
+    if (pathname.startsWith('/admin/diagnose') || pathname.startsWith('/admin/diagnostics')) return 'diagnose';
     if (pathname.startsWith('/settings')) return 'settings';
     if (pathname.startsWith('/admin')) return 'gallery';
     return 'gallery' as const;

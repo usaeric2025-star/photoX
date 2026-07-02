@@ -133,5 +133,14 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       if (!data.success) throw new Error(String(data.error || '刷新失败'));
       return { message: "已强制刷新全局照片列表缓存 (Materialized View)" };
     }
+  },
+  repair_integrity: {
+    name: "修复数据库约束与合组一致性",
+    execute: async () => {
+      const res = await api.groups['repair-integrity'].$post();
+      const data = await res.json() as Record<string, any>;
+      if (!data.success) throw new Error(String(data.error || '修复失败'));
+      return { message: `修复完成：解散了 ${data.data?.dissolved || 0} 个无效合组，同步了 ${data.data?.synced || 0} 个合组。`, ...data };
+    }
   }
 };

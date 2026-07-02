@@ -4,7 +4,7 @@ import { updatePhoto } from '#src/services/photo/index.js';
 import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '#src/services/tag/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { analyzeGroup, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands.js';
-import { updateGroup, groupPhotos } from '#src/services/group/commands.js';
+import { updateGroup } from '#src/services/group/commands.js';
 import { resolveTagNamesToIds } from '#src/services/tag/completion.js';
 import { withTimeout } from '#lib/utils.js';
 import { logger } from '#lib/logger.js';
@@ -16,6 +16,7 @@ import { supabase } from '#lib/supabase.js';
 import { api } from '#lib/api.js';
 
 import { Photo, Dimension, ProductGroup } from '#src/types/index.js';
+import { appQuery } from '#src/lib/query/index.js';
 
 interface PhotoAnalysisResponse {
   name?: unknown;
@@ -45,7 +46,7 @@ const analyzeAndSavePhoto = async (
     );
 
     const updateResult = await updatePhoto(photo.id, {
-      name: nameObj.en || nameObj.zh || '',
+      name: (nameObj.en || nameObj.zh || '').substring(0, 200),
       description: descObj,
       categoryId: analysisData.category_id ? String(analysisData.category_id) : (photo.categoryId || null),
       groupId: analysisData.group_id ? String(analysisData.group_id) : (photo.groupId || null),
@@ -89,46 +90,6 @@ const analyzeAndSavePhoto = async (
   }
 };
 
-export const autoGroupPhotos = async (
-  photoIds: string[]
-): Promise<unknown> => {
-  try {
-    const response = await api.photos['by-ids'].$post({ json: { ids: photoIds } });
-    const body = await response.json();
-    const photos = body.success ? body.data || [] : [];
-    
-    for (let i = 0; i < photos.length; i++) {
-      try {
-        const p = photos[i] as Photo;
-        logger.info(`[autoGroupPhotos] Analyzing and saving single photo ${i+1}/${photos.length}: ${p.id}`);
-        await analyzeAndSavePhoto(p);
-      } catch (err) {
-        ErrorFactory.handle(err, { context: '[autoGroupPhotos] Single photo analysis failed' });
-      }
-    }
-
-    const refreshResponse = await api.photos['by-ids'].$post({ json: { ids: photoIds } });
-    const refreshBody = await refreshResponse.json();
-    const updatedPhotos = (refreshBody.success ? refreshBody.data || [] : []) as Photo[];
-
-    const analysis = await analyzeGroup(updatedPhotos);
-
-    const { name: nameObj, description: descObj } = await mapAiToMultilingual(
-      analysis.name,
-      analysis.description
-    );
-
-    const result = await groupPhotos(photoIds, undefined, {
-      name: nameObj.en || nameObj.zh || '',
-      description: descObj.en || descObj.zh || ''
-    });
-    
-    return result;
-  } catch (err) {
-    throw ErrorFactory.fatal((err as Error).message || '自动合组失败', { context: 'autoGroupPhotos' });
-  }
-};
-
 interface GroupAnalysisResponse {
   name?: unknown;
   description?: unknown;
@@ -140,13 +101,13 @@ const analyzeAndSaveGroup = async (
 ): Promise<unknown> => {
   try {
     const analysis = (await withTimeout(analyzeGroup(photos), 120000, 'AI Analyze Group Materials & Colors')) as GroupAnalysisResponse; // 120s
-    const { name: nameObj, description: descObj } = await mapAiToMultilingual(
+    const { name: nameObj } = await mapAiToMultilingual(
       analysis.name,
       analysis.description
     );
 
     const res = await updateGroup(groupId, {
-      name: nameObj.en || nameObj.zh || ''
+      name: (nameObj.en || nameObj.zh || '').substring(0, 200)
     } as unknown as Partial<ProductGroup>);
 
     return res;
@@ -192,33 +153,15 @@ export async function runBatchAnalysis({
         onProgress(0.85, '生成合组名称与描述...');
         await analyzeAndSaveGroup(groupId, photos);
         groupSuccess = true;
+        await appQuery.invalidatePhotos();
       }
     } catch (e) {
       logger.warn('[AI Group] Batch summary failed', e);
     }
   } else {
-    onProgress(0.75, '正在將照片自動合組...');
-    try {
-      const response = await api.photos['by-ids'].$post({ json: { ids: targetPhotos.map(p => p.id) } });
-      const body = await response.json();
-      const photos = (body.success ? body.data || [] : []) as Photo[];
-      
-      if (photos.length > 0) {
-        onProgress(0.85, '生成合组名称与描述...');
-        const analysis = await analyzeGroup(photos);
-        const { name: nameObj, description: descObj } = await mapAiToMultilingual(
-          analysis.name,
-          analysis.description
-        );
-        await groupPhotos(targetPhotos.map(p => p.id), undefined, {
-          name: nameObj.en || nameObj.zh || '',
-          description: descObj.en || descObj.zh || ''
-        });
-        groupSuccess = true;
-      }
-    } catch (e) {
-      logger.warn('[AI Group] Auto grouping failed', e);
-    }
+    // Grouping logic removed as per user request
+    onProgress(0.9, '分析完成');
+    await appQuery.invalidatePhotos();
   }
 
   onProgress(1, '分析流程完成');

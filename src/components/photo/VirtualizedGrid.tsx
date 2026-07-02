@@ -36,7 +36,7 @@ export function VirtualizedGrid<T extends { id: string | number }>({
     setCooldown(true);
     const timer = setTimeout(() => {
       setCooldown(false);
-    }, 1200);
+    }, 400);
     return () => clearTimeout(timer);
   }, [items.length]);
 
@@ -67,13 +67,14 @@ export function VirtualizedGrid<T extends { id: string | number }>({
   };
 
   return (
-    <div className="w-full h-full absolute inset-0">
+    <div className="w-full h-full relative overflow-hidden">
       <VList 
+        key={`vlist-${columns}-${items.length > 0 ? 'active' : 'empty'}`}
         ref={containerRef}
-        bufferSize={200}
+        bufferSize={3000}
         onScroll={handleScroll} 
         onScrollEnd={handleScrollEnd}
-        style={{ height: '100%', overflowX: 'hidden' }}
+        style={{ height: '100%', width: '100%' }}
       >
         {rows.map((row) => (
           <div 
@@ -101,7 +102,7 @@ export function VirtualizedGrid<T extends { id: string | number }>({
             })}
           </div>
         ))}
-        {footer && <div className="w-full">{footer}</div>}
+        {footer && <div className="w-full pb-20">{footer}</div>}
       </VList>
     </div>
   );

@@ -21,5 +21,5 @@ export function withTimeout<T>(promiseOrThenable: Promise<T> | PromiseLike<T>, m
 export const TIMEOUTS = {
   DB_QUERY: 30000, // 30 seconds for standard DB queries
   AI_REQUEST: 40000, // 40 seconds for AI inference 
-  PUBLIC_META: 2000, // 2 seconds for fast-loading public settings/auth (Critical for cold start)
+  PUBLIC_META: 5000, // 5 seconds for fast-loading public settings/auth (Critical for cold start)
 };

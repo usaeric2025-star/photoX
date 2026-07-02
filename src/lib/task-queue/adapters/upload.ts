@@ -3,7 +3,6 @@ import { Photo } from '#src/types/index.js';
 import { processImageFile } from '#src/services/storage/imageProcessor.js';
 import { savePhotoToCloud } from '#src/features/upload/services/uploadService.js';
 import { createTask } from '#lib/task-queue/taskFactory.js';
-import { runBatchAnalysis } from '#src/features/ai/orchestration.js';
 import { appQuery } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { checkHashExists } from '#lib/api/photos.js';
@@ -173,50 +172,6 @@ export const executeBatchUpload = (
     });
   }
 
-  // ✅ 自動將 AI 分析任務加入佇列 (如果上傳成功)
-  /*
-  if (uploadedPhotos.length > 0) {
-    const taskTitle = options.groupId ? `智能合組分析 (${uploadedPhotos.length}張)` : `批量 AI 分析 (${uploadedPhotos.length}張)`;
-    
-    createTask({
-      label: taskTitle,
-      type: 'ai-analyze',
-      meta: { photoCount: uploadedPhotos.length, groupId: options.groupId },
-      execute: async (aiSignal, aiProgress) => {
-          const res = await runBatchAnalysis({
-            targetPhotos: uploadedPhotos,
-            groupId: options.groupId,
-            onProgress: aiProgress
-          });
-          
-          // 觸發重新驗證快取
-          appQuery.invalidatePhotos();
-          
-          if (res.successCount < uploadedPhotos.length) {
-            const failedCount = uploadedPhotos.length - res.successCount;
-            throw new Error(`${failedCount} 張照片 AI 分析失敗`);
-          }
-          if (options.groupId && !res.groupSuccess) {
-            throw new Error(`商品組 AI 分析失敗`);
-          }
-          
-          import('#lib/ui/toast.js').then(({ showToast }) => {
-              showToast.success(options.groupId ? `合組 AI 分析成功！` : `AI 分析完成 (${res.successCount}張)`);
-          });
-          
-          return res;
-      },
-      onError: (err) => {
-          import('#lib/ui/toast.js').then(({ showToast }) => {
-              showToast.error(`AI 分析有部分失敗: ${err.message}`);
-          });
-          // Even on error, invalidate to show partial results
-          appQuery.invalidatePhotos();
-      }
-    });
-  }
-  */
-  
   // Trigger initial photos invalidate immediately after upload
   appQuery.invalidatePhotos();
   
