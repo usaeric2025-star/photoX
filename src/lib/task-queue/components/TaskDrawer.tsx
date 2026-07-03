@@ -125,7 +125,7 @@ export function TaskDrawer() {
       {/* Backdrop overlay to prevent underlying elements from receiving outside clicks */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[9995]"
+          className="fixed inset-0 bg-black/40 z-[9995]"
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();

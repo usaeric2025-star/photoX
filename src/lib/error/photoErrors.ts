@@ -132,26 +132,26 @@ export function getLocalizedError(type: PhotoErrorType, _lang?: string, error?: 
     let subAction = '立即重試';
 
     if (errorStr.includes('Initialize Settings & Auth APIs')) {
-      subTitle = '系統初始化逾時 (25秒)';
-      subMessage = '前端看門狗檢測到載入系統核心設定與認證狀態 (Settings & Auth APIs) 時逾時。這通常發生在 Vercel Serverless Function 冷啟動、資料庫連線池滿載或 PostgreSQL 還在睡眠中。';
+      subTitle = '系統初始化逾時';
+      subMessage = '系統載入核心設定時回應較慢，這可能是因為伺服器正在啟動或網路連線不穩。請稍候片刻並重新整理頁面。';
     } else if (errorStr.includes('Supabase Get Auth Session')) {
-      subTitle = '會員認證連線逾時 (3秒)';
-      subMessage = '前端看門狗在請求 Supabase 會員狀態時 3000ms 未響應。可能原因：您的網路阻擋了 Supabase 連線，或者認證伺服器當前繁忙。我們已為您安全降級為訪客身分繼續瀏覽。';
+      subTitle = '會員連線逾時';
+      subMessage = '無法及時取得會員狀態。這可能是網路環境不穩所致。我們已暫時為您切換至訪客模式，您可以繼續瀏覽，但部分功能可能受限。';
     } else if (errorStr.includes('AI Analyze Group Materials & Colors')) {
-      subTitle = 'AI 智慧分析逾時 (120秒)';
-      subMessage = '批量照片智能合組與特徵提取 (analyzeGroup) 執行超過 120 秒而被看門狗中斷。可能原因：照片檔案過大、一次性分析照片過多（建議不超過 10 張），或外部 AI 提供商 (Google Gemini / OpenRouter) 當前請求量過大，建議稍後再試。';
+      subTitle = 'AI 智慧分析逾時';
+      subMessage = '照片分析處理時間過長。這可能是因為一次處理的照片過多或單個檔案過大，建議減少照片數量後再試一次。';
     } else if (errorStr.includes('DB Query Settings table')) {
-      subTitle = '資料庫設定讀取逾時';
-      subMessage = '後端看門狗讀取 settings 設定表時逾時。這代表當前資料庫執行緒已被阻塞，請前往「系統診斷控制台」進行自檢與修復。';
+      subTitle = '系統設定讀取逾時';
+      subMessage = '目前無法讀取系統配置。請檢查您的網路連線，或稍後再試。若問題持續，請聯繫管理員。';
     } else if (errorStr.includes('DB Query Access Passcode secret')) {
-      subTitle = '資料庫密鑰讀取逾時';
-      subMessage = '後端看門狗讀取 access_passcode 密鑰表時逾時。這通常是因為資料庫並行鎖定 (Lock) 或連線超載。';
+      subTitle = '訪問授權讀取逾時';
+      subMessage = '讀取安全驗證資訊時發生逾時，這可能是因為系統連線較擁擠，請稍後再試。';
     } else if (errorStr.includes('AI Chat Test Connection')) {
-      subTitle = 'AI 連線測試逾時';
-      subMessage = '與 AI 推理伺服器的握手測試逾時。請確認您的 .env 中配置的 API Key 與 Provider 網路是否暢通。';
+      subTitle = 'AI 服務連線逾時';
+      subMessage = '目前無法連線至 AI 分析服務，請稍後再試。';
     } else if (errorStr.includes('statement_timeout') || errorStr.includes('statement timeout')) {
-      subTitle = '資料庫語句執行逾時';
-      subMessage = 'PostgreSQL 連線級看門狗 (statement_timeout) 強制中斷了當前 SQL。通常是因為對未建索引的大表進行了複雜的全表掃描，或是資料庫表格正被寫入鎖定 (Locking)。';
+      subTitle = '資料處理逾時';
+      subMessage = '目前系統處理的資料量較大，或正在進行維護，導致查詢逾時。請嘗試縮小查詢範圍或稍後再試。';
     }
 
     return {

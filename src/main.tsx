@@ -32,10 +32,11 @@ if (typeof window !== 'undefined') {
 
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SWRConfig } from 'swr';
-import { swrConfig } from './lib/query/client.js';
 import { Analytics } from '@vercel/analytics/react';
+import { NuqsAdapter } from 'nuqs/adapters/react';
+import { Router } from 'wouter';
 import App from './App.js';
+import { QueryClientProvider, queryClient } from '#src/lib/query/index.js';
 import { ErrorFactory } from './lib/error/ErrorFactory.js';
 import { ErrorBoundary } from './components/shared/ErrorBoundary.js';
 import { FatalErrorOverlay } from './components/shared/FatalErrorOverlay.js';
@@ -163,13 +164,17 @@ async function init() {
     
     root.render(
       <StrictMode>
-        <SWRConfig value={swrConfig}>
-          <ErrorBoundary>
-            <App />
-            <FatalErrorOverlay />
-            <Analytics />
-          </ErrorBoundary>
-        </SWRConfig>
+        <QueryClientProvider client={queryClient}>
+          <NuqsAdapter>
+            <Router>
+              <ErrorBoundary>
+                <App />
+                <FatalErrorOverlay />
+                <Analytics />
+              </ErrorBoundary>
+            </Router>
+          </NuqsAdapter>
+        </QueryClientProvider>
       </StrictMode>
     );
 

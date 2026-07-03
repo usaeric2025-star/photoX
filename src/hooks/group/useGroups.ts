@@ -10,7 +10,7 @@ export function useGroupDetail(id: string, isAdmin = false) {
       return getGroupById(id, isAdmin ? 'admin' : 'public');
     },
     {
-      dedupingInterval: STALE_TIMES.LONG,
+      staleTime: STALE_TIMES.LONG,
     }
   );
 

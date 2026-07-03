@@ -1,7 +1,7 @@
 import { logger } from '#lib/logger.js';
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useAppQuery, useAppMutation, appQuery } from '#lib/query/index.js';
+import { useAppQuery, useAppMutation, queryClient } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import { Button } from '#src/components/shared/Button.js';
@@ -109,7 +109,7 @@ Message: ${log.message || log.error_message || ''}${metadataStr}${stack ? `\nSta
 
 export const ErrorLogViewer = () => {
   const { data: logs = [] } = useAppQuery(
-    'error_logs',
+    ['error_logs'],
     async () => {
         const res = await api.admin.maintenance['error-events'].$get();
         const json = await res.json();
@@ -127,7 +127,7 @@ export const ErrorLogViewer = () => {
           return json as { success: boolean; count?: number };
       },
       onSuccess: () => {
-          appQuery.mutate('error_logs');
+          queryClient.invalidateQueries({ queryKey: ['error_logs'] });
       },
       successMessage: '日誌清理成功 / Cleanup successful',
       errorMessage: '清除失敗 / Cleanup failed'

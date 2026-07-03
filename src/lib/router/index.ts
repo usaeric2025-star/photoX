@@ -1,9 +1,11 @@
 import { Router, ALL_ROUTES } from '#src/router.js';
 import { useCallback } from 'react';
+import { useLocation } from 'wouter';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 // ✅ 唯一出口：永遠不傳參數
 export function useAppRoute() {
+  const [location] = useLocation();
   try {
     const route = Router.useRoute(ALL_ROUTES);
     return route || { query: {}, params: {}, name: '' };

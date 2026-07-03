@@ -88,7 +88,7 @@ export function PublicGroupDetailPage() {
   
   return (
     <div className="min-h-screen bg-slate-50 group-detail-public flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none">
-      <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm relative">
+      <div className="flex-shrink-0 bg-white border-b border-slate-100 shadow-sm relative">
         <PublicGroupHeader 
           group={group} 
           photoCount={totalCount} 

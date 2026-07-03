@@ -23,7 +23,7 @@ export const usePhoto = (photoId: string | null | undefined) => {
       return rawData ? mapSupabasePhoto(rawData) : null;
     },
     {
-      dedupingInterval: STALE_TIMES.REALTIME,
+      staleTime: STALE_TIMES.REALTIME,
     }
   );
 };

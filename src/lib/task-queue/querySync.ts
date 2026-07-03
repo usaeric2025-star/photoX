@@ -1,4 +1,4 @@
-import { appQuery } from '#lib/query/index.js';
+import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { scheduler } from './scheduler.js';
 
@@ -21,16 +21,13 @@ export function setupQuerySync(): () => void {
       case 'ai-analyze':
         // ✅ 本地更新單條數據（不需防抖）
         if (task.meta?.photoId) {
-          appQuery.mutate(
-            ['photos', 'detail', task.meta.photoId],
-            (old: unknown) => ({
-              ...(old && typeof old === 'object' ? old : {}),
-              aiTags: (task.state as { status: 'completed'; result?: { tags: string[] } }).result?.tags,
-            }),
-            { revalidate: false }
-          );
+          const detailKey = queryKeys.photos.detail(String(task.meta.photoId));
+          queryClient.setQueryData(detailKey, (old: any) => ({
+            ...(old && typeof old === 'object' ? old : {}),
+            aiTags: (task.state as { status: 'completed'; result?: { tags: string[] } }).result?.tags,
+          }));
           // ✅ 同時使 AI 詳細結果失效以觸發重新加載
-          appQuery.mutate(['photos', 'ai-result', task.meta.photoId]);
+          queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', String(task.meta.photoId)] });
         }
         break;
 
@@ -69,10 +66,10 @@ function flushInvalidations() {
   keys.forEach(key => {
     switch (key) {
       case 'photos_list':
-        appQuery.mutate((key) => Array.isArray(key) && key[0] === 'photos');
+        queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
         break;
       case 'diagnostics':
-        appQuery.mutate(['diagnostics']);
+        queryClient.invalidateQueries({ queryKey: queryKeys.diagnostics.all });
         break;
     }
   });

@@ -1,5 +1,5 @@
 import { STALE_TIMES } from '#lib/query/config.js';
-import { useAppMutation, useAppQuery, appQuery } from '#lib/query/index.js';
+import { useAppMutation, useAppQuery, queryClient } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
@@ -13,7 +13,7 @@ import { useTranslation } from '#src/hooks/index.js';
 export function useDiagnostics() {
   const { uiTranslations: t } = useTranslation();
 
-  const { data: auditResult, isValidating: isAuditing } = useAppQuery(
+  const { data: auditResult, isFetching: isAuditing } = useAppQuery(
     null, // manually triggered
     async () => {
       const res = await api.admin.maintenance.storage.audit.$get();
@@ -21,7 +21,7 @@ export function useDiagnostics() {
       if (!data.success) throw new Error(data.error || t.storageAuditFailed);
       return data.data;
     },
-    { dedupingInterval: STALE_TIMES.SHORT * 5 }
+    { staleTime: STALE_TIMES.SHORT * 5 }
   );
 
   const runAudit = async () => {
@@ -39,7 +39,7 @@ export function useDiagnostics() {
     });
   };
 
-  const { isMutating: isCleaning, trigger: deduplicate } = useAppMutation(
+  const { isPending: isCleaning, mutate: deduplicate } = useAppMutation(
     {
       mutationFn: async () => {
         return executeTask({
@@ -51,11 +51,7 @@ export function useDiagnostics() {
             const json = await res.json() as { success: boolean; error?: string };
             if (!json.success) throw new Error(json.error || t.mutationFailed);
             
-            appQuery.mutate((key) => {
-              if (!key) return false;
-              const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-              return keyStr.includes('photos');
-            });
+            queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
             onProgress(1, t.deduplicateComplete(0));
             return json;
           }
@@ -89,7 +85,7 @@ export function useDiagnostics() {
     },
     report: { issues: [] }, // Compatibility layer
     refreshReport: () => {
-        appQuery.mutate(queryKeys.diagnostics.all);
+        queryClient.invalidateQueries({ queryKey: queryKeys.diagnostics.all });
     }
   };
 }

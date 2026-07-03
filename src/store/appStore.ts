@@ -3,7 +3,7 @@ import { signal } from '@storve/core/signals';
 import { initAuthListener, authStore } from './authStore.js';
 import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
 import { loadTagsFromCloud } from '#src/services/tag/queries.js';
-import { mutate } from 'swr';
+import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { scheduler } from '#lib/task-queue/scheduler.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -34,8 +34,8 @@ export const initializeApp = async () => {
 
     // 4. 背景並行啟動分類與標籤預加載 (DK-PATTERN: 前置緩存提高首屏響應速度)
     Promise.all([
-      mutate(queryKeys.categories.all, loadCategoriesFromCloud()),
-      mutate(queryKeys.tags.all, loadTagsFromCloud())
+      loadCategoriesFromCloud().then(data => queryClient.setQueryData(queryKeys.categories.all, data)),
+      loadTagsFromCloud().then(data => queryClient.setQueryData(queryKeys.tags.all, data))
     ]).catch(e => ErrorFactory.handle(e, { context: '[appStore] Background prefetch failed' }));
     
     // 5. 標記初始化完成

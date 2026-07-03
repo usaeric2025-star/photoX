@@ -63,8 +63,8 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
       />
       {photo.isPinned && (
-        <div className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-full border border-white bg-white text-slate-950 shadow-md pointer-events-none select-none">
-          <Icon name="heart" size={14} className="fill-current text-slate-950" />
+        <div className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-full border border-white/20 bg-black/80 text-white shadow-lg pointer-events-none select-none">
+          <Icon name="heart" size={14} className="fill-current text-red-500" />
         </div>
       )}
       <PhotoCardInfo 

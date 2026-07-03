@@ -18,6 +18,7 @@ import { useUI, useSignal } from '#lib/store/index.js';
 import { AdminHeader } from '#src/components/layouts/headers/AdminHeader.js';
 import { AdminAuthGate } from '#src/components/admin/AdminAuthGate.js';
 import { AdminContainer } from '#src/components/admin/AdminContainer.js';
+import { TaskIndicator } from '#src/components/admin/TaskIndicator.js';
 import { useFilters } from '#src/features/filters/index.js';
 import { FilterBar } from '#src/features/filters/index.js';
 
@@ -89,6 +90,7 @@ export function AdminPageContent() {
         )}
 
         <SelectionToolbar />
+        <TaskIndicator />
 
         {currentScreen === 'gallery' && (
           <>

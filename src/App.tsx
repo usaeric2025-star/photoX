@@ -1,5 +1,4 @@
 import { Suspense, lazy } from 'react';
-import { NuqsAdapter } from 'nuqs/adapters/react';
 import { motion } from 'lite-sleek';
 import { AppErrorBoundary } from './components/layout/AppErrorBoundary.js';
 import { ConfirmProvider } from './context/ConfirmContext.js';
@@ -9,7 +8,6 @@ import { useAppInit } from './hooks/core/useAppInit.js';
 import { LoadingScreen } from './components/ui/LoadingScreen.js';
 import { DialogContainer } from './components/layout/DialogContainer.js';
 import { Toaster } from 'sonner';
-import { PhotoEditDialog } from './features/photo-edit/PhotoEditDialog.js';
 
 function AppContent({ status, error }: { status: string, error: Error | null }) {
   return (
@@ -42,9 +40,7 @@ export default function App() {
   const { status, error } = useAppInit();
 
   return (
-    <NuqsAdapter>
-      <AppContent status={status} error={error} />
-    </NuqsAdapter>
+    <AppContent status={status} error={error} />
   );
 }
 

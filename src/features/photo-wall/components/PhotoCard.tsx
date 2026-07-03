@@ -22,10 +22,27 @@ export const PhotoCard = memo(function PhotoCard({ photo, hideGroupBadge, isGrou
   }, [photo, onPhotoClick]);
 
   if (mode === 'admin') {
-    return <AdminPhotoCard photo={photo} onClick={handleClick} hideGroupBadge={hideGroupBadge} isGroupDetail={isGroupDetail} priority={priority} />;
+    return (
+      <AdminPhotoCard 
+        photo={photo} 
+        onClick={handleClick} 
+        hideGroupBadge={hideGroupBadge} 
+        isGroupDetail={isGroupDetail} 
+        showGroupsCollapsed={!isGroupDetail}
+        priority={priority} 
+      />
+    );
   }
 
-  return <PublicPhotoCard photo={photo} onClick={handleClick} hideGroupBadge={hideGroupBadge} priority={priority} />;
+  return (
+    <PublicPhotoCard 
+      photo={photo} 
+      onClick={handleClick} 
+      hideGroupBadge={hideGroupBadge} 
+      showGroupsCollapsed={!isGroupDetail}
+      priority={priority} 
+    />
+  );
 });
 
 

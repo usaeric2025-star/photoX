@@ -1,7 +1,7 @@
 import { Category } from '#src/types/index.js';
 import { createCategory, updateCategory, deleteCategory } from '#src/services/category/commands.js';
 import { queryKeys } from '#lib/query/keys.js';
-import { useAppMutation, appQuery } from '#lib/query/index.js';
+import { useAppMutation, queryClient } from '#lib/query/index.js';
 
 export const useCategoryCreate = () => useAppMutation({
   mutationFn: async (variables: string | Partial<Category>) => {
@@ -11,12 +11,8 @@ export const useCategoryCreate = () => useAppMutation({
     return res;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.categories.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
 
@@ -26,12 +22,8 @@ export const useCategoryEdit = () => useAppMutation({
     return true;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.categories.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
 
@@ -41,27 +33,7 @@ export const useCategoryDelete = () => useAppMutation({
     return true;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.categories.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
-
-/**
- * Combined hook for batch usage or specific components
- */
-function useCategoryMutations() {
-  const create = useCategoryCreate();
-  const update = useCategoryEdit();
-  const remove = useCategoryDelete();
-
-  return {
-    create: create.mutateAsync,
-    update: update.mutateAsync,
-    remove: remove.mutateAsync,
-    isMutating: create.isPending || update.isPending || remove.isPending,
-  };
-}

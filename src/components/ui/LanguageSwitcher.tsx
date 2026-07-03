@@ -2,7 +2,7 @@ import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
-import { appQuery } from '#lib/query/index.js';
+import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 
 export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' | 'lightbox' }) {
@@ -17,7 +17,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
 
   const handleLangChange = (lang: 'zh' | 'en' | 'ms') => {
     patch({ appLang: lang });
-    appQuery.mutate(queryKeys.categories.all);
+    queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
   };
 
   if (mode === 'lightbox') {
@@ -110,7 +110,7 @@ export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dro
   }
 
   return (
-    <div className="flex items-center p-1 rounded-full border border-brand-navy/20 bg-white/80 backdrop-blur-lg shadow-sm overflow-hidden h-10 sm:h-11">
+    <div className="flex items-center p-1 rounded-full border border-brand-navy/20 bg-white shadow-sm overflow-hidden h-10 sm:h-11">
       {langs.map(l => (
         <button 
           key={l.code} 

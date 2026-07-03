@@ -124,7 +124,7 @@
                 var probe = { msg: "應用程序載入逾時 (App Load Timeout)", type: "效能/加載警告", details: "應用程序在 12 秒內未完成啟動渲染。正在探測後端系統..." };
                 errors.push(probe);
                 renderErrorOverlay();
-                fetch('/api/health').then(function(r){return r.json()}).then(function(d){
+                fetch('/api/system/health').then(function(r){return r.json()}).then(function(d){
                   probe.details += "\n\n[後端探測成功]: " + JSON.stringify(d, null, 2);
                   renderErrorOverlay();
                 }).catch(function(e){

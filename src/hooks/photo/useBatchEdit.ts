@@ -14,7 +14,7 @@ export function useBatchEdit() {
 
   const batchEdit = usePhotoBatchEdit();
   const remove = usePhotoDelete();
-  const isMutating = batchEdit.isPending || remove.isPending;
+  const isPending = batchEdit.isPending || remove.isPending;
   const { navigate, route } = useAppRouter();
 
   const handleSave = async (selectedIds: string[]) => {
@@ -70,6 +70,6 @@ export function useBatchEdit() {
     handleSave,
     handleDelete,
     handleClose,
-    isSyncing: isMutating,
+    isSyncing: isPending,
   };
 }

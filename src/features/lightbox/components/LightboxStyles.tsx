@@ -7,9 +7,7 @@ export function LightboxStyles({ hasThumbnails }: { hasThumbnails: boolean }) {
       .rlbx-wrapper { opacity: 0; animation: rlbx-fade-in 0.2s ease-out forwards; }
       @keyframes rlbx-fade-in { to { opacity: 1; } }
       .rlbx-overlay {
-        background-color: rgba(0, 0, 0, 0.9) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
+        background-color: rgba(0, 0, 0, 0.95) !important;
       }
       .rlbx-image {
         border-radius: 4px !important;
@@ -25,9 +23,7 @@ export function LightboxStyles({ hasThumbnails }: { hasThumbnails: boolean }) {
         left: 0 !important;
         right: 0 !important;
         z-index: 10010 !important;
-        background: rgba(0, 0, 0, 0.9) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
+        background: rgba(0, 0, 0, 0.95) !important;
         border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
         height: 84px !important;
         padding: 0.5rem 0.875rem !important;

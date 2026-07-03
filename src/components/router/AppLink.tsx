@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@zoontek/chicane";
+import { Link } from "wouter";
 
 interface AppLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   to: string;
@@ -8,7 +8,7 @@ interface AppLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
 
 export function AppLink({ to, children, className, ...props }: AppLinkProps) {
   return (
-    <Link to={to} className={className} {...props}>
+    <Link href={to} className={className} {...props}>
       {children}
     </Link>
   );

@@ -7,7 +7,7 @@ import { Tag } from '#src/types/index.js';
  * Perform server-side tag search with debounce handling (via queryKey)
  */
 export const useTagSearch = (keyword: string) => {
-  return useAppQuery(
+  return useAppQuery<Tag[]>(
     keyword.length >= 0 ? ['tags', 'search', keyword] : null,
     async () => {
       const resp = await api.tags.search.$get({ query: { keyword } });
@@ -17,6 +17,6 @@ export const useTagSearch = (keyword: string) => {
       }
       return body.data as Tag[];
     },
-    { dedupingInterval: STALE_TIMES.SHORT }
+    { staleTime: STALE_TIMES.SHORT }
   );
 };

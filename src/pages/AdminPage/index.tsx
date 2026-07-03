@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { mutate } from '#lib/query/index.js';
+import { queryClient } from '#lib/query/index.js';
 import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
 import { loadTagsFromCloud } from '#src/services/tag/queries.js';
 import { queryKeys } from '#lib/query/keys.js';
@@ -19,10 +19,16 @@ export default function AdminPage() {
     }
     
     // Prefetch categories in the background
-    mutate(queryKeys.categories.categories(), loadCategoriesFromCloud());
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.categories.list(),
+      queryFn: () => loadCategoriesFromCloud(),
+    });
 
     // Prefetch tags in the background
-    mutate(queryKeys.tags.tags(), loadTagsFromCloud());
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.tags.list(),
+      queryFn: () => loadTagsFromCloud(),
+    });
   }, [appLang]);
 
   return (

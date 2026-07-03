@@ -50,7 +50,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
 
   // ✅ 使用計算後的 Selector
   const activeTasks = useSignal(activeTaskCountSignal);
-  const isAnyPending = deletePhoto.isMutating || batchUpdate.isMutating || activeTasks > 0 || combineMutation.isMutating || removeMutation.isMutating;
+  const isAnyPending = deletePhoto.isPending || batchUpdate.isPending || activeTasks > 0 || combineMutation.isPending || removeMutation.isPending;
 
   const isVisible = isMultiSelect || selectedCount > 0;
 
@@ -160,10 +160,10 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
           groupId={groupId}
           isSm={isSm}
           isMd={isMd}
-          isRemoving={removeMutation.isMutating}
-          isCombining={combineMutation.isMutating}
+          isRemoving={removeMutation.isPending}
+          isCombining={combineMutation.isPending}
           activeTasks={activeTasks}
-          isDeleting={deletePhoto.isMutating}
+          isDeleting={deletePhoto.isPending}
           onRemoveFromGroup={handleRemoveFromGroup}
           onManualGroup={handleManualGroup}
           onBatchEdit={handleBatchEdit}

@@ -35,11 +35,17 @@ const StatCard = ({ title, value, subValue, icon: iconName, colorClass, delay = 
 );
 
 export function StatisticsScreen() {
-  const { data: stats, isLoading } = useAppQuery(
+  const { data: stats, isLoading } = useAppQuery<{
+    totalPhotos: number;
+    hiddenPhotos: number;
+    totalCategories: number;
+    totalTags: number;
+    totalGroups: number;
+  }>(
     ['admin', 'stats'],
     async () => {
       const res = await api.admin.maintenance.stats.$get();
-      const json = await res.json();
+      const json = await res.json() as { success: boolean; data: any };
       return json.success ? json.data : null;
     }
   );

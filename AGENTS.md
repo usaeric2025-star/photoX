@@ -4,7 +4,7 @@
 - **狀態管理**: 
   - URL 狀態 (唯一真相來源): `nuqs`
   - UI 瞬態 (如主題): `Storve (Signal)`
-  - Server State: `SWR` (`useAppQuery`)，寫入必須透過 mutate 處理樂觀更新。
+  - Server State: `TanStack Query` (`useAppQuery`), 寫入透過 `queryClient` 處理。
   - 選擇狀態: `SelectionService` (使用 `useIsMultiSelect`, `useSelectionActions` 等)
 - **表單**: `@tanstack/react-form` + `Valibot` (取代 Zod/ArkType)
 - **動畫**: `lite-sleek` (進出場/交錯) + 純 CSS (懸停/淡入)

@@ -1,6 +1,4 @@
-import useSWRInfinite from 'swr/infinite';
-import { useSWRConfig } from 'swr';
-import { queryKeys } from '#lib/query/keys.js';
+import { useInfiniteQuery, photoKeys, keepPreviousData } from '#lib/query/index.js';
 import { ErrorFactory } from '#lib/error/index.js';
 import { api } from '#lib/api.js';
 import { PhotoListItem } from '#src/types/api.js';
@@ -18,82 +16,36 @@ type PhotoListResponse = {
 };
 
 export function usePhotos(params: PhotoListFilters = {}) {
-  const getKey = (pageIndex: number, previousPageData: PhotoListResponse | null) => {
-    // If we've reached the end, return null
-    if (previousPageData && !previousPageData.nextCursor) return null;
-    
-    // Filter out UI-only parameters that shouldn't trigger a re-fetch of the list
-    const { photoId, modal, anchor, ...fetchParams } = params;
-    
-    // Add pagination params
-    const queryParams: Record<string, any> = {
-      ...fetchParams,
-      cursor: previousPageData ? previousPageData.nextCursor : undefined,
-    };
+  const { photoId, modal, anchor, ...fetchParams } = params;
 
-    // Strip undefined values and sort keys for stable serialization
-    const stableQueryParams = Object.keys(queryParams)
-      .filter(key => queryParams[key] !== undefined)
-      .sort()
-      .reduce((obj, key) => {
-        obj[key] = queryParams[key];
-        return obj;
-      }, {} as Record<string, any>);
-    
-    // Convert to a stable key string for SWR
-    // SWRInfinite expects a string, array, or null
-    return [ 'photos', 'list', stableQueryParams ];
-  };
-
-  const { data, error, isLoading, isValidating, size, setSize, mutate } = useSWRInfinite<PhotoListResponse>(
-    getKey,
-    async ([_p, _l, fetchParams]) => {
-      logger.debug('--- [SWR Fetch] Start with params:', fetchParams);
-      try {
-        const response = await api.photos.list.$post({ json: fetchParams });
-        logger.debug('--- [SWR Fetch] Response status:', response.status);
-        if (!response.ok) {
-          const errData = await response.json().catch(() => null);
-          const rawMsg = errData?.error?.message || errData?.message || errData?.error || `HTTP ${response.status}`;
-          const err = new Error(typeof rawMsg === 'string' ? rawMsg : JSON.stringify(rawMsg));
-          if (errData) Object.assign(err, errData);
-          throw err;
-        }
-        const result = await response.json();
-        logger.debug('--- [SWR Fetch] JSON received, item count:', result?.data?.length);
-        
-        // Validate the response
-        const parsed = v.parse(PhotoListResSchema, result) as PhotoListResponse;
-        logger.debug('--- [SWR Fetch] Validation success, parsed:', parsed.data.length);
-        return parsed;
-      } catch (err: unknown) {
-        logger.error('--- [SWR Fetch] Error:', err);
-        throw err;
+  const result = useInfiniteQuery({
+    queryKey: photoKeys.list(fetchParams),
+    queryFn: async ({ pageParam }) => {
+      const response = await api.photos.list.$post({ 
+        json: { ...fetchParams, cursor: pageParam as string | undefined } 
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
+      return await response.json() as PhotoListResponse;
     },
-    {
-      revalidateFirstPage: true,
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      revalidateIfStale: true,
-      dedupingInterval: 2000,
-      persistSize: true,
-      keepPreviousData: true,
-    }
-  );
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+    placeholderData: keepPreviousData,
+  });
 
-  const hasNextPage = data ? !!data[data.length - 1]?.nextCursor : false;
-  const isFetchingNextPage = Boolean(isLoading || (size > 0 && data && typeof data[size - 1] === "undefined"));
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isFetching, error } = result;
 
   return {
-    data: { pages: data?.map(p => ({ items: p.data, total: p.total })) || [] },
-    isPending: Boolean(isLoading),
-    isFetching: Boolean(isValidating),
+    data: { pages: data?.pages.map(p => ({ items: p.data, total: p.total })) || [] },
+    isPending: isLoading,
+    isFetching,
     isError: !!error,
     error,
-    fetchNextPage: () => setSize(size + 1),
-    hasNextPage,
+    fetchNextPage,
+    hasNextPage: !!hasNextPage,
     isFetchingNextPage,
-    refetch: mutate,
+    refetch: result.refetch,
   };
 }

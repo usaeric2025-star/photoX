@@ -7,7 +7,7 @@ export async function fetchPublicSettings(): Promise<AppSettings> {
   try {
     const settingsPromise = api.public.settings.$get();
     
-    const [settingsResponse] = await withTimeout(Promise.all([settingsPromise]), 25000, 'Initialize Settings & Auth API');
+    const [settingsResponse] = await withTimeout(Promise.all([settingsPromise]), 10000, 'Initialize Settings & Auth APIs');
     
     const settingsResult = await settingsResponse.json();
     

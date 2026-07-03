@@ -35,7 +35,7 @@ export const PhotoStatusBadges = ({
         </div>
       )}
 
-      {/* Group Badge - Apple Style: pill, backdrop-blur */}
+      {/* Group Badge - Apple Style: pill, solid surface */}
       {shouldShowGroup && typeof photo.memberCount === 'number' && photo.memberCount > 1 && (
         <div className={cn(
           "px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-sm transition-all duration-300 min-w-[36px] justify-center",

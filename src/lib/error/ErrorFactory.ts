@@ -359,32 +359,32 @@ export class ErrorFactory {
     // 进行英中错误信息转换，确保「报错一律只有中文」
     const lowerMsg = rawMsg.toLowerCase();
     if (lowerMsg.includes('failed to fetch') || lowerMsg.includes('network request failed')) {
-      return '网络连接异常，请检查网络';
+      return '網路連線異常，請檢查網路';
     }
     if (lowerMsg.includes('network error')) {
-      return '网络连接错误，请稍后重试';
+      return '網路連線錯誤，請稍後重試';
     }
     if (lowerMsg.includes('timeout') || lowerMsg.includes('timed out')) {
-      return '请求超时，请稍后重试';
+      return '請求逾時，請稍後重試';
     }
     if (lowerMsg.includes('unauthorized') || lowerMsg.includes('token expired') || lowerMsg.includes('invalid token')) {
-      return '登录已过期，请重新登录';
+      return '登入已過期，請重新登入';
     }
     if (lowerMsg.includes('permission denied') || lowerMsg.includes('forbidden')) {
-      return '权限不足，拒绝执行此操作';
+      return '權限不足，拒絕執行此操作';
     }
     if (lowerMsg.includes('not found')) {
-      return '找不到该项资源';
+      return '找不到該項資源';
     }
     if (lowerMsg.includes('conflict') || lowerMsg.includes('already exists')) {
-      return '数据记录已存在，请勿重复提交';
+      return '資料記錄已存在，請勿重複提交';
     }
     if (lowerMsg.includes('validation') || lowerMsg.includes('invalid argument') || lowerMsg.includes('bad request')) {
-      return '输入数据格式不正确';
+      return '輸入資料格式不正確';
     }
 
-    if (rawMsg === 'Network Error') return '网络错误，请稍后重试';
-    if (rawMsg === 'Unknown Error') return '未知的系统错误';
+    if (rawMsg === 'Network Error') return '網路錯誤，請稍後重試';
+    if (rawMsg === 'Unknown Error') return '未知的系統錯誤';
 
     return rawMsg;
   }

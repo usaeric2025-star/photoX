@@ -1,7 +1,7 @@
 import { Tag } from '#src/types/index.js';
 import { addTagToDB, updateTagInDB, deleteTagFromDB } from '#src/services/tag/commands.js';
 import { queryKeys } from '#lib/query/keys.js';
-import { useAppMutation, appQuery } from '#lib/query/index.js';
+import { useAppMutation, queryClient } from '#lib/query/index.js';
 
 // 1. 创建标签
 export const useTagCreate = () => useAppMutation({
@@ -14,12 +14,8 @@ export const useTagCreate = () => useAppMutation({
     return res as Tag;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.tags.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
 
@@ -31,12 +27,8 @@ export const useTagEdit = () => useAppMutation({
     return true;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.tags.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
 
@@ -48,27 +40,7 @@ export const useTagDelete = () => useAppMutation({
     return true;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.tags.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
-
-/**
- * Combined hook for backward compatibility or bulk usage
- */
-function useTagMutations() {
-  const create = useTagCreate();
-  const update = useTagEdit();
-  const remove = useTagDelete();
-
-  return {
-    add: create.mutateAsync,
-    update: update.mutateAsync,
-    remove: remove.mutateAsync,
-    isMutating: create.isPending || update.isPending || remove.isPending,
-  };
-}

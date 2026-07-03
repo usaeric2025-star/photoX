@@ -1,6 +1,6 @@
 import { ErrorFactory } from "#lib/error/ErrorFactory.js";
 import { useState, useEffect, useCallback } from "react";
-import { appQuery } from '#lib/query/index.js';
+import { queryClient } from '#lib/query/index.js';
 import { ProductGroup, Photo } from '#src/types/index.js';
 import { useGroupDetail } from '#src/hooks/index.js';
 import { useAuth } from '#lib/store/index.js';
@@ -71,7 +71,7 @@ export const useGroupDraft = (
 
       try {
         await upsertGroup(nextGroupData);
-        await appQuery.mutate(queryKeys.groups.detail(activeGroupId, true));
+        await queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(activeGroupId, true) });
         removeDraftGroup();
 
         if (updates.hasOwnProperty("isHidden")) {

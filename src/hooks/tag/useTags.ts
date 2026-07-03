@@ -6,11 +6,11 @@ import { STALE_TIMES } from '#lib/query/config.js';
 
 export function useTags(options?: { enabled?: boolean }) {
   const isEnabled = options?.enabled ?? true;
-  const { data, isLoading, error, mutate } = useAppQuery<Tag[]>(
-    isEnabled ? queryKeys.tags.all : null,
+  const { data, isLoading, error, refetch } = useAppQuery<Tag[]>(
+    isEnabled ? queryKeys.tags.list() : null,
     loadTagsFromCloud,
     {
-      dedupingInterval: STALE_TIMES.LONG,
+      staleTime: STALE_TIMES.LONG,
     }
   );
 
@@ -18,6 +18,6 @@ export function useTags(options?: { enabled?: boolean }) {
     tags: data || [],
     isLoading,
     error,
-    mutate,
+    mutate: refetch,
   };
 }

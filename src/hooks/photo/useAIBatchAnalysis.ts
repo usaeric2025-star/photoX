@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import type { Photo } from '#src/types/index.js';
 import { useInvalidatePhotos } from './useInvalidatePhotos.js';
 import { showToast } from '#lib/ui/toast.js';
-import { appQuery } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { runBatchAnalysis } from '#src/features/ai/orchestration.js';
 import { createTask } from '#lib/task-queue/index.js';

@@ -130,7 +130,7 @@ export function Modal({
         ${sizeClasses[size]}
         ${size === 'screen' ? '' : 'rounded-xl shadow-2xl'}
         w-full bg-surface-base border-none
-        backdrop:bg-black/40 backdrop:backdrop-blur-md
+        backdrop:bg-black/60
         p-0 overflow-hidden outline-none ${className}
       `}
       id={id}

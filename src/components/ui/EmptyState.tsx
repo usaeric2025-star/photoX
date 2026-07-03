@@ -38,7 +38,7 @@ export function EmptyState({
     <motion.div 
       variant="scale" 
       transition="easeOut"
-      className={cn("flex flex-col items-center justify-center py-20 px-8 text-center bg-white/50 backdrop-blur-sm rounded-[3rem] border border-slate-100 shadow-sm mx-auto max-w-lg", className)}
+      className={cn("flex flex-col items-center justify-center py-20 px-8 text-center bg-white rounded-[3rem] border border-slate-100 shadow-sm mx-auto max-w-lg", className)}
     >
       <div className="mb-6 p-6 bg-slate-50 rounded-full ring-8 ring-slate-50/50">{icon}</div>
       <h3 className="text-xl font-black text-slate-900 tracking-tight">{title}</h3>

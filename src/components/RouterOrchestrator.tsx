@@ -1,7 +1,6 @@
-import { useAppRoute } from '#lib/router/index.js';
-import { logger } from "#lib/logger.js";
 import { lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "lite-sleek";
+import { Switch, Route, useLocation } from "wouter";
 import PublicPage from "#src/pages/PublicPage.js";
 import AdminPage from '#src/pages/AdminPage/index.js';
 import { NotFoundPage } from "#src/pages/NotFoundPage.js";
@@ -14,148 +13,47 @@ const SettingsPage = lazy(() => import("#src/features/settings/SettingsPage.js")
 const DiagDashboard = lazy(() => import("#src/features/diagnostics/DiagDashboard.js").then(m => ({ default: m.DiagDashboard })));
 
 export function RouterOrchestrator() {
-  const route = useAppRoute();
-  logger.debug('[RouterOrchestrator] Current route:', route);
+  const [location] = useLocation();
 
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  
-  // ✅ 第1层：路径前缀强制守卫
-  if (pathname.startsWith('/admin')) {
-    return <AdminPage />;
-  }
-  
-  // FORCE matching based on pathname for all admin and system pages to avoid any Chicane matching issues or transient state desyncs!
-  let routeName = route?.name;
-  
-  if (pathname.startsWith('/admin/batch-edit')) {
-    routeName = 'adminBatchEdit';
-  } else if (pathname.startsWith('/admin/group/')) {
-    routeName = 'adminGroup';
-  } else if (pathname.startsWith('/admin/photo/')) {
-    routeName = 'adminPhoto';
-  } else if (pathname.startsWith('/admin/tasks')) {
-    routeName = 'adminTasks';
-  } else if (pathname.startsWith('/admin/diagnose')) {
-    routeName = 'adminDiagnostics';
-  } else if (pathname.startsWith('/admin/error-logs')) {
-    routeName = 'adminDiagnosticsLogs';
-  } else if (pathname.startsWith('/admin')) {
-    routeName = 'admin';
-  } else if (pathname.startsWith('/settings')) {
-    routeName = 'settings';
-  } else if (pathname.startsWith('/diagnostics')) {
-    routeName = 'diagnostics';
-  } else if (!routeName || routeName === '') {
-    // Default fallback for other pages
-    if (pathname === '/' || pathname === '') {
-      routeName = 'home';
-    } else if (pathname.startsWith('/group/')) {
-      routeName = 'publicGroup';
-    } else if (pathname.startsWith('/photo/')) {
-      routeName = 'photo';
-    }
-  }
-
-  // Group routes to avoid tearing down the entire layout when swapping nested sub-views
-  const getPageGroupKey = (rName: string) => {
-    if (rName === 'home' || rName === 'photo' || rName === 'photoSlash') {
-      return 'public-home';
-    }
-    if (
-      rName === 'admin' || 
-      rName === 'adminSlash' || 
-      rName === 'adminPhoto' || 
-      rName === 'adminPhotoSlash' || 
-      rName === 'adminBatchEdit' || 
-      rName === 'adminBatchEditSlash' || 
-      rName === 'adminTasks' || 
-      rName === 'adminTasksSlash' || 
-      rName === 'adminDiagnostics' || 
-      rName === 'adminDiagnosticsSlash' || 
-      rName === 'adminDiagnosticsLogs' || 
-      rName === 'adminDiagnosticsLogsSlash' || 
-      rName === 'settings' || 
-      rName === 'settingsSlash'
-    ) {
-      return 'admin-dashboard';
-    }
-    if (rName === 'diagnostics' || rName === 'diagnosticsSlash') {
-      return 'diag-dashboard';
-    }
-    if (rName === 'publicGroup' || rName === 'publicGroupSlash') {
-      return 'public-group';
-    }
-    if (rName === 'adminGroup' || rName === 'adminGroupSlash') {
-      return 'admin-group';
-    }
-    return rName || 'unknown';
+  const getPageGroupKey = (pathname: string) => {
+    if (pathname === '/' || pathname.startsWith('/photo/')) return 'public-home';
+    if (pathname.startsWith('/admin')) return 'admin-dashboard';
+    if (pathname.startsWith('/diagnostics')) return 'diag-dashboard';
+    if (pathname.startsWith('/group/')) return 'public-group';
+    return pathname;
   };
 
-  const groupKey = getPageGroupKey(routeName || '');
-
-  const getPage = () => {
-    if (!routeName) {
-      logger.warn('[Router] No route matched!', pathname);
-      return <NotFoundPage />;
-    }
-    logger.debug('[Router] Matched route:', routeName);
-
-    switch (routeName) {
-      case "home":
-      case "photo":
-      case "photoSlash":
-        return <PublicPage />;
-      case "admin":
-      case "adminSlash":
-      case "adminPhoto":
-      case "adminPhotoSlash":
-      case "adminBatchEdit":
-      case "adminBatchEditSlash":
-      case "adminTasks":
-      case "adminTasksSlash":
-      case "adminDiagnostics":
-      case "adminDiagnosticsSlash":
-      case "adminDiagnosticsLogs":
-      case "adminDiagnosticsLogsSlash":
-      case "settings":
-      case "settingsSlash":
-        return <AdminPage />;
-      case "diagnostics":
-      case "diagnosticsSlash":
-        return (
-          <AdminAuthGate>
-            <DiagDashboard />
-          </AdminAuthGate>
-        );
-      case "publicGroup":
-      case "publicGroupSlash":
-        return <PublicGroupDetailPage />;
-      case "adminGroup":
-      case "adminGroupSlash":
-        return (
-          <AdminAuthGate>
-            <AdminGroupDetailPage />
-          </AdminAuthGate>
-        );
-      default:
-        return <NotFoundPage />;
-    }
-  };
+  const groupKey = getPageGroupKey(location);
 
   return (
-    <>
-      <AnimatePresence>
-        <motion.div 
-          key={groupKey}
-          variant="fade"
-          transition="easeOut"
-          className="flex-1 flex flex-col h-full w-full"
-        >
-          <Suspense fallback={<LoadingScreen />}>
-            {getPage()}
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
-    </>
+    <AnimatePresence>
+      <motion.div 
+        key={groupKey}
+        variant="fade"
+        transition="easeOut"
+        className="flex-1 flex flex-col h-full w-full"
+      >
+        <Suspense fallback={<LoadingScreen />}>
+          <Switch>
+            <Route path="/" component={PublicPage} />
+            <Route path="/photo/:photoId" component={PublicPage} />
+            <Route path="/group/:slug" component={PublicGroupDetailPage} />
+            <Route path="/admin*" component={AdminPage} />
+            <Route path="/settings*" component={AdminPage} />
+            <Route path="/diagnostics" component={() => (
+                <AdminAuthGate>
+                  <DiagDashboard />
+                </AdminAuthGate>
+            )} />
+            <Route path="/admin/group/:id" component={() => (
+                <AdminAuthGate>
+                  <AdminGroupDetailPage />
+                </AdminAuthGate>
+            )} />
+            <Route component={NotFoundPage} />
+          </Switch>
+        </Suspense>
+      </motion.div>
+    </AnimatePresence>
   );
 }

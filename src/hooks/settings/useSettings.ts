@@ -1,40 +1,38 @@
 import { AppSettings } from '#src/types/index.js';
 import React from 'react';
-import { useAppQuery, useAppMutation, appQuery } from '#lib/query/index.js';
+import { useAppQuery } from '#lib/query/index.js';
 import { fetchPublicSettings } from '#src/services/settings/queries.js';
-import { saveSettings } from '#src/services/settings/commands.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { queryKeys } from '#lib/query/keys.js';
-
-const SETTINGS_KEY = ['settings', 'public'];
+import { useSettingsMutations } from './useSettingsMutations.js';
 
 export function useSettings() {
-  const { data: settings, isLoading, mutate } = useAppQuery<AppSettings>(
-    SETTINGS_KEY,
+  const { data: settings, isPending } = useAppQuery<AppSettings>(
+    queryKeys.settings.public(),
     fetchPublicSettings,
     {
-      dedupingInterval: STALE_TIMES.LONG,
-      revalidateOnFocus: false,
+      staleTime: STALE_TIMES.LONG,
     }
   );
 
+  const { update: updateSettings } = useSettingsMutations();
+
   return React.useMemo(() => ({
     settings: settings || ({} as AppSettings),
-    isPending: isLoading,
-    updateSettings: mutate,
+    isPending,
+    updateSettings,
     agnesApiKey: settings?.agnes_api_key,
     accessPasscode: settings?.accessPasscode,
-    updateSettingsSync: mutate,
-  }), [settings, isLoading, mutate]);
+    updateSettingsSync: updateSettings,
+  }), [settings, isPending, updateSettings]);
 }
 
 export function usePublicSettings() {
   return useAppQuery<AppSettings>(
-    SETTINGS_KEY,
+    queryKeys.settings.public(),
     fetchPublicSettings,
     {
-      dedupingInterval: STALE_TIMES.MEDIUM,
-      revalidateOnFocus: false,
+      staleTime: STALE_TIMES.MEDIUM,
     }
   );
 }

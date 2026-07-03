@@ -12,7 +12,8 @@ import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 
 import { normalizeTagName } from "#lib/utils.js";
 import { triggerRefreshTagHotScores } from "#src/services/tag/commands.js";
-import { appQuery } from '#lib/query/index.js';
+import { queryClient } from '#lib/query/index.js';
+import { queryKeys } from '#lib/query/keys.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import { FormProvider } from '#lib/forms/useFormField.js';
 import * as v from 'valibot';
@@ -89,7 +90,7 @@ export function TagsSection({
       silent: true,
       execute: async () => {
         await triggerRefreshTagHotScores();
-        await appQuery.mutate("tags"); // Refactored to use SWR mutate
+        await queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
       }
     });
   };

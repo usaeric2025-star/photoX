@@ -171,7 +171,7 @@ export function TagEditor({
             <div className="space-y-3">
               <button
                 type="button"
-                className="w-full flex items-center justify-center gap-3 text-amber-600 bg-amber-50/50 backdrop-blur-sm border border-amber-100/50 font-bold py-4 rounded-2xl hover:bg-amber-100 transition-all cursor-pointer shadow-sm shadow-amber-500/5"
+                className="w-full flex items-center justify-center gap-3 text-amber-600 bg-amber-50 border border-amber-100/50 font-bold py-4 rounded-2xl hover:bg-amber-100 transition-all cursor-pointer shadow-sm shadow-amber-500/5"
                 onClick={() => {
                   if (activeActionTag) togglePin(String(activeActionTag.id));
                   setActiveActionTag(null);
@@ -192,7 +192,7 @@ export function TagEditor({
               </button>
               <button
                 type="button"
-                className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
+                className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50 border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
                 onClick={() => {
                   if (onRenameTagRequest && activeActionTag) {
                     onRenameTagRequest(activeActionTag);
@@ -204,7 +204,7 @@ export function TagEditor({
               </button>
               <button
                 type="button"
-                className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
+                className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50 border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
                 onClick={async () => {
                   if (!activeActionTag) return;
                   if (await confirm({

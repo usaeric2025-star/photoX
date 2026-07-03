@@ -30,6 +30,7 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
     tagId: tags?.[0],
     searchQuery: search,
     sortOrder: sort,
+    onlyGroupsCover: false, // Ensure we see all photos in the group
   });
 
   const photos = data?.pages.flatMap(p => p.items) || [];

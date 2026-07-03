@@ -1,7 +1,7 @@
 import { Manufacturer } from '#src/types/index.js';
 import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '#src/services/manufacturer/commands.js';
 import { queryKeys } from '#lib/query/keys.js';
-import { useAppMutation, appQuery } from '#lib/query/index.js';
+import { useAppMutation, queryClient } from '#lib/query/index.js';
 
 // 1. 创建厂商
 export const useManufacturerCreate = () => useAppMutation({
@@ -12,12 +12,8 @@ export const useManufacturerCreate = () => useAppMutation({
     return res;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.manufacturers.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
 
@@ -29,12 +25,8 @@ export const useManufacturerEdit = () => useAppMutation({
     return true;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.manufacturers.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
 
@@ -46,24 +38,7 @@ export const useManufacturerDelete = () => useAppMutation({
     return true;
   },
   onSuccess: () => {
-    appQuery.mutate(queryKeys.manufacturers.all);
-    appQuery.mutate((key) => {
-      if (!key) return false;
-      const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-      return keyStr.includes('photos');
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.manufacturers.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   }
 });
-
-function useManufacturerMutations() {
-  const create = useManufacturerCreate();
-  const update = useManufacturerEdit();
-  const remove = useManufacturerDelete();
-
-  return {
-    create: create.mutateAsync,
-    update: update.mutateAsync,
-    remove: remove.mutateAsync,
-    isMutating: create.isPending || update.isPending || remove.isPending,
-  };
-}

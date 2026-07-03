@@ -2,7 +2,7 @@ import { logger } from '#lib/logger.js';
 import { useCallback } from 'react';
 import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext.js";
 import { ErrorFactory } from '#lib/error/index.js';
-import { appQuery } from '#lib/query/index.js';
+import { useAppQuery, queryClient } from '#lib/query/index.js';
 import { executeTask } from '#lib/task-queue/index.js';
 import { useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '#src/hooks/index.js';
 import { Tag, Photo } from '#src/types/index.js';
@@ -161,12 +161,12 @@ export function usePhotoEditAI() {
                   const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3);
                   
                   // Refetch/Invalidate tags so the tag select options are in sync
-                  await appQuery.mutate('tags');
+                  queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
                   
                   const latestTags = await loadTagsFromCloud().catch(() => allTags);
 
                   // Optimistically set the cache for tags so they display IMMEDIATELY
-                  appQuery.mutate(queryKeys.tags.tags(), (old: Tag[] | undefined) => {
+                  queryClient.setQueryData(queryKeys.tags.list(), (old: Tag[] | undefined) => {
                     const oldTags = Array.isArray(old) ? old : [];
                     const existingMap = new Map(oldTags.map((t: Tag) => [String(t.id), t]));
                     latestTags.forEach((t: Tag) => existingMap.set(String(t.id), t));
@@ -220,7 +220,7 @@ export function usePhotoEditAI() {
             }));
           }
           // Invalidate the cache to instantly reveal JSON output in AI tab
-          await appQuery.mutate(['photos', 'ai-result', editPhotoId]);
+          queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
 
           Object.entries(updates).forEach(([key, value]) => {
             form.setFieldValue(key as keyof PhotoEditFormData, value as never);
@@ -233,7 +233,7 @@ export function usePhotoEditAI() {
               // Synchronously update the cache for the photo detail query
               const detailKey = queryKeys.photos.detail(editPhotoId);
               
-              await appQuery.mutate(detailKey, (oldPhoto: Photo | undefined) => {
+              queryClient.setQueryData(detailKey, (oldPhoto: Photo | undefined) => {
                 if (!oldPhoto) return oldPhoto;
                 return {
                   ...oldPhoto,
@@ -253,8 +253,8 @@ export function usePhotoEditAI() {
           }
         
           // [V2.2] Standard invalidation per architecture rules
-          await appQuery.mutate(queryKeys.photos.all);
-          await appQuery.mutate(queryKeys.groups.all);
+          queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
           
           return result;
         }

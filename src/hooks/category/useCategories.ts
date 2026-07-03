@@ -6,11 +6,11 @@ import { STALE_TIMES } from '#lib/query/config.js';
 
 export function useCategories(options?: { enabled?: boolean }) {
   const isEnabled = options?.enabled ?? true;
-  const { data, isLoading, error, mutate } = useAppQuery<Category[]>(
-    isEnabled ? queryKeys.categories.all : null,
+  const { data, isLoading, error, refetch } = useAppQuery<Category[]>(
+    isEnabled ? queryKeys.categories.list() : null,
     loadCategoriesFromCloud,
     {
-      dedupingInterval: STALE_TIMES.MEDIUM,
+      staleTime: STALE_TIMES.MEDIUM,
     }
   );
 
@@ -18,6 +18,6 @@ export function useCategories(options?: { enabled?: boolean }) {
     categories: data || [],
     isLoading,
     error,
-    mutate,
+    mutate: refetch,
   };
 }

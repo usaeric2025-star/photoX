@@ -141,7 +141,7 @@ export function AdminGroupDetailPage() {
   
   return (
     <div className="bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
-      <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
+      <div className="flex-shrink-0 bg-white border-b border-slate-100 shadow-sm">
         <AdminGroupHeader 
           group={group} 
           photoCount={totalCount} 

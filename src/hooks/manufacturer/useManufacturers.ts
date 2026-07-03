@@ -5,11 +5,11 @@ import { queryKeys } from '#lib/query/keys.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 
 export function useManufacturers() {
-  const { data, isLoading, error, mutate } = useAppQuery<Manufacturer[]>(
-    queryKeys.manufacturers.all,
+  const { data, isLoading, error } = useAppQuery<Manufacturer[]>(
+    queryKeys.manufacturers.list(),
     loadManufacturersFromCloud,
     {
-      dedupingInterval: STALE_TIMES.LONG,
+      staleTime: STALE_TIMES.LONG,
     }
   );
 
@@ -17,6 +17,5 @@ export function useManufacturers() {
     manufacturers: data || [],
     isLoading,
     error,
-    mutate,
   };
 }

@@ -28,8 +28,9 @@ export interface Photo {
   imageUrl: string; // Public URL in Storage
   width?: number; // Pixel width
   height?: number; // Pixel height
-  thumbnailSmUrl?: string; // w=300
-  thumbnailMdUrl?: string; // w=800
+  thumbnailSmUrl?: string; // w=120 (Standard for grid/cards)
+  thumbnailMdUrl?: string; // w=400 (Standard for medium grid)
+  thumbnailLgUrl?: string; // w=800 (Standard for lightbox/fullscreen)
   dimensions?: Dimension[] | null;
   createdAt: string;
   updatedAt?: string;

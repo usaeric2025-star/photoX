@@ -30,6 +30,6 @@ export const usePhotoAIResult = (photoId: string) => {
         throw ErrorFactory.wrap(err, 'Network Error', photoId);
       }
     },
-    { dedupingInterval: STALE_TIMES.PHOTO_LIST }
+    { staleTime: STALE_TIMES.PHOTO_LIST }
   );
 };

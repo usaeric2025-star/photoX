@@ -16,46 +16,52 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
   }, []);
 
   const content = error ? (
-    <div className="flex items-center justify-center bg-white/95 backdrop-blur-sm select-none min-h-screen">
+    <div className="flex items-center justify-center bg-white select-none min-h-screen">
       <div className="text-center max-w-md p-8 bg-white rounded-3xl shadow-2xl border border-red-100 animate-in fade-in zoom-in duration-300">
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <Icon name="alert-triangle" className="w-10 h-10 text-red-500" />
         </div>
         <h3 className="text-2xl font-black text-gray-900 mb-2">啟動失敗</h3>
         <p className="text-slate-500 mb-6 font-medium leading-relaxed">
-          {error.message?.includes('逾時') ? '連線速度較慢或系統正在初始化，請稍候再試' : (error.message || '應用程式在啟動過程中遇到未知錯誤')}
+          {error.message?.includes('逾時') ? '連線速度較慢或系統正在初始化，請稍候片刻後重新整理頁面' : (error.message || '系統啟動時遇到一點問題')}
         </p>
         
-        <div className="bg-slate-50 rounded-xl p-4 mb-6 text-left border border-slate-100 overflow-hidden">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">診斷報告 (Diagnostics)</div>
-            <button 
-              onClick={() => {
-                const data = {
-                  url: window.location.href,
-                  ua: navigator.userAgent,
-                  time: new Date().toISOString(),
-                  error: error.stack || error.message,
-                  type: error.name
-                };
-                navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-                alert('診斷資料已複製到剪貼簿');
-              }}
-              className="text-[10px] text-brand-navy font-bold hover:underline"
-            >
-              複製代碼
-            </button>
+        <details className="group mb-6">
+          <summary className="text-[10px] uppercase tracking-wider text-slate-400 font-bold cursor-pointer list-none flex items-center justify-center gap-1 hover:text-slate-500 transition">
+            <span>診斷資訊 (Diagnostics)</span>
+            <Icon name="chevron-down" className="w-2.5 h-2.5 group-open:rotate-180 transition-transform" />
+          </summary>
+          <div className="mt-4 bg-slate-50 rounded-xl p-4 text-left border border-slate-100 overflow-hidden">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] text-slate-400 font-bold">Error Details</div>
+              <button 
+                onClick={() => {
+                  const data = {
+                    url: window.location.href,
+                    ua: navigator.userAgent,
+                    time: new Date().toISOString(),
+                    error: error.stack || error.message,
+                    type: error.name
+                  };
+                  navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+                  alert('診斷資料已複製到剪貼簿');
+                }}
+                className="text-[10px] text-brand-navy font-bold hover:underline"
+              >
+                複製代碼
+              </button>
+            </div>
+            <code className="text-[11px] text-slate-600 block break-all font-mono leading-tight max-h-40 overflow-y-auto">
+              <div className="text-red-600 font-bold mb-1">Error: {error.name}</div>
+              <div className="mb-2 italic opacity-70">{error.message}</div>
+              {error.stack && (
+                <div className="text-slate-400 text-[9px] mt-2 whitespace-pre-wrap">
+                  {error.stack.split('\n').slice(0, 5).join('\n')}
+                </div>
+              )}
+            </code>
           </div>
-          <code className="text-[11px] text-slate-600 block break-all font-mono leading-tight max-h-40 overflow-y-auto">
-            <div className="text-red-600 font-bold mb-1">Error: {error.name}</div>
-            <div className="mb-2 italic opacity-70">{error.message}</div>
-            {error.stack && (
-              <div className="text-slate-400 text-[9px] mt-2 whitespace-pre-wrap">
-                {error.stack.split('\n').slice(0, 5).join('\n')}
-              </div>
-            )}
-          </code>
-        </div>
+        </details>
 
         <div className="flex flex-col gap-3">
           <button
@@ -80,14 +86,14 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
       </div>
     </div>
   ) : (
-    <div className="flex flex-col bg-slate-50/95 backdrop-blur-sm select-none overflow-hidden min-h-screen w-full">
+    <div className="flex flex-col bg-slate-50 select-none overflow-hidden min-h-screen w-full">
       {/* Top-edge dynamic linear progress bar */}
       <div className="h-[3px] w-full bg-slate-200 relative overflow-hidden shrink-0">
         <div className="absolute top-0 left-0 h-full w-[35%] bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 rounded-full animate-[loading-bar_1.2s_infinite_ease-in-out]"></div>
       </div>
 
       {/* Mock Header skeleton */}
-      <header className="h-14 border-b border-slate-100 bg-white/80 backdrop-blur px-4 flex items-center justify-between shrink-0">
+      <header className="h-14 border-b border-slate-100 bg-white px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="text-brand-navy font-black tracking-widest text-sm flex items-center gap-1">
             <span>PH</span>
@@ -128,7 +134,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
   );
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-slate-50/95 backdrop-blur-sm select-none overflow-hidden h-screen w-screen">
+    <div className="fixed inset-0 z-[9999] flex flex-col bg-slate-50 select-none overflow-hidden h-screen w-screen">
       {content}
     </div>
   );

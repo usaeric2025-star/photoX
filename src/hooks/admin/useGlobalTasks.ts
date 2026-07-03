@@ -3,8 +3,9 @@ import { useAuth, tasksSignal, useSignal } from '#lib/store/index.js';
 import { useEffect, useState } from 'react';
 import { UnifiedTask, TaskStatus } from '#src/types/index.js';
 import { api } from '#lib/api.js';
-import { useAppQuery } from '#lib/query/index.js';
+import { useAppQuery, queryClient } from '#lib/query/index.js';
 import { useAdminMode } from '#src/hooks/core/auth/useAdminMode.js';
+import { queryKeys } from '#lib/query/keys.js';
 import { logger } from '#lib/logger.js';
 import { useAppRoute } from '#lib/router/index.js';
 import type { Task } from '#lib/task-queue/types.js';
@@ -23,8 +24,8 @@ export function useGlobalTasks() {
   const sessionTasksMap = useSignal(tasksSignal);
 
   // 2. Backend Jobs (Durable, polled)
-  const { data: remoteJobs = [], mutate: refetchJobs, isLoading: isPendingJobs } = useAppQuery(
-    isAdmin ? ['maintenance-jobs'] : null,
+  const { data: remoteJobs = [], isPending: isPendingJobs, refetch: refetchJobs } = useAppQuery<any[]>(
+    isAdmin ? queryKeys.maintenance.jobs() : null,
     async () => {
       try {
         const res = await api.admin.maintenance.jobs.$get();
@@ -41,12 +42,12 @@ export function useGlobalTasks() {
       }
     },
     {
-      revalidateOnFocus: false, // Prevent focus changes from hammering the server
-      revalidateOnReconnect: false,   // Prevent network state changes from refetching
-      // Poll only if there is an active job or the user is on a tasks/logs/diagnostics screen
-      refreshInterval: (rJobs: unknown) => {
-        if (!isAdmin) return 0;
-        if (typeof document !== 'undefined' && document.hidden) return 0;
+      refetchOnWindowFocus: false,
+      staleTime: STALE_TIMES.FAST,
+      refetchInterval: (query: any) => {
+        const rJobs = query.state.data;
+        if (!isAdmin) return false;
+        if (typeof document !== 'undefined' && document.hidden) return false;
         const hasRunning = Array.isArray(rJobs) && (rJobs as { status?: string }[]).some(job => job && job.status === 'processing');
         const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
         const isStatusScreen = 
@@ -54,9 +55,8 @@ export function useGlobalTasks() {
           pathname.startsWith('/admin/tasks') ||
           pathname.startsWith('/admin/diagnose') ||
           pathname.startsWith('/admin/error-logs');
-        return (hasRunning || isStatusScreen) ? 5000 : 0;
+        return (hasRunning || isStatusScreen) ? 5000 : false;
       },
-      dedupingInterval: STALE_TIMES.FAST
     }
   );
 

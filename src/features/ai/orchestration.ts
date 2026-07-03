@@ -15,7 +15,8 @@ import { supabase } from '#lib/supabase.js';
 import { api } from '#lib/api.js';
 
 import { Photo, Dimension, ProductGroup } from '#src/types/index.js';
-import { appQuery } from '#src/lib/query/index.js';
+import { queryClient } from '#src/lib/query/index.js';
+import { queryKeys } from '#src/lib/query/keys.js';
 
 interface PhotoAnalysisResponse {
   name?: unknown;
@@ -112,7 +113,7 @@ export async function runBatchAnalysis({
   }
 
   onProgress(0.9, '分析完成');
-  await appQuery.invalidatePhotos();
+  await queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   onProgress(1, '分析流程完成');
   
   return { successCount, groupSuccess: false };

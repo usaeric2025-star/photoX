@@ -10,7 +10,7 @@ export function PinButton({ photoId, isPinned }: { photoId: string; isPinned: bo
     togglePin.mutate({ id: photoId, isPinned: !isPinned });
   };
 
-  const isPending = togglePin.isMutating;
+  const isPending = togglePin.isPending;
 
   return (
     <button 

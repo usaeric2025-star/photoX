@@ -1,5 +1,4 @@
 import React from 'react';
-import { Router } from '#src/router.js';
 import { AppLink } from '#src/components/router/AppLink.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useUI } from '#lib/store/index.js';
@@ -105,7 +104,7 @@ export const NotFoundPage = () => {
 
         <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
           <AppLink 
-            to={Router.home()}
+            to="/"
             className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm tracking-wide hover:bg-black transition-all active:scale-[0.98]"
           >
             <Icon name="home" size={16} />

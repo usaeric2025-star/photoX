@@ -3,7 +3,7 @@ import { Photo } from '#src/types/index.js';
 import { processImageFile } from '#src/services/storage/imageProcessor.js';
 import { savePhotoToCloud } from '#src/features/upload/services/uploadService.js';
 import { createTask } from '#lib/task-queue/taskFactory.js';
-import { appQuery } from '#lib/query/index.js';
+import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { checkHashExists } from '#lib/api/photos.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -173,7 +173,7 @@ export const executeBatchUpload = (
   }
 
   // Trigger initial photos invalidate immediately after upload
-  appQuery.invalidatePhotos();
+  queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   
   return results;
 };

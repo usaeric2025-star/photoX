@@ -54,7 +54,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
   const theme = {
     public: {
-      bg: "bg-white/90 backdrop-blur-md border-slate-200 text-slate-800 shadow-[0_1px_10px_rgba(0,0,0,0.02)]",
+      bg: "bg-white border-slate-200 text-slate-800 shadow-[0_1px_10px_rgba(0,0,0,0.02)]",
       logoColor: "bg-slate-800",
       logoText: "text-slate-800 font-bold",
       button: "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200/80 hover:text-slate-900 hover:border-slate-300 active:scale-95 transition-all outline-none rounded-full flex items-center justify-center border",

@@ -1,86 +1,41 @@
-import type { FilterOptions, GroupFilterOptions } from '#src/types/api.js';
-
-/**
- * 稳定化排序对象，确保 Query Key 顺通一致
- */
-
-function sortObject(obj: unknown): unknown {
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
-  const source = obj as Record<string, unknown>;
-  return Object.keys(source)
-    .sort()
-    .reduce((acc: Record<string, unknown>, key: string) => {
-      acc[key] = source[key];
-      return acc;
-    }, {});
-}
-
-const photos = {
-  all: ['photos'] as const,
-  list: (filters: unknown) => [...photos.all, 'list', sortObject(filters)] as const,
-  detail: (photoId: string) => [...photos.all, 'detail', photoId] as const,
-  infinite: (filters: unknown, mode: 'public' | 'admin') => 
-    [...photos.all, 'infinite', mode, sortObject(filters)] as const,
-  count: (filters: unknown) => [...photos.all, 'count', sortObject(filters)] as const,
-};
-
-const groups = {
-  all: ['groups'] as const,
-  list: (filters: unknown) => [...groups.all, 'list', sortObject(filters)] as const,
-  detail: (groupId: string, isAdmin: boolean) => 
-    [...groups.all, 'detail', groupId, isAdmin] as const,
-  photos: (groupId: string) => [...groups.all, 'photos', groupId] as const,
-};
-
-const aiAudit = {
-  all: ['ai-audit'] as const,
-  byPhoto: (photoId: string) => [...aiAudit.all, 'photo', photoId] as const,
-};
-
-const categories = {
-  all: ['categories'] as const,
-  public: (lang: string) => [...categories.all, 'public', lang] as const,
-  admin: () => [...categories.all, 'admin'] as const,
-  categories: () => [...categories.all] as const,
-};
-
-const tags = {
-  all: ['tags'] as const,
-  list: (mode: 'public' | 'admin') => [...tags.all, mode] as const,
-  tags: () => [...tags.all] as const,
-};
-
-const manufacturers = {
-  all: ['manufacturers'] as const,
-  list: (mode: 'public' | 'admin') => [...manufacturers.all, mode] as const,
-  manufacturers: () => [...manufacturers.all] as const,
-};
-
-const settings = {
-  all: ['settings'] as const,
-  detail: (key: string) => [...settings.all, 'detail', key] as const,
-};
-
-const storage = {
-  all: ['storage'] as const,
-  audit: () => [...storage.all, 'audit'] as const,
-};
-
-const diagnostics = {
-  all: ['diagnostics'] as const,
-  audit: () => [...diagnostics.all, 'audit'] as const,
-  report: () => [...diagnostics.all, 'report'] as const,
-  r2: () => [...diagnostics.all, 'r2'] as const,
-};
-
 export const queryKeys = {
-  photos,
-  groups,
-  aiAudit,
-  categories,
-  tags,
-  manufacturers,
-  settings,
-  storage,
-  diagnostics
-} as const;
+  photos: {
+    all: ['photos'] as const,
+    lists: () => [...queryKeys.photos.all, 'list'] as const,
+    list: (filters: any) => [...queryKeys.photos.lists(), { filters }] as const,
+    details: () => [...queryKeys.photos.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.photos.details(), id] as const,
+  },
+  categories: {
+    all: ['categories'] as const,
+    list: () => [...queryKeys.categories.all, 'list'] as const,
+  },
+  tags: {
+    all: ['tags'] as const,
+    list: () => [...queryKeys.tags.all, 'list'] as const,
+    search: (keyword: string) => [...queryKeys.tags.all, 'search', { keyword }] as const,
+  },
+  groups: {
+    all: ['groups'] as const,
+    lists: () => [...queryKeys.groups.all, 'list'] as const,
+    details: () => [...queryKeys.groups.all, 'detail'] as const,
+    detail: (id: string, includePhotos?: boolean) => [...queryKeys.groups.details(), id, { includePhotos }] as const,
+  },
+  manufacturers: {
+    all: ['manufacturers'] as const,
+    list: () => [...queryKeys.manufacturers.all, 'list'] as const,
+  },
+  settings: {
+    all: ['settings'] as const,
+    public: () => [...queryKeys.settings.all, 'public'] as const,
+    admin: () => [...queryKeys.settings.all, 'admin'] as const,
+  },
+  diagnostics: {
+    all: ['diagnostics'] as const,
+  },
+  maintenance: {
+    all: ['maintenance'] as const,
+    stats: () => [...queryKeys.maintenance.all, 'stats'] as const,
+    jobs: () => [...queryKeys.maintenance.all, 'jobs'] as const,
+  }
+};

@@ -35,13 +35,13 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
     <div className="relative">
       <Button 
         onClick={handleConfirm}
-        loading={deleteMutation.isMutating}
+        loading={deleteMutation.isPending}
         disabled={selectedIds.length === 0}
         variant="destructive"
         className="h-10 px-3 flex items-center justify-center gap-1.5"
-        leftIcon={!deleteMutation.isMutating && <Icon name="trash-2" size={16} />}
+        leftIcon={!deleteMutation.isPending && <Icon name="trash-2" size={16} />}
       >
-        {deleteMutation.isMutating ? t.deleting : `${t.delete} (${selectedIds.length})`}
+        {deleteMutation.isPending ? t.deleting : `${t.delete} (${selectedIds.length})`}
       </Button>
     </div>
   );
