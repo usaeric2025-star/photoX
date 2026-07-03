@@ -9,6 +9,11 @@ import { useSelectionActions } from '#src/hooks/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useTranslation } from '#src/hooks/index.js';
 
+interface SWRPhotoPage {
+  data?: Photo[];
+  items?: Photo[];
+}
+
 /**
  * 照片编辑 Mutation
  */
@@ -24,21 +29,21 @@ export const usePhotoEditMutation = () => {
       // 樂觀更新
       await swrMutate(
         (key: unknown) => typeof key === 'string' ? key.includes('photos') : JSON.stringify(key).includes('photos'),
-        (currentData: Photo[] | { data?: Photo[]; items?: Photo[] } | undefined) => {
+        (currentData: SWRPhotoPage[] | SWRPhotoPage | undefined) => {
           if (!currentData) return currentData;
           const updater = (items: Photo[]) => items.map(p => p.id === id ? { ...p, ...coreUpdates } : p);
 
           if (Array.isArray(currentData)) {
             return currentData.map(page => ({
               ...page,
-              data: page.data ? updater(page.data) : page.data,
-              items: page.items ? updater(page.items) : page.items
+              data: page.data ? updater(page.data as Photo[]) : page.data,
+              items: page.items ? updater(page.items as Photo[]) : page.items
             }));
           } else {
             return {
               ...currentData,
-              data: currentData.data ? updater(currentData.data) : currentData.data,
-              items: currentData.items ? updater(currentData.items) : currentData.items
+              data: currentData.data ? updater(currentData.data as Photo[]) : currentData.data,
+              items: currentData.items ? updater(currentData.items as Photo[]) : currentData.items
             };
           }
         },
@@ -83,7 +88,7 @@ export const usePhotoDelete = () => {
       // 樂觀刪除
       await swrMutate(
          (key: unknown) => typeof key === 'string' ? key.includes('photos') : JSON.stringify(key).includes('photos'),
-         (currentData: Photo[] | { data?: Photo[]; items?: Photo[] } | undefined) => {
+         (currentData: SWRPhotoPage[] | SWRPhotoPage | undefined) => {
             if (!currentData) return currentData;
             
             const updater = (items: Photo[]) => items.filter((p: Photo) => !filterIds.has(p.id));
@@ -91,14 +96,14 @@ export const usePhotoDelete = () => {
             if (Array.isArray(currentData)) {
               return currentData.map(page => ({
                 ...page,
-                data: page.data ? updater(page.data) : page.data,
-                items: page.items ? updater(page.items) : page.items
+                data: page.data ? updater(page.data as Photo[]) : page.data,
+                items: page.items ? updater(page.items as Photo[]) : page.items
               }));
             } else {
               return {
                 ...currentData,
-                data: currentData.data ? updater(currentData.data) : currentData.data,
-                items: currentData.items ? updater(currentData.items) : currentData.items
+                data: currentData.data ? updater(currentData.data as Photo[]) : currentData.data,
+                items: currentData.items ? updater(currentData.items as Photo[]) : currentData.items
               };
             }
          },
@@ -133,7 +138,7 @@ export const usePhotoBatchEdit = () => {
       // 樂觀批量更新
       await swrMutate(
          (key: unknown) => typeof key === 'string' ? key.includes('photos') : JSON.stringify(key).includes('photos'),
-         (currentData: Photo[] | { data?: Photo[]; items?: Photo[] } | undefined) => {
+         (currentData: SWRPhotoPage[] | SWRPhotoPage | undefined) => {
             if (!currentData) return currentData;
             
             const updater = (items: Photo[]) => items.map(p => updateIds.has(p.id) ? { ...p, ...coreUpdates } : p);
@@ -141,14 +146,14 @@ export const usePhotoBatchEdit = () => {
             if (Array.isArray(currentData)) {
               return currentData.map(page => ({
                 ...page,
-                data: page.data ? updater(page.data) : page.data,
-                items: page.items ? updater(page.items) : page.items
+                data: page.data ? updater(page.data as Photo[]) : page.data,
+                items: page.items ? updater(page.items as Photo[]) : page.items
               }));
             } else {
               return {
                 ...currentData,
-                data: currentData.data ? updater(currentData.data) : currentData.data,
-                items: currentData.items ? updater(currentData.items) : currentData.items
+                data: currentData.data ? updater(currentData.data as Photo[]) : currentData.data,
+                items: currentData.items ? updater(currentData.items as Photo[]) : currentData.items
               };
             }
          },
@@ -191,21 +196,21 @@ export const useTogglePin = () => {
       // 樂觀更新
       await swrMutate(
         (key: unknown) => typeof key === 'string' ? key.includes('photos') : JSON.stringify(key).includes('photos'),
-        (currentData: Photo[] | { data?: Photo[]; items?: Photo[] } | undefined) => {
+        (currentData: SWRPhotoPage[] | SWRPhotoPage | undefined) => {
           if (!currentData) return currentData;
           const updater = (items: Photo[]) => items.map(p => p.id === id ? { ...p, isPinned } : p);
 
           if (Array.isArray(currentData)) {
             return currentData.map(page => ({
               ...page,
-              data: page.data ? updater(page.data) : page.data,
-              items: page.items ? updater(page.items) : page.items
+              data: page.data ? updater(page.data as Photo[]) : page.data,
+              items: page.items ? updater(page.items as Photo[]) : page.items
             }));
           } else {
             return {
               ...currentData,
-              data: currentData.data ? updater(currentData.data) : currentData.data,
-              items: currentData.items ? updater(currentData.items) : currentData.items
+              data: currentData.data ? updater(currentData.data as Photo[]) : currentData.data,
+              items: currentData.items ? updater(currentData.items as Photo[]) : currentData.items
             };
           }
         },

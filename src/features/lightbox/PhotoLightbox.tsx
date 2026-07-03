@@ -53,7 +53,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   // If we have an ID but no photos list (e.g. direct refresh), we need to show at least one slide to render the stage
   const normalizeSlide = (slide: Photo | { original: Photo } | LightboxSlide): Photo | { original: Photo } => {
     if (slide && typeof slide === 'object') {
-        if ('original' in slide) return slide;
+        if ('original' in slide) return slide as { original: Photo };
         if ('imageUrl' in slide || 'image_url' in slide || 'id' in slide) return slide as Photo;
         
         // Fallback for LightboxSlide
@@ -93,9 +93,9 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     return slide as Photo;
   };
 
-  const effectivePhotos: (Photo | { original: Photo })[] = (sourcePhotos.length === 0 && isOpen) 
+  const effectivePhotos: (Photo | { original: Photo })[] = ((sourcePhotos.length === 0 && isOpen) 
     ? [] 
-    : sourcePhotos.map(normalizeSlide);
+    : sourcePhotos.map(normalizeSlide)) as (Photo | { original: Photo })[];
 
   const handleNext = useCallback(() => {
     if (effectivePhotos.length <= 1) return;
