@@ -8,7 +8,7 @@
   - 選擇狀態: `SelectionService` (使用 `useIsMultiSelect`, `useSelectionActions` 等)
 - **表單**: `@tanstack/react-form` + `Valibot` (取代 Zod/ArkType)
 - **動畫**: `lite-sleek` (進出場/交錯) + 純 CSS (懸停/淡入)
-- **路由**: `Chicane`
+- **路由**: `wouter`
 - **後端**: Vercel Serverless + Hono (RPC)
 - **數據庫**: PostgreSQL + Drizzle ORM (嚴禁手動寫 SQL)
 
