@@ -6,6 +6,7 @@ import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts.js';
 import { useColumns, usePerformance } from '#src/hooks/index.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
 import { useSignal, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+import { Icon } from '#src/components/ui/Icon.js';
 
 interface PublicPhotoCardProps {
   photo: PhotoListItem;
@@ -59,9 +60,13 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
     >
       <PhotoStatusBadges 
         photo={photo} 
-        isPinned={!!photo.isPinned} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
       />
+      {photo.isPinned && (
+        <div className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-full border border-white bg-white text-slate-950 shadow-md pointer-events-none select-none">
+          <Icon name="heart" size={14} className="fill-current text-slate-950" />
+        </div>
+      )}
       <PhotoCardInfo 
         hideDetails={hideDetails}
         photoTags={displayPhotoTags}
@@ -75,6 +80,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
          prev.photo.name === next.photo.name &&
          prev.photo.imageUrl === next.photo.imageUrl &&
          prev.photo.createdAt === next.photo.createdAt &&
+         prev.photo.isPinned === next.photo.isPinned &&
          prev.showGroupsCollapsed === next.showGroupsCollapsed &&
          prev.hideGroupBadge === next.hideGroupBadge &&
          prev.hasSearchQuery === next.hasSearchQuery;

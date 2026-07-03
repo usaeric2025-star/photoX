@@ -10,12 +10,10 @@ import { getDisplayGroupCode } from '#src/services/photo/utils.js';
  */
 export const PhotoStatusBadges = ({
   photo,
-  isPinned,
   hideGroupBadge,
   isGroupDetail = false,
 }: {
   photo: PhotoListItem;
-  isPinned: boolean;
   hideGroupBadge?: boolean;
   isGroupDetail?: boolean;
 }) => {
@@ -28,12 +26,6 @@ export const PhotoStatusBadges = ({
 
   return (
     <div className="absolute top-2 left-2 flex flex-col items-start gap-1 pointer-events-none select-none">
-      {/* Pinned Status */}
-      {isPinned && (
-        <div className="bg-primary text-white p-1.5 rounded-full shadow-lg border border-white/40 mb-0.5">
-          <Icon name="heart" size={12} className="fill-current" />
-        </div>
-      )}
 
       {/* Group Cover Badge */}
       {isManagement && photo.isGroupCover && isGroupDetail && (

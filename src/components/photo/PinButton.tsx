@@ -16,7 +16,11 @@ export function PinButton({ photoId, isPinned }: { photoId: string; isPinned: bo
     <button 
       onClick={handleClick}
       disabled={isPending}
-      className={`absolute top-2 right-2 bg-slate-950/40 border border-white/10 p-1.5 sm:p-2 rounded-full text-white hover:scale-110 md:hover:bg-slate-950/65 active:scale-95 transition-all duration-250 disabled:opacity-50 ${isPinned ? 'text-red-500 hover:text-red-400' : ''}`}
+      className={`absolute top-2 right-2 p-1.5 sm:p-2 rounded-full border hover:scale-110 active:scale-95 transition-all duration-250 disabled:opacity-50 ${
+        isPinned 
+          ? 'bg-white text-slate-950 border-white shadow-md' 
+          : 'bg-slate-950/40 text-white border-white/10 md:hover:bg-slate-950/65'
+      }`}
     >
       <Icon name="heart" size={14} className={isPinned ? 'fill-current' : 'stroke-[2.5]'} />
     </button>

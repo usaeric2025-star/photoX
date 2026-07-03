@@ -76,7 +76,6 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       )}
       <PhotoStatusBadges 
         photo={photo} 
-        isPinned={!!photo.isPinned} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
         isGroupDetail={isGroupDetail}
       />

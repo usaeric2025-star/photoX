@@ -217,7 +217,7 @@ export const useTogglePin = () => {
         { revalidate: false }
       );
       
-      const res = await update(id, { is_pinned: isPinned });
+      const res = await update(id, { isPinned });
       if (!res) throw new Error('Failed to update photo');
       return res;
     },
