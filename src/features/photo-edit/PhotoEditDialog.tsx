@@ -49,14 +49,11 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
       >
         {isOpen && (
           <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
-            <div className="p-4 border-b flex justify-between items-center bg-surface-base">
-              <div></div>
-              <DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
-                logger.info('[PhotoEditDialog] Delete clicked for photo:', editPhotoId);
-                await adminActions.deletePhoto.mutateAsync([editPhotoId]);
-                handleClose();
-              }} />
-            </div>
+            <DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
+              logger.info('[PhotoEditDialog] Delete clicked for photo:', editPhotoId);
+              await adminActions.deletePhoto.mutateAsync([editPhotoId]);
+              handleClose();
+            }} />
             
             {isPending ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[500px]">

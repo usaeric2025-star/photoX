@@ -25,7 +25,8 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
       .where(inArray(furnitureItems.groupId, uniqueGroupIds)),
       db.select({
         id: groupsTable.id,
-        coverPhotoId: groupsTable.coverPhotoId
+        coverPhotoId: groupsTable.coverPhotoId,
+        createdAt: groupsTable.createdAt
       })
       .from(groupsTable)
       .where(inArray(groupsTable.id, uniqueGroupIds))
@@ -49,13 +50,19 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
 
         // Rule: Group must have at least 2 members.
         if (actualCount <= 1) {
-          if (actualCount === 1) {
-            await db.update(furnitureItems)
-              .set({ groupId: null, isGroupCover: false, isPinned: false })
-              .where(eq(furnitureItems.id, items[0].id));
+          const dbGroup = groupMap.get(groupId) as any;
+          const createdAt = dbGroup?.createdAt ? new Date(dbGroup.createdAt) : null;
+          const isRecentlyCreated = createdAt && (Date.now() - createdAt.getTime() < 5 * 60 * 1000); // 5 minutes
+
+          if (!isRecentlyCreated) {
+            if (actualCount === 1) {
+              await db.update(furnitureItems)
+                .set({ groupId: null, isGroupCover: false, isPinned: false })
+                .where(eq(furnitureItems.id, items[0].id));
+            }
+            await db.delete(groupsTable).where(eq(groupsTable.id, groupId));
+            return;
           }
-          await db.delete(groupsTable).where(eq(groupsTable.id, groupId));
-          return;
         }
 
         const dbGroup = groupMap.get(groupId) as any;

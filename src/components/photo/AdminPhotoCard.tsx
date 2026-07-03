@@ -9,6 +9,44 @@ import { useIsMultiSelect, useIsPhotoSelected } from '#src/hooks/index.js';
 import { useSignal, useUI } from '#lib/store/index.js';
 import { gridColumns as gridColumnsSignal } from '#lib/store/index.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
+import { useGroupMutations } from '#src/hooks/group/index.js';
+import { Icon } from '#src/components/ui/Icon.js';
+
+interface SetCoverButtonProps {
+  photoId: string;
+  groupId: string;
+  isCover: boolean;
+  offsetRight?: boolean;
+}
+
+const SetCoverButton = memo(function SetCoverButton({
+  photoId,
+  groupId,
+  isCover,
+  offsetRight,
+}: SetCoverButtonProps) {
+  const { setCover } = useGroupMutations();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCover.mutate({ groupId, photoId });
+  };
+
+  if (isCover) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      title="設為封面 / Set as Cover"
+      className={`absolute top-2 p-1.5 sm:p-2 rounded-full border hover:scale-110 active:scale-95 transition-all duration-250 bg-slate-950/40 text-white border-white/10 md:hover:bg-slate-950/65 shadow-sm ${
+        offsetRight ? 'right-11' : 'right-2'
+      }`}
+    >
+      <Icon name="image" size={14} className="stroke-[2.5]" />
+    </button>
+  );
+});
 
 interface AdminPhotoCardProps {
   photo: PhotoListItem;
@@ -81,6 +119,14 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       />
       {(actualCanPin && !isMultiSelect) && (
         <PinButton photoId={photo.id} isPinned={!!photo.isPinned} />
+      )}
+      {isGroupDetail && photo.groupId && !isMultiSelect && (
+        <SetCoverButton 
+          photoId={photo.id} 
+          groupId={photo.groupId} 
+          isCover={!!photo.isGroupCover} 
+          offsetRight={actualCanPin}
+        />
       )}
       <PhotoCardInfo 
         hideDetails={hideDetails}

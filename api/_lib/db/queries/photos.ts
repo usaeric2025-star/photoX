@@ -158,6 +158,12 @@ export async function getPhotosList(params: PhotoListParams) {
     const primaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.createdAt) : desc(furnitureItems.createdAt);
     const secondaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.id) : desc(furnitureItems.id);
 
+    const orderByList: any[] = [hiddenOrder];
+    if (groupId) {
+        orderByList.push(desc(furnitureItems.isGroupCover));
+    }
+    orderByList.push(pinnedOrder, primaryOrder, secondaryOrder);
+
     const dbDataPromise = db
         .select({
             items: furnitureItems,
@@ -168,7 +174,7 @@ export async function getPhotosList(params: PhotoListParams) {
         .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
         .leftJoin(categories, eq(furnitureItems.categoryId, categories.id))
         .where(finalWhere)
-        .orderBy(hiddenOrder, pinnedOrder, primaryOrder, secondaryOrder)
+        .orderBy(...orderByList)
         .limit(limit)
         .execute();
 

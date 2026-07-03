@@ -71,16 +71,13 @@ export function DialogHeader({
 
   return (
     <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
-      <div className="flex-none flex items-center gap-2">
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-2">
-        <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate w-full text-center">
+      <div className="flex-1 min-w-0">
+        <h2 className="font-black text-sm sm:text-base text-slate-800 tracking-tight leading-tight uppercase truncate">
           {editPhotoId ? l.editTitle : l.analyzeTitle}
         </h2>
       </div>
 
-      <div className="flex-1 flex items-center justify-end gap-2">
+      <div className="flex-none flex items-center justify-end gap-1.5 sm:gap-2">
         <div className="flex items-center gap-1.5">
           <button
             type="button"

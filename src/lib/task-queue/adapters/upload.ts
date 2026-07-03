@@ -8,6 +8,7 @@ import { queryKeys } from '#lib/query/keys.js';
 import { checkHashExists } from '#lib/api/photos.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { logger } from '#lib/logger.js';
+import { api } from '#lib/api.js';
 
 export const executeBatchUpload = (
   files: File[],
@@ -20,6 +21,27 @@ export const executeBatchUpload = (
   let skippedCount = 0;
   
   if (total === 0) return [];
+
+  // === Pre-create the group if we are grouping ===
+  if (options.groupId) {
+    onProgress(0.05, '正在創建商品組...');
+    try {
+      const res = await api.groups.upsert.$post({
+        json: {
+          id: options.groupId,
+          name: 'GROUP',
+          status: 'confirmed',
+          userId: userId || '8ec53131-a589-4b50-beb4-6b5308541e1b'
+        }
+      });
+      if (!res.ok) {
+        throw new Error('創建商品組失敗');
+      }
+    } catch (err) {
+      logger.error('Failed to pre-create group during upload', err);
+      throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'executeBatchUpload.preCreateGroup');
+    }
+  }
 
   // Helper for parallel map with concurrency limit
   async function parallelMap<T, R>(
