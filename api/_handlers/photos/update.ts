@@ -52,6 +52,10 @@ export const updateHandler = (app: Hono) => {
             if (manRows.length === 0) mappedUpdates.manufacturerId = null;
         }
 
+        if (Object.keys(mappedUpdates).length === 0) {
+            return successResponse(c, ids);
+        }
+
         const data = await db
             .update(furnitureItems)
             .set(mappedUpdates)

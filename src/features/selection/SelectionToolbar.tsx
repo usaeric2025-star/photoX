@@ -128,7 +128,12 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* 關閉/清除選擇 */}
           <button
-            onClick={clearSelection}
+            onClick={() => {
+              if (isMultiSelect) {
+                toggleMode();
+              }
+              clearSelection();
+            }}
             className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
             title="清除並退出選取"
           >

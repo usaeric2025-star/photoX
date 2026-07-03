@@ -13,3 +13,4 @@ export * from './usePhotoEditSessionContext.js';
 export * from './useBatchEdit.js';
 export * from './usePhotoUpload.js';
 export * from './usePhotoEditAI.js';
+export * from './usePhotoWall.js';

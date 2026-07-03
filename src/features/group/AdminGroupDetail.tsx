@@ -8,7 +8,7 @@ import { useFilters, useTranslation } from '#src/hooks/index.js';
 import { useIsMultiSelect } from '#src/hooks/index.js';
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
 import { GroupSettingsDialog } from '#src/components/groups/GroupSettingsDialog.js';
-import { useGroupDraft } from '#src/components/groups/useGroupDraft.js';
+import { useGroupDraft } from '#src/hooks/index.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
 import { AdminGroupHeader } from './components/AdminGroupHeader.js';
 import { Button } from '#src/components/shared/Button.js';

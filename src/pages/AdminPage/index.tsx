@@ -13,6 +13,11 @@ export default function AdminPage() {
 
   useEffect(() => {
     document.title = t.adminPanelTitle;
+    
+    if (!window.location.pathname.startsWith('/admin')) {
+      console.warn('[Admin] Pathname deviation detected:', window.location.pathname);
+    }
+    
     // Prefetch categories in the background
     mutate(queryKeys.categories.categories(), loadCategoriesFromCloud());
 

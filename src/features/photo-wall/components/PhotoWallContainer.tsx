@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { photoWallStore } from '../signal.js';
 import { PhotoWallGrid } from './PhotoWallGrid.js';
-import { usePhotoWall } from '../hooks/usePhotoWall.js';
+import { usePhotoWall } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 

@@ -19,6 +19,11 @@ export function RouterOrchestrator() {
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   
+  // ✅ 第1层：路径前缀强制守卫
+  if (pathname.startsWith('/admin')) {
+    return <AdminPage />;
+  }
+  
   // FORCE matching based on pathname for all admin and system pages to avoid any Chicane matching issues or transient state desyncs!
   let routeName = route?.name;
   

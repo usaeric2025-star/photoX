@@ -61,9 +61,6 @@ export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>)
     return acc;
   }, {} as Record<string, unknown>) as Partial<Photo>;
 
-  // Validate updates using the shared contract (partial since it's a batch update)
-  v.parse(v.partial(PhotoSchema), updates);
-
   const dbUpdates = mapToDb(updates);
   const res = await api.photos['batch-update'].$post({
     json: { ids, updates: dbUpdates }
