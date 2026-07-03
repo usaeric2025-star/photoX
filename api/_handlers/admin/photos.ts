@@ -1,6 +1,6 @@
 import { logger } from '../../_lib/logger.js';
 import { Hono } from 'hono';
-import { db, aiAuditLogs, systemLogs, furnitureItems } from '../../_lib/db/index.js';
+import { db, aiAuditLogs, systemLogs, furnitureItems, photoTags } from '../../_lib/db/index.js';
 import { eq, desc, inArray, sql, like } from "drizzle-orm";
 import { errorResponse } from '../../_lib/response.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
@@ -145,14 +145,40 @@ adminPhotos.post("/photo/update", async (c) => {
     const { id, updates } = await c.req.json();
     if (!id) return errorResponse(c, "id is required", 400);
 
-    // Map updates to camelCase
+    const { tags: tagIds, ...otherUpdates } = updates;
+
+    // Map updates to camelCase for furnitureItems
     const mappedUpdates: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(updates as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(otherUpdates as Record<string, unknown>)) {
         const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
         mappedUpdates[camelKey] = value;
     }
 
-    await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id));
+    await db.transaction(async (tx) => {
+        if (Object.keys(mappedUpdates).length > 0) {
+            await tx.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id));
+        }
+
+        if (Array.isArray(tagIds)) {
+            // Delete old tags
+            await tx.delete(photoTags).where(eq(photoTags.photoId, id));
+            
+            // Insert new tags if any
+            if (tagIds.length > 0) {
+                const tagInsertValues = tagIds
+                    .map(tid => ({
+                        photoId: id,
+                        tagId: Number(tid)
+                    }))
+                    .filter(v => !isNaN(v.tagId));
+                
+                if (tagInsertValues.length > 0) {
+                    await tx.insert(photoTags).values(tagInsertValues);
+                }
+            }
+        }
+    });
+
     await refreshPhotosView();
     return c.json({ success: true });
 });

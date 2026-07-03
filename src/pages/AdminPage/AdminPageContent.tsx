@@ -90,7 +90,6 @@ export function AdminPageContent() {
         )}
 
         <SelectionToolbar />
-        <TaskIndicator />
 
         {currentScreen === 'gallery' && (
           <>

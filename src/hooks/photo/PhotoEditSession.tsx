@@ -93,7 +93,9 @@ export const PhotoEditSessionProvider = ({
     
     // Convert using our strict Adapter
     const saveData = photoEditAdapter(values, photoId, {
-      tags: photo?.tags?.map((t: Tag) => t.name) ?? null,
+      tags: Array.isArray(values.tags) 
+        ? values.tags.map((t: any) => typeof t === 'object' ? t.name || t.id : String(t)) 
+        : null,
       createdAt: photo?.createdAt,
       updatedAt: new Date().toISOString(),
     } as Record<string, unknown>);
@@ -114,10 +116,22 @@ export const PhotoEditSessionProvider = ({
   
   const handleCommit = useCallback(async (data?: PhotoEditFormData) => {
     if (data) {
-        Object.entries(data).forEach(([key, value]) => formObj.form.setFieldValue(key as keyof PhotoEditFormData, value as never));
+      Object.entries(data).forEach(([key, value]) => formObj.form.setFieldValue(key as keyof PhotoEditFormData, value as never));
     }
     
-    return await formObj.form.handleSubmit();
+    try {
+      console.log('[PhotoEdit] Committing form data...');
+      await formObj.form.handleSubmit();
+      
+      const state = formObj.form.state;
+      if (Object.keys(state.errors).length > 0 || state.fieldMeta && Object.values(state.fieldMeta).some(m => m?.errorMap?.onChange)) {
+         console.warn('[PhotoEdit] Form has validation errors:', state.errors, state.fieldMeta);
+         // toast.error(appLang === 'zh' ? '请检查输入内容' : 'Please check your input');
+      }
+    } catch (err) {
+      console.error('[PhotoEdit] Commit failed:', err);
+      throw err;
+    }
   }, [formObj]);
 
   const discard = () => {

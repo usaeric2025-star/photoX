@@ -7,6 +7,7 @@ import { useAppInit } from './hooks/core/useAppInit.js';
 import { LoadingScreen } from './components/ui/LoadingScreen.js';
 import { DialogContainer } from './components/layout/DialogContainer.js';
 import { Toaster } from 'sonner';
+import { TaskIndicator } from './components/admin/TaskIndicator.js';
 
 function AppContent({ status, error }: { status: string, error: Error | null }) {
   return (
@@ -29,6 +30,7 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
           )}
       </ConfirmProvider>
       <DialogContainer />
+      <TaskIndicator />
       <Toaster position="bottom-center" closeButton />
     </AppErrorBoundary>
   );

@@ -92,6 +92,14 @@ export function usePhotoEditAI() {
             }
           }
 
+          if (result.category_id || result.categoryId) {
+            updates.categoryId = String(result.category_id || result.categoryId);
+          }
+          
+          if (result.itemCode || result.item_code) {
+            updates.itemCode = String(result.itemCode || result.item_code);
+          }
+
           // --- Strict Tag Matching (Full format-compatible) with auto-creation ---
           const sourceTags: (string | { id?: string; tag_id?: string; tagId?: string; name?: string })[] = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
           const sourceTagIds: (string | { id?: string; tag_id?: string; tagId?: string; name?: string })[] = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
@@ -173,19 +181,7 @@ export function usePhotoEditAI() {
                     return Array.from(existingMap.values());
                   });
 
-                  updates.tags = uniqueIds.map(id => {
-                    const found = latestTags.find((t: Tag) => String(t.id) === id) || allTags.find((t: Tag) => String(t.id) === id);
-                    if (found) {
-                      return { id: found.id, name: found.name || '' };
-                    }
-                    // Fallback
-                    const matchingRaw = [...sourceTags, ...sourceTagIds].find((raw) => {
-                      const rStr = typeof raw === 'object' && raw ? String(raw.id ?? raw.tagId ?? raw.tag_id ?? raw.name ?? '') : String(raw);
-                      return rStr.toLowerCase() === id.toLowerCase();
-                    });
-                    const nameVal = typeof matchingRaw === 'object' ? (matchingRaw.name || id) : (matchingRaw || id);
-                    return { id, name: String(nameVal) };
-                  });
+                  updates.tags = uniqueIds;
               } else {
                   updates.tags = [];
               }
@@ -221,6 +217,11 @@ export function usePhotoEditAI() {
           }
           // Invalidate the cache to instantly reveal JSON output in AI tab
           queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
+
+          // Include AI Raw Result in metadata for persistence
+          if (result.raw_result) {
+            updates.metadata = { ai_raw: result.raw_result };
+          }
 
           Object.entries(updates).forEach(([key, value]) => {
             form.setFieldValue(key as keyof PhotoEditFormData, value as never);
