@@ -48,7 +48,8 @@ export function Image({
         onLoad?.(e);
     };
 
-    const lqipSrc = providedLqip;
+    // Skip LQIP rendering if lqipSrc is identical to src (e.g., when image worker is disabled)
+    const lqipSrc = providedLqip && providedLqip !== src ? providedLqip : undefined;
 
     return (
         <div className={cn("relative overflow-hidden bg-surface-mute w-full h-full", containerClassName)}>

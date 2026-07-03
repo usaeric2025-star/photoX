@@ -153,7 +153,6 @@ export function LightboxStage({
               src={src}
               lqipSrc={lqipSrc}
               alt={title}
-              disableFade={true}
               priority={true}
               containerClassName="bg-transparent"
               className={`object-contain max-w-full max-h-full drop-shadow-2xl transition-all duration-300 select-none ${isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in'}`}

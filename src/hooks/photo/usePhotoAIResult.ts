@@ -7,7 +7,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 /**
  * 获取照片对应的 AI 识别原始源代碼與解析後的 JSON 數據。
  */
-export const usePhotoAIResult = (photoId: string) => {
+export const usePhotoAIResult = (photoId: string, options?: { enabled?: boolean }) => {
   return useAppQuery(
     photoId ? ['photos', 'ai-result', photoId] : null,
     async (): Promise<PhotoAIResult | null> => {
@@ -30,6 +30,9 @@ export const usePhotoAIResult = (photoId: string) => {
         throw ErrorFactory.wrap(err, 'Network Error', photoId);
       }
     },
-    { staleTime: STALE_TIMES.PHOTO_LIST }
+    { 
+      staleTime: STALE_TIMES.PHOTO_LIST,
+      enabled: options?.enabled
+    }
   );
 };

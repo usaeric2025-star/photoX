@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'lite-sleek';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
@@ -93,9 +93,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     return slide as Photo;
   };
 
-  const effectivePhotos: (Photo | { original: Photo })[] = ((sourcePhotos.length === 0 && isOpen) 
-    ? [] 
-    : sourcePhotos.map(normalizeSlide)) as (Photo | { original: Photo })[];
+  const effectivePhotos = useMemo(() => {
+    if (sourcePhotos.length === 0 && isOpen) return [];
+    return sourcePhotos.map(normalizeSlide);
+  }, [sourcePhotos, isOpen]) as (Photo | { original: Photo })[];
 
   const handleNext = useCallback(() => {
     if (effectivePhotos.length <= 1) return;

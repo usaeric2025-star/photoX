@@ -54,7 +54,7 @@ export function LightboxInfo({
   const title = getDisplayString(photoData.name || 'Photo', lang);
   const uuid = photoData.id || 'N/A';
 
-  const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id);
+  const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id, { enabled: showInfo });
 
   return (
     <AnimatePresence>

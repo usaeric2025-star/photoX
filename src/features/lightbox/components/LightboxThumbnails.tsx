@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
 import { Photo } from '#src/types/photo.js';
@@ -10,7 +10,7 @@ interface LightboxThumbnailsProps {
   onSelect: (index: number) => void;
 }
 
-export function LightboxThumbnails({
+export const LightboxThumbnails = memo(function LightboxThumbnails({
   photos,
   currentIndex,
   isOpen,
@@ -49,6 +49,7 @@ export function LightboxThumbnails({
           const thumb = getPhotoThumb(key, 'SM', hash);
           const isActive = idx === currentIndex;
           const isNear = Math.abs(idx - currentIndex) <= 2;
+          const isRenderable = Math.abs(idx - currentIndex) <= 12;
           
           return (
             <button
@@ -58,17 +59,21 @@ export function LightboxThumbnails({
               aria-label={`Select photo ${idx + 1}`}
               aria-current={isActive}
             >
-              <Image 
-                src={thumb} 
-                className="w-full h-full object-cover" 
-                alt="" 
-                disableFade={true} 
-                priority={isNear}
-              />
+              {isRenderable ? (
+                <Image 
+                  src={thumb} 
+                  className="w-full h-full object-cover" 
+                  alt="" 
+                  disableFade={true} 
+                  priority={isNear}
+                />
+              ) : (
+                <div className="w-full h-full bg-slate-950" />
+              )}
             </button>
           );
         })}
       </div>
     </div>
   );
-}
+});
