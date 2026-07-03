@@ -37,11 +37,21 @@ export function DiagDashboard() {
   };
 
   const { isPending, refreshReport, runAudit } = useDiagnostics();
+  const isStandalone = pathname.startsWith('/diagnostics');
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className={isStandalone ? "h-screen overflow-y-auto w-full px-6 md:px-8 py-8 pb-32 no-scrollbar max-w-7xl mx-auto space-y-8 bg-slate-50 animate-in fade-in duration-500" : "space-y-8 animate-in fade-in duration-500"}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
+          {isStandalone && (
+            <button 
+              onClick={() => navigate.admin()}
+              className="p-2 mr-1 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
+              title="返回管理後台"
+            >
+              <Icon name="arrow-left" size={20} />
+            </button>
+          )}
           <Icon name="shield-check" className="w-8 h-8 text-brand-navy" />
           <div className="space-y-0.5">
             <h1 className="text-2xl font-black text-brand-navy tracking-tight uppercase">系統維護中心</h1>

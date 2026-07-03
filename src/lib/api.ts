@@ -148,7 +148,27 @@ const client = hc<AppType>(
         } else if (resp.status === 502 || resp.status === 504) {
           platformTip = " [诊断提示: 网关超时/错误，后端子域名或中间件运行异常]";
         } else if (resp.status === 404) {
-          platformTip = " [诊断提示: 路径不存在，请检查后台路由重写 vercel.json 映射配置和 API 挂载路径]";
+          platformTip = " [诊断提示: 路径不存在，请检查后台路由重写 vercel.json 映射配置和 API 挂載路径]";
+          
+          // --- AUTO-REFRESH SAFETY NET ---
+          // 如果 API 出现 404 且不是因为业务逻辑（如 404 Not Found 资源），可能是环境同步延迟。
+          // 我们在 1.5s 后尝试自动刷新页面，给环境一个重新加载的机会。
+          // 特别是当响应内容包含 Vercel 典型的 404 特征时。
+          const isCriticalApi = requestUrl.includes('/list') || requestUrl.includes('/settings') || requestUrl.includes('/public');
+          const looksLikeInfraError = text.includes('404') || text.includes('NOT_FOUND') || text.includes('Vercel');
+          
+          if ((isCriticalApi || looksLikeInfraError) && typeof window !== 'undefined') {
+            const lastRefresh = sessionStorage.getItem('last_api_404_refresh');
+            const now = Date.now();
+            // 限制 1 分钟内只自动刷新一次，防止死循环
+            if (!lastRefresh || (now - parseInt(lastRefresh)) > 60000) {
+              sessionStorage.setItem('last_api_404_refresh', now.toString());
+              console.warn('检测到可能的 API 基础设施 404 异常，1.5秒后将自动刷新页面尝试恢复...');
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
+            }
+          }
         }
 
         const message = `服务器响应异常 [${requestMethod} ${requestUrl}] (HTTP ${resp.status}): ${text.substring(0, 400)}${platformTip}`;

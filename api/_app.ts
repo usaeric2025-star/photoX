@@ -43,11 +43,27 @@ apiApp.onError((err, c) => {
 
 // ✅ 統一 404 路由不存在處理，紀錄至錯誤日誌並回傳標準 JSON
 apiApp.notFound((c) => {
-    const err = new Error(`API 路由不存在 (Route Not Found): [${c.req.method}] ${c.req.path}`);
+    const { method, path, url } = c.req;
+    console.warn(`[API 404] Route Not Found: [${method}] ${path} (Full URL: ${url})`);
+    const err = new Error(`API 路由不存在 (Route Not Found): [${method}] ${path}`);
     return errorResponse(c, err, 404);
 });
 
 apiApp.use('*', cors());
+
+// ✅ 請求日誌中間件 (幫助診斷 404 問題)
+apiApp.use('*', async (c, next) => {
+    const start = Date.now();
+    await next();
+    const ms = Date.now() - start;
+    if (c.res.status === 404) {
+        console.warn(`[API ACCESS] ${c.req.method} ${c.req.path} - 404 Not Found (${ms}ms)`);
+    } else if (c.res.status >= 400) {
+        console.error(`[API ACCESS] ${c.req.method} ${c.req.path} - ${c.res.status} (${ms}ms)`);
+    } else {
+        // 成功請求不輸出日誌，避免刷屏
+    }
+});
 
 // 全域中間件（含錯誤處理、Auth、Materialized View 刷新）
 setupMiddlewares(apiApp, { NODE_ENV: serverEnv.NODE_ENV });
