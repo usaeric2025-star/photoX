@@ -50,7 +50,7 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
 
         // Rule: Group must have at least 2 members.
         if (actualCount <= 1) {
-          const dbGroup = groupMap.get(groupId) as any;
+          const dbGroup = groupMap.get(groupId) as { id: string; name: unknown; status: string; coverPhotoId: string | null; createdAt: Date };
           const createdAt = dbGroup?.createdAt ? new Date(dbGroup.createdAt) : null;
           const isRecentlyCreated = createdAt && (Date.now() - createdAt.getTime() < 5 * 60 * 1000); // 5 minutes
 
@@ -65,7 +65,7 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
           }
         }
 
-        const dbGroup = groupMap.get(groupId) as any;
+        const dbGroup = groupMap.get(groupId) as { id: string; name: unknown; status: string; coverPhotoId: string | null; createdAt: Date };
         const dbCoverPhotoId = dbGroup?.coverPhotoId;
         
         const currentCover = items.find(p => p.isGroupCover === true);

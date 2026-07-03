@@ -35,7 +35,7 @@ export const getPhotoEditSchema = (t: TranslationType) => v.object({
   itemCode: v.optional(v.nullable(v.string())),
 });
 
-export const PhotoEditSchema = getPhotoEditSchema({} as any); // Fallback for types
+export const PhotoEditSchema = getPhotoEditSchema({ titleRequired: 'Required', titleTooLong: 'Too long' } as unknown as TranslationType); // Fallback for types
 
 export type PhotoEditFormData = v.InferOutput<typeof PhotoEditSchema>;
 

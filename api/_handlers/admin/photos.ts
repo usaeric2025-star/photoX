@@ -58,8 +58,8 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
         }
         
         // If still nothing, check metadata column if it exists in auditLog (future proofing)
-        if (!rawResult && (auditLog as any).metadata) {
-            const meta = (auditLog as any).metadata as Record<string, unknown>;
+        if (!rawResult && (auditLog as { metadata?: unknown }).metadata) {
+            const meta = (auditLog as { metadata?: unknown }).metadata as Record<string, unknown>;
             const possibleRaw = meta.raw_output || meta.raw_result || meta.rawText || meta.text;
             if (possibleRaw) {
                 rawResult = typeof possibleRaw === 'object' ? JSON.stringify(possibleRaw, null, 2) : String(possibleRaw);

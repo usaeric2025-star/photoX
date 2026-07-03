@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, furnitureItems, groups as groupsTable, categories, manufacturers } from '../../_lib/db/index.js';
+import { db, furnitureItems, groups as groupsTable, categories, manufacturers, photoTags } from '../../_lib/db/index.js';
 import { eq, inArray, and } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
@@ -27,8 +27,8 @@ export const updateHandler = (app: Hono) => {
             if (typeof updates.name === 'string') {
                 nameStr = updates.name;
             } else if (updates.name && typeof updates.name === 'object') {
-                const obj = updates.name as any;
-                nameStr = obj.zh || obj.en || obj.ms || '';
+                const obj = updates.name as Record<string, unknown>;
+                nameStr = String(obj.zh || obj.en || obj.ms || "");
             }
 
             if (nameStr.length > 200) throw new Error('標題超過 200 字上限');
@@ -52,15 +52,40 @@ export const updateHandler = (app: Hono) => {
             if (manRows.length === 0) mappedUpdates.manufacturerId = null;
         }
 
-        if (Object.keys(mappedUpdates).length === 0) {
-            return successResponse(c, ids);
+        // Handle tags bulk update if present
+        if (updates.tags && Array.isArray(updates.tags)) {
+            const tagIds = updates.tags.map(String).map(Number).filter(n => !isNaN(n));
+            
+            await db.transaction(async (tx) => {
+                // Delete old tags for these photos
+                await tx.delete(photoTags).where(inArray(photoTags.photoId, ids));
+                
+                // Insert new tags
+                if (tagIds.length > 0) {
+                    const tagInsertValues = [];
+                    for (const pid of ids) {
+                        for (const tid of tagIds) {
+                            tagInsertValues.push({ photoId: pid, tagId: tid });
+                        }
+                    }
+                    if (tagInsertValues.length > 0) {
+                        await tx.insert(photoTags).values(tagInsertValues);
+                    }
+                }
+                
+                if (Object.keys(mappedUpdates).length > 0) {
+                    await tx.update(furnitureItems)
+                        .set(mappedUpdates)
+                        .where(inArray(furnitureItems.id, ids));
+                }
+            });
+        } else if (Object.keys(mappedUpdates).length > 0) {
+            await db.update(furnitureItems)
+                .set(mappedUpdates)
+                .where(inArray(furnitureItems.id, ids));
         }
 
-        const data = await db
-            .update(furnitureItems)
-            .set(mappedUpdates)
-            .where(inArray(furnitureItems.id, ids))
-            .returning({ id: furnitureItems.id });
+        const data = ids.map(id => ({ id }));
 
         await refreshPhotosView();
 
@@ -95,8 +120,8 @@ export const updateHandler = (app: Hono) => {
             if (typeof updates.name === 'string') {
                 nameStr = updates.name;
             } else if (updates.name && typeof updates.name === 'object') {
-                const obj = updates.name as any;
-                nameStr = obj.zh || obj.en || obj.ms || '';
+                const obj = updates.name as Record<string, unknown>;
+                nameStr = String(obj.zh || obj.en || obj.ms || "");
             }
 
             if (nameStr.length > 200) throw new Error('標題超過 200 字上限');

@@ -34,8 +34,8 @@ export const createHandler = (app: Hono) => {
             if (typeof payload.name === 'string') {
                 nameStr = payload.name;
             } else if (payload.name && typeof payload.name === 'object') {
-                const obj = payload.name as any;
-                nameStr = obj.zh || obj.en || obj.ms || '';
+                const obj = payload.name as Record<string, unknown>;
+                nameStr = String(obj.zh || obj.en || obj.ms || "");
             }
 
             if (nameStr.length > 200) throw new Error('標題超過 200 字上限');
@@ -115,7 +115,7 @@ export const createHandler = (app: Hono) => {
         if (error instanceof Error) {
             errorMessage = error.message;
         } else if (typeof error === 'object' && error !== null && 'detail' in error) {
-            errorMessage = (error as any).detail;
+            errorMessage = (error as { detail?: string }).detail;
         } else {
             errorMessage = String(error);
         }
