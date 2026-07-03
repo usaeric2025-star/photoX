@@ -65,7 +65,7 @@ export const PhotoCardBase = ({
         ...props.style
       }}
       className={cn(
-        "overflow-hidden cursor-pointer relative group rounded-[4px] bg-surface-base",
+        "aspect-square overflow-hidden cursor-pointer relative group rounded-[4px] bg-surface-base",
         "transition-[filter,background-color,ring] duration-500",
         "active:brightness-95",
         isHidden && "opacity-80 grayscale-[0.3] ring-1 ring-danger inset-ring-1 inset-ring-danger",
@@ -75,7 +75,7 @@ export const PhotoCardBase = ({
       {...props}
     >
       <div className={cn(
-        "relative w-full h-full overflow-hidden transition-all duration-700 ease-in-out bg-surface-mute flex items-center justify-center",
+        "relative aspect-square w-full h-full overflow-hidden transition-all duration-700 ease-in-out bg-surface-mute flex items-center justify-center",
         isSelected ? "scale-[0.92] rounded-md" : "scale-100 rounded-[2px]",
       )}>
         <Image
