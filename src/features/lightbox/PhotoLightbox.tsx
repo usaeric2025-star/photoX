@@ -3,6 +3,8 @@ import { motion } from 'lite-sleek';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';
+import { LightboxSlide } from '#lib/lightbox/types.js';
+import { Photo } from '#src/types/photo.js';
 
 // Components
 import { LightboxStage } from './components/LightboxStage.js';
@@ -11,11 +13,11 @@ import { LightboxHeader } from './components/LightboxHeader.js';
 import { LightboxInfo } from './components/LightboxInfo.js';
 
 interface PhotoLightboxProps {
-  photos?: any[];
+  photos?: (Photo | { original: Photo } | LightboxSlide)[];
   initialIndex?: number;
   isOpen?: boolean;
   onClose?: () => void;
-  onEdit?: (photo: any) => void;
+  onEdit?: (photo: Photo) => void;
 }
 
 export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
@@ -34,7 +36,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const { setPhotoId, setModal } = useFilters();
   const { isAdmin } = usePermission();
   
-  const onEdit = props.onEdit || ((photo: any) => {
+  const onEdit = props.onEdit || ((photo: Photo) => {
     setPhotoId(photo.id);
     setModal('edit');
   });
@@ -48,13 +50,52 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     }
   }, [isOpen]);
 
-  // ✅ Deep Link support: if we have an ID but no slides, use a dummy slide that we'll populate with usePhoto details if needed
-  // (Note: usePhoto logic is already inside components like LightboxInfo and Stage handles its own loading)
-  
   // If we have an ID but no photos list (e.g. direct refresh), we need to show at least one slide to render the stage
-  const effectivePhotos = (sourcePhotos.length === 0 && isOpen) 
-    ? [{ id: (props as any).photoId || '' }] 
-    : sourcePhotos;
+  const normalizeSlide = (slide: Photo | { original: Photo } | LightboxSlide): Photo | { original: Photo } => {
+    if (slide && typeof slide === 'object') {
+        if ('original' in slide) return slide;
+        if ('imageUrl' in slide || 'image_url' in slide || 'id' in slide) return slide as Photo;
+        
+        // Fallback for LightboxSlide
+        return {
+          id: (slide as LightboxSlide).id,
+          storageId: (slide as LightboxSlide).id,
+          itemCode: (slide as LightboxSlide).itemCode || '',
+          manualCode: '',
+          modelNumber: '',
+          imageHash: '',
+          name: (slide as LightboxSlide).title || '',
+          categoryId: null,
+          manufacturerId: null,
+          description: { zh: (slide as LightboxSlide).description || '', en: (slide as LightboxSlide).description || '' },
+          imageUrl: (slide as LightboxSlide).src,
+          thumbnailSmUrl: (slide as LightboxSlide).src,
+          thumbnailMdUrl: (slide as LightboxSlide).src,
+          exifData: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          groupId: null,
+          group: null,
+          isGroupCover: false,
+          isHidden: false,
+          isPinned: false,
+          isAnalyzing: false,
+          groupOrder: 0,
+          userId: '',
+          uri: (slide as LightboxSlide).src,
+          price: (slide as LightboxSlide).price || '',
+          tags: [],
+          dimensions: [],
+          categoryName: '',
+          manufacturerName: ''
+        };
+    }
+    return slide as Photo;
+  };
+
+  const effectivePhotos: (Photo | { original: Photo })[] = (sourcePhotos.length === 0 && isOpen) 
+    ? [] 
+    : sourcePhotos.map(normalizeSlide);
 
   const handleNext = useCallback(() => {
     if (effectivePhotos.length <= 1) return;
@@ -62,10 +103,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     setLightboxIndex(nextIdx);
     
     // Update URL if applicable
-    const photoData = effectivePhotos[nextIdx]?.original || effectivePhotos[nextIdx];
-    const id = (photoData as any)?.id;
-    if (id) {
-      setPhotoId(id);
+    const photoItem = effectivePhotos[nextIdx];
+    const photoData = ('original' in photoItem ? photoItem.original : photoItem) as Photo;
+    if (photoData.id) {
+      setPhotoId(photoData.id);
     }
   }, [effectivePhotos, currentIndex, setLightboxIndex, setPhotoId]);
 
@@ -75,10 +116,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     setLightboxIndex(prevIdx);
     
     // Update URL if applicable
-    const photoData = effectivePhotos[prevIdx]?.original || effectivePhotos[prevIdx];
-    const id = (photoData as any)?.id;
-    if (id) {
-      setPhotoId(id);
+    const photoItem = effectivePhotos[prevIdx];
+    const photoData = ('original' in photoItem ? photoItem.original : photoItem) as Photo;
+    if (photoData.id) {
+      setPhotoId(photoData.id);
     }
   }, [effectivePhotos, currentIndex, setLightboxIndex, setPhotoId]);
 
@@ -149,9 +190,9 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
           isOpen={isOpen}
           onSelect={(idx) => {
             setLightboxIndex(idx);
-            const photoData = effectivePhotos[idx]?.original || effectivePhotos[idx];
-            const id = (photoData as any)?.id;
-            if (id) setPhotoId(id);
+            const photoItem = effectivePhotos[idx];
+            const photoData = ('original' in photoItem ? photoItem.original : photoItem) as Photo;
+            if (photoData.id) setPhotoId(photoData.id);
           }}
         />
       </div>

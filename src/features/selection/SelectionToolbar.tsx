@@ -28,7 +28,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const selectedCount = useSelectionCount();
   const selectedIds = useSelectedIds();
   const isMultiSelect = useIsMultiSelect();
-  const { clearSelection, patch } = useSelectionActions();
+  const { clearSelection, patch, toggleMode } = useSelectionActions();
   
   const { deletePhoto, batchUpdate } = useAdminMaintenance();
   // const patch = useUI((s: UIStoreState) => s.patch); // Removed
@@ -86,7 +86,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
     
     try {
       await combineMutation.mutateAsync({ photoIds: idsToGroup });
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Errors handled by mutation hook
     }
   };
@@ -101,7 +101,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
     
     try {
       await removeMutation.mutateAsync({ photoIds: idsToRemove, groupId });
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Errors handled by mutation hook
     }
   };

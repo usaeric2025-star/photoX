@@ -1,6 +1,11 @@
 import React from 'react';
 
-export function PhotoErrorDisplay({ error, onRetry }: { error: any; onRetry?: () => void }) {
+export function PhotoErrorDisplay({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+  const errorMessage = 
+    error instanceof Error ? error.message : 
+    typeof error === 'string' ? error : 
+    'Error loading photos';
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-red-50 text-red-600 rounded-lg">
       <div className="mb-2">
@@ -9,7 +14,7 @@ export function PhotoErrorDisplay({ error, onRetry }: { error: any; onRetry?: ()
         </svg>
       </div>
       <p className="text-sm font-medium mb-4 text-center">
-        {error?.message || 'Error loading photos'}
+        {errorMessage}
       </p>
       {onRetry && (
         <button 

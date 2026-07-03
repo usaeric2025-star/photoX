@@ -57,7 +57,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     return () => window.removeEventListener('url-change', handleUrlChange);
   }, []);
 
-  const wrappedSetQuery = useCallback((updates: any) => {
+  const wrappedSetQuery = useCallback((updates: Record<string, unknown>) => {
     const promise = setQuery(updates);
     promise.then(() => {
       window.dispatchEvent(new Event('url-change'));

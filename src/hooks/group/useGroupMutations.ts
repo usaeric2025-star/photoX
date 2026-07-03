@@ -103,7 +103,7 @@ export function useGroupMutations() {
     mutationFn: async (args: { photoIds: string[]; targetGroupId?: string }) => {
       return await groupPhotos(args.photoIds, args.targetGroupId);
     },
-    onSuccess: (data: any, variables) => {
+    onSuccess: (data: { newGroupId: string }, variables) => {
       const count = variables.photoIds.length;
       showToast.success(`成功將 ${count} 張照片合併`);
       clearSelection();

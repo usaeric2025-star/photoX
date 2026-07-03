@@ -10,6 +10,7 @@ import * as v from 'valibot';
 import { Input } from '#src/components/shared/Input.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useTranslation } from '#src/hooks/core/useTranslation.js';
+import { TranslationType } from '#src/locales/index.js';
 
 const GroupTitleSchema = v.object({
   title: v.pipe(v.string(), v.minLength(3, 'Title error')),
@@ -21,7 +22,7 @@ interface TitleInputProps {
   onBlur: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   disabled: boolean;
-  t: any;
+  t: TranslationType;
 }
 
 function TitleInput({ value, onChange, onBlur, onKeyDown, disabled, t }: TitleInputProps) {

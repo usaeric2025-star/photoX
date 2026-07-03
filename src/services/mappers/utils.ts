@@ -61,7 +61,7 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
 export const mapTranslationField = (value: unknown): { zh: string; en: string; ms: string } => {
   if (!value) return { zh: '', en: '', ms: '' };
 
-  let target: any = value;
+  let target: unknown = value;
 
   // If it's a string, try parsing it as JSON first
   if (typeof target === 'string') {
@@ -76,13 +76,14 @@ export const mapTranslationField = (value: unknown): { zh: string; en: string; m
   }
 
   // Now, if it's an object, we handle it
-  if (target && typeof target === 'object') {
-    let zhVal = target.zh;
-    let enVal = target.en;
-    let msVal = target.ms;
+  if (target && typeof target === 'object' && !Array.isArray(target)) {
+    const t = target as Record<string, unknown>;
+    let zhVal = t.zh;
+    let enVal = t.en;
+    let msVal = t.ms;
 
     // Helper to unwrap possible serialized JSON strings inside values
-    const unwrapValue = (val: any): any => {
+    const unwrapValue = (val: unknown): unknown => {
       if (typeof val === 'string') {
         const trimmed = val.trim();
         if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
@@ -101,41 +102,51 @@ export const mapTranslationField = (value: unknown): { zh: string; en: string; m
     const unwrappedMs = unwrapValue(msVal);
 
     // If unwrapping any returned a full translation object, use that!
-    if (unwrappedZh && typeof unwrappedZh === 'object' && ('zh' in unwrappedZh || 'en' in unwrappedZh || 'ms' in unwrappedZh)) {
-      return {
-        zh: cleanTranslationPrefixes(String(unwrappedZh.zh || '')).trim(),
-        en: cleanTranslationPrefixes(String(unwrappedZh.en || '')).trim(),
-        ms: cleanTranslationPrefixes(String(unwrappedZh.ms || '')).trim(),
-      };
+    if (unwrappedZh && typeof unwrappedZh === 'object' && !Array.isArray(unwrappedZh)) {
+      const uZ = unwrappedZh as Record<string, unknown>;
+      if ('zh' in uZ || 'en' in uZ || 'ms' in uZ) {
+        return {
+          zh: cleanTranslationPrefixes(String(uZ.zh || '')).trim(),
+          en: cleanTranslationPrefixes(String(uZ.en || '')).trim(),
+          ms: cleanTranslationPrefixes(String(uZ.ms || '')).trim(),
+        };
+      }
     }
-    if (unwrappedEn && typeof unwrappedEn === 'object' && ('zh' in unwrappedEn || 'en' in unwrappedEn || 'ms' in unwrappedEn)) {
-      return {
-        zh: cleanTranslationPrefixes(String(unwrappedEn.zh || '')).trim(),
-        en: cleanTranslationPrefixes(String(unwrappedEn.en || '')).trim(),
-        ms: cleanTranslationPrefixes(String(unwrappedEn.ms || '')).trim(),
-      };
+    if (unwrappedEn && typeof unwrappedEn === 'object' && !Array.isArray(unwrappedEn)) {
+      const uE = unwrappedEn as Record<string, unknown>;
+      if ('zh' in uE || 'en' in uE || 'ms' in uE) {
+        return {
+          zh: cleanTranslationPrefixes(String(uE.zh || '')).trim(),
+          en: cleanTranslationPrefixes(String(uE.en || '')).trim(),
+          ms: cleanTranslationPrefixes(String(uE.ms || '')).trim(),
+        };
+      }
     }
-    if (unwrappedMs && typeof unwrappedMs === 'object' && ('zh' in unwrappedMs || 'en' in unwrappedMs || 'ms' in unwrappedMs)) {
-      return {
-        zh: cleanTranslationPrefixes(String(unwrappedMs.zh || '')).trim(),
-        en: cleanTranslationPrefixes(String(unwrappedMs.en || '')).trim(),
-        ms: cleanTranslationPrefixes(String(unwrappedMs.ms || '')).trim(),
-      };
+    if (unwrappedMs && typeof unwrappedMs === 'object' && !Array.isArray(unwrappedMs)) {
+      const uM = unwrappedMs as Record<string, unknown>;
+      if ('zh' in uM || 'en' in uM || 'ms' in uM) {
+        return {
+          zh: cleanTranslationPrefixes(String(uM.zh || '')).trim(),
+          en: cleanTranslationPrefixes(String(uM.en || '')).trim(),
+          ms: cleanTranslationPrefixes(String(uM.ms || '')).trim(),
+        };
+      }
     }
 
     // Otherwise, just get string values
-    const getFinalStr = (val: any) => {
+    const getFinalStr = (val: unknown) => {
       if (!val) return '';
-      if (typeof val === 'object') {
-        return cleanTranslationPrefixes(String(val.zh || val.en || val.ms || '')).trim();
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        const v = val as Record<string, unknown>;
+        return cleanTranslationPrefixes(String(v.zh || v.en || v.ms || '')).trim();
       }
       return cleanTranslationPrefixes(String(val)).trim();
     };
 
     return {
-      zh: getFinalStr(zhVal || target.zh_CN || target.zh_TW || ''),
+      zh: getFinalStr(zhVal || (target as Record<string, unknown>).zh_CN || (target as Record<string, unknown>).zh_TW || ''),
       en: getFinalStr(enVal),
-      ms: getFinalStr(msVal || target.my || target.id || ''),
+      ms: getFinalStr(msVal || (target as Record<string, unknown>).my || (target as Record<string, unknown>).id || ''),
     };
   }
 

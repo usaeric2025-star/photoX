@@ -11,8 +11,11 @@ const ALLOWED_FIELDS = [
   'userId', 'isHidden', 'isAnalyzing', 'imageHash', 'itemCode', 'metadata'
 ];
 
-export function mapSupabasePhoto(item: any, allTags?: Tag[]): Photo {
+export function mapSupabasePhoto(item: Partial<SupabasePhotoRaw>, allTags?: Tag[]): Photo {
     if (!item) return {} as Photo;
+    
+    // Cast to any to handle mixed snake_case/camelCase properties
+    const raw: any = item;
     
     // Optimization: Create a tag map for O(1) lookup if it was passed
     const tagMapContainer = allTags as (Tag[] & { _map?: Map<string, Tag> }) | undefined;
@@ -22,8 +25,8 @@ export function mapSupabasePhoto(item: any, allTags?: Tag[]): Photo {
         tagMapContainer._map = tagCache; // Attach for reuse in the same map loop
     }
 
-    const rawImageUrl = item.imageUrl || item.image_url || '';
-    let storageId = item.id;
+    const rawImageUrl = raw.image_url || raw.imageUrl || '';
+    let storageId = raw.id || '';
     if (rawImageUrl) {
       try {
         const parts = rawImageUrl.split('/');
@@ -36,41 +39,43 @@ export function mapSupabasePhoto(item: any, allTags?: Tag[]): Photo {
     }
 
     const tags: Tag[] = [];
-    const photoTags = item.photoTags || item.photo_tags;
-    const itemTags = item.tags;
+    const photoTags = raw.photo_tags || raw.photoTags;
+    const itemTags = raw.tags;
 
     if (Array.isArray(photoTags)) {
-      (photoTags as Record<string, any>[]).forEach((pt) => {
+      photoTags.forEach((pt: any) => {
         if (pt && typeof pt === 'object') {
-            let tagId = pt.tagId ?? pt.tag_id;
+            let tagId = pt.tag_id || pt.tagId;
             let tagName = '';
             
             if (pt.tags) {
-                const rawTag = (Array.isArray(pt.tags) ? pt.tags[0] : pt.tags) as Record<string, any> | null | undefined;
-                if (rawTag) {
-                    tagId = rawTag.id || tagId;
+                const rawTag = (Array.isArray(pt.tags) ? pt.tags[0] : pt.tags);
+                if (rawTag && typeof rawTag === 'object' && 'id' in rawTag) {
+                    tagId = rawTag.id;
                     tagName = getSafeText(rawTag.name);
                 }
-            } else if (tagCache) {
+            } else if (tagCache && tagId) {
                 const matchedTag = tagCache.get(String(tagId));
                 if (matchedTag) {
                     tagName = matchedTag.name;
                 }
             }
             
-            tags.push({
-                id: Number(tagId || 0),
-                name: tagName,
-                aliases: [],
-            });
+            if (tagId) {
+                tags.push({
+                    id: Number(tagId || 0),
+                    name: tagName,
+                    aliases: [],
+                });
+            }
         }
       });
     } else if (Array.isArray(itemTags)) {
-      (itemTags as Record<string, any>[]).forEach((t) => {
-        if (t && typeof t === 'object') {
+      itemTags.forEach((t: any) => {
+        if (t && typeof t === 'object' && 'id' in t) {
             tags.push({
                 id: Number(t.id || 0),
-                name: getSafeText(t.name),
+                name: getSafeText(t.name || ''),
                 aliases: [],
             });
         }
@@ -78,45 +83,45 @@ export function mapSupabasePhoto(item: any, allTags?: Tag[]): Photo {
     }
 
     const imageUrl = normalizeStoredUrl(rawImageUrl);
-    const imageHash = item.imageHash || item.image_hash || '';
-    const createdAt = item.createdAt || item.created_at || new Date().toISOString();
-    const updatedAt = item.updatedAt || item.updated_at || createdAt;
+    const imageHash = raw.image_hash || raw.imageHash || '';
+    const createdAt = raw.created_at || raw.createdAt || new Date().toISOString();
+    const updatedAt = raw.updated_at || raw.updatedAt || createdAt;
 
     return {
-      id: String(item.id),
+      id: String(raw.id || ''),
       storageId,
-      itemCode: item.itemCode || item.item_code || '',
-      manualCode: item.manualCode || item.manual_code || '',
-      modelNumber: item.modelNumber || item.model_number || '',
+      itemCode: raw.item_code || raw.itemCode || '',
+      manualCode: raw.manual_code || raw.manualCode || '',
+      modelNumber: raw.model_number || raw.modelNumber || '',
       imageHash,
-      name: (item.name && typeof item.name === 'object') ? ((item.name as any).en || (item.name as any).zh || '') : (item.name || ''),
-      categoryId: item.categoryId || item.category_id || null,
-      manufacturerId: item.manufacturerId || item.manufacturer_id || null,
-      description: mapTranslationField(item.description || item.descriptionTranslations),
+      name: (raw.name && typeof raw.name === 'object') ? ((raw.name as Record<string, string>).en || (raw.name as Record<string, string>).zh || '') : (raw.name || ''),
+      categoryId: raw.category_id || raw.categoryId || null,
+      manufacturerId: raw.manufacturer_id || raw.manufacturerId || null,
+      description: mapTranslationField(raw.description || raw.description_translations),
       imageUrl,
       thumbnailSmUrl: getThumbnailUrl(imageUrl, 200, undefined, imageHash),
       thumbnailMdUrl: getThumbnailUrl(imageUrl, 800, undefined, imageHash),
-      exifData: item.exifData || item.exif_data || null,
+      exifData: raw.exif_data || raw.exifData || null,
       createdAt,
       updatedAt,
-      groupId: item.groupId || item.group_id || null,
-      group: item.group ? {
-          id: item.group.id,
-          name: getSafeText(item.group.name),
-          color: '#3b82f6',
-          coverPhotoId: item.group.coverPhotoId || item.group.cover_photo_id,
-          memberCount: item.group.memberCount || item.group.member_count || 0,
+      groupId: raw.group_id || raw.groupId || null,
+      group: raw.group ? {
+          id: raw.group.id,
+          name: getSafeText(raw.group.name),
+          color: raw.group.color || '#3b82f6',
+          coverPhotoId: raw.group.cover_photo_id || raw.group.coverPhotoId || null,
+          memberCount: raw.group.member_count || raw.group.memberCount || 0,
       } : null,
-      isGroupCover: !!(item.isGroupCover ?? item.is_group_cover ?? false),
-      isHidden: !!(item.isHidden ?? item.is_hidden ?? false),
-      isPinned: !!(item.isPinned ?? item.is_pinned ?? false),
-      isAnalyzing: !!(item.isAnalyzing ?? item.is_analyzing ?? false),
-      groupOrder: item.groupOrder ?? item.group_order,
-      userId: item.userId || item.user_id,
+      isGroupCover: !!(raw.is_group_cover ?? raw.isGroupCover ?? false),
+      isHidden: !!(raw.is_hidden ?? raw.isHidden ?? false),
+      isPinned: !!(raw.is_pinned ?? raw.isPinned ?? false),
+      isAnalyzing: !!(raw.is_analyzing ?? raw.isAnalyzing ?? false),
+      groupOrder: raw.group_order ?? raw.groupOrder,
+      userId: raw.user_id || raw.userId,
       uri: imageUrl,
-      price: item.price || '',
+      price: raw.price || '',
       tags: tags,
-      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
+      dimensions: Array.isArray(raw.dimensions) ? (raw.dimensions as Photo['dimensions']) : [],
       categoryName: '',
       manufacturerName: ''
     };

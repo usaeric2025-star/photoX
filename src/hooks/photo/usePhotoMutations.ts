@@ -15,9 +15,36 @@ import { useTranslation } from '#src/hooks/index.js';
 // 1. 照片编辑
 export const usePhotoEditMutation = () => {
   const { uiTranslations: t } = useTranslation();
+  const { mutate: swrMutate } = useSWRConfig();
+
   return useAppMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Photo> }) => {
       const { tags, ...coreUpdates } = updates;
+
+      // 樂觀更新
+      await swrMutate(
+        (key: unknown) => typeof key === 'string' ? key.includes('photos') : JSON.stringify(key).includes('photos'),
+        (currentData: Photo[] | { data?: Photo[]; items?: Photo[] } | undefined) => {
+          if (!currentData) return currentData;
+          const updater = (items: Photo[]) => items.map(p => p.id === id ? { ...p, ...coreUpdates } : p);
+
+          if (Array.isArray(currentData)) {
+            return currentData.map(page => ({
+              ...page,
+              data: page.data ? updater(page.data) : page.data,
+              items: page.items ? updater(page.items) : page.items
+            }));
+          } else {
+            return {
+              ...currentData,
+              data: currentData.data ? updater(currentData.data) : currentData.data,
+              items: currentData.items ? updater(currentData.items) : currentData.items
+            };
+          }
+        },
+        { revalidate: false }
+      );
+
       const res = await update(id, coreUpdates as Partial<Photo>);
       
       if (tags && Array.isArray(tags)) {
@@ -37,7 +64,6 @@ export const usePhotoEditMutation = () => {
     },
     onError: (err, { id }) => {
       ErrorFactory.handle(err, { context: 'photo-update' });
-      // Rollback is handled by invalidatePhotos usually, but we force it here
       appQuery.invalidatePhotos();
     }
   });
@@ -47,10 +73,38 @@ export const usePhotoEditMutation = () => {
 export const usePhotoDelete = () => {
   const { clearSelection } = useSelectionActions();
   const { uiTranslations: t } = useTranslation();
+  const { mutate: swrMutate } = useSWRConfig();
   
   return useAppMutation({
     mutationFn: async (ids: string | string[]) => {
       const idArray = Array.isArray(ids) ? ids : [ids];
+      const filterIds = new Set(idArray);
+      
+      // 樂觀刪除
+      await swrMutate(
+         (key: unknown) => typeof key === 'string' ? key.includes('photos') : JSON.stringify(key).includes('photos'),
+         (currentData: Photo[] | { data?: Photo[]; items?: Photo[] } | undefined) => {
+            if (!currentData) return currentData;
+            
+            const updater = (items: Photo[]) => items.filter((p: Photo) => !filterIds.has(p.id));
+            
+            if (Array.isArray(currentData)) {
+              return currentData.map(page => ({
+                ...page,
+                data: page.data ? updater(page.data) : page.data,
+                items: page.items ? updater(page.items) : page.items
+              }));
+            } else {
+              return {
+                ...currentData,
+                data: currentData.data ? updater(currentData.data) : currentData.data,
+                items: currentData.items ? updater(currentData.items) : currentData.items
+              };
+            }
+         },
+         { revalidate: true }
+      );
+      
       return await deleteMany(idArray);
     },
     onSuccess: () => {
@@ -69,10 +123,38 @@ export const usePhotoDelete = () => {
 export const usePhotoBatchEdit = () => {
   const { uiTranslations: t } = useTranslation();
   const { clearSelection } = useSelectionActions();
+  const { mutate: swrMutate } = useSWRConfig();
 
   return useAppMutation({
     mutationFn: async ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => {
       const { tags, ...coreUpdates } = updates;
+      const updateIds = new Set(ids);
+      
+      // 樂觀批量更新
+      await swrMutate(
+         (key: unknown) => typeof key === 'string' ? key.includes('photos') : JSON.stringify(key).includes('photos'),
+         (currentData: Photo[] | { data?: Photo[]; items?: Photo[] } | undefined) => {
+            if (!currentData) return currentData;
+            
+            const updater = (items: Photo[]) => items.map(p => updateIds.has(p.id) ? { ...p, ...coreUpdates } : p);
+
+            if (Array.isArray(currentData)) {
+              return currentData.map(page => ({
+                ...page,
+                data: page.data ? updater(page.data) : page.data,
+                items: page.items ? updater(page.items) : page.items
+              }));
+            } else {
+              return {
+                ...currentData,
+                data: currentData.data ? updater(currentData.data) : currentData.data,
+                items: currentData.items ? updater(currentData.items) : currentData.items
+              };
+            }
+         },
+         { revalidate: true }
+      );
+
       const res = await batchUpdate(ids, coreUpdates as Partial<Photo>);
       
       if (tags && Array.isArray(tags)) {
@@ -106,54 +188,29 @@ export const useTogglePin = () => {
 
   return useAppMutation({
     mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
-      // 樂觀更新 SWR 緩存：使用 matcher 函數遍歷匹配所有 key 包含 'photos' 的快取
-      try {
-        await swrMutate(
-          (key: any) => {
-            const keyStr = typeof key === 'string' ? key : JSON.stringify(key);
-            return keyStr.includes('photos');
-          },
-          (currentData: any) => {
-            if (!currentData) return currentData;
-            if (Array.isArray(currentData)) {
-              // SWRInfinite data (pages array)
-              return currentData.map((page: any) => {
-                if (page?.data && Array.isArray(page.data)) {
-                  return {
-                    ...page,
-                    data: page.data.map((p: any) => p.id === id ? { ...p, isPinned } : p)
-                  };
-                }
-                if (page?.items && Array.isArray(page.items)) {
-                  return {
-                    ...page,
-                    items: page.items.map((p: any) => p.id === id ? { ...p, isPinned } : p)
-                  };
-                }
-                return page;
-              });
-            } else {
-              // Standard SWR query data (single page)
-              if (currentData.data && Array.isArray(currentData.data)) {
-                return {
-                  ...currentData,
-                  data: currentData.data.map((p: any) => p.id === id ? { ...p, isPinned } : p)
-                };
-              }
-              if (currentData.items && Array.isArray(currentData.items)) {
-                return {
-                  ...currentData,
-                  items: currentData.items.map((p: any) => p.id === id ? { ...p, isPinned } : p)
-                };
-              }
-            }
-            return currentData;
-          },
-          { revalidate: false }
-        );
-      } catch (err) {
-        console.warn('Optimistic pin update failed:', err);
-      }
+      // 樂觀更新
+      await swrMutate(
+        (key: unknown) => typeof key === 'string' ? key.includes('photos') : JSON.stringify(key).includes('photos'),
+        (currentData: Photo[] | { data?: Photo[]; items?: Photo[] } | undefined) => {
+          if (!currentData) return currentData;
+          const updater = (items: Photo[]) => items.map(p => p.id === id ? { ...p, isPinned } : p);
+
+          if (Array.isArray(currentData)) {
+            return currentData.map(page => ({
+              ...page,
+              data: page.data ? updater(page.data) : page.data,
+              items: page.items ? updater(page.items) : page.items
+            }));
+          } else {
+            return {
+              ...currentData,
+              data: currentData.data ? updater(currentData.data) : currentData.data,
+              items: currentData.items ? updater(currentData.items) : currentData.items
+            };
+          }
+        },
+        { revalidate: false }
+      );
       
       const res = await update(id, { is_pinned: isPinned });
       if (!res) throw new Error('Failed to update photo');
@@ -161,7 +218,6 @@ export const useTogglePin = () => {
     },
     onSuccess: (_, { isPinned }) => {
       showToast.success(typeof t.togglePinnedSuccess === 'function' ? t.togglePinnedSuccess(isPinned) : t.togglePinnedSuccess);
-      // 在背景中重新驗證快取以確保資料與後端絕對一致
       appQuery.invalidatePhotos();
     },
     onError: (err) => {

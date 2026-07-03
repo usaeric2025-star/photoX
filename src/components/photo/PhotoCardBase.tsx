@@ -17,7 +17,7 @@ export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement>
   ref?: Ref<HTMLDivElement>;
 }
 
-const getDisplayString = (val: any) => {
+const getDisplayString = (val: string | { zh?: string; en?: string; ms?: string } | null | undefined) => {
   if (!val) return '照片';
   if (typeof val === 'string') {
     try {
@@ -28,10 +28,7 @@ const getDisplayString = (val: any) => {
     } catch(e) {}
     return val;
   }
-  if (typeof val === 'object') {
-    return val.zh || val.en || val.ms || '照片';
-  }
-  return String(val);
+  return val.zh || val.en || val.ms || '照片';
 };
 
 /**
@@ -85,9 +82,9 @@ export const PhotoCardBase = ({
           src={getPhotoThumb(
             item.imageUrl, 
             imgVariant === 'md' ? 'MD' : 'SM', 
-            item.imageHash || (item as any).image_hash
+            item.imageHash || (item as Record<string, unknown>).image_hash as string | undefined
           )}
-          lqipSrc={(item as any).lqip}
+          lqipSrc={(item as Record<string, unknown>).lqip as string | undefined}
           alt={getDisplayString(item.name)}
           priority={priority}
           className={cn(

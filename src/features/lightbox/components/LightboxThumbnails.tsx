@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { getThumbnailUrl } from '#src/services/mappers/utils.js';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
+import { Photo } from '#src/types/photo.js';
 
 interface LightboxThumbnailsProps {
-  photos: any[];
+  photos: (Photo | { original: Photo })[];
   currentIndex: number;
   isOpen: boolean;
   onSelect: (index: number) => void;
@@ -43,9 +43,9 @@ export function LightboxThumbnails({
         className="relative flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full px-4 py-2 scroll-smooth"
       >
         {photos.map((p, idx) => {
-          const photoData = (p.original || p) as any;
-          const key = photoData.imageUrl || photoData.uri || (p as any).src;
-          const hash = photoData.imageHash || photoData.image_hash;
+          const photoData = ('original' in p ? p.original : p) as Photo;
+          const key = photoData.imageUrl || photoData.uri || '';
+          const hash = photoData.imageHash;
           const thumb = getPhotoThumb(key, 'SM', hash);
           const isActive = idx === currentIndex;
           const isNear = Math.abs(idx - currentIndex) <= 2;

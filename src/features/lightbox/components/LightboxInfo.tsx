@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePhotoAIResult } from '#src/hooks/photo/usePhotoAIResult.js';
+import { Photo } from '#src/types/photo.js';
 
 interface LightboxInfoProps {
-  currentPhoto: any;
+  currentPhoto: Photo | { original: Photo };
   showInfo: boolean;
   lang: 'zh' | 'en' | 'ms';
   onLangChange: (lang: 'zh' | 'en' | 'ms') => void;
@@ -19,19 +20,20 @@ const formatPhotoDate = (dateStr: string) => {
   }
 };
 
-const getDisplayString = (val: any, lang: string) => {
+const getDisplayString = (val: unknown, lang: string) => {
   if (!val) return '';
   if (typeof val === 'string') {
     try {
       if (val.startsWith('{') && val.endsWith('}')) {
-        const parsed = JSON.parse(val);
+        const parsed = JSON.parse(val) as Record<string, string>;
         return parsed[lang] || parsed.zh || parsed.en || val;
       }
     } catch(e) {}
     return val;
   }
   if (typeof val === 'object') {
-    return val[lang] || val.zh || val.en || '';
+    const obj = val as Record<string, string>;
+    return obj[lang] || obj.zh || obj.en || '';
   }
   return String(val);
 };
@@ -45,12 +47,11 @@ export function LightboxInfo({
   const [copied, setCopied] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
   
-  const photoData = (currentPhoto.original || currentPhoto) as any;
+  const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
   const descriptionObj = photoData?.description;
   const displayDescription = getDisplayString(descriptionObj, lang);
   
-  const rawTitle = (currentPhoto as any).title || photoData.name || 'Photo';
-  const title = getDisplayString(rawTitle, lang);
+  const title = getDisplayString(photoData.name || 'Photo', lang);
   const uuid = photoData.id || 'N/A';
 
   const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id);

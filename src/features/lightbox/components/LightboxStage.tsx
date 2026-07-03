@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
+import { Photo } from '#src/types/photo.js';
 
 interface LightboxStageProps {
-  currentPhoto: any;
+  currentPhoto: Photo | { original: Photo };
   currentIndex: number;
   totalPhotos: number;
   onNext: () => void;
   onPrev: () => void;
   onClose: () => void;
-  photos: any[];
+  photos: (Photo | { original: Photo })[];
 }
 
 export function LightboxStage({
@@ -83,10 +84,10 @@ export function LightboxStage({
   };
 
   // Derive photo data
-  const photoData = (currentPhoto.original || currentPhoto) as any;
-  const title = (currentPhoto as any).title || photoData.name || 'Photo';
-  const key = photoData.imageUrl || photoData.uri || (currentPhoto as any).src;
-  const hash = photoData.imageHash || photoData.image_hash;
+  const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
+  const title = photoData.name || 'Photo';
+  const key = photoData.imageUrl || photoData.uri || '';
+  const hash = photoData.imageHash;
   
   // Use standardized thumb helper
   const src = getPhotoThumb(key, 'LG', hash);
@@ -102,12 +103,12 @@ export function LightboxStage({
   const nextIdx = (currentIndex + 1) % totalPhotos;
   const prevIdx = (currentIndex - 1 + totalPhotos) % totalPhotos;
 
-  const getSlideInfo = (slide: any) => {
+  const getSlideInfo = (slide: Photo | { original: Photo } | undefined) => {
     if (!slide) return { key: '', hash: '' };
-    const d = (slide.original || slide) as any;
+    const d = ('original' in slide ? slide.original : slide) as Photo;
     return {
-      key: d.imageUrl || d.uri || (slide as any).src,
-      hash: d.imageHash || d.image_hash
+      key: d.imageUrl || d.uri || '',
+      hash: d.imageHash
     };
   };
 

@@ -1,14 +1,15 @@
 import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
+import { Photo } from '#src/types/photo.js';
 
 interface LightboxHeaderProps {
-  currentPhoto: any;
+  currentPhoto: Photo | { original: Photo };
   currentIndex: number;
   totalPhotos: number;
   showInfo: boolean;
   isAdmin: boolean;
   onToggleInfo: () => void;
-  onEdit: (photoData: any) => void;
+  onEdit: (photoData: Photo) => void;
   onClose: () => void;
 }
 
@@ -22,7 +23,7 @@ export function LightboxHeader({
   onEdit,
   onClose
 }: LightboxHeaderProps) {
-  const photoData = (currentPhoto.original || currentPhoto) as any;
+  const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
   const descriptionObj = photoData?.description;
   const hasDescription = !!descriptionObj;
   
@@ -72,7 +73,7 @@ export function LightboxHeader({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            const key = photoData.imageUrl || photoData.uri || (currentPhoto as any).src;
+            const key = photoData.imageUrl || photoData.uri || '';
             if (key) {
               const url = new URL(key, window.location.origin);
               navigator.clipboard.writeText(url.toString());
