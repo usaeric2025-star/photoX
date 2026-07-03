@@ -38,16 +38,23 @@ export function RouterOrchestrator() {
             <Route path="/" component={PublicPage} />
             <Route path="/photo/:photoId" component={PublicPage} />
             <Route path="/group/:slug" component={PublicGroupDetailPage} />
-            <Route path="/admin*" component={AdminPage} />
-            <Route path="/settings*" component={AdminPage} />
+            <Route path="/admin/group/:id" component={() => (
+                <AdminAuthGate>
+                  <AdminGroupDetailPage />
+                </AdminAuthGate>
+            )} />
+            <Route path="/admin" component={AdminPage} />
+            <Route path="/admin/*" component={AdminPage} />
+            <Route path="/settings" component={AdminPage} />
+            <Route path="/settings/*" component={AdminPage} />
             <Route path="/diagnostics" component={() => (
                 <AdminAuthGate>
                   <DiagDashboard />
                 </AdminAuthGate>
             )} />
-            <Route path="/admin/group/:id" component={() => (
+            <Route path="/diagnostics/*" component={() => (
                 <AdminAuthGate>
-                  <AdminGroupDetailPage />
+                  <DiagDashboard />
                 </AdminAuthGate>
             )} />
             <Route component={NotFoundPage} />

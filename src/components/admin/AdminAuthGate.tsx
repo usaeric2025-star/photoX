@@ -27,21 +27,21 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
   });
 
   const { user, isLoading: isAuthLoading, signIn } = useAuth();
-  const { data: settings } = usePublicSettings();
+  const { data: settings, isLoading: isSettingsLoading } = usePublicSettings();
   
   const isStaffMode = !!settings?.accessPasscode && String(passcode) === settings.accessPasscode;
   const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {
-    if (!isAuthLoading) return;
+    if (!isAuthLoading && !isSettingsLoading) return;
     const timer = setTimeout(() => {
       setForceShow(true);
     }, 3000);
     return () => clearTimeout(timer);
-  }, [isAuthLoading]);
+  }, [isAuthLoading, isSettingsLoading]);
 
-  // Auth is still loading
-  if (isAuthLoading && !user && !isStaffMode && !forceShow) {
+  // Auth or settings are still loading
+  if ((isAuthLoading || isSettingsLoading) && !user && !isStaffMode && !forceShow) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center justify-center">

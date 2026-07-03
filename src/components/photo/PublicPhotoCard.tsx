@@ -79,8 +79,10 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   return prev.photo.id === next.photo.id && 
          prev.photo.name === next.photo.name &&
          prev.photo.imageUrl === next.photo.imageUrl &&
+         prev.photo.imageHash === next.photo.imageHash &&
          prev.photo.createdAt === next.photo.createdAt &&
          prev.photo.isPinned === next.photo.isPinned &&
+         prev.priority === next.priority &&
          prev.showGroupsCollapsed === next.showGroupsCollapsed &&
          prev.hideGroupBadge === next.hideGroupBadge &&
          prev.hasSearchQuery === next.hasSearchQuery;

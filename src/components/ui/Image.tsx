@@ -98,7 +98,7 @@ export function Image({
                     onError={() => setHasError(true)}
                     className={cn(
                         "absolute inset-0 w-full h-full object-cover object-center z-20",
-                        !disableFade && "transition-opacity duration-300 ease-out",
+                        !disableFade && "transition-opacity duration-200 ease-out",
                         (isLoaded || disableFade) ? "opacity-100" : "opacity-0",
                         className
                     )}

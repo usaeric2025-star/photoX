@@ -140,15 +140,81 @@ export const useTogglePin = () => {
       if (!res) throw new Error('Failed to update photo');
       return res;
     },
+    onMutate: async ({ id, isPinned }) => {
+      // 1. 取消相關查詢以避免衝突 (不使用 await 避免阻塞樂觀更新)
+      queryClient.cancelQueries({ queryKey: queryKeys.photos.all });
+
+      // 2. 備份舊數據 (用於回滾)
+      const previousQueries = queryClient.getQueriesData({ queryKey: queryKeys.photos.all });
+
+      // 3. 樂觀更新列表快取
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.all }, (old: any) => {
+        if (!old) return old;
+
+        // 處理 Infinite Query 的結構
+        if (old.pages) {
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => {
+              // 某些 API 可能返回 data，某些可能返回 items，同時處理
+              const hasItems = Array.isArray(page.items);
+              const hasData = Array.isArray(page.data);
+              
+              const updatedPage = { ...page };
+              
+              if (hasData) {
+                updatedPage.data = page.data.map((photo: any) => 
+                  photo.id === id ? { ...photo, isPinned } : photo
+                );
+              }
+              
+              if (hasItems) {
+                updatedPage.items = page.items.map((photo: any) => 
+                  photo.id === id ? { ...photo, isPinned } : photo
+                );
+              }
+              
+              return updatedPage;
+            })
+          };
+        }
+
+        // 處理單個項目的結構 (如果是普通 Query 或 Detail)
+        const photoId = old.id || (old.data && typeof old.data === 'object' ? old.data.id : undefined);
+        if (photoId === id) {
+          if (old.data) {
+            return { ...old, data: { ...old.data, isPinned } };
+          }
+          return { ...old, isPinned };
+        }
+
+        return old;
+      });
+
+      return { previousQueries };
+    },
     onSuccess: (_, { isPinned }) => {
       showToast.success(typeof t.togglePinnedSuccess === 'function' ? t.togglePinnedSuccess(isPinned) : t.togglePinnedSuccess);
     },
-    onError: (err) => {
+    onError: (err, _variables, context) => {
       if (err instanceof CancelledError) return;
+      
+      // 發生錯誤時回滾
+      if (context?.previousQueries) {
+        context.previousQueries.forEach(([queryKey, previousData]) => {
+          queryClient.setQueryData(queryKey, previousData);
+        });
+      }
+      
       ErrorFactory.handle(err, { context: 'photo-toggle-pin' });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
+      // 延遲失效 2 秒，避免在快速操作時頻繁觸發全量重新拉取，讓樂觀更新結果穩定顯示
+      // 同時確保資料最終一致性
+      const timer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
+      }, 2000);
+      return () => clearTimeout(timer);
     }
   });
 };

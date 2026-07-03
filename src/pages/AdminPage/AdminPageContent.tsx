@@ -43,7 +43,7 @@ export function AdminPageContent() {
   
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const currentScreen = (() => {
-    if (pathname.startsWith('/admin/batch-edit')) return 'batch';
+    if (pathname.startsWith('/admin/batch-edit') || pathname.startsWith('/admin/batch')) return 'batch';
     if (pathname.startsWith('/admin/tasks')) return 'tasks';
     if (pathname.startsWith('/admin/error-logs')) return 'error-logs';
     if (pathname.startsWith('/admin/diagnose') || pathname.startsWith('/admin/diagnostics')) return 'diagnose';

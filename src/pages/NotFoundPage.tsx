@@ -10,6 +10,14 @@ export const NotFoundPage = () => {
   const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
+  const [copied, setCopied] = React.useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   React.useEffect(() => {
     // Report frontend 404 to backend system logs
     if (pathname && pathname !== '/') {
@@ -95,9 +103,19 @@ export const NotFoundPage = () => {
             {details.description}
           </p>
           {pathname && (
-            <div className="mt-3 pt-3 border-t border-slate-200/60 font-mono text-xs text-slate-400 break-all flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-              <span>URI: {pathname}</span>
+            <div className="mt-3 pt-3 border-t border-slate-200/60 font-mono text-xs text-slate-400 break-all flex items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                <span>URI: {pathname}</span>
+              </div>
+              <button 
+                onClick={handleCopy}
+                className="p-1 hover:bg-slate-200 rounded text-slate-500 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+                title="複製連結 / Copy Link"
+              >
+                <Icon name={copied ? "check" : "copy"} size={12} className={copied ? "text-emerald-500" : "text-slate-400"} />
+                <span className="text-[10px]">{copied ? "已複製" : "複製"}</span>
+              </button>
             </div>
           )}
         </div>

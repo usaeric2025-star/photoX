@@ -94,11 +94,13 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   return prev.photo.id === next.photo.id && 
          prev.photo.name === next.photo.name &&
          prev.photo.imageUrl === next.photo.imageUrl &&
+         prev.photo.imageHash === next.photo.imageHash &&
          prev.photo.isPinned === next.photo.isPinned &&
          prev.photo.isGroupCover === next.photo.isGroupCover &&
          prev.photo.memberCount === next.photo.memberCount &&
          prev.photo.isHidden === next.photo.isHidden &&
          prev.photo.groupName === next.photo.groupName &&
+         prev.priority === next.priority &&
          prev.canPinGlobal === next.canPinGlobal &&
          prev.showGroupsCollapsed === next.showGroupsCollapsed &&
          prev.hideGroupBadge === next.hideGroupBadge &&

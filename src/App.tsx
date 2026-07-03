@@ -3,7 +3,6 @@ import { motion } from 'lite-sleek';
 import { AppErrorBoundary } from './components/layout/AppErrorBoundary.js';
 import { ConfirmProvider } from './context/ConfirmContext.js';
 import { RouterOrchestrator } from './components/RouterOrchestrator.js';
-import { Analytics } from '@vercel/analytics/react';
 import { useAppInit } from './hooks/core/useAppInit.js';
 import { LoadingScreen } from './components/ui/LoadingScreen.js';
 import { DialogContainer } from './components/layout/DialogContainer.js';
@@ -31,7 +30,6 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
       </ConfirmProvider>
       <DialogContainer />
       <Toaster position="bottom-center" closeButton />
-      <Analytics />
     </AppErrorBoundary>
   );
 }

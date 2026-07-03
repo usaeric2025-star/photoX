@@ -93,9 +93,9 @@ export function PhotoWallGrid({
         renderItem={renderItem}
         renderLoader={renderLoader}
         renderEmpty={renderEmpty}
-        scrollThreshold={2500}
-        overscan={3000}
-        hysteresis={50}
+        scrollThreshold={3000}
+        overscan={2400}
+        hysteresis={20}
       />
       
       {isLoadingMore && (

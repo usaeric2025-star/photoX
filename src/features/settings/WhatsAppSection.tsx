@@ -35,15 +35,29 @@ export function WhatsAppSection({
                 type="text" 
                 placeholder="名稱 / Name" 
                 className={`${inputClass} w-full bg-white shadow-sm border-none`} 
-                value={(settings as Record<string, unknown>)?.[`whatsapp_${i}_name`] as string || ''} 
-                onChange={(e) => setSettingField(`whatsapp_${i}_name` as keyof typeof settings, e.target.value)} 
+                value={
+                  ((settings as Record<string, unknown>)?.[`whatsapp${i}Name`] as string) || 
+                  ((settings as Record<string, unknown>)?.[`whatsapp_${i}_name`] as string) || 
+                  ''
+                } 
+                onChange={(e) => {
+                  setSettingField(`whatsapp${i}Name` as keyof typeof settings, e.target.value);
+                  setSettingField(`whatsapp_${i}_name` as keyof typeof settings, e.target.value);
+                }} 
               />
               <input 
                 type="text" 
                 placeholder="號碼 / Phone (e.g. +86138...)" 
                 className={`${inputClass} w-full bg-white shadow-sm border-none font-mono text-[11px]`} 
-                value={(settings as Record<string, unknown>)?.[`whatsapp_${i}`] as string || ''} 
-                onChange={(e) => setSettingField(`whatsapp_${i}` as keyof typeof settings, e.target.value)} 
+                value={
+                  ((settings as Record<string, unknown>)?.[`whatsapp${i}`] as string) || 
+                  ((settings as Record<string, unknown>)?.[`whatsapp_${i}`] as string) || 
+                  ''
+                } 
+                onChange={(e) => {
+                  setSettingField(`whatsapp${i}` as keyof typeof settings, e.target.value);
+                  setSettingField(`whatsapp_${i}` as keyof typeof settings, e.target.value);
+                }} 
               />
             </div>
           </div>

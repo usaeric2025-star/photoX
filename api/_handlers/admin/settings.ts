@@ -157,7 +157,7 @@ adminSettings.post("/save-settings", async (c) => {
         // Map frontend fields (snake_case) to Drizzle fields (camelCase)
         const mappedPayload: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(settingsPayload)) {
-            const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+            const camelKey = key.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
             if (allowedKeys.includes(camelKey)) {
                 mappedPayload[camelKey] = value;
             } else {

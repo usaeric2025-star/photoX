@@ -15,8 +15,7 @@ export function PinButton({ photoId, isPinned }: { photoId: string; isPinned: bo
   return (
     <button 
       onClick={handleClick}
-      disabled={isPending}
-      className={`absolute top-2 right-2 p-1.5 sm:p-2 rounded-full border hover:scale-110 active:scale-95 transition-all duration-250 disabled:opacity-50 ${
+      className={`absolute top-2 right-2 p-1.5 sm:p-2 rounded-full border hover:scale-110 active:scale-95 transition-all duration-250 ${
         isPinned 
           ? 'bg-white text-slate-950 border-white shadow-md' 
           : 'bg-slate-950/40 text-white border-white/10 md:hover:bg-slate-950/65'
