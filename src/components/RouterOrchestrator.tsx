@@ -44,15 +44,14 @@ export function RouterOrchestrator() {
                 </AdminAuthGate>
             )} />
             <Route path="/admin" component={AdminPage} />
-            <Route path="/admin/*" component={AdminPage} />
+            <Route path="/admin/batch" component={AdminPage} />
+            <Route path="/admin/batch-edit" component={AdminPage} />
+            <Route path="/admin/tasks" component={AdminPage} />
+            <Route path="/admin/error-logs" component={AdminPage} />
+            <Route path="/admin/diagnose" component={AdminPage} />
+            <Route path="/admin/diagnostics" component={AdminPage} />
             <Route path="/settings" component={AdminPage} />
-            <Route path="/settings/*" component={AdminPage} />
             <Route path="/diagnostics" component={() => (
-                <AdminAuthGate>
-                  <DiagDashboard />
-                </AdminAuthGate>
-            )} />
-            <Route path="/diagnostics/*" component={() => (
                 <AdminAuthGate>
                   <DiagDashboard />
                 </AdminAuthGate>

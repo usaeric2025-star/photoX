@@ -35,7 +35,7 @@ export function AdminHeaderActions({
       </button>
 
       <button
-        onClick={batchAiIdentify}
+        onClick={() => batchAiIdentify()}
         className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
         title={t.aiSmartIdentify}
       >

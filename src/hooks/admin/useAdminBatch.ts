@@ -16,7 +16,7 @@ export function useAdminBatchActions() {
     const targetIds = ids || selectedIds;
 
     // If no specific photos provided, we use the passed allPhotos
-    let photosToProcess = allPhotos || [];
+    let photosToProcess = Array.isArray(allPhotos) ? allPhotos : [];
     
     if (photosToProcess.length === 0) {
       // Attempt to retrieve from query client cache to prevent errors when header photos list is not loaded yet
