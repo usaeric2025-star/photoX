@@ -15,6 +15,7 @@
       (function() {
         var errors = [];
         window.__STARTUP_ERRORS__ = errors;
+        var errorFingerprints = new Set();
         function renderErrorOverlay() {
           if (errors.length === 0) return;
           var errorDiv = document.getElementById('startup-error-overlay');
@@ -37,11 +38,22 @@
               </div>';
             document.body.appendChild(errorDiv);
             document.getElementById('copy-startup-dia').onclick = function() {
+              // Deduplicate errors for copy-to-clipboard output
+              var uniqueErrors = [];
+              var seenMsg = {};
+              errors.forEach(function(e) {
+                var key = e.msg + e.type;
+                if (!seenMsg[key]) {
+                   uniqueErrors.push(e);
+                   seenMsg[key] = true;
+                }
+              });
+
               var txt = "--- 启动诊断信息 ---\n" +
                         "时间戳: " + new Date().toISOString() + "\n" +
                         "浏览器环境: " + navigator.userAgent + "\n" +
                         "URL: " + window.location.href + "\n" +
-                        "异常详情:\n" + errors.map(function(e, i) {
+                        "异常详情 (聚合后):\n" + uniqueErrors.map(function(e, i) {
                           return (i + 1) + ". [" + e.type + "] " + e.msg + (e.details ? "\n" + e.details : "");
                         }).join("\n---\n") + "\nTrace ID: TRACE-STARTUP-" + Math.random().toString(36).substr(2, 9).toUpperCase();
               navigator.clipboard.writeText(txt).then(function() {
@@ -59,12 +71,22 @@
           }
           var logEl = document.getElementById('startup-error-logs');
           if (logEl) {
-            logEl.textContent = errors.map(function(e) {
+            logEl.textContent = errors.slice(-10).map(function(e) {
               return "[" + e.type + "] " + e.msg + (e.details ? "\n" + e.details : "");
             }).join("\n\n");
           }
         }
         window.__RENDER_STARTUP_ERROR__ = renderErrorOverlay;
+
+        function addStartupError(err) {
+          var fingerprint = err.msg + err.type + (err.details ? err.details.substring(0, 100) : "");
+          if (errorFingerprints.has(fingerprint)) return;
+          errorFingerprints.add(fingerprint);
+          
+          errors.push(err);
+          if (errors.length > 20) errors.shift(); // Keep it clean
+          renderErrorOverlay();
+        }
 
         window.onerror = function(message, source, lineno, colno, error) {
           var msgStr = String(message || '');
@@ -83,9 +105,8 @@
             }
           }
 
-          var details = "源地址: " + source + "\n位置: 行 " + lineno + ", 列 " + colno + (error && error.stack ? "\n调用栈:\n" + error.stack : "");
-          errors.push({ msg: msgStr, type: "运行期异常 (Runtime Error)", details: details });
-          renderErrorOverlay();
+          var details = "源地址: " + source + "\n位置: 行 " + lineno + ", 列 " + colno;
+          addStartupError({ msg: msgStr, type: "运行期异常 (Runtime Error)", details: details });
         };
 
         window.addEventListener('unhandledrejection', function(event) {
@@ -106,9 +127,8 @@
              }
           }
 
-          var details = reason.stack ? "调用栈:\n" + reason.stack : "位置: 匿名异步拒绝";
-          errors.push({ msg: msg, type: "异步拒绝异常 (Promise Rejection)", details: details });
-          renderErrorOverlay();
+          var details = "位置: 匿名异步拒绝";
+          addStartupError({ msg: msg, type: "异步拒绝异常 (Promise Rejection)", details: details });
         });
 
         window.__APP_READY__ = false;

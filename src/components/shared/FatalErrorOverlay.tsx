@@ -49,10 +49,7 @@ export const FatalErrorOverlay = () => {
       `错误类型: ${errorType}`,
       `代码: ${errorCode}`,
       `Trace ID: ${traceId}`,
-      `原始信息: ${message}`,
-      `----------------`,
-      `堆栈信息:`,
-      fatalError.stack || '无堆栈信息'
+      `原始信息: ${message}`
     ].join('\n');
     
     copy(diagnosticInfo);

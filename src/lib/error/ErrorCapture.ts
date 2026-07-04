@@ -45,9 +45,22 @@ export class ErrorCapture {
     });
   }
 
+  private static lastErrorFingerprint: string | null = null;
+  private static lastErrorTime: number = 0;
+
   private static saveToLocal(appError: AppError) {
     try {
       if (typeof localStorage === 'undefined') return;
+
+      // Deduplication: skip if same error message within 5 seconds
+      const fingerprint = `${appError.code}_${appError.message}`;
+      const now = Date.now();
+      if (this.lastErrorFingerprint === fingerprint && (now - this.lastErrorTime) < 5000) {
+        return;
+      }
+      this.lastErrorFingerprint = fingerprint;
+      this.lastErrorTime = now;
+
       const key = 'app_errors';
       const raw = localStorage.getItem(key);
       const errors = JSON.parse(raw || '[]');

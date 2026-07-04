@@ -79,17 +79,6 @@ async function init() {
         
       if (isCancellation) return;
       
-      // 同步到全域診斷陣列
-      type StartupError = { msg: string; type: string; details: string };
-      const w = window as unknown as { __STARTUP_ERRORS__?: StartupError[] };
-      const errors = w.__STARTUP_ERRORS__ || [];
-      errors.push({
-        msg: message,
-        type: 'Async Unhandled Promise',
-        details: reason?.stack || 'Location: React App runtime'
-      });
-      w.__STARTUP_ERRORS__ = errors;
-
       ErrorFactory.capture(reason || new Error(message || 'Unhandled Promise Rejection'));
     });
 
@@ -106,17 +95,6 @@ async function init() {
         message.includes('NetworkError');
 
       if (isNoise) return;
-
-      // 同步到全域診斷陣列
-      type StartupError = { msg: string; type: string; details: string };
-      const w = window as unknown as { __STARTUP_ERRORS__?: StartupError[] };
-      const errors = w.__STARTUP_ERRORS__ || [];
-      errors.push({
-        msg: message,
-        type: 'React Runtime Error',
-        details: event.error?.stack || 'Location: React App index'
-      });
-      w.__STARTUP_ERRORS__ = errors;
 
       ErrorFactory.capture(event.error || new Error(event.message || 'Global runtime error'));
     });

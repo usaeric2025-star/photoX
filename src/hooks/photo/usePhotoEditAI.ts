@@ -8,6 +8,7 @@ import { useAdminMaintenance, useSettings, useCategories, useTags, useFilters } 
 import { Tag, Photo } from '#src/types/index.js';
 import { analyzePhoto } from '#src/features/ai/commands.js';
 import { useUI, useAuth } from '#lib/store/index.js';
+import { showToast } from '#lib/ui/toast.js';
 
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
@@ -95,8 +96,28 @@ export function usePhotoEditAI() {
             }
           }
 
-          if (result.category_id || result.categoryId) {
-            updates.categoryId = String(result.category_id || result.categoryId);
+          if (result.category_id || result.categoryId || result.category_name || result.categoryName) {
+            const rawCatId = String(result.category_id || result.categoryId || '');
+            const rawCatName = String(result.category_name || result.categoryName || '');
+            
+            // Try ID match first
+            let matchedId: string | null = null;
+            if (rawCatId && categories.find(c => String(c.id) === rawCatId)) {
+                matchedId = rawCatId;
+            } 
+            // Fallback to name match
+            else if (rawCatName) {
+                const found = categories.find(c => 
+                    c.name.toLowerCase() === rawCatName.toLowerCase() ||
+                    c.nameZh?.toLowerCase() === rawCatName.toLowerCase() ||
+                    c.nameEn?.toLowerCase() === rawCatName.toLowerCase()
+                );
+                if (found) matchedId = String(found.id);
+            }
+            
+            if (matchedId) {
+                updates.categoryId = matchedId;
+            }
           }
           
           if (result.itemCode || result.item_code) {
@@ -282,5 +303,82 @@ export function usePhotoEditAI() {
     return await handleAiAnalyze({ imageUrl: url });
   }, [handleAiAnalyze]);
 
-  return { handleAiAnalyze: onAnalyze, isAnalyzing };
+  const handleReExtract = useCallback(async (rawResult: any) => {
+      if (!editPhotoId) return;
+      
+      const result = (Array.isArray(rawResult) && rawResult.length > 0) ? rawResult[0] : rawResult;
+      if (!result || typeof result !== 'object') {
+          showToast.error('Invalid raw data format');
+          return;
+      }
+
+      const updates: Record<string, any> = {};
+      
+      // Basic Info
+      if (result.name) {
+          if (typeof result.name === 'object' && result.name !== null) {
+              const n = result.name as Record<string, string>;
+              updates.name = n.en || n.zh || n.ms || String(result.name);
+          } else {
+              updates.name = String(result.name);
+          }
+      }
+
+      // Category
+      if (result.category_id || result.categoryId || result.category_name || result.categoryName) {
+          const rawCatId = String(result.category_id || result.categoryId || '');
+          const rawCatName = String(result.category_name || result.categoryName || '');
+          
+          let matchedId: string | null = null;
+          if (rawCatId && categories.find(c => String(c.id) === rawCatId)) {
+              matchedId = rawCatId;
+          } else if (rawCatName) {
+              const found = categories.find(c => 
+                  c.name.toLowerCase() === rawCatName.toLowerCase() ||
+                  c.nameZh?.toLowerCase() === rawCatName.toLowerCase() ||
+                  c.nameEn?.toLowerCase() === rawCatName.toLowerCase()
+              );
+              if (found) matchedId = String(found.id);
+          }
+          if (matchedId) updates.categoryId = matchedId;
+      }
+
+      // Tags
+      const sourceTags = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
+      if (sourceTags.length > 0) {
+          const rawNames = sourceTags.map((t: any) => typeof t === 'object' ? (t.name || t.id || '') : String(t)).filter(Boolean);
+          const resolved = await resolveTagNamesToIds(rawNames, allTags);
+          if (resolved.length > 0) updates.tags = resolved.slice(0, 5);
+      }
+
+      // Description
+      if (result.description) {
+          if (typeof result.description === 'object' && result.description !== null) {
+              updates.description = {
+                  zh: result.description.zh || '',
+                  en: result.description.en || '',
+                  ms: result.description.ms || ''
+              };
+          } else {
+              updates.description = { zh: String(result.description), en: '', ms: '' };
+          }
+      }
+
+      // Apply to form
+      Object.entries(updates).forEach(([key, value]) => {
+          form.setFieldValue(key as keyof PhotoEditFormData, value as never);
+      });
+
+      // Save
+      try {
+          await updatePhoto({ id: editPhotoId, updates });
+          invalidateDetail(editPhotoId);
+          invalidateList();
+          showToast.success('Re-extraction successful');
+      } catch (e) {
+          showToast.error('Failed to save extracted data');
+      }
+  }, [editPhotoId, categories, allTags, form, updatePhoto, invalidateDetail, invalidateList]);
+
+  return { handleAiAnalyze: onAnalyze, handleReExtract, isAnalyzing };
 }

@@ -1,6 +1,6 @@
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import React from 'react';
-import { usePhotoAIResult, useCopyToClipboard } from '#src/hooks/index.js';
+import { usePhotoEditAI, usePhotoAIResult, useCopyToClipboard } from '#src/hooks/index.js';
 import { useUI } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
@@ -8,6 +8,7 @@ import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSession
 export function AISourceTab() {
   const { photoId } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
+  const { handleReExtract } = usePhotoEditAI();
   const { copy, copied } = useCopyToClipboard({
     successMessage: appLang === 'zh' ? '已复制' : 'Copied'
   });
@@ -80,26 +81,35 @@ export function AISourceTab() {
             {appLang === 'zh' ? '照片 AI 分析原始输出 (JSON / Markdown)' : 'Model Output Log (Raw Source)'}
           </span>
         </div>
-        <button
-          onClick={() => copy(formattedResult)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-sans font-medium transition-all ${
-            copied
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
-              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 active:scale-95'
-          }`}
-        >
-          {copied ? (
-            <>
-              <Icon name="check" className="w-3.5 h-3.5" />
-              <span>{appLang === 'zh' ? '已复制' : 'Copied'}</span>
-            </>
-          ) : (
-            <>
-              <Icon name="copy" className="w-3.5 h-3.5" />
-              <span>{appLang === 'zh' ? '复制代码' : 'Copy Code'}</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleReExtract(aiResult.rawResult)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 text-xs font-sans font-medium hover:bg-indigo-100 transition-all active:scale-95"
+          >
+            <Icon name="refresh-cw" className="w-3.5 h-3.5" />
+            <span>{appLang === 'zh' ? '二次提取分类与标签' : 'Re-extract Meta'}</span>
+          </button>
+          <button
+            onClick={() => copy(formattedResult)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-sans font-medium transition-all ${
+              copied
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 active:scale-95'
+            }`}
+          >
+            {copied ? (
+              <>
+                <Icon name="check" className="w-3.5 h-3.5" />
+                <span>{appLang === 'zh' ? '已复制' : 'Copied'}</span>
+              </>
+            ) : (
+              <>
+                <Icon name="copy" className="w-3.5 h-3.5" />
+                <span>{appLang === 'zh' ? '复制代码' : 'Copy Code'}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="relative group rounded-2xl border border-slate-200 bg-slate-900 shadow-sm overflow-hidden">
