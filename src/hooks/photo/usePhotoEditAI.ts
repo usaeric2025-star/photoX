@@ -8,7 +8,6 @@ import { useAdminMaintenance, useSettings, useCategories, useTags, useFilters } 
 import { Tag, Photo } from '#src/types/index.js';
 import { analyzePhoto } from '#src/features/ai/commands.js';
 import { useUI, useAuth } from '#lib/store/index.js';
-import { aiAnalysisSignal } from '#lib/ai/executor.js';
 
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
@@ -43,7 +42,6 @@ export function usePhotoEditAI() {
     mutationFn: async ({ imageUrl }: { imageUrl: string }) => {
       if (!editPhotoId) throw new Error('Missing editPhotoId');
       
-      aiAnalysisSignal.set({ status: 'processing', photoId: editPhotoId });
       
       const result = await executeTask({
         label: appLang === 'zh' ? "AI 识别" : "AI Identification",
@@ -263,10 +261,8 @@ export function usePhotoEditAI() {
       return result;
     },
     onSuccess: (result) => {
-      aiAnalysisSignal.set({ status: 'completed', result });
     },
     onError: (error) => {
-      aiAnalysisSignal.set({ status: 'failed', error: String(error) });
     },
     successMessage: appLang === 'zh' ? 'AI 識別補全成功' : 'AI Analysis completed',
     errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'

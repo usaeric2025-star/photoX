@@ -49,6 +49,11 @@ export async function resolveTagNamesToIds(
         if (createResult) {
           createResult.forEach((id: string) => tagIds.push(id));
         }
+        
+        // Invalidate tags cache so the UI shows the newly created tags
+        const { queryClient } = await import('#lib/query/index.js');
+        const { queryKeys } = await import('#lib/query/keys.js');
+        queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
       } catch (e) {}
     }
 

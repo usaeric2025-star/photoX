@@ -3,6 +3,7 @@ import { motion } from 'lite-sleek';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';
+import { usePhoto } from '#src/hooks/photo/usePhoto.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 import { Photo } from '#src/types/photo.js';
 
@@ -139,7 +140,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   if (!isOpen) return null;
   if (effectivePhotos.length === 0) return null;
   
-  const activePhoto = effectivePhotos[currentIndex] || effectivePhotos[0];
+  const baseActivePhoto = effectivePhotos[currentIndex] || effectivePhotos[0] as any;
+  const activeId = ('original' in baseActivePhoto) ? (baseActivePhoto as any).original.id : (baseActivePhoto as any).id;
+  const { data: freshPhoto } = usePhoto(activeId);
+  const activePhoto = freshPhoto || ('original' in baseActivePhoto ? (baseActivePhoto as any).original : baseActivePhoto);
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col font-sans select-none">

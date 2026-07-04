@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'lite-sleek';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
 import { Photo } from '#src/types/photo.js';
@@ -127,39 +128,45 @@ export function LightboxStage({
       onPointerCancel={onPointerCancel}
       onClick={onClose} // Clicking the background closes it
     >
-      <div
-        key={currentIndex}
-        className="absolute inset-0 flex items-center justify-center p-4 sm:p-12 md:p-16 animate-in fade-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to background
-      >
-        {/* Main Image Container */}
-        <div 
-          className="relative w-full h-full flex items-center justify-center select-none"
-          style={{
-            transform: isSwiping ? `translateX(${dragOffset}px)` : 'translateX(0px)',
-            transition: isSwiping ? 'none' : 'transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1)',
-          }}
+      <AnimatePresence>
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0, transform: 'scale(0.96)' }}
+          animate={{ opacity: 1, transform: 'scale(1)' }}
+          exit={{ opacity: 0, transform: 'scale(1.04)' }}
+          transition="all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)"
+          className="absolute inset-0 flex items-center justify-center p-4 sm:p-12 md:p-16"
+          onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to background
         >
+          {/* Main Image Container */}
           <div 
-            className="w-full h-full flex items-center justify-center cursor-pointer"
-            onDoubleClick={handleToggleZoom}
-            onClick={(e) => {
-              // On touch devices single tap can toggle zoom, or just double-click
-              // For safety and compatibility with onClose, we stop propagation of click on the image
-              e.stopPropagation();
+            className="relative w-full h-full flex items-center justify-center select-none"
+            style={{
+              transform: isSwiping ? `translateX(${dragOffset}px)` : 'translateX(0px)',
+              transition: isSwiping ? 'none' : 'transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1)',
             }}
           >
-            <Image
-              src={src}
-              lqipSrc={lqipSrc}
-              alt={title}
-              priority={true}
-              containerClassName="bg-transparent"
-              className={`object-contain max-w-full max-h-full drop-shadow-2xl transition-all duration-300 select-none ${isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in'}`}
-            />
+            <div 
+              className="w-full h-full flex items-center justify-center cursor-pointer"
+              onDoubleClick={handleToggleZoom}
+              onClick={(e) => {
+                // On touch devices single tap can toggle zoom, or just double-click
+                // For safety and compatibility with onClose, we stop propagation of click on the image
+                e.stopPropagation();
+              }}
+            >
+              <Image
+                src={src}
+                lqipSrc={lqipSrc}
+                alt={title}
+                priority={true}
+                containerClassName="bg-transparent"
+                className={`object-contain max-w-full max-h-full drop-shadow-2xl transition-all duration-300 select-none ${isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in'}`}
+              />
+            </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* Hidden preloading container */}
       {totalPhotos > 1 && shouldPreload && (

@@ -4,12 +4,10 @@ import { DimensionEditor } from './DimensionEditor.js';
 import { Dimension } from '#src/types/index.js';
 import { safeArray } from '#lib/utils.js';
 import { useUI, useSignal } from '#lib/store/index.js';
-import { aiAnalysisSignal } from '#lib/ai/executor.js';
 import { usePhoto, useFilters } from '#src/hooks/index.js';
 import { showToast } from '#lib/ui/toast.js';
 import { translations } from '#src/locales/index.js';
 import { usePhotoEditAI } from '#src/hooks/index.js';
-import { AIStatusBadge } from '#src/components/ui/AIStatusBadge.js';
 import { AppField } from '#lib/forms/AppField.js';
 import { MultilingualInput } from '#src/components/shared/MultilingualInput.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
@@ -18,10 +16,10 @@ export function DetailsTab() {
   const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
   const appLang = useUI((s) => s.appLang);
-  const aiState = useSignal(aiAnalysisSignal);
-  const isAnalyzing = aiState.status === 'processing';
+  
+  
   const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
-  const { handleAiAnalyze } = usePhotoEditAI();
+  const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
 
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
@@ -53,7 +51,6 @@ export function DetailsTab() {
             {detailPhoto?.id?.slice(0, 8)}...
           </span>
         </div>
-        <AIStatusBadge />
       </div>
 
       <AppField form={form} name="dimensions">

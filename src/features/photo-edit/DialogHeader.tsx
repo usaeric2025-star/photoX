@@ -10,8 +10,7 @@ import {
   usePhotoDelete,
   useFilters,
 } from '#src/hooks/index.js';
-import { useSignal, useUI } from '#lib/store/index.js';
-import { aiAnalysisSignal } from '#lib/ai/executor.js';
+import { useSignal, useUI, tasksSignal } from '#lib/store/index.js';
 import { showToast } from "#lib/ui/toast.js";
 import { ErrorFactory } from "#lib/error/ErrorFactory.js";
 import { usePhotoEditAI } from "#src/hooks/index.js";
@@ -33,16 +32,19 @@ export function DialogHeader({
   const appLang = useUI((s) => s.appLang);
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  const aiState = useSignal(aiAnalysisSignal);
-  const isAnalyzing = aiState.status === 'processing';
+  
+  
 
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const { setCover } = useGroupMutations();
   const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();
   const { mutateAsync: deletePhoto } = usePhotoDelete();
   
-  const { handleAiAnalyze } = usePhotoEditAI();
-
+  const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
+  const tasksMap = useSignal(tasksSignal) as Map<string, any>;
+  const aiTask = Array.from(tasksMap.values()).find((t: any) => t.type === 'ai-analyze' && t.state.status === 'processing');
+  const aiMessage = (aiTask?.state as any)?.message;
+  
   const isPartOfGroup = !!detailPhoto?.groupId;
 
   const onRemoveFromGroup = async () => {
@@ -75,6 +77,12 @@ export function DialogHeader({
         <h2 className="font-black text-sm sm:text-base text-slate-800 tracking-tight leading-tight uppercase truncate">
           {editPhotoId ? l.editTitle : l.analyzeTitle}
         </h2>
+        {aiMessage && (
+          <div className="ml-4 px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-xs font-semibold animate-in fade-in flex items-center gap-2 max-w-[200px] sm:max-w-xs truncate">
+            <LoadingSpinner size="xs" />
+            <span className="truncate">{aiMessage}</span>
+          </div>
+        )}
       </div>
 
       <div className="flex-none flex items-center justify-end gap-1.5 sm:gap-2">

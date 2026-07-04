@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { useFilters } from '#src/features/filters/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { PublicHeader } from '#src/components/layouts/headers/PublicHeader.js';
@@ -19,6 +19,7 @@ export default function PublicPage() {
   } = useFilters();
   
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const filters = useMemo(() => ({
     categoryId: (category && category !== 'all' && category !== '') ? category : undefined,
@@ -32,6 +33,18 @@ export default function PublicPage() {
   const patch = useUI(s => s.patch);
   const { uiTranslations: t } = useTranslation();
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = e.currentTarget.scrollTop;
+    setShowScrollTop(scrollTop > 400);
+  };
+
+  const handleScrollToTop = () => {
+    scrollContainerRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div 
       className="flex flex-col h-full w-full bg-surface-base relative overflow-hidden" 
@@ -41,7 +54,11 @@ export default function PublicPage() {
 
       <FilterBar mode="public" className="border-b shadow-sm" />
 
-      <div className="flex-1 min-h-0 relative bg-surface-soft overflow-y-auto">
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 min-h-0 relative bg-surface-soft overflow-y-auto"
+      >
         <ErrorBoundary>
           <PhotoWall 
             mode="public"
@@ -50,7 +67,17 @@ export default function PublicPage() {
         </ErrorBoundary>
       </div>
 
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3">
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        {showScrollTop && (
+          <button
+            onClick={handleScrollToTop}
+            type="button"
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-900/95 text-white border border-slate-800 shadow-xl hover:bg-slate-800 transition-all active:scale-90 focus:outline-none animate-in fade-in slide-in-from-bottom-3 duration-300"
+            title="Scroll to Top"
+          >
+            <Icon name="chevron-up" size={22} />
+          </button>
+        )}
         <button
           onClick={() => {
             patch({ showWhatsAppChoice: true, pendingPhotoId: null });

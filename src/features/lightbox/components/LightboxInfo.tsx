@@ -11,15 +11,6 @@ interface LightboxInfoProps {
   onLangChange: (lang: 'zh' | 'en' | 'ms') => void;
 }
 
-const formatPhotoDate = (dateStr: string) => {
-  if (!dateStr) return 'Unknown Date';
-  try {
-    return new Date(dateStr).toLocaleDateString();
-  } catch (e) {
-    return dateStr;
-  }
-};
-
 const getDisplayString = (val: unknown, lang: string) => {
   if (!val) return '';
   if (typeof val === 'string') {
@@ -69,9 +60,6 @@ export function LightboxInfo({
           <div className="space-y-6">
             <div>
               <h3 className="text-white font-medium text-base sm:text-lg leading-snug mb-2">{title}</h3>
-              <div className="flex items-center gap-4 text-[10px] sm:text-xs font-mono text-white/40 uppercase tracking-widest">
-                <span className="flex items-center gap-1.5"><Icon name="calendar" className="w-3 h-3" />{formatPhotoDate(photoData.createdAt)}</span>
-              </div>
             </div>
             
             {displayDescription && (

@@ -279,7 +279,7 @@ export const groups = new Hono()
 
     return successResponse(c, null);
   })
-  .delete('/remove-photos', async (c) => {
+  .post('/remove-photos', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(v.object({ 
         photoIds: v.union([v.string(), v.array(v.string())]), 

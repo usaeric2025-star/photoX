@@ -8,6 +8,7 @@ import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "#src/hooks
 import { PhotoEditTabs } from "./PhotoEditTabs.js";
 import { DialogHeader } from "./DialogHeader.js";
 import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner.js";
+import { TaskIndicator } from "#src/components/admin/TaskIndicator.js";
 import { logger } from "#lib/logger.js";
 import { useAdminMaintenance, useFilters } from '#src/hooks/index.js';
 
@@ -67,6 +68,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
             )}
           </div>
         )}
+        <TaskIndicator />
       </Modal>
       
       <NativeDialog

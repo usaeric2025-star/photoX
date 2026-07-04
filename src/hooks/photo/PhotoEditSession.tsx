@@ -1,4 +1,5 @@
 import { logger } from '#lib/logger.js';
+import { showToast } from '#lib/ui/toast.js';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { useAppForm } from '#lib/forms/useAppForm.js';
@@ -94,7 +95,7 @@ export const PhotoEditSessionProvider = ({
     // Convert using our strict Adapter
     const saveData = photoEditAdapter(values, photoId, {
       tags: Array.isArray(values.tags) 
-        ? values.tags.map((t: any) => typeof t === 'object' ? t.name || t.id : String(t)) 
+        ? values.tags.map((t: any) => typeof t === 'object' ? String(t.id ?? '') : String(t)).filter(Boolean) 
         : null,
       createdAt: photo?.createdAt,
       updatedAt: new Date().toISOString(),
@@ -104,6 +105,8 @@ export const PhotoEditSessionProvider = ({
       id: photoId,
       updates: saveData as unknown as Partial<Photo>
     });
+    
+    showToast.success('Saved successfully');
     
     onSuccess?.();
   }, [photoId, photo?.tags, photo?.createdAt, updateMutation, onSuccess, categories, manufacturers]);
@@ -126,11 +129,12 @@ export const PhotoEditSessionProvider = ({
       const state = formObj.form.state;
       if (Object.keys(state.errors).length > 0 || state.fieldMeta && Object.values(state.fieldMeta).some(m => m?.errorMap?.onChange)) {
          console.warn('[PhotoEdit] Form has validation errors:', state.errors, state.fieldMeta);
-         // toast.error(appLang === 'zh' ? '请检查输入内容' : 'Please check your input');
+         showToast.error('Please check your input (form validation failed)');
+         return;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[PhotoEdit] Commit failed:', err);
-      throw err;
+      showToast.error(err?.message || 'Failed to save changes');
     }
   }, [formObj]);
 

@@ -31,7 +31,7 @@ export const getPhotoEditSchema = (t: TranslationType) => v.object({
   modelNumber: v.optional(v.nullable(v.string())),
   dimensions: v.optional(v.nullable(v.array(DimensionSchema))),
   isHidden: v.optional(v.boolean()),
-  tags: v.optional(v.nullable(v.array(v.string()))),
+  tags: v.optional(v.nullable(v.array(v.any()))),
   itemCode: v.optional(v.nullable(v.string())),
 });
 

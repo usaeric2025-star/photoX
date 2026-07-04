@@ -114,7 +114,7 @@ export function Tabs({
           role="tabpanel"
           id={`panel-${activeTab}`}
           aria-labelledby={`tab-${activeTab}`}
-          className="w-full h-full focus:outline-none"
+          className="w-full min-h-full focus:outline-none flex flex-col"
           tabIndex={0}
         >
           {children}

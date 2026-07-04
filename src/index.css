@@ -185,7 +185,7 @@ li[data-sonner-toast] [data-close-button] {
 }
 
 li[data-sonner-toast] {
-  touch-action: none !important;
+  /* touch-action removed to allow swipe to dismiss */
 }
 
 .dark {

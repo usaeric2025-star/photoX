@@ -31,7 +31,7 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
       </ConfirmProvider>
       <DialogContainer />
       <TaskIndicator />
-      <Toaster position="bottom-center" closeButton />
+      <Toaster position="bottom-right" closeButton visibleToasts={3} />
     </AppErrorBoundary>
   );
 }

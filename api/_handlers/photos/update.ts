@@ -167,7 +167,35 @@ export const updateHandler = (app: Hono) => {
             }
         }
 
-        const results = await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id)).returning();
+        let results;
+        if (updates.tags && Array.isArray(updates.tags)) {
+            const tagIds = updates.tags.map(String).map(Number).filter(n => !isNaN(n));
+            
+            await db.transaction(async (tx) => {
+                // Delete old tags for this photo
+                await tx.delete(photoTags).where(eq(photoTags.photoId, id));
+                
+                // Insert new tags
+                if (tagIds.length > 0) {
+                    const tagInsertValues = tagIds.map(tid => ({
+                        photoId: id,
+                        tagId: tid
+                    }));
+                    await tx.insert(photoTags).values(tagInsertValues);
+                }
+                
+                if (Object.keys(mappedUpdates).length > 0) {
+                    results = await tx.update(furnitureItems)
+                        .set(mappedUpdates)
+                        .where(eq(furnitureItems.id, id))
+                        .returning();
+                } else {
+                    results = await tx.select().from(furnitureItems).where(eq(furnitureItems.id, id)).limit(1);
+                }
+            });
+        } else {
+            results = await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id)).returning();
+        }
         const data = results[0] || null;
 
         // POST-MUTATION: Reconcile covers & counts
