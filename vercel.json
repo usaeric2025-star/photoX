@@ -12,15 +12,7 @@
       "destination": "/api"
     },
     {
-      "source": "/admin",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/admin/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/((?!api/|assets/).*)",
+      "source": "/((?!api/|assets/|.*\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }
   ]

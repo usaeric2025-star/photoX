@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { LoginScreen } from '#src/components/admin/LoginScreen.js';
 import React from 'react';
@@ -59,7 +59,7 @@ vi.mock('../../hooks', () => ({
 }));
 
 describe('LoginScreen', () => {
-  it('renders correctly and allows mode switching', () => {
+  it('renders correctly and allows mode switching', async () => {
     const signIn = vi.fn();
     render(<LoginScreen signIn={signIn} />);
     
@@ -70,19 +70,23 @@ describe('LoginScreen', () => {
     
     // Switch to staff mode
     const staffBtn = screen.getByText('Staff');
-    fireEvent.click(staffBtn);
+    await act(async () => {
+      fireEvent.click(staffBtn);
+    });
     
     // Check staff mode elements
     expect(screen.getByPlaceholderText('Enter Passcode')).toBeTruthy();
     expect(screen.getByText('Unlock')).toBeTruthy();
   });
 
-  it('calls signIn when login button is clicked in admin mode', () => {
+  it('calls signIn when login button is clicked in admin mode', async () => {
     const signIn = vi.fn().mockResolvedValue(undefined);
     render(<LoginScreen signIn={signIn} />);
     
     const loginBtn = screen.getByText('Login');
-    fireEvent.click(loginBtn);
+    await act(async () => {
+      fireEvent.click(loginBtn);
+    });
     
     expect(signIn).toHaveBeenCalled();
   });
