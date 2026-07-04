@@ -15,7 +15,7 @@ export const upsertPhotoRecord = async (payload: Record<string, unknown>): Promi
     if (!res.ok) {
         let errorMsg = 'Upsert photo failed';
         try {
-            const errJson = await res.json() as any;
+            const errJson = await res.json() as { error?: string | Record<string, unknown> };
             if (errJson && errJson.error) {
                 const errorDetail = typeof errJson.error === 'object' ? JSON.stringify(errJson.error) : errJson.error;
                 errorMsg = `${errorMsg}: ${errorDetail}`;
@@ -30,7 +30,7 @@ export const upsertPhotoRecord = async (payload: Record<string, unknown>): Promi
         throw ErrorFactory.fatal(errorMsg, { context: 'dbCommands' });
     }
     
-    const { data } = await res.json() as any;
+    const { data } = await res.json() as { data: unknown };
     return data;
 };
 

@@ -1,3 +1,5 @@
+import { queryClient } from "#lib/query/index.js";
+import { queryKeys } from "#lib/query/keys.js";
 import { Tag } from '#src/types/index.js';
 import { loadTagsFromCloud } from './queries.js';
 import { batchCreateTags } from './commands.js';
@@ -51,8 +53,7 @@ export async function resolveTagNamesToIds(
         }
         
         // Invalidate tags cache so the UI shows the newly created tags
-        const { queryClient } = await import('#lib/query/index.js');
-        const { queryKeys } = await import('#lib/query/keys.js');
+        
         queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
       } catch (e) {}
     }

@@ -22,7 +22,7 @@ export function setupQuerySync(): () => void {
         // ✅ 本地更新單條數據（不需防抖）
         if (task.meta?.photoId) {
           const detailKey = queryKeys.photos.detail(String(task.meta.photoId));
-          queryClient.setQueryData(detailKey, (old: any) => ({
+          queryClient.setQueryData(detailKey, (old: unknown) => ({
             ...(old && typeof old === 'object' ? old : {}),
             aiTags: (task.state as { status: 'completed'; result?: { tags: string[] } }).result?.tags,
           }));

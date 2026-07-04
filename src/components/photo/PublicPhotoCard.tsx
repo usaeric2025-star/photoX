@@ -3,9 +3,9 @@ import { Category, Tag } from '#src/types/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCardBase } from './PhotoCardBase.js';
 import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts.js';
-import { useColumns, usePerformance } from '#src/hooks/index.js';
+import { usePerformance } from '#src/hooks/index.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
-import { useSignal, gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+import { useGrid } from '#src/context/GridContext.js';
 import { Icon } from '#src/components/ui/Icon.js';
 
 interface PublicPhotoCardProps {
@@ -31,7 +31,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   sharedTags,
   priority = false,
 }: PublicPhotoCardProps) {
-  const columns = useSignal(gridColumnsSignal) as number;
+  const { columns } = useGrid();
   
   const { cardRef, handleClick } = usePhotoCard({
     photo,
@@ -53,7 +53,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       item={photo}
       isSelected={false}
       isMultiSelect={false}
-      imgVariant={columns <= 3 ? 'md' : 'sm'}
+      imgVariant={columns <= 4 ? 'md' : 'sm'}
       priority={priority}
       onClick={handleClick}
       ref={cardRef}

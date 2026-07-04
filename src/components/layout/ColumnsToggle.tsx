@@ -1,13 +1,17 @@
-import { useColumns, useTranslation } from '#src/hooks/index.js';
+import { useTranslation } from '#src/hooks/index.js';
+import { useGrid, ColumnCount } from '#src/context/GridContext.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { cn } from '#lib/utils.js';
 
 export function ColumnsToggle() {
-  const { columns, setColumns } = useColumns();
+  const { columns, setColumns } = useGrid();
   const { uiTranslations: t } = useTranslation();
 
   const handleToggle = () => {
-    const nextCols: 2 | 3 | 5 = columns === 3 ? 5 : columns === 5 ? 2 : 3;
+    // Standard sequence: 3 -> 6 -> 2 -> 3
+    const nextCols: ColumnCount = 
+      columns === 3 ? 6 : 
+      columns === 6 ? 2 : 3;
     setColumns(nextCols);
   };
 

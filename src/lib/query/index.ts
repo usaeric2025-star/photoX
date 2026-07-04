@@ -27,9 +27,9 @@ export const queryClient = new QueryClient({
 /**
  * Standard data fetching hook (Legacy wrapper for compatibility)
  */
-export function useAppQuery<TData = any, TError = Error>(
+export function useAppQuery<TData = unknown, TError = Error>(
   key: QueryKey | null,
-  fetcherFn: (...args: any[]) => Promise<TData>,
+  fetcherFn: (...args: unknown[]) => Promise<TData>,
   options?: Omit<UseQueryOptions<TData, TError, TData, QueryKey>, 'queryKey' | 'queryFn'>
 ) {
   const queryKey = key === null ? ['__null__'] : (Array.isArray(key) ? key : [key]);
@@ -46,7 +46,7 @@ export function useAppQuery<TData = any, TError = Error>(
 /**
  * Standard mutation hook (Legacy wrapper for compatibility)
  */
-export function useAppMutation<TVariables = any, TData = any, TError = Error>(
+export function useAppMutation<TVariables = unknown, TData = unknown, TError = Error>(
   options: UseMutationOptions<TData, TError, TVariables>
 ) {
   return useMutation<TData, TError, TVariables>(options);

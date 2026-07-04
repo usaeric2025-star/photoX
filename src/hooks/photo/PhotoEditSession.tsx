@@ -5,10 +5,11 @@ import { useForm } from '@tanstack/react-form';
 import { useAppForm } from '#lib/forms/useAppForm.js';
 import { useCategories, useManufacturers } from '#src/hooks/index.js';
 import { usePhoto } from './usePhoto.js';
-import { usePhotoEditMutation } from './usePhotoMutations.js';
+import { usePhotoMutations } from './usePhotoMutations.js';
 import { PhotoEditSchema, type PhotoEditFormData } from '#src/schemas/photoEdit.js';
 import { photoEditAdapter } from '#lib/forms/index.js';
 import { generateItemCode } from '#src/services/photo/utils.js';
+import { toSingleString, toMultiObject } from '#lib/forms/utils.js';
 import { Photo, Tag } from '#src/types/index.js';
 
 interface PhotoEditSessionContextValue {
@@ -35,27 +36,10 @@ export const PhotoEditSessionProvider = ({
   onSuccess 
 }: PhotoEditSessionProps) => {
   const { data: photo, isPending } = usePhoto(photoId);
-  const updateMutation = usePhotoEditMutation();
+  const { editPhotoAsync } = usePhotoMutations();
   const { categories = [] } = useCategories();
   const { manufacturers = [] } = useManufacturers();
   
-  const toSingleString = (val: unknown) => {
-    if (typeof val === 'object' && val !== null) {
-      const v = val as Record<string, string>;
-      return v.zh || v.en || v.ms || '';
-    }
-    return typeof val === 'string' ? val : '';
-  };
-
-  const toMultiObject = (val: unknown) => {
-    if (typeof val === 'object' && val !== null) {
-      const v = val as Record<string, string>;
-      return { zh: v.zh || '', en: v.en || '', ms: v.ms || '' };
-    }
-    const s = typeof val === 'string' ? val : '';
-    return { zh: s, en: '', ms: '' };
-  };
-
   const defaultValues = useMemo(() => {
     const p = (photo || {}) as Partial<Photo>;
     return {
@@ -95,13 +79,13 @@ export const PhotoEditSessionProvider = ({
     // Convert using our strict Adapter
     const saveData = photoEditAdapter(values, photoId, {
       tags: Array.isArray(values.tags) 
-        ? values.tags.map((t: any) => typeof t === 'object' ? String(t.id ?? '') : String(t)).filter(Boolean) 
+        ? (values.tags as (Tag | string)[]).map((t) => typeof t === 'object' ? String(t.id ?? '') : String(t)).filter(Boolean) 
         : null,
       createdAt: photo?.createdAt,
       updatedAt: new Date().toISOString(),
     } as Record<string, unknown>);
     
-    await updateMutation.mutateAsync({
+    await editPhotoAsync({
       id: photoId,
       updates: saveData as unknown as Partial<Photo>
     });
@@ -109,7 +93,7 @@ export const PhotoEditSessionProvider = ({
     showToast.success('Saved successfully');
     
     onSuccess?.();
-  }, [photoId, photo?.tags, photo?.createdAt, updateMutation, onSuccess, categories, manufacturers]);
+  }, [photoId, photo?.tags, photo?.createdAt, editPhotoAsync, onSuccess, categories, manufacturers]);
 
   const formObj = useAppForm({
     schema: PhotoEditSchema,
@@ -123,7 +107,7 @@ export const PhotoEditSessionProvider = ({
     }
     
     try {
-      console.log('[PhotoEdit] Committing form data...');
+      logger.debug('[PhotoEdit] Committing form data...');
       await formObj.form.handleSubmit();
       
       const state = formObj.form.state;
@@ -132,9 +116,10 @@ export const PhotoEditSessionProvider = ({
          showToast.error('Please check your input (form validation failed)');
          return;
       }
-    } catch (err: any) {
-      console.error('[PhotoEdit] Commit failed:', err);
-      showToast.error(err?.message || 'Failed to save changes');
+    } catch (err) {
+      const error = err as Error;
+      logger.error('[PhotoEdit] Commit failed:', error);
+      showToast.error(error?.message || 'Failed to save changes');
     }
   }, [formObj]);
 

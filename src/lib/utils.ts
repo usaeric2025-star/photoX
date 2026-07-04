@@ -46,7 +46,7 @@ export function getPathFromUrl(url: string): string {
 }
 
 export function withTimeout<T>(promise: Promise<T>, ms: number, labelOrError?: string): Promise<T> {
-  let timeoutId: NodeJS.Timeout | number;
+  let timeoutId: ReturnType<typeof setTimeout>;
   const timeout = new Promise<never>((_, reject) => {
     const msg = labelOrError
       ? `Operation [${labelOrError}] timed out after ${ms}ms`
@@ -58,6 +58,6 @@ export function withTimeout<T>(promise: Promise<T>, ms: number, labelOrError?: s
   actualPromise.catch(() => {}); // prevent unhandled rejections if timeout wins
   
   return Promise.race([actualPromise, timeout]).finally(() => {
-    clearTimeout(timeoutId as any);
+    clearTimeout(timeoutId);
   });
 }

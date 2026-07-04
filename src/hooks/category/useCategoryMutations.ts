@@ -1,39 +1,48 @@
 import { Category } from '#src/types/index.js';
 import { createCategory, updateCategory, deleteCategory } from '#src/services/category/commands.js';
-import { queryKeys } from '#lib/query/keys.js';
-import { useAppMutation, queryClient } from '#lib/query/index.js';
+import { useAppMutation } from '#lib/query/index.js';
+import { useInvalidatePhotos } from '#src/hooks/photo/useInvalidatePhotos.js';
 
-export const useCategoryCreate = () => useAppMutation({
-  mutationFn: async (variables: string | Partial<Category>) => {
-    const name = typeof variables === 'string' ? variables : (variables.name || '');
-    const res = await createCategory({ name });
-    if (!res) throw new Error('分类创建失败');
-    return res;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
-    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
-  }
-});
+export const useCategoryCreate = () => {
+  const { invalidateCategories, invalidateList } = useInvalidatePhotos();
+  return useAppMutation({
+    mutationFn: async (variables: string | Partial<Category>) => {
+      const name = typeof variables === 'string' ? variables : (variables.name || '');
+      const res = await createCategory({ name });
+      if (!res) throw new Error('分类创建失败');
+      return res;
+    },
+    onSuccess: () => {
+      invalidateCategories();
+      invalidateList();
+    }
+  });
+};
 
-export const useCategoryEdit = () => useAppMutation({
-  mutationFn: async ({ id, updates }: { id: number; updates: Partial<Category> }) => {
-    await updateCategory(id, updates);
-    return true;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
-    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
-  }
-});
+export const useCategoryEdit = () => {
+  const { invalidateCategories, invalidateList } = useInvalidatePhotos();
+  return useAppMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Category> }) => {
+      await updateCategory(id, updates);
+      return true;
+    },
+    onSuccess: () => {
+      invalidateCategories();
+      invalidateList();
+    }
+  });
+};
 
-export const useCategoryDelete = () => useAppMutation({
-  mutationFn: async (id: number) => {
-    await deleteCategory(id);
-    return true;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
-    queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
-  }
-});
+export const useCategoryDelete = () => {
+  const { invalidateCategories, invalidateList } = useInvalidatePhotos();
+  return useAppMutation({
+    mutationFn: async (id: number) => {
+      await deleteCategory(id);
+      return true;
+    },
+    onSuccess: () => {
+      invalidateCategories();
+      invalidateList();
+    }
+  });
+};

@@ -1,13 +1,16 @@
 import { logger } from '#lib/logger.js';
 import React, { useEffect, useState, useRef } from 'react';
 import { PhotoWall, usePhotoWall } from '#src/features/photo-wall/index.js';
-import { useTranslation, useColumns, useFilters } from '#src/hooks/index.js';
+import { useTranslation, useFilters } from '#src/hooks/index.js';
+import { useGrid } from '#src/context/GridContext.js';
 import { AdminEmptyState } from '#src/pages/AdminPage/AdminEmptyState.js';
 import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
 import { useUI } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
+
+import { ScrollToTopButton } from '#src/components/ui/ScrollToTopButton.js';
 
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });
@@ -27,7 +30,7 @@ export function AdminContainer() {
   const { photos, total, isLoading, error, refresh } = usePhotoWall(filtersObj);
   
   const { uiTranslations: labels } = useTranslation();
-  const { columns } = useColumns();
+  const { columns } = useGrid();
   const adminActions = useAdminMaintenance();
 
   const patch = useUI(s => s.patch);
@@ -80,16 +83,7 @@ export function AdminContainer() {
           />
        </div>
 
-       {showScrollTop && (
-         <button
-           onClick={handleScrollToTop}
-           type="button"
-           className="absolute bottom-24 right-8 z-[9999] w-12 h-12 flex items-center justify-center rounded-full bg-slate-900/95 text-white border border-slate-800 shadow-xl hover:bg-slate-800 transition-all active:scale-90 focus:outline-none animate-in fade-in slide-in-from-bottom-3 duration-300"
-           title="Scroll to Top"
-         >
-           <Icon name="chevron-up" size={22} />
-         </button>
-       )}
+       <ScrollToTopButton show={showScrollTop} onClick={handleScrollToTop} />
     </div>
   );
 }

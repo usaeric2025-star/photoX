@@ -60,15 +60,15 @@ export function DiagDashboard() {
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
-             {[
+             {([
                { id: 'stats', label: '數據概覽 / Stats' },
                { id: 'diagnosis', label: '診斷與修復 / Repair' },
                { id: 'tasks', label: '任務佇列 / Tasks' },
                { id: 'logs', label: '系統日誌 / Logs' }
-             ].map(tab => (
+             ] as const).map(tab => (
                <button
                  key={tab.id}
-                 onClick={() => setActiveTab(tab.id as any)}
+                 onClick={() => setActiveTab(tab.id)}
                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all ${
                    activeTab === tab.id 
                     ? 'bg-white text-brand-navy shadow-sm' 

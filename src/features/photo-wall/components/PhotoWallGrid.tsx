@@ -2,7 +2,7 @@ import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react'
 import { DreamMasonry } from 'dream-masonry';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCard } from './PhotoCard.js';
-import { useColumns } from '#src/hooks/index.js';
+import { useGrid } from '#src/context/GridContext.js';
 
 interface PhotoWallGridProps {
   photos: PhotoListItem[];
@@ -23,7 +23,7 @@ export function PhotoWallGrid({
   hideGroupBadge = false,
   isGroupDetail = false,
 }: PhotoWallGridProps) {
-  const { columns } = useColumns();
+  const { columns } = useGrid();
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
 
@@ -77,7 +77,7 @@ export function PhotoWallGrid({
   ), []);
 
   return (
-    <div ref={containerRef} className="w-full px-2 sm:px-4 md:px-6 pt-4 pb-32">
+    <div ref={containerRef} className="page-container pt-4 pb-32">
       <DreamMasonry
         key={scrollParent ? 'resolved' : 'pending'}
         items={photos as PhotoListItem[]}

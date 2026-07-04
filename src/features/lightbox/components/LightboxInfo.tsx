@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePhotoAIResult } from '#src/hooks/photo/usePhotoAIResult.js';
+import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 import { Photo } from '#src/types/photo.js';
+import { getLocalizedDisplay } from '#src/utils/display.js';
 
 interface LightboxInfoProps {
   currentPhoto: Photo | { original: Photo };
@@ -10,24 +12,6 @@ interface LightboxInfoProps {
   lang: 'zh' | 'en' | 'ms';
   onLangChange: (lang: 'zh' | 'en' | 'ms') => void;
 }
-
-const getDisplayString = (val: unknown, lang: string) => {
-  if (!val) return '';
-  if (typeof val === 'string') {
-    try {
-      if (val.startsWith('{') && val.endsWith('}')) {
-        const parsed = JSON.parse(val) as Record<string, string>;
-        return parsed[lang] || parsed.zh || parsed.en || val;
-      }
-    } catch(e) {}
-    return val;
-  }
-  if (typeof val === 'object') {
-    const obj = val as Record<string, string>;
-    return obj[lang] || obj.zh || obj.en || '';
-  }
-  return String(val);
-};
 
 export function LightboxInfo({
   currentPhoto,
@@ -40,12 +24,15 @@ export function LightboxInfo({
   
   const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
   const descriptionObj = photoData?.description;
-  const displayDescription = getDisplayString(descriptionObj, lang);
+  const displayDescription = getLocalizedDisplay(descriptionObj, lang);
   
-  const title = getDisplayString(photoData.name || 'Photo', lang);
+  const title = getLocalizedDisplay(photoData.name || '照片', lang);
   const uuid = photoData.id || 'N/A';
 
-  const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id, { enabled: showInfo });
+  const { isStaff } = usePermission();
+  const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id, { 
+    enabled: showInfo && isStaff 
+  });
 
   return (
     <AnimatePresence>
@@ -76,7 +63,7 @@ export function LightboxInfo({
                         onClick={() => onLangChange(l)}
                         className={`px-2 py-1 rounded text-[9px] font-bold tracking-wider uppercase transition-all ${lang === l ? 'bg-white text-black' : 'text-white/40 active:text-white'}`}
                       >
-                        {l}
+                        {l === 'zh' ? '简' : l === 'en' ? 'EN' : 'MS'}
                       </button>
                     ))}
                   </div>

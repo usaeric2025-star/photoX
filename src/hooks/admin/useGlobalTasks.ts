@@ -10,6 +10,16 @@ import { logger } from '#lib/logger.js';
 import { useAppRoute } from '#lib/router/index.js';
 import type { Task } from '#lib/task-queue/types.js';
 
+interface RemoteJob {
+  id: string;
+  status: string;
+  progress: number;
+  processed?: number;
+  total?: number;
+  message?: string;
+  error?: string;
+}
+
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
  */
@@ -24,7 +34,7 @@ export function useGlobalTasks() {
   const sessionTasksMap = useSignal(tasksSignal);
 
   // 2. Backend Jobs (Durable, polled)
-  const { data: remoteJobs = [], isPending: isPendingJobs, refetch: refetchJobs } = useAppQuery<any[]>(
+  const { data: remoteJobs = [], isPending: isPendingJobs, refetch: refetchJobs } = useAppQuery<RemoteJob[]>(
     isAdmin ? queryKeys.maintenance.jobs() : null,
     async () => {
       try {
@@ -34,7 +44,7 @@ export function useGlobalTasks() {
           return [];
         }
         if (!res.ok) return [];
-        const result = await res.json() as { success: boolean; data?: { id: string; status: string; progress: number; processed?: number; total?: number; message?: string; error?: string }[] };
+        const result = await res.json() as { success: boolean; data?: RemoteJob[] };
         return (result && result.success && Array.isArray(result.data)) ? result.data : [];
       } catch (err) {
         logger.error('Failed to fetch maintenance jobs:', err);
@@ -44,7 +54,7 @@ export function useGlobalTasks() {
     {
       refetchOnWindowFocus: false,
       staleTime: STALE_TIMES.FAST,
-      refetchInterval: (query: any) => {
+      refetchInterval: (query: { state: { data: unknown } }) => {
         const rJobs = query.state.data;
         if (!isAdmin) return false;
         if (typeof document !== 'undefined' && document.hidden) return false;

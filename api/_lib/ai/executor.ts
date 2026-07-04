@@ -53,9 +53,7 @@ const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
       parsedRawOutput = { raw_text: data.rawResponse };
     }
 
-    const jsonOutput = data.status === 'success' 
-      ? data.cleanedOutput 
-      : { error: data.errorMessage };
+    const jsonOutput = (data.status === 'success' ? data.cleanedOutput : null) || { error: data.errorMessage || 'Unknown error' };
 
     // 写入数据库 (符合最新的 schema)
     try {
@@ -64,12 +62,13 @@ const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
         model: data.model,
         promptVersion: data.promptVersion || 'v1',
         cleanedOutput: jsonOutput,
-        rawOutput: parsedRawOutput,
+        rawOutput: parsedRawOutput || {},
         latencyMs: data.duration,
         costEst: data.cost_est ? String(data.cost_est) : "0",
         tokenUsage: data.token_usage || null,
         status: data.status,
         errorMessage: data.errorMessage || null,
+        rawStoragePath: `ai-logs/${data.photoId || 'global'}-${Date.now()}.json`,
         createdAt: new Date()
       });
       logger.info(`[AIAudit] Successfully saved AI audit log for ${data.photoId || 'global'}`);
@@ -86,12 +85,13 @@ const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
           model: data.model,
           promptVersion: data.promptVersion || 'v1',
           cleanedOutput: fallbackCleanedOutput,
-          rawOutput: parsedRawOutput,
+          rawOutput: parsedRawOutput || {},
           latencyMs: data.duration,
           costEst: data.cost_est ? String(data.cost_est) : "0",
           tokenUsage: data.token_usage || null,
           status: data.status,
           errorMessage: data.errorMessage || null,
+          rawStoragePath: `ai-logs/fallback-${data.photoId || 'global'}-${Date.now()}.json`,
           createdAt: new Date()
         });
         logger.info(`[AIAudit] Successfully saved fallback AI audit log (avoided FK constraint) for ${data.photoId}`);

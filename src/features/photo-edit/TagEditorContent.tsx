@@ -1,19 +1,16 @@
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import React, { useState, useRef, useDeferredValue } from "react";
-import { NativeDialog } from "#src/components/ui/NativeDialog.js";
-import { Icon } from '#src/components/ui/Icon.js';
+import React, { useState, useDeferredValue } from "react";
 import { cn } from "#lib/utils.js";
-import { useConfirm } from '#src/context/ConfirmContext.js';
 import {
   useTagSorting,
   useSettings,
-  useUI,
   useTagSearch,
 } from '#src/hooks/index.js';
 import { MAX_TAGS_PER_PHOTO } from "#src/constants/limits.js";
 import { Tag } from '#src/types/index.js';
 import { SearchInput } from "#src/components/ui/SearchInput.js";
-import { useLongPress } from "#src/hooks/core/useLongPress.js";
+import { TagButton } from "./components/TagButton.js";
+import { TagActionDialog } from "./components/TagActionDialog.js";
 
 interface TagEditorProps {
   tags: Tag[]; // Initial tags or global list
@@ -43,8 +40,6 @@ export function TagEditor({
   const { settings, updateSettings } = useSettings();
   
   const [activeActionTag, setActiveActionTag] = useState<Tag | null>(null);
-  const portalOpenedAt = useRef<number>(0);
-  const confirm = useConfirm();
 
   // 0. Use server-side search for the keyword
   const { data: searchResults = [] } = useTagSearch(deferredSearchTerm);
@@ -59,7 +54,7 @@ export function TagEditor({
       const nextSettings = { ...settings, pinnedTags: newPinned };
       await updateSettings(nextSettings);
     } catch (err) {
-      ErrorFactory.handleError(err, "切换置顶状态");
+      ErrorFactory.handle(err, { context: "切换置顶状态" });
     }
   };
 
@@ -67,7 +62,6 @@ export function TagEditor({
 
   const selectedSet = new Set(selectedTagIds.map(String));
   const pinnedSet = new Set(pinnedIds.map(String));
-  const hotSet = hotTagsSet;
 
   // 1. Data Source
   let displayList: Tag[] = [];
@@ -94,7 +88,7 @@ export function TagEditor({
     const bPinned = pinnedSet.has(bId);
     if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
-    return a.name.localeCompare(b.name, undefined, { numeric: true });
+    return a.name.localeCompare(a.name, undefined, { numeric: true });
   });
 
   return (
@@ -142,7 +136,6 @@ export function TagEditor({
               hideHotLabel={hideHotLabel}
               onToggle={onToggleTag}
               onLongPress={() => {
-                portalOpenedAt.current = Date.now();
                 setActiveActionTag(tag);
               }}
             />
@@ -155,165 +148,18 @@ export function TagEditor({
         )}
       </div>
 
-      <NativeDialog id="tag-editor-dialog" open={!!activeActionTag} onClose={() => setActiveActionTag(null)} hidePadding={false}>
-          <div
-            className="w-full max-w-[280px] space-y-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center space-y-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                标签管理 / TAG
-              </span>
-              <div className="text-lg font-black text-slate-900">
-                #{activeActionTag?.name}
-              </div>
-            </div>
-            <div className="space-y-3">
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-3 text-amber-600 bg-amber-50 border border-amber-100/50 font-bold py-4 rounded-2xl hover:bg-amber-100 transition-all cursor-pointer shadow-sm shadow-amber-500/5"
-                onClick={() => {
-                  if (activeActionTag) togglePin(String(activeActionTag.id));
-                  setActiveActionTag(null);
-                }}
-              >
-                <Icon name="heart"
-                  size={18}
-                  strokeWidth={2.5}
-                  className={
-                    activeActionTag && pinnedIds.includes(String(activeActionTag.id))
-                      ? "fill-amber-600"
-                      : ""
-                  }
-                />
-                {activeActionTag && pinnedIds.includes(String(activeActionTag.id))
-                  ? "取消置顶 / Unpin"
-                  : "设为置顶 / Pin as Hot"}
-              </button>
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50 border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
-                onClick={() => {
-                  if (onRenameTagRequest && activeActionTag) {
-                    onRenameTagRequest(activeActionTag);
-                  }
-                  setActiveActionTag(null);
-                }}
-              >
-                <Icon name="pencil" size={18} strokeWidth={2.5} /> 编辑名称 / Rename
-              </button>
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50 border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
-                onClick={async () => {
-                  if (!activeActionTag) return;
-                  if (await confirm({
-                    title: `彻底删除标签 / Permanent Delete: #${activeActionTag.name}`,
-                    description: "无法撤销且会从所有照片中移除 / This will be permanently removed from all photos.",
-                    confirmText: "删除",
-                    variant: "destructive"
-                  })) {
-                    try {
-                      onDeleteTag(String(activeActionTag.id));
-                    } catch (e) {
-                      throw ErrorFactory.wrap(e as Error, "彻底删除标签", activeActionTag.name);
-                    }
-                  }
-                  setActiveActionTag(null);
-                }}
-              >
-                <Icon name="trash-2" size={18} strokeWidth={2.5} /> 彻底删除 / Delete
-              </button>
-            </div>
-            <button
-              type="button"
-              className="w-full text-slate-400 text-[10px] font-black uppercase tracking-tighter pt-2 active:text-slate-600 cursor-pointer"
-              onClick={() => setActiveActionTag(null)}
-            >
-              取消操作 / CANCEL
-            </button>
-          </div>
-      </NativeDialog>
+      <TagActionDialog
+        activeTag={activeActionTag}
+        pinnedIds={pinnedIds}
+        onClose={() => setActiveActionTag(null)}
+        onTogglePin={togglePin}
+        onRenameRequest={(tag) => onRenameTagRequest?.(tag)}
+        onDeleteTag={onDeleteTag}
+      />
     </div>
   );
 }
 
-interface TagButtonProps {
-  tag: Tag;
-  isSelected: boolean;
-  isHot: boolean;
-  isPinned: boolean;
-  isDisabled: boolean;
-  hideHotLabel: boolean;
-  onToggle: (tag: Tag) => void;
-  onLongPress: () => void;
-}
-
-const TagButton = ({ tag, isSelected, isHot, isPinned, isDisabled, hideHotLabel, onToggle, onLongPress: onLongPressProp }: TagButtonProps) => {
-
-  const btnRef = useRef<HTMLButtonElement>(null);
-  useLongPress(btnRef, {
-    delay: 400,
-    onLongPress: onLongPressProp
-  });
-
-  return (
-    <div className="relative">
-      <button
-        ref={btnRef}
-        type="button"
-        style={{
-          WebkitTouchCallout: "none",
-          WebkitUserSelect: "none",
-          userSelect: "none",
-          touchAction: "pan-y",
-          pointerEvents: "auto",
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          if (isDisabled) return;
-          onToggle(tag);
-        }}
-        className={cn(
-          "px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border select-none flex items-center gap-1 w-auto shadow-sm min-h-[32px] cursor-pointer",
-          isSelected
-            ? "bg-blue-600 text-white border-blue-600 font-semibold"
-            : "bg-slate-50 text-slate-700 border-slate-100 hover:border-slate-300 hover:bg-slate-100/80 active:bg-slate-200/50",
-          isHot &&
-            !isSelected &&
-            "border-amber-200 bg-amber-50/50 text-amber-800",
-          isHot && isSelected && "ring-2 ring-amber-400",
-          isDisabled && "opacity-30 grayscale saturate-50 cursor-not-allowed",
-        )}
-      >
-        <span
-          className={cn(
-            "w-2 h-2 rounded-full",
-            isSelected
-              ? "bg-white"
-              : isHot
-                ? "bg-amber-400"
-                : "bg-slate-300",
-          )}
-        />
-        <span className="flex-1 text-left whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
-          #{tag.name}
-        </span>
-        {isPinned && !isSelected && (
-          <span className="text-[9px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full scale-90 origin-left font-black tracking-tighter shadow-sm">
-            <Icon name="heart" size={8} className="fill-white" /> 置顶
-          </span>
-        )}
-        {!hideHotLabel && isHot && !isPinned && !isSelected && (
-          <span className="text-[9px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-90 origin-left font-black tracking-tighter">
-            HOT
-          </span>
-        )}
-      </button>
-    </div>
-  );
-};
 
 
 

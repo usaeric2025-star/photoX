@@ -68,7 +68,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   const setSearch = useCallback((val: string) => wrappedSetQuery({ q: val || null }), [wrappedSetQuery]);
   const setCategory = useCallback((val: string) => wrappedSetQuery({ cat: val || null }), [wrappedSetQuery]);
   const setTags = useCallback((vals: string[]) => wrappedSetQuery({ tag: vals?.length ? vals : null }), [wrappedSetQuery]);
-  const setSort = useCallback((val: string) => wrappedSetQuery({ sort: val as any }), [wrappedSetQuery]);
+  const setSort = useCallback((val: string) => wrappedSetQuery({ sort: val as SortOrder }), [wrappedSetQuery]);
   const setStatus = useCallback((val: string) => wrappedSetQuery({ status: val === 'all' ? null : val }), [wrappedSetQuery]);
   const setBatchFilter = useCallback((val: boolean) => wrappedSetQuery({ batch: val || null }), [wrappedSetQuery]);
   

@@ -15,7 +15,6 @@ export * from './selection/index.js';
 export * from './ui/useFilters.js';
 export { useUI } from '#lib/store/index.js';
 export type { UIStoreState } from '#lib/store/index.js';
-export { useColumns } from './ui/useColumns.js';
 export { useSearchTransition } from './ui/useSearchTransition.js';
 
 

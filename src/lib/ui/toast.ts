@@ -15,7 +15,7 @@ export const showToast = {
     }),
     
   error: (messageOrError: string | Error | unknown, options?: ExternalToast) => {
-    let userMessage = '發生未知錯誤，請稍後再試';
+    let userMessage = '系统错误';
     let systemMessage = '';
     let traceId = options?.traceId || '';
     let timestamp = '';
@@ -28,10 +28,6 @@ export const showToast = {
         code?: string;
         traceId?: string;
         timestamp?: string;
-        cause?: unknown;
-        originalError?: unknown;
-        context?: { original?: unknown };
-        stack?: string;
         error?: { message?: string } | string;
       }
       
@@ -39,35 +35,11 @@ export const showToast = {
       userMessage = err.userMessage || err.message || userMessage;
       
       const extractSystemMsg = (e: unknown): string => {
-        let msg = '';
-        if (!e) msg = '';
-        else if (typeof e === 'string') msg = e;
-        else if (typeof e === 'object') {
-          const obj = e as Record<string, unknown>;
-          if (obj.message) msg = String(obj.message);
-          else if (obj.error && typeof obj.error === 'object') {
-            const nestedErr = obj.error as Record<string, unknown>;
-            if (nestedErr.message) msg = String(nestedErr.message);
-          } else if (obj.error && typeof obj.error === 'string') {
-            msg = obj.error;
-          } else {
-            try {
-              msg = JSON.stringify(e);
-            } catch {
-              msg = String(e);
-            }
-          }
-        } else {
-          msg = String(e);
-        }
-        
-        if (msg) {
-          msg = msg.replace(/data:image\/[^;]+;base64,[a-zA-Z0-9+/=]+/g, '[BASE64_IMAGE_TRUNCATED]');
-          if (msg.length > 500) {
-            msg = msg.substring(0, 500) + `... (內容過長已截斷，原始長度: ${msg.length})`;
-          }
-        }
-        return msg;
+        if (!e) return '';
+        if (typeof e === 'string') return e;
+        const obj = e as Record<string, unknown>;
+        if (obj.message) return String(obj.message);
+        return JSON.stringify(e).substring(0, 500);
       };
 
       systemMessage = extractSystemMsg(err);
@@ -78,38 +50,26 @@ export const showToast = {
       userMessage = String(messageOrError || userMessage);
     }
 
-    if (!traceId) {
-      traceId = Math.random().toString(36).substring(2, 10).toUpperCase();
-    }
-    if (!timestamp) {
-      timestamp = new Date().toLocaleString('zh-CN');
-    }
-    if (!systemMessage || systemMessage === '[object Object]') {
-      systemMessage = userMessage;
-    }
+    if (!traceId) traceId = Math.random().toString(36).substring(2, 10).toUpperCase();
+    if (!timestamp) timestamp = new Date().toLocaleString('zh-CN');
     
     const diagnosticsText = [
-      `--- 诊断信息 ---`,
-      `时间戳: ${timestamp}`,
-      `错误类型: 运行逻辑异常`,
+      `--- 诊断报告 ---`,
+      `时间: ${timestamp}`,
       `代码: ${code}`,
-      `Trace ID: ${traceId}`,
-      `URL: ${typeof window !== 'undefined' ? window.location.href : 'unknown'}`,
-      `信息: ${systemMessage}`
-    ].filter(Boolean).join('\n');
+      `ID: ${traceId}`,
+      `信息: ${systemMessage || userMessage}`
+    ].join('\n');
     
     return toast.error(userMessage, {
       id: options?.id,
-      duration: options?.duration || 8000,
+      duration: options?.duration || 6000,
       action: {
-        label: '複製診斷',
+        label: '复制诊断',
         onClick: async () => {
           const success = await copyToClipboard(diagnosticsText);
-          if (success) {
-            toast.success('診斷信息已複製', { duration: 2000 });
-          } else {
-            toast.error('複製失敗，請手動選擇複製', { duration: 3000 });
-          }
+          if (success) toast.success('已复制诊断信息');
+          else toast.error('复制失败');
         }
       }
     });
@@ -118,7 +78,7 @@ export const showToast = {
   info: (message: string, options?: ExternalToast) => 
     toast.info(message, {
       id: options?.id,
-      duration: options?.duration,
+      duration: options?.duration || 3000,
     }),
 
   warning: (message: string, options?: ExternalToast) => 

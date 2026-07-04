@@ -45,7 +45,16 @@ export function StatisticsScreen() {
     ['admin', 'stats'],
     async () => {
       const res = await api.admin.maintenance.stats.$get();
-      const json = await res.json() as { success: boolean; data: any };
+      const json = await res.json() as {
+        success: boolean;
+        data: {
+          totalPhotos: number;
+          hiddenPhotos: number;
+          totalCategories: number;
+          totalTags: number;
+          totalGroups: number;
+        };
+      };
       return json.success ? json.data : null;
     }
   );

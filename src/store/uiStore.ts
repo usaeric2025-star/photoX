@@ -8,6 +8,7 @@ import { Photo } from '#src/types/photo.js';
 
 export interface UIStoreState {
   appLang: 'zh' | 'en' | 'ms';
+  descLang: 'zh' | 'en' | 'ms';
   groupSettingsOpen: boolean;
   uploadAsGroup: boolean;
   formState: ProductFormData;
@@ -24,7 +25,6 @@ export interface UIStoreState {
   pendingFiles: FileList | File[] | null;
   activeDialogCount: number;
   fatalError: Error | null;
-  gridColumns: number;
   totalCount: number;
   
   // Lightbox 状态 (Data only)
@@ -39,7 +39,6 @@ export interface UIStoreState {
   incrementDialogCount: () => void;
   decrementDialogCount: () => void;
   setFatalError: (error: Error | null) => void;
-  setGridColumns: (columns: number) => void;
   resetUI: () => void;
   
   // Lightbox Actions
@@ -72,6 +71,11 @@ export const uiStore = createStore<UIStoreState>({
     if (lower.startsWith('ms')) return 'ms';
     return 'en';
   })() as 'zh' | 'en' | 'ms',
+  descLang: (() => {
+    const raw = storage.get(STORAGE_KEYS.DESC_LANG, 'zh');
+    if (['zh', 'en', 'ms'].includes(String(raw))) return raw as 'zh' | 'en' | 'ms';
+    return 'zh';
+  })() as 'zh' | 'en' | 'ms',
   groupSettingsOpen: storage.get<string>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, 'false') === 'true',
   uploadAsGroup: storage.get<string>('uploadAsGroup', 'false') === 'true',
   formState: storage.get(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm),
@@ -88,7 +92,6 @@ export const uiStore = createStore<UIStoreState>({
   pendingFiles: null,
   activeDialogCount: 0,
   fatalError: null,
-  gridColumns: 3,
   totalCount: 0,
   lightboxSlides: [],
   lightboxCurrentIndex: 0,
@@ -112,8 +115,6 @@ export const uiStore = createStore<UIStoreState>({
   
   setFatalError: (error) => uiStore.setState({ fatalError: error }),
   
-  setGridColumns: (columns) => uiStore.setState({ gridColumns: columns }),
-
   resetUI: () => uiStore.setState({
       formState: defaultForm,
       activeDialogCount: 0,
@@ -141,6 +142,9 @@ export const uiStore = createStore<UIStoreState>({
       if ('appLang' in nextUpdates && nextUpdates.appLang !== undefined) {
         storage.set(STORAGE_KEYS.LANG, nextState.appLang);
       }
+      if ('descLang' in nextUpdates && nextUpdates.descLang !== undefined) {
+        storage.set(STORAGE_KEYS.DESC_LANG, nextState.descLang);
+      }
       if ('groupSettingsOpen' in nextUpdates && nextUpdates.groupSettingsOpen !== undefined) {
         storage.set(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen));
       }
@@ -158,9 +162,11 @@ export function useUIStore<T = UIStoreState>(selector?: (state: UIStoreState) =>
 }
 
 export const useAppLang = () => useStore(uiStore, (s: UIStoreState) => s.appLang) as 'zh' | 'en' | 'ms';
+export const useDescLang = () => useStore(uiStore, (s: UIStoreState) => s.descLang) as 'zh' | 'en' | 'ms';
 
 // ============ UI 狀態 Signal (Derived from uiStore) ============
 export const appLangSignal = signal<UIStoreState, 'appLang'>(uiStore, 'appLang');
+export const descLangSignal = signal<UIStoreState, 'descLang'>(uiStore, 'descLang');
 
 // Sync language to DOM
 if (typeof document !== 'undefined') {
@@ -181,4 +187,3 @@ export const lightboxCurrentIndex = signal<UIStoreState, 'lightboxCurrentIndex'>
 // UI 狀態開關
 const isSidebarOpen = signal<UIStoreState, 'isSidebarOpen'>(uiStore, 'isSidebarOpen');
 export const isTaskDrawerOpen = signal<UIStoreState, 'isTaskDrawerOpen'>(uiStore, 'isTaskDrawerOpen');
-export const gridColumns = signal<UIStoreState, 'gridColumns'>(uiStore, 'gridColumns');

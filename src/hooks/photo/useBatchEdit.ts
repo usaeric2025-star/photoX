@@ -2,7 +2,7 @@ import { useSelectionActions } from '#src/hooks/index.js';
 import { selectionStore } from '#src/services/selection/selectionService.js';
 import { useUI, UIStoreState, useStore } from '#lib/store/index.js';
 import { useAppRouter } from '#lib/router/index.js';
-import { usePhotoBatchEdit, usePhotoDelete } from '#src/hooks/photo/usePhotoMutations.js';
+import { usePhotoMutations } from '#src/hooks/photo/usePhotoMutations.js';
 
 export function useBatchEdit() {
   const batchEditingIds = useStore(selectionStore, s => s.batchEditingIds);
@@ -12,9 +12,8 @@ export function useBatchEdit() {
   const updateForm = useUI((s: UIStoreState) => s.updateForm);
   const resetForm = useUI((s: UIStoreState) => s.resetForm);
 
-  const batchEdit = usePhotoBatchEdit();
-  const remove = usePhotoDelete();
-  const isPending = batchEdit.isPending || remove.isPending;
+  const { batchEditAsync, deletePhotoAsync, isBatchEditing, isDeleting } = usePhotoMutations();
+  const isPending = isBatchEditing || isDeleting;
   const { navigate, route } = useAppRouter();
 
   const handleSave = async (selectedIds: string[]) => {
@@ -32,7 +31,7 @@ export function useBatchEdit() {
       }
     });
 
-    await batchEdit.mutateAsync({ ids, updates: cleanUpdates });
+    await batchEditAsync({ ids, updates: cleanUpdates });
     patchSelection({ batchEditingIds: null });
     resetForm();
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -45,7 +44,7 @@ export function useBatchEdit() {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
     
-    await remove.mutateAsync(ids);
+    await deletePhotoAsync(ids);
     patchSelection({ batchEditingIds: null, selectedIds: [] });
     resetForm();
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';

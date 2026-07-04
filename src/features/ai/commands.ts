@@ -127,6 +127,7 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
           group_id: parsed.group_id || null,
           tagNames: sanitizedTagNames,
           tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
+          dimensions: Array.isArray(parsed.dimensions) ? parsed.dimensions : [],
           raw_result: data.raw_result || JSON.stringify(data.data)
        };
      } else {

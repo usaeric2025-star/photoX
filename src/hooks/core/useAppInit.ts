@@ -23,7 +23,7 @@ export function useAppInit() {
   useEffect(() => {
     if (isReady && !isError) {
       if (typeof window !== 'undefined') {
-        (window as any).__APP_READY__ = true;
+        window.__APP_READY__ = true;
       }
     }
   }, [isReady, isError]);

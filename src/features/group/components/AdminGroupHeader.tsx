@@ -121,7 +121,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-3">
+    <div className="glass-header !p-4">
       <div className="flex-1 min-w-0 pr-4">
         <div className="flex items-center gap-2 mb-1">
           {isEditingTitle ? (
@@ -173,11 +173,11 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
 
         <button 
           onClick={toggleMode}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors font-medium ${isMultiSelect ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent'}`}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all font-medium ${isMultiSelect ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent'}`}
         >
           {isMultiSelect ? t.cancel : t.selectAction}
         </button>
-        <button onClick={onEditSettings} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm transition-colors font-medium">
+        <button onClick={onEditSettings} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm transition-all font-medium">
           <Icon name="edit" className="w-4 h-4" />
           <span className="hidden sm:inline">{t.settings}</span>
         </button>

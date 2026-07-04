@@ -4,6 +4,7 @@ import { PhotoWallGrid } from './PhotoWallGrid.js';
 import { usePhotoWall } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 interface PhotoWallContainerProps {
   mode?: 'admin' | 'public';
@@ -43,12 +44,16 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   }, [mode, handlePhotoClickStable]);
 
   if (error) {
+    ErrorFactory.handle(error, { context: 'photo-wall-load' });
     return (
-      <div className="text-center py-20">
-        <p className="text-red-500">加载失败</p>
+      <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+        <div className="text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 max-w-md">
+          <p className="font-bold">加载失败</p>
+          <p className="text-sm opacity-80 mt-1">{error.message}</p>
+        </div>
         <button
           onClick={() => refresh()}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
+          className="px-6 py-2.5 bg-primary text-white rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all font-medium"
         >
           重试
         </button>

@@ -12,6 +12,8 @@ import { TaskIndicator } from "#src/components/admin/TaskIndicator.js";
 import { logger } from "#lib/logger.js";
 import { useAdminMaintenance, useFilters } from '#src/hooks/index.js';
 
+import { StandardModalLayout } from "#src/components/ui/StandardModalLayout.js";
+
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const adminActions = useAdminMaintenance();
   const { data: photo, isPending } = usePhoto(editPhotoId);
@@ -49,15 +51,17 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
         showCloseButton={false}
       >
         {isOpen && (
-          <div className="flex flex-col h-full bg-surface-soft min-h-[500px]">
-            <DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
+          <StandardModalLayout 
+            onClose={handleInterceptClose}
+            className="bg-surface-soft"
+            header={<DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
               logger.info('[PhotoEditDialog] Delete clicked for photo:', editPhotoId);
               await adminActions.deletePhoto.mutateAsync([editPhotoId]);
               handleClose();
-            }} />
-            
+            }} />}
+          >
             {isPending ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-4 min-h-[500px]">
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
                 <LoadingSpinner size="lg" />
                 <p className="text-sm font-medium text-slate-500">正在获取照片详情...</p>
               </div>
@@ -66,9 +70,9 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
                 <PhotoEditTabs />
               </AppErrorBoundary>
             )}
-          </div>
+            <TaskIndicator />
+          </StandardModalLayout>
         )}
-        <TaskIndicator />
       </Modal>
       
       <NativeDialog

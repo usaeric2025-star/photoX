@@ -4,6 +4,8 @@ import { PhotoListItem } from '#src/types/api.js';
 import { useIsManagement } from '#src/hooks/index.js';
 import { Image } from '#src/components/ui/Image.js';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
+import { getLocalizedDisplay } from '#src/utils/display.js';
+import { useDescLang } from '#lib/store/index.js';
 
 export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement> {
   item: PhotoListItem;
@@ -16,20 +18,6 @@ export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement>
   children?: React.ReactNode;
   ref?: Ref<HTMLDivElement>;
 }
-
-const getDisplayString = (val: string | { zh?: string; en?: string; ms?: string } | null | undefined) => {
-  if (!val) return '照片';
-  if (typeof val === 'string') {
-    try {
-      if (val.startsWith('{') && val.endsWith('}')) {
-        const parsed = JSON.parse(val);
-        return parsed.zh || parsed.en || parsed.ms || val;
-      }
-    } catch(e) {}
-    return val;
-  }
-  return val.zh || val.en || val.ms || '照片';
-};
 
 /**
  * PhotoCardBase provides the foundational layout and visual state for a photo card,
@@ -49,6 +37,7 @@ export const PhotoCardBase = ({
 }: PhotoCardBaseProps) => {
   const isManagement = useIsManagement();
   const isHidden = !!item.isHidden && isManagement;
+  const descLang = useDescLang();
 
   return (
     <div
@@ -66,7 +55,7 @@ export const PhotoCardBase = ({
       }}
       className={cn(
         "aspect-square overflow-hidden cursor-pointer relative group rounded-[4px] bg-surface-base",
-        "transition-[filter,background-color,ring] duration-500",
+        "transition-[background-color,ring] duration-300",
         "active:brightness-95",
         isHidden && "opacity-80 grayscale-[0.3] ring-1 ring-danger inset-ring-1 inset-ring-danger",
         isSelected && "ring-2 ring-primary bg-primary/10 z-10",
@@ -85,7 +74,7 @@ export const PhotoCardBase = ({
             item.imageHash || (item as Record<string, unknown>).image_hash as string | undefined
           )}
           lqipSrc={(item as Record<string, unknown>).lqip as string | undefined}
-          alt={getDisplayString(item.name)}
+          alt={getLocalizedDisplay(item.name, descLang)}
           priority={priority}
           className={cn(
             "w-full h-full object-cover object-center transition-transform duration-700 ease-out",

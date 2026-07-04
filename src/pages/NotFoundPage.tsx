@@ -90,7 +90,7 @@ export const NotFoundPage = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-800 p-6">
       <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center text-center max-w-lg w-full animate-scale-in">
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 transition-transform duration-500 hover:scale-105 ${details.colorClass}`}>
-          <Icon name={details.icon as any} size={36} />
+          <Icon name={details.icon} size={36} />
         </div>
         
         <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3 tracking-tight">

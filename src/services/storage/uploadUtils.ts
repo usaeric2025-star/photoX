@@ -25,7 +25,7 @@ export async function compressImage(fileOrBlob: File | Blob, options: CompressOp
     };
 
     // Fix for CJS default export behavior
-    const compressFn = (imageCompression as any).default || imageCompression;
+    const compressFn = ((imageCompression as unknown as { default?: unknown }).default || imageCompression) as (file: File, options: unknown) => Promise<File>;
     const compressedFile = await compressFn(file, compressionOptions);
     return compressedFile;
   } catch (error) {

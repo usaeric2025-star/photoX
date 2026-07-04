@@ -1,16 +1,16 @@
 import React from 'react';
-import { useTogglePin } from '#src/hooks/index.js';
+import { usePhotoMutations } from '#src/hooks/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 
 export function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }) {
-  const togglePin = useTogglePin();
+  const { togglePin, togglePinMutation } = usePhotoMutations();
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    togglePin.mutate({ id: photoId, isPinned: !isPinned });
+    togglePin({ id: photoId, isPinned: !isPinned });
   };
 
-  const isPending = togglePin.isPending;
+  const isPending = togglePinMutation.isPending;
 
   return (
     <button 

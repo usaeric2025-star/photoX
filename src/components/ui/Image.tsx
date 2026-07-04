@@ -52,7 +52,11 @@ export function Image({
     const lqipSrc = providedLqip && providedLqip !== src ? providedLqip : undefined;
 
     return (
-        <div className={cn("relative overflow-hidden bg-surface-mute w-full h-full", containerClassName)}>
+        <div className={cn(
+            "relative overflow-hidden w-full h-full", 
+            !containerClassName?.includes('bg-') && "bg-surface-mute",
+            containerClassName
+        )}>
             {/* 1. Error Placeholder */}
             {hasError && (
                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-surface-soft text-text-soft p-4 text-center">
@@ -65,26 +69,31 @@ export function Image({
 
             {/* 2. Loading Placeholder / LQIP */}
             {!isLoaded && !hasError && (
-                <div className="absolute inset-0 z-10 bg-surface-mute">
+                <div className={cn(
+                    "absolute inset-0 z-10",
+                    !priority && "bg-surface-mute"
+                )}>
                     {lqipSrc ? (
-                        <div className="w-full h-full relative overflow-hidden bg-surface-mute">
+                        <div className="w-full h-full relative overflow-hidden">
                             <img
                                 src={lqipSrc}
                                 alt=""
                                 className={cn(
-                                    "w-full h-full object-cover object-center filter blur-md scale-105",
+                                    "w-full h-full object-cover object-center",
                                     className?.includes('object-contain') && 'object-contain',
                                     className?.includes('object-fill') && 'object-fill'
                                 )}
                                 aria-hidden="true"
                             />
-                            {/* Subtle pulse overlay to indicate active loading */}
-                            <div className="absolute inset-0 bg-surface-base/15 animate-pulse" />
+                            {/* Subtle pulse overlay to indicate active loading - disabled for priority images */}
+                            {!priority && <div className="absolute inset-0 bg-surface-base/15 animate-pulse" />}
                         </div>
                     ) : (
-                        <div className="w-full h-full bg-surface-mute animate-pulse flex items-center justify-center">
-                            <div className="w-5 h-5 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-                        </div>
+                        !priority && (
+                            <div className="w-full h-full bg-surface-mute animate-pulse flex items-center justify-center">
+                                <div className="w-5 h-5 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                            </div>
+                        )
                     )}
                 </div>
             )}
@@ -99,8 +108,8 @@ export function Image({
                     onError={() => setHasError(true)}
                     className={cn(
                         "absolute inset-0 w-full h-full object-cover object-center z-20",
-                        !disableFade && "transition-opacity duration-200 ease-out",
-                        (isLoaded || disableFade) ? "opacity-100" : "opacity-0",
+                        !disableFade && !priority && "transition-opacity duration-200 ease-out",
+                        (isLoaded || disableFade || priority) ? "opacity-100" : "opacity-0",
                         className
                     )}
                     loading={priority ? "eager" : "lazy"}

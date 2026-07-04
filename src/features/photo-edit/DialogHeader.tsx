@@ -7,10 +7,11 @@ import {
   usePhoto,
   useRemoveFromGroupMutation,
   useAdminMaintenance,
-  usePhotoDelete,
+  usePhotoMutations,
   useFilters,
 } from '#src/hooks/index.js';
 import { useSignal, useUI, tasksSignal } from '#lib/store/index.js';
+import { Task } from '#lib/task-queue/types.js';
 import { showToast } from "#lib/ui/toast.js";
 import { ErrorFactory } from "#lib/error/ErrorFactory.js";
 import { usePhotoEditAI } from "#src/hooks/index.js";
@@ -38,12 +39,12 @@ export function DialogHeader({
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const { setCover } = useGroupMutations();
   const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();
-  const { mutateAsync: deletePhoto } = usePhotoDelete();
+  const { deletePhotoAsync: deletePhoto } = usePhotoMutations();
   
   const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
-  const tasksMap = useSignal(tasksSignal) as Map<string, any>;
-  const aiTask = Array.from(tasksMap.values()).find((t: any) => t.type === 'ai-analyze' && t.state.status === 'processing');
-  const aiMessage = (aiTask?.state as any)?.message;
+  const tasksMap = useSignal(tasksSignal) as Map<string, Task>;
+  const aiTask = Array.from(tasksMap.values()).find((t) => t.type === 'ai-analyze' && t.state.status === 'processing');
+  const aiMessage = aiTask?.state.status === 'processing' ? aiTask.state.message : undefined;
   
   const isPartOfGroup = !!detailPhoto?.groupId;
 
@@ -72,7 +73,7 @@ export function DialogHeader({
   };
 
   return (
-    <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
+    <div className="flex items-center justify-between gap-3 w-full">
       <div className="flex-1 min-w-0">
         <h2 className="font-black text-sm sm:text-base text-slate-800 tracking-tight leading-tight uppercase truncate">
           {editPhotoId ? l.editTitle : l.analyzeTitle}

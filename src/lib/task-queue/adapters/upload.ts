@@ -1,6 +1,6 @@
 import { generateId } from '#lib/id.js';
 import { Photo } from '#src/types/index.js';
-import { processImageFile } from '#src/services/storage/imageProcessor.js';
+import { processImageFile, ProcessedImage } from '#src/services/storage/imageProcessor.js';
 import { savePhotoToCloud } from '#src/features/upload/services/uploadService.js';
 import { createTask } from '#lib/task-queue/taskFactory.js';
 import { queryClient } from '#lib/query/index.js';
@@ -66,7 +66,7 @@ export const executeBatchUpload = (
   // === 阶段1 & 2：并行压缩与去重 ===
   onProgress(0.1, `處理壓縮及查重 (0/${total})...`);
   
-  type ProcessedTask = { file: File, processed?: any, isDuplicate: boolean, error?: string, originalIndex: number };
+  type ProcessedTask = { file: File, processed?: ProcessedImage, isDuplicate: boolean, error?: string, originalIndex: number };
   
   const processTasks = await parallelMap(
     files,

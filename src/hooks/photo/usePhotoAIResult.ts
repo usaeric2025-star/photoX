@@ -3,13 +3,17 @@ import { useAppQuery } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { PhotoAIResult } from '#src/types/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 
 /**
  * 获取照片对应的 AI 识别原始源代碼與解析後的 JSON 數據。
  */
 export const usePhotoAIResult = (photoId: string, options?: { enabled?: boolean }) => {
+  const { isStaff } = usePermission();
+  const isEnabled = isStaff && (options?.enabled !== false);
+
   return useAppQuery(
-    photoId ? ['photos', 'ai-result', photoId] : null,
+    (photoId && isEnabled) ? ['photos', 'ai-result', photoId] : null,
     async (): Promise<PhotoAIResult | null> => {
       try {
         const resp = await api.admin["photo-ai-result"][":photoId"].$get({
@@ -32,7 +36,7 @@ export const usePhotoAIResult = (photoId: string, options?: { enabled?: boolean 
     },
     { 
       staleTime: STALE_TIMES.PHOTO_LIST,
-      enabled: options?.enabled
+      enabled: isEnabled
     }
   );
 };

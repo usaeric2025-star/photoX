@@ -4,10 +4,10 @@ import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCardBase } from './PhotoCardBase.js';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts.js';
 import { PinButton } from './PinButton.js';
-import { useColumns, usePermission, usePerformance } from '#src/hooks/index.js';
+import { usePermission, usePerformance } from '#src/hooks/index.js';
 import { useIsMultiSelect, useIsPhotoSelected } from '#src/hooks/index.js';
-import { useSignal, useUI } from '#lib/store/index.js';
-import { gridColumns as gridColumnsSignal } from '#lib/store/index.js';
+import { useGrid } from '#src/context/GridContext.js';
+import { useUI } from '#lib/store/index.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
@@ -39,7 +39,7 @@ const SetCoverButton = memo(function SetCoverButton({
       type="button"
       onClick={handleClick}
       title="設為封面 / Set as Cover"
-      className={`absolute top-2 p-1.5 sm:p-2 rounded-full border hover:scale-110 active:scale-95 transition-all duration-250 bg-slate-950/40 text-white border-white/10 md:hover:bg-slate-950/65 shadow-sm ${
+      className={`absolute top-2 p-1.5 sm:p-2 rounded-full border active:scale-95 transition-all duration-200 bg-slate-950/40 text-white border-white/10 md:hover:bg-slate-950/60 shadow-sm ${
         offsetRight ? 'right-11' : 'right-2'
       }`}
     >
@@ -77,9 +77,9 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   priority = false,
   isGroupDetail = false,
 }: AdminPhotoCardProps) {
+  const { columns } = useGrid();
   const isMultiSelect = useIsMultiSelect();
   const isPhotoSelected = useIsPhotoSelected(photo.id);
-  const columns = useSignal(gridColumnsSignal) as number;
   const { can } = usePermission();
   
   const { cardRef, handleClick } = usePhotoCard({
@@ -104,7 +104,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       item={photo}
       isSelected={isPhotoSelected}
       isMultiSelect={isMultiSelect}
-      imgVariant={columns <= 3 ? 'md' : 'sm'}
+      imgVariant={columns <= 4 ? 'md' : 'sm'}
       priority={priority}
       onClick={handleClick}
       ref={cardRef}

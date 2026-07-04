@@ -6,12 +6,11 @@ export {
   lightboxSlides, lightboxCurrentIndex,
    
   isTaskDrawerOpen, isTaskDrawerOpen as isTaskDrawerOpenSignal,
-  gridColumns, 
 } from '#src/store/uiStore.js';
 
 // Import for local usage and re-export
 import { 
-  uiStore, useUIStore, useAppLang
+  uiStore, useUIStore, useAppLang, useDescLang
 } from '#src/store/uiStore.js';
 import type { UIStoreState } from '#src/store/uiStore.js';
 import { authStore, useAuthStore, userSignal, authLoadingSignal } from '#src/store/authStore.js';
@@ -22,7 +21,7 @@ import { appStore, appLoadingSignal, appErrorSignal } from '#src/store/appStore.
 // Re-exports
 export { 
   uiStore,  useUIStore as useUI,
-  useAppLang,
+  useAppLang, useDescLang,
   UIStoreState 
 };
 export {   useAuthStore as useAuth,    };

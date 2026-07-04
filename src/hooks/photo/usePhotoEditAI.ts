@@ -22,6 +22,8 @@ const AIAnalysisSchema = v.object({
   imageUrl: v.string(),
 });
 
+import { useInvalidatePhotos } from './useInvalidatePhotos.js';
+
 /**
  * Hook to handle AI Analysis and backfilling for Photo Editing
  */
@@ -32,6 +34,7 @@ export function usePhotoEditAI() {
   const editPhotoId = modal === 'edit' ? photoId : null;
   const appLang = useUI((s) => s.appLang);
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
+  const { invalidateDetail, invalidateList, invalidateTags } = useInvalidatePhotos();
 
   // Fetch reference data for matching
   const { categories = [] } = useCategories();
@@ -70,7 +73,9 @@ export function usePhotoEditAI() {
           
           if (result.name) {
             if (typeof result.name === 'object' && result.name !== null) {
-              updates.name = result.name.zh || result.name.en || result.name.ms || String(result.name);
+              const n = result.name as Record<string, string>;
+              // 優先使用英文名稱，因為用戶要求名稱用英文
+              updates.name = n.en || n.zh || n.ms || String(result.name);
             } else {
               updates.name = String(result.name);
             }
@@ -126,10 +131,13 @@ export function usePhotoEditAI() {
               }
           });
           
-          let uniqueRawNames = Array.from(new Set(rawNames));
-          let finalResolvedIds = [...resolvedIds];
+          const uniqueRawNames = Array.from(new Set(rawNames));
+          const finalResolvedIds = [...resolvedIds];
 
           // Prevent tags that perfectly match the chosen category name
+          let filteredRawNames = [...uniqueRawNames];
+          let finalFilteredResolvedIds = [...finalResolvedIds];
+
           if (updates.categoryId || result.categoryId || result.category_id) {
               const catId = updates.categoryId || result.categoryId || result.category_id;
               const chosenCategory = categories.find(c => String(c.id) === String(catId));
@@ -141,10 +149,10 @@ export function usePhotoEditAI() {
                       chosenCategory.nameMs?.toLowerCase()
                   ].filter(Boolean);
                   
-                  uniqueRawNames = uniqueRawNames.filter(n => !catNames.includes(n.toLowerCase()));
+                  filteredRawNames = filteredRawNames.filter(n => !catNames.includes(n.toLowerCase()));
                   
                   // Also filter out resolved tags that have the same name
-                  finalResolvedIds = finalResolvedIds.filter(id => {
+                  finalFilteredResolvedIds = finalFilteredResolvedIds.filter(id => {
                     const tag = allTags.find(t => String(t.id) === id);
                     if (!tag) return true;
                     return !catNames.includes(tag.name.toLowerCase());
@@ -152,13 +160,13 @@ export function usePhotoEditAI() {
               }
           }
 
-          uniqueRawNames = uniqueRawNames.slice(0, 10);
+          filteredRawNames = filteredRawNames.slice(0, 10);
 
-          if (uniqueRawNames.length > 0 || finalResolvedIds.length > 0) {
+          if (filteredRawNames.length > 0 || finalFilteredResolvedIds.length > 0) {
             try {
-              const resolveResult = await resolveTagNamesToIds(uniqueRawNames, allTags);
+              const resolveResult = await resolveTagNamesToIds(filteredRawNames, allTags);
 
-              let finalTagIds = [...finalResolvedIds];
+              let finalTagIds = [...finalFilteredResolvedIds];
               if (resolveResult && resolveResult.length > 0) {
                   finalTagIds = [...finalTagIds, ...resolveResult];
               }
@@ -166,8 +174,8 @@ export function usePhotoEditAI() {
               if (finalTagIds.length > 0) {
                   const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3);
                   
-                  // Refetch/Invalidate tags so the tag select options are in sync
-                  queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+                  // Centralized Invalidation
+                  invalidateTags();
                   
                   const latestTags = await loadTagsFromCloud().catch(() => allTags);
 
@@ -213,8 +221,8 @@ export function usePhotoEditAI() {
               isAi: true
             }));
           }
-          // Invalidate the cache to instantly reveal JSON output in AI tab
-          queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
+          // Centralized Invalidation for AI Result
+          invalidateDetail(String(editPhotoId));
 
           // Include AI Raw Result in metadata for persistence
           if (result.raw_result) {
@@ -247,26 +255,26 @@ export function usePhotoEditAI() {
                 };
               });
             } catch (saveError: unknown) {
-              logger.warn('AI识别结果自动保存失败(但不影响回填):', saveError);
+              logger.warn('AI识别结果自动保存失败(但不影響回填):', saveError);
             }
           }
         
-          // [V2.2] Standard invalidation per architecture rules
-          queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
-          queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+          // Standard invalidation per architecture rules
+          invalidateList();
           
           return result;
         }
       });
       return result;
     },
-    onSuccess: (result) => {
+    onSuccess: () => {
     },
-    onError: (error) => {
+    onError: () => {
     },
     successMessage: appLang === 'zh' ? 'AI 識別補全成功' : 'AI Analysis completed',
     errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'
   });
+
 
   const onAnalyze = useCallback(async (previewSrc?: string, imageUrl?: string) => {
     const url = previewSrc || imageUrl;

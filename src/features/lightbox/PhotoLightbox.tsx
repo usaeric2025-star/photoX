@@ -3,7 +3,7 @@ import { motion } from 'lite-sleek';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';
-import { usePhoto } from '#src/hooks/photo/usePhoto.js';
+import { useUI } from '#lib/store/index.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 import { Photo } from '#src/types/photo.js';
 
@@ -36,6 +36,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const onClose = props.onClose || hookClose;
   const { setPhotoId, setModal } = useFilters();
   const { isAdmin } = usePermission();
+  const { descLang, patch } = useUI();
   
   const onEdit = props.onEdit || ((photo: Photo) => {
     setPhotoId(photo.id);
@@ -43,15 +44,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   });
 
   const [showInfo, setShowInfo] = useState(false);
-  const [lang, setLang] = useState<'zh' | 'en' | 'ms'>('zh');
 
-  useEffect(() => {
-    if (isOpen) {
-      setShowInfo(false);
-    }
-  }, [isOpen]);
-
-  // If we have an ID but no photos list (e.g. direct refresh), we need to show at least one slide to render the stage
+  const handleLangChange = (newLang: 'zh' | 'en' | 'ms') => {
+    patch({ descLang: newLang });
+  };
   const normalizeSlide = (slide: Photo | { original: Photo } | LightboxSlide): Photo | { original: Photo } => {
     if (slide && typeof slide === 'object') {
         if ('original' in slide) return slide as { original: Photo };
@@ -140,10 +136,15 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   if (!isOpen) return null;
   if (effectivePhotos.length === 0) return null;
   
-  const baseActivePhoto = effectivePhotos[currentIndex] || effectivePhotos[0] as any;
-  const activeId = ('original' in baseActivePhoto) ? (baseActivePhoto as any).original.id : (baseActivePhoto as any).id;
-  const { data: freshPhoto } = usePhoto(activeId);
-  const activePhoto = freshPhoto || ('original' in baseActivePhoto ? (baseActivePhoto as any).original : baseActivePhoto);
+  const baseActivePhoto = (effectivePhotos[currentIndex] || effectivePhotos[0]) as Photo | { original: Photo };
+  if (!baseActivePhoto) return null;
+  
+  const activeId = ('original' in baseActivePhoto) 
+    ? (baseActivePhoto as { original: Photo }).original.id 
+    : (baseActivePhoto as Photo).id;
+  const activePhoto = ('original' in baseActivePhoto) 
+    ? (baseActivePhoto as { original: Photo }).original 
+    : (baseActivePhoto as Photo);
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col font-sans select-none">
@@ -173,8 +174,8 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         <LightboxInfo
           currentPhoto={activePhoto}
           showInfo={showInfo}
-          lang={lang}
-          onLangChange={setLang}
+          lang={descLang}
+          onLangChange={handleLangChange}
         />
 
         {/* Main Stage */}

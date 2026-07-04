@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { motion } from 'lite-sleek';
 import { AppErrorBoundary } from './components/layout/AppErrorBoundary.js';
 import { ConfirmProvider } from './context/ConfirmContext.js';
+import { GridProvider } from './context/GridContext.js';
 import { RouterOrchestrator } from './components/RouterOrchestrator.js';
 import { useAppInit } from './hooks/core/useAppInit.js';
 import { LoadingScreen } from './components/ui/LoadingScreen.js';
@@ -13,6 +14,7 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
   return (
     <AppErrorBoundary>
       <ConfirmProvider>
+        <GridProvider>
           {status === 'loading' ? (
             <LoadingScreen />
           ) : status === 'error' ? (
@@ -28,6 +30,7 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
               </Suspense>
             </motion.div>
           )}
+        </GridProvider>
       </ConfirmProvider>
       <DialogContainer />
       <TaskIndicator />

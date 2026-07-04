@@ -10,6 +10,9 @@ import { NativeDialog } from '#src/components/ui/NativeDialog.js';
 import { Field } from '@tanstack/react-form';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 
+import { PhotoPreviewSection } from './components/PhotoPreviewSection.js';
+import { PhotoZoomOverlay } from './components/PhotoZoomOverlay.js';
+
 export function BasicInfoTab() {
   const { form } = usePhotoEditSessionContext();
   const { uiTranslations: t } = useTranslation();
@@ -22,23 +25,11 @@ export function BasicInfoTab() {
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
       <div className="flex gap-4 items-start">
-        {previewSrc && (
-          <div className="w-1/3 shrink-0 space-y-2">
-             <div 
-               className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative group cursor-zoom-in"
-               onClick={openZoom}
-              >
-                <Image 
-                  src={getThumbnailUrl(previewSrc, 120, 120, detailPhoto?.imageHash)} 
-                  className="w-full h-full object-contain" 
-                  alt="Preview" 
-                />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                   <Icon name="maximize-2" className="text-white drop-shadow-md" size={20} />
-                </div>
-             </div>
-          </div>
-        )}
+        <PhotoPreviewSection 
+          previewSrc={previewSrc} 
+          imageHash={detailPhoto?.imageHash} 
+          onZoom={openZoom} 
+        />
         <div className="flex-1 space-y-3">
           <div className="space-y-3">
             <div className="space-y-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
@@ -138,21 +129,12 @@ export function BasicInfoTab() {
         </Field>
       </div>
 
-      <NativeDialog id="photo-zoom-dialog" open={zoomed && !!previewSrc} onClose={closeZoom} size="screen" hidePadding={true} showCloseButton={false}>
-          <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-12 bg-black/90 animate-in fade-in duration-200">
-            <button 
-              onClick={closeZoom}
-              className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-            >
-              <Icon name="x" size={24} />
-            </button>
-            <Image 
-              src={getThumbnailUrl(previewSrc || '', 800, undefined, detailPhoto?.imageHash)} 
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
-              alt="Zoomed" 
-            />
-          </div>
-      </NativeDialog>
+      <PhotoZoomOverlay 
+        isOpen={zoomed} 
+        onClose={closeZoom} 
+        previewSrc={previewSrc} 
+        imageHash={detailPhoto?.imageHash} 
+      />
     </div>
   );
 }

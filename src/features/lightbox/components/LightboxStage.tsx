@@ -31,9 +31,11 @@ export function LightboxStage({
   
   const minSwipeDistance = 50;
 
-  // Reset zoom when active photo index changes
+  // Reset state when active photo index changes
   useEffect(() => {
     setIsZoomed(false);
+    setDragOffset(0);
+    setIsSwiping(false);
   }, [currentIndex]);
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -130,11 +132,11 @@ export function LightboxStage({
     >
       <AnimatePresence>
         <motion.div
-          key={currentIndex}
-          initial={{ opacity: 0, transform: 'scale(0.96)' }}
-          animate={{ opacity: 1, transform: 'scale(1)' }}
-          exit={{ opacity: 0, transform: 'scale(1.04)' }}
-          transition="all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)"
+          key={photoData.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 1 }} // Keep the old image opaque while the new one fades in on top
+          transition="opacity 0.25s ease-out"
           className="absolute inset-0 flex items-center justify-center p-4 sm:p-12 md:p-16"
           onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to background
         >
@@ -157,7 +159,6 @@ export function LightboxStage({
             >
               <Image
                 src={src}
-                lqipSrc={lqipSrc}
                 alt={title}
                 priority={true}
                 containerClassName="bg-transparent"

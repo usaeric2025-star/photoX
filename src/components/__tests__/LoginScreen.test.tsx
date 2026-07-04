@@ -64,7 +64,7 @@ describe('LoginScreen', () => {
     render(<LoginScreen signIn={signIn} />);
     
     // Check initial state (admin mode)
-    expect(screen.getByText(/PHO/)).toBeTruthy();
+    expect(screen.getByText(/Photo/)).toBeTruthy();
     expect(screen.getByText('Admin')).toBeTruthy();
     expect(screen.getByText('Login')).toBeTruthy();
     

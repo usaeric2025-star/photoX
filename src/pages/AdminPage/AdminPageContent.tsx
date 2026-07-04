@@ -29,17 +29,17 @@ const BatchEditScreen = lazy(() => import('#src/features/batch-edit/BatchEditScr
 const DiagDashboard = lazy(() => import('#src/features/diagnostics/DiagDashboard.js').then(m => ({ default: m.DiagDashboard })));
 const SettingsPage = lazy(() => import('#src/features/settings/SettingsPage.js').then(m => ({ default: m.SettingsPage }))) as React.ComponentType<SettingsPageProps>;
 
+import { ScreenWrapper } from '#src/components/admin/ScreenWrapper.js';
+
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
   const { user } = useAuth();
   const { uploadFiles } = usePhotoUpload();
   
   const uploadModeDialogOpen = useUI(s => s.uploadModeDialogOpen);
-  const pendingFiles = useUI(s => s.pendingFiles);
   const patch = useUI(s => s.patch);
   
-  const { handleBatchAiAnalyze } = useAIBatchAnalysis();
-  const { navigate, route } = useAppRouter();
+  const { navigate } = useAppRouter();
   
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const currentScreen = (() => {
@@ -52,11 +52,13 @@ export function AdminPageContent() {
     return 'gallery' as const;
   })();
 
+  const isGallery = currentScreen === 'gallery';
+
   return (
     <AdminAuthGate>
       <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
         {/* Gallery is kept alive */}
-        <div className={currentScreen === 'gallery' ? 'flex-1 relative overflow-hidden order-0' : 'hidden'}>
+        <div className={isGallery ? 'flex-1 relative overflow-hidden order-0' : 'hidden'}>
           <div key="admin-gallery" className="absolute inset-0 animate-fade-in translate-z-0">
             <AdminContainer />
           </div>
@@ -69,7 +71,7 @@ export function AdminPageContent() {
         </div>
 
         {/* Other screens are lazy mounted */}
-        {currentScreen !== 'gallery' && (
+        {!isGallery && (
           <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0 order-0">
             <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
               {currentScreen === 'batch' ? (
@@ -91,14 +93,13 @@ export function AdminPageContent() {
 
         <SelectionToolbar />
 
-        {currentScreen === 'gallery' && (
+        {isGallery && (
           <>
             <FilterBar mode="admin" className="order-[-1]" />
             <AdminHeader className="order-first" />
           </>
         )}
         
-
         <input 
           type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
           onChange={(e) => {
@@ -110,7 +111,6 @@ export function AdminPageContent() {
         />
       </div>
 
-      {/* UploadModeDialog is still fine here for fine-grained control if needed, but consider moving to global if it conflicts */}
       <Suspense fallback={null}>
         <UploadModeDialog 
           open={uploadModeDialogOpen}
@@ -123,16 +123,5 @@ export function AdminPageContent() {
         />
       </Suspense>
     </AdminAuthGate>
-  );
-}
-
-function ScreenWrapper({ children, onClose }: { children: React.ReactNode, onClose: () => void }) {
-  return (
-    <div className="h-full bg-slate-50 flex flex-col animate-fade-up">
-      <div className="flex justify-end p-4 shrink-0 bg-slate-50 border-b border-slate-100">
-        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"><Icon name="x" size={24} /></button>
-      </div>
-      <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 pb-8">{children}</div>
-    </div>
   );
 }

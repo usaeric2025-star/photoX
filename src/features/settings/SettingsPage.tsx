@@ -46,6 +46,8 @@ interface SettingsPageProps {
   onClose?: () => void;
 }
 
+import { StandardModalLayout } from '#src/components/ui/StandardModalLayout.js';
+
 export function SettingsPage({ onClose }: SettingsPageProps) {
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
@@ -146,7 +148,13 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   });
 
   return (
-    <div className="flex flex-col h-full w-full bg-brand-bg pt-safe relative">
+    <StandardModalLayout 
+      onClose={() => {
+        if (onClose) onClose();
+        else navigate.admin();
+      }}
+      className="bg-brand-bg"
+      header={
         <SettingsHeader 
           appLang={appLang}
           hasChanges={hasChanges}
@@ -157,11 +165,12 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
             else navigate.admin();
           }}
         />
-
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
+      }
+    >
+      <div className="pt-4">
         <SettingsTabs activeTab={activeTab} onTabChange={handleTabChange} />
         
-        <div className="space-y-6">
+        <div className="space-y-6 mt-6">
           {loadedTabs.includes('general') && (
             <div className={activeTab === 'general' ? 'block' : 'hidden'}>
               <Suspense fallback={<LoadingScreen />}>
@@ -241,6 +250,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           )}
         </div>
       </div>
-    </div>
+    </StandardModalLayout>
   );
 };

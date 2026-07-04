@@ -149,6 +149,40 @@
   .hot-tag-breath {
     animation: breathing 3s ease-in-out infinite;
   }
+
+  /* --- Photo Card Status Badges --- */
+  .badge-base {
+    @apply px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none;
+  }
+
+  .badge-hidden {
+    @apply px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-danger/95 text-text-on-primary;
+  }
+
+  .badge-cover {
+    @apply px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-amber-500/95 text-white;
+  }
+
+  .badge-group {
+    @apply px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-surface-overlay text-text-main border-white/40 transition-all duration-300 min-w-[32px] sm:min-w-[36px] justify-center;
+  }
+
+  /* --- Global Scaffolding --- */
+  .glass-header {
+    @apply sticky top-0 z-20 bg-white/95 border-b border-slate-100 flex items-center px-4 py-3 shrink-0;
+  }
+
+  .page-container {
+    @apply flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .card-surface {
+    @apply bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden transition-all duration-300;
+  }
+
+  .interactive-hover {
+    @apply hover:border-primary/40 active:scale-[0.98] transition-all;
+  }
 }
 
 /* Base Dialog Transitions */

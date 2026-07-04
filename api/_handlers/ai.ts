@@ -103,6 +103,25 @@ ai.post("/analyze", async (c) => {
     if (!finalImageUrl) finalImageUrl = undefined;
     if (!finalImageUrl) return errorResponse(c, "Image URL is required for analysis", 400);
 
+    // Normalize image URL to ensure it is fully qualified for Gemini API access
+    const r2Base = process.env.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
+    const cleanBase = r2Base.endsWith('/') ? r2Base.slice(0, -1) : r2Base;
+
+    if (!finalImageUrl.startsWith('http://') && !finalImageUrl.startsWith('https://')) {
+        const cleanPath = finalImageUrl.startsWith('/') ? finalImageUrl.slice(1) : finalImageUrl;
+        finalImageUrl = `${cleanBase}/${cleanPath}`;
+    } else if (finalImageUrl.includes('/products/')) {
+        finalImageUrl = finalImageUrl
+            .replace('/products/', '/')
+            .replace(/\/(\d+-[a-z0-9]+\.webp)$/i, '/temp-$1');
+    }
+
+    const match = finalImageUrl.match(/photox\/(public|thumb|original)\/(.+)/);
+    if (match) {
+        const pathAndFilename = match[0];
+        finalImageUrl = `${cleanBase}/${pathAndFilename}`;
+    }
+
     // Use safer query approach - select only what we need and handle errors per-table
     let catRef: { id: number; nameZh: string | null; nameEn?: string | null; nameMs?: string | null }[] = [];
     let tagRef: { id: string | number; name: string | null }[] = [];

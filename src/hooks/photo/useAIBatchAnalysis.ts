@@ -12,7 +12,7 @@ import { useTranslation } from '#src/hooks/index.js';
 
 export function useAIBatchAnalysis() {
   const { user } = useAuth();
-  const invalidatePhotos = useInvalidatePhotos();
+  const { invalidateAll } = useInvalidatePhotos();
   const { uiTranslations: t } = useTranslation();
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[]) => {
@@ -37,7 +37,7 @@ export function useAIBatchAnalysis() {
             });
 
             // Final Sync
-            await invalidatePhotos();
+            invalidateAll();
             
             return { successCount, groupSuccess };
         },
@@ -46,7 +46,7 @@ export function useAIBatchAnalysis() {
         }
     });
 
-  }, [invalidatePhotos]);
+  }, [invalidateAll, t, user?.id]);
 
   return { handleBatchAiAnalyze };
 }

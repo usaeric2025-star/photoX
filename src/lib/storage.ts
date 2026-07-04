@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   PREFERENCE: 'preferences',
   CACHE: 'cache',
   LANG: 'appLang',
+  DESC_LANG: 'descLang',
   COLUMNS: 'columns',
   ACTIVE_GROUP: 'activeGroupId',
   ACTIVE_PHOTO: 'activePhotoId',

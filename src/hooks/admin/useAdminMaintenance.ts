@@ -1,4 +1,4 @@
-import { usePhotoEditMutation, usePhotoDelete, usePhotoBatchEdit, useTogglePin } from '#src/hooks/photo/usePhotoMutations.js';
+import { usePhotoMutations } from '#src/hooks/photo/usePhotoMutations.js';
 import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
 
 /**
@@ -7,22 +7,19 @@ import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
  * 替換原有的 features/admin/useAdminActions.ts。
  */
 export function useAdminMaintenance() {
-  const photoEdit = usePhotoEditMutation();
-  const photoDelete = usePhotoDelete();
-  const photoBatchUpdate = usePhotoBatchEdit();
-  const photoTogglePin = useTogglePin();
+  const { editMutation, deleteMutation, batchEditMutation, togglePinMutation } = usePhotoMutations();
   const aiBatch = useAIBatchAnalysis();
 
   return {
-    updatePhoto: photoEdit,
-    deletePhoto: photoDelete,
-    batchUpdate: photoBatchUpdate,
-    togglePin: photoTogglePin,
+    updatePhoto: editMutation,
+    deletePhoto: deleteMutation,
+    batchUpdate: batchEditMutation,
+    togglePin: togglePinMutation,
     handleBatchAiAnalyze: aiBatch.handleBatchAiAnalyze,
     // Add full objects for destructuring compatibility
-    photoEdit,
-    photoDelete,
-    photoBatchUpdate,
-    photoTogglePin,
+    photoEdit: editMutation,
+    photoDelete: deleteMutation,
+    photoBatchUpdate: batchEditMutation,
+    photoTogglePin: togglePinMutation,
   };
 }

@@ -1,4 +1,5 @@
 export * from './types.js';
+import { LightboxSlide } from './types.js';
 import { useUI } from '#lib/store/index.js';
 import { useFilters } from '#src/hooks/index.js';
 import { useAppRoute } from '#lib/router/index.js';
@@ -14,10 +15,10 @@ export function useLightbox() {
   const route = useAppRoute();
   
   const photoId = queryPhotoId || 
-    (route.name === 'photo' || route.name === 'adminPhoto' ? (route.params as any).photoId : null);
+    (route.name === 'photo' || route.name === 'adminPhoto' ? (route.params as Record<string, string>).photoId : null);
   const isOpen = !!(photoId && modal !== 'edit');
   
-  const open = (slides: any[], index: number = 0) => {
+  const open = (slides: LightboxSlide[], index: number = 0) => {
     setLightboxData(slides, index);
     if (slides[index]?.id) {
       setPhotoId(slides[index].id);

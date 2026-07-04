@@ -2,7 +2,7 @@ export const queryKeys = {
   photos: {
     all: ['photos'] as const,
     lists: () => [...queryKeys.photos.all, 'list'] as const,
-    list: (filters: any) => [...queryKeys.photos.lists(), { filters }] as const,
+    list: (filters: unknown) => [...queryKeys.photos.lists(), { filters }] as const,
     details: () => [...queryKeys.photos.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.photos.details(), id] as const,
   },
