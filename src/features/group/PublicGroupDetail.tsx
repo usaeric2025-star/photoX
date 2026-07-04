@@ -9,6 +9,7 @@ import { Button } from '#src/components/shared/Button.js';
 import { useUI } from '#lib/store/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
+import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import { PhotoWallGrid } from '#src/features/photo-wall/components/PhotoWallGrid.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 
@@ -95,7 +96,7 @@ export function PublicGroupDetailPage() {
         />
       </div>
       <div className="flex-1 bg-slate-50 overflow-y-auto p-1 sm:p-2 relative">
-        <PhotoWallGrid 
+        <ErrorBoundary><PhotoWallGrid 
           photos={photos} 
           hasMore={!!hasNextPage} 
           isLoading={loading}
@@ -104,6 +105,7 @@ export function PublicGroupDetailPage() {
           hideGroupBadge={true}
           isGroupDetail={true}
         />
+        </ErrorBoundary>
       </div>
 
       <WhatsAppDialog 

@@ -36,7 +36,8 @@ import { Analytics } from '@vercel/analytics/react';
 import { NuqsAdapter } from 'nuqs/adapters/react';
 import { Router } from 'wouter';
 import App from './App.js';
-import { QueryClientProvider, queryClient } from '#src/lib/query/index.js';
+import { queryClient, asyncPersister } from '#src/lib/query/index.js';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { ErrorFactory } from './lib/error/ErrorFactory.js';
 import { ErrorBoundary } from './components/shared/ErrorBoundary.js';
 import { FatalErrorOverlay } from './components/shared/FatalErrorOverlay.js';
@@ -142,7 +143,13 @@ async function init() {
     
     root.render(
       <StrictMode>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider 
+          client={queryClient}
+          persistOptions={{
+            persister: asyncPersister,
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+          }}
+        >
           <NuqsAdapter>
             <Router>
               <ErrorBoundary>
@@ -152,7 +159,7 @@ async function init() {
               </ErrorBoundary>
             </Router>
           </NuqsAdapter>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </StrictMode>
     );
 

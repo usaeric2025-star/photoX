@@ -1,20 +1,34 @@
 import { lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "lite-sleek";
 import { Switch, Route, useLocation } from "wouter";
-import PublicPage from "#src/pages/PublicPage.js";
-import AdminPage from '#src/pages/AdminPage/index.js';
 import { NotFoundPage } from "#src/pages/NotFoundPage.js";
-import { PublicGroupDetailPage } from "#src/features/group/PublicGroupDetail.js";
-import { AdminGroupDetailPage } from "#src/features/group/AdminGroupDetail.js";
-import { AdminAuthGate } from "./admin/AdminAuthGate.js";
 import { LoadingScreen } from "./ui/LoadingScreen.js";
+import { useAuth } from "#lib/store/index.js";
 
+const PublicPage = lazy(() => import("#src/pages/PublicPage.js"));
+const AdminPage = lazy(() => import("#src/pages/AdminPage/index.js"));
+const PublicGroupDetailPage = lazy(() => import("#src/features/group/PublicGroupDetail.js").then(m => ({ default: m.PublicGroupDetailPage })));
+const AdminGroupDetailPage = lazy(() => import("#src/features/group/AdminGroupDetail.js").then(m => ({ default: m.AdminGroupDetailPage })));
+const AdminAuthGate = lazy(() => import("./admin/AdminAuthGate.js").then(m => ({ default: m.AdminAuthGate })));
 const SettingsPage = lazy(() => import("#src/features/settings/SettingsPage.js").then(m => ({ default: m.SettingsPage })));
 const DiagDashboard = lazy(() => import("#src/features/diagnostics/DiagDashboard.js").then(m => ({ default: m.DiagDashboard })));
 
+const AdminGroupDetailRoute = () => (
+  <AdminAuthGate>
+    <AdminGroupDetailPage />
+  </AdminAuthGate>
+);
+
+const DiagnosticsRoute = () => (
+  <AdminAuthGate>
+    <DiagDashboard />
+  </AdminAuthGate>
+);
+
 export function RouterOrchestrator() {
   const [location] = useLocation();
-
+  const { isLoading: isAuthLoading } = useAuth();
+  
   const getPageGroupKey = (pathname: string) => {
     if (pathname === '/' || pathname.startsWith('/photo/')) return 'public-home';
     if (pathname.startsWith('/admin')) return 'admin-dashboard';
@@ -24,6 +38,10 @@ export function RouterOrchestrator() {
   };
 
   const groupKey = getPageGroupKey(location);
+
+  if (isAuthLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <AnimatePresence>
@@ -38,24 +56,15 @@ export function RouterOrchestrator() {
             <Route path="/" component={PublicPage} />
             <Route path="/photo/:photoId" component={PublicPage} />
             <Route path="/group/:slug" component={PublicGroupDetailPage} />
-            <Route path="/admin/group/:id" component={() => (
-                <AdminAuthGate>
-                  <AdminGroupDetailPage />
-                </AdminAuthGate>
-            )} />
-            <Route path="/admin" component={AdminPage} />
-            <Route path="/admin/batch" component={AdminPage} />
-            <Route path="/admin/batch-edit" component={AdminPage} />
-            <Route path="/admin/tasks" component={AdminPage} />
-            <Route path="/admin/error-logs" component={AdminPage} />
-            <Route path="/admin/diagnose" component={AdminPage} />
-            <Route path="/admin/diagnostics" component={AdminPage} />
+            
+            <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
+            
+            <Route path="/admin/:subpath*" component={AdminPage} />
+            
             <Route path="/settings" component={AdminPage} />
-            <Route path="/diagnostics" component={() => (
-                <AdminAuthGate>
-                  <DiagDashboard />
-                </AdminAuthGate>
-            )} />
+            
+            <Route path="/diagnostics" component={DiagnosticsRoute} />
+            
             <Route component={NotFoundPage} />
           </Switch>
         </Suspense>

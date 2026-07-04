@@ -45,7 +45,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
           setProgress(p * 100);
         };
         update(0.1, '正在初始化...');
-        const result = await action.execute();
+        const result = await action.execute(update);
         update(1, '完成');
         return result;
       },

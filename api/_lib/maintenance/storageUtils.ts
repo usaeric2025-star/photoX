@@ -22,7 +22,7 @@ export function normalizeUrl(u: string) {
     return u.toLowerCase().trim().split('?')[0].replace(/\/$/, ''); 
 }
 
-export async function runStorageAudit() {
+export async function runStorageAudit(onProgress?: (progress: number, msg?: string) => Promise<void>) {
     const r2 = await getR2Client();
     const bucket = serverEnv.R2_BUCKET_NAME!;
     const publicUrlPrefixRaw = serverEnv.R2_PUBLIC_URL_PREFIX || "";
@@ -30,12 +30,14 @@ export async function runStorageAudit() {
     const isPrefixSsl = publicUrlPrefix.startsWith('http');
 
     const startTime = Date.now();
-    const MAX_RUN_TIME = 7500; // 7.5 seconds limit
+    const MAX_RUN_TIME = onProgress ? 300000 : 7500; // 5 mins limit if streaming, 7.5s if not
 
     const dbRecords: DbRecord[] = [];
     let offset = 0;
     const limit = 1000;
     let hasMore = true;
+
+    await onProgress?.(0.1, '從資料庫加載記錄...');
 
     while (hasMore) {
         const batch = await db.select({
@@ -61,6 +63,7 @@ export async function runStorageAudit() {
             });
             offset += limit;
             if (batch.length < limit) hasMore = false;
+            await onProgress?.(0.2, `已加載 ${dbRecords.length} 條記錄...`);
         }
         
         // Timeout check for DB part as well
@@ -75,6 +78,8 @@ export async function runStorageAudit() {
     let isTruncated = true;
     let continuationToken: string | undefined;
 
+    await onProgress?.(0.4, '掃描 R2 儲存桶...');
+
     while (isTruncated && (Date.now() - startTime < MAX_RUN_TIME)) {
         const listCommand = new ListObjectsV2Command({
             Bucket: bucket,
@@ -84,7 +89,7 @@ export async function runStorageAudit() {
         });
         
         // Add abort signal to prevent hanging
-        const response = await r2.send(listCommand, { abortSignal: AbortSignal.timeout(3000) });
+        const response = await r2.send(listCommand, { abortSignal: AbortSignal.timeout(10000) });
         
         if (response.Contents) {
             for (const obj of response.Contents) {
@@ -98,7 +103,10 @@ export async function runStorageAudit() {
         
         isTruncated = response.IsTruncated || false;
         continuationToken = response.NextContinuationToken;
+        await onProgress?.(0.6, `已掃描 ${r2KeysSet.size} 個文件...`);
     }
+
+    await onProgress?.(0.8, '比對孤兒與殘餘記錄...');
 
     const orphans: OrphanFile[] = []; 
     const ghosts: DbRecord[] = [];  
@@ -131,6 +139,8 @@ export async function runStorageAudit() {
             ghosts.push(record);
         }
     });
+
+    await onProgress?.(1.0, '掃描完成');
 
     return { healthy, ghosts, orphans, truncated: isTruncated };
 }

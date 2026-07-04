@@ -102,12 +102,13 @@ export function usePhotoEditAI() {
             
             // Try ID match first
             let matchedId: string | null = null;
-            if (rawCatId && categories.find(c => String(c.id) === rawCatId)) {
+            const currentCats = queryClient.getQueryData<any[]>(queryKeys.categories.list()) || categories;
+          if (rawCatId && currentCats.find(c => String(c.id) === rawCatId)) {
                 matchedId = rawCatId;
             } 
             // Fallback to name match
             else if (rawCatName) {
-                const found = categories.find(c => 
+                const found = currentCats.find(c => 
                     c.name.toLowerCase() === rawCatName.toLowerCase() ||
                     c.nameZh?.toLowerCase() === rawCatName.toLowerCase() ||
                     c.nameEn?.toLowerCase() === rawCatName.toLowerCase()
@@ -143,16 +144,18 @@ export function usePhotoEditAI() {
           }).filter(Boolean);
           
           const resolvedIds: string[] = [];
-          parsedTagIds.forEach((idOrName: string) => {
+          const unresolvedNames: string[] = [];
+          
+          [...parsedTagIds, ...rawNames].forEach((idOrName: string) => {
               const found = allTags.find(t => String(t.id) === idOrName || t.name.toLowerCase() === idOrName.toLowerCase());
               if (found) {
                   resolvedIds.push(String(found.id));
               } else {
-                  rawNames.push(idOrName);
+                  unresolvedNames.push(idOrName);
               }
           });
           
-          const uniqueRawNames = Array.from(new Set(rawNames));
+          const uniqueRawNames = Array.from(new Set(unresolvedNames));
           const finalResolvedIds = [...resolvedIds];
 
           // Prevent tags that perfectly match the chosen category name
@@ -330,10 +333,11 @@ export function usePhotoEditAI() {
           const rawCatName = String(result.category_name || result.categoryName || '');
           
           let matchedId: string | null = null;
-          if (rawCatId && categories.find(c => String(c.id) === rawCatId)) {
+          const currentCats = queryClient.getQueryData<any[]>(queryKeys.categories.list()) || categories;
+          if (rawCatId && currentCats.find(c => String(c.id) === rawCatId)) {
               matchedId = rawCatId;
           } else if (rawCatName) {
-              const found = categories.find(c => 
+              const found = currentCats.find(c => 
                   c.name.toLowerCase() === rawCatName.toLowerCase() ||
                   c.nameZh?.toLowerCase() === rawCatName.toLowerCase() ||
                   c.nameEn?.toLowerCase() === rawCatName.toLowerCase()

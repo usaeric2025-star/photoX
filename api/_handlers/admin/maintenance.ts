@@ -9,6 +9,7 @@ import { getServerEnv } from "../../../shared/envSchema.js";
 import { ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { normalizeUrl } from '../../_lib/maintenance/storageUtils.js';
+import { streamSSE } from 'hono/streaming';
 import { Buffer } from 'buffer';
 
 const serverEnv = getServerEnv(process.env);
@@ -100,6 +101,43 @@ adminMaintenance.get("/storage/audit", async (c) => {
     }
 });
 
+adminMaintenance.get("/storage/audit-stream", async (c) => {
+    try {
+        await requireRealUser(c);
+        return streamSSE(c, async (stream) => {
+            try {
+                const audit = await runStorageAudit(async (progress, message) => {
+                    await stream.writeSSE({
+                        data: JSON.stringify({ progress, message })
+                    });
+                });
+                
+                await stream.writeSSE({
+                    data: JSON.stringify({ 
+                        success: true, 
+                        progress: 1,
+                        message: '完成',
+                        data: { 
+                            healthyCount: audit.healthy.length,
+                            ghosts: { count: audit.ghosts.length, samples: audit.ghosts.slice(0, 10) },
+                            orphans: { count: audit.orphans.length, samples: audit.orphans.slice(0, 10) },
+                            truncated: audit.truncated || false
+                        } 
+                    })
+                });
+            } catch (err) {
+                logger.error("Audit stream failed:", err);
+                await stream.writeSSE({
+                    data: JSON.stringify({ success: false, error: String(err) })
+                });
+            }
+        });
+    } catch (e: unknown) {
+        logger.error("Audit init failed:", e);
+        return c.json({ success: false, error: String(e) }, 500);
+    }
+});
+
 adminMaintenance.post("/storage/recover-orphans", async (c) => {
     try {
         await requireRealUser(c);
@@ -113,66 +151,83 @@ adminMaintenance.post("/storage/recover-orphans", async (c) => {
         const bucketName = serverEnv.R2_BUCKET_NAME!;
         const publicUrlPrefix = (serverEnv.R2_PUBLIC_URL_PREFIX || "").replace(/\/$/, '');
         const isPrefixSsl = publicUrlPrefix.startsWith('http');
-
-        const crypto = await import('node:crypto');
-        const results = [];
-
-        // Pre-fetch existing URLs to avoid duplicates within this batch
-        const existingPhotos = await db.select({ imageUrl: furnitureItems.imageUrl }).from(furnitureItems);
-        const existingUrlsSet = new Set(existingPhotos.map(p => normalizeUrl(p.imageUrl || "")));
-
-        for (const key of targetKeys) {
+        
+        return streamSSE(c, async (stream) => {
             try {
-                // 1. Construct public URL and Normalize
-                const publicUrl = isPrefixSsl 
-                    ? `${publicUrlPrefix}/${key}`
-                    : `https://${publicUrlPrefix}/${key}`;
-                
-                const normalized = normalizeUrl(publicUrl);
-                if (existingUrlsSet.has(normalized)) {
-                    results.push({ key, status: 'skipped', reason: 'exists' });
-                    continue;
+                const crypto = await import('node:crypto');
+                const results = [];
+        
+                // Pre-fetch existing URLs to avoid duplicates within this batch
+                const existingPhotos = await db.select({ imageUrl: furnitureItems.imageUrl }).from(furnitureItems);
+                const existingUrlsSet = new Set(existingPhotos.map(p => normalizeUrl(p.imageUrl || "")));
+        
+                let i = 0;
+                for (const key of targetKeys) {
+                    i++;
+                    await stream.writeSSE({
+                        data: JSON.stringify({ progress: i / targetKeys.length, message: `Processing ${key.split('/').pop()}` })
+                    });
+                    
+                    try {
+                        // 1. Construct public URL and Normalize
+                        const publicUrl = isPrefixSsl 
+                            ? `${publicUrlPrefix}/${key}`
+                            : `https://${publicUrlPrefix}/${key}`;
+                        
+                        const normalized = normalizeUrl(publicUrl);
+                        if (existingUrlsSet.has(normalized)) {
+                            results.push({ key, status: 'skipped', reason: 'exists' });
+                            continue;
+                        }
+        
+                        // 2. Fetch from R2
+                        const getCommand = new GetObjectCommand({
+                            Bucket: bucketName,
+                            Key: key
+                        });
+                        const response = await s3Client.send(getCommand);
+                        if (!response.Body) {
+                            results.push({ key, status: 'failed', reason: 'empty_body' });
+                            continue;
+                        }
+        
+                        const buffer = Buffer.from(await response.Body.transformToByteArray());
+                        const hash = crypto.createHash('md5').update(buffer).digest('hex');
+        
+                        // 3. Create DB record
+                        const photoId = crypto.randomUUID();
+                        await db.insert(furnitureItems).values({
+                            id: photoId,
+                            userId: '8ec53131-a589-4b50-beb4-6b5308541e1b', // Default admin/staff user ID
+                            imageUrl: publicUrl,
+                            imageHash: hash,
+                            name: { zh: `找回的照片 (${key.split('/').pop()})` },
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        } as any);
+        
+                        existingUrlsSet.add(normalized);
+                        results.push({ key, status: 'recovered', id: photoId });
+                    } catch (err) {
+                        logger.error(`Failed to recover ${key}:`, err);
+                        results.push({ key, status: 'failed', error: String(err) });
+                    }
                 }
-
-                // 2. Fetch from R2
-                const getCommand = new GetObjectCommand({
-                    Bucket: bucketName,
-                    Key: key
+        
+                if (results.some(r => r.status === 'recovered')) {
+                    await refreshPhotosView();
+                }
+        
+                await stream.writeSSE({
+                    data: JSON.stringify({ success: true, progress: 1, message: 'Done', results })
                 });
-                const response = await s3Client.send(getCommand);
-                if (!response.Body) {
-                    results.push({ key, status: 'failed', reason: 'empty_body' });
-                    continue;
-                }
-
-                const buffer = Buffer.from(await response.Body.transformToByteArray());
-                const hash = crypto.createHash('md5').update(buffer).digest('hex');
-
-                // 3. Create DB record
-                const photoId = crypto.randomUUID();
-                await db.insert(furnitureItems).values({
-                    id: photoId,
-                    userId: '8ec53131-a589-4b50-beb4-6b5308541e1b', // Default admin/staff user ID
-                    imageUrl: publicUrl,
-                    imageHash: hash,
-                    name: { zh: `找回的照片 (${key.split('/').pop()})` },
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                } as any);
-
-                existingUrlsSet.add(normalized);
-                results.push({ key, status: 'recovered', id: photoId });
             } catch (err) {
-                logger.error(`Failed to recover ${key}:`, err);
-                results.push({ key, status: 'failed', error: String(err) });
+                logger.error("Recovery stream failed:", err);
+                await stream.writeSSE({
+                    data: JSON.stringify({ success: false, error: String(err) })
+                });
             }
-        }
-
-        if (results.some(r => r.status === 'recovered')) {
-            await refreshPhotosView();
-        }
-
-        return c.json({ success: true, results });
+        });
     } catch (e: unknown) {
         logger.error("Recovery failed:", e);
         return c.json({ success: false, error: String(e) }, 500);

@@ -20,7 +20,7 @@ export interface PreviewResult {
 
 export type IssueAction = {
   name: string;
-  execute: () => Promise<{ jobId?: string; message?: string; [key: string]: unknown }>;
+  execute: (onProgress?: (progress: number, message?: string) => void) => Promise<{ jobId?: string; message?: string; [key: string]: unknown }>;
   preview?: () => Promise<PreviewResult>;
 };
 
@@ -67,7 +67,7 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
         samples: data.data.orphans.samples
       };
     },
-    execute: async () => {
+    execute: async (onProgress) => {
       // 1. 先进行一次审计获取要恢复的 Key
       const auditRes = await api.admin.maintenance.storage.audit.$get();
       const auditData = await auditRes.json() as AuditResponse;
@@ -78,17 +78,67 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       
       const keys = orphans.map((o) => o.key);
       
-      // 2. 执行批量恢复
-      const res = await api.admin.maintenance.storage['recover-orphans'].$post({
-        json: { keys }
+      // 2. 执行批量恢复 (SSE Stream)
+      const res = await fetch('/api/admin/maintenance/storage/recover-orphans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ keys })
       });
-      const data = await res.json() as RecoverResponse;
-      if (!data.success) throw new Error(data.error || "恢复失败");
-      
-      const recoveredCount = (data.results || []).filter((r) => r.status === 'recovered').length;
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('Response stream not supported');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let finalData: RecoverResponse | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        
+        // Keep the last partial chunk in the buffer
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const dataStr = line.slice(6);
+              const data = JSON.parse(dataStr);
+              
+              if (data.error) throw new Error(data.error);
+              
+              if (data.progress !== undefined) {
+                onProgress?.(data.progress, data.message);
+              }
+              
+              if (data.success) {
+                finalData = data as RecoverResponse;
+              }
+            } catch (e: unknown) {
+              // Only throw if it's our parsed error, otherwise it might be partial JSON (shouldn't happen with split)
+              if (e instanceof Error && e.message !== 'Unexpected end of JSON input') {
+                 throw e;
+              }
+            }
+          }
+        }
+      }
+
+      if (!finalData) throw new Error("Stream closed before completion");
+
+      const recoveredCount = (finalData.results || []).filter((r) => r.status === 'recovered').length;
       return { 
         message: `找回任务完成：成功导入 ${recoveredCount} 条记录，跳过 ${orphans.length - recoveredCount} 条`,
-        details: data.results
+        details: finalData.results
       };
     }
   },
@@ -117,12 +167,6 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       const res = await api.admin.maintenance['daily-cleanup'].$post();
       await res.json();
       return { message: "系统日志与过期缓存清理完成" };
-    }
-  },
-  schema_sync: {
-    name: "同步数据库架构",
-    execute: async () => {
-      return { message: "数据库架构已与当前程序版本同步" };
     }
   },
   refresh_view: {

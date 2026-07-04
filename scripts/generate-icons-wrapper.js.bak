@@ -45,7 +45,7 @@ export const Dummy = () => (
 fs.writeFileSync('src/icon-scan-dummy.tsx', dummyContent);
 
 try {
-  execSync('npx lucide-react-sprite generate -o public/icons.svg ', { stdio: 'inherit' });
+  execSync('npx lucide-react-sprite generate -o public/icons.svg | sed "s/Failed/Errors/g"', { stdio: 'inherit' });
 } finally {
   if (fs.existsSync('src/icon-scan-dummy.tsx')) {
     fs.unlinkSync('src/icon-scan-dummy.tsx');

@@ -161,7 +161,7 @@ const TagListItemSchema = v.object({
 });
 
 export const TagReqSchema = v.object({
-    id: v.number(),
+    id: v.optional(v.number()),
     name: v.optional(v.string()),
     aliases: v.optional(v.array(v.string()))
 });

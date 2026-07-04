@@ -6,6 +6,8 @@ import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 import { useUI } from '#lib/store/index.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 import { Photo } from '#src/types/photo.js';
+import { usePhoto } from '#src/hooks/index.js';
+import { Icon } from '#src/components/ui/Icon.js';
 
 // Components
 import { LightboxStage } from './components/LightboxStage.js';
@@ -34,10 +36,20 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const currentIndex = props.initialIndex ?? hookIndex;
   const isOpen = props.isOpen ?? hookIsOpen;
   const onClose = props.onClose || hookClose;
-  const { setPhotoId, setModal } = useFilters();
+  const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
   const { isAdmin } = usePermission();
   const { descLang, patch } = useUI();
   
+  // Auto-fetch photo if we are deep-linked but have no slides loaded
+  const needsDeepLinkFetch = isOpen && sourcePhotos.length === 0 && !!queryPhotoId;
+  const { data: deepLinkPhoto, isLoading: isDeepLinkLoading } = usePhoto(needsDeepLinkFetch ? queryPhotoId : null);
+  
+  const finalSourcePhotos = useMemo(() => {
+    if (sourcePhotos.length > 0) return sourcePhotos;
+    if (deepLinkPhoto) return [deepLinkPhoto];
+    return [];
+  }, [sourcePhotos, deepLinkPhoto]);
+
   const onEdit = props.onEdit || ((photo: Photo) => {
     setPhotoId(photo.id);
     setModal('edit');
@@ -91,9 +103,9 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   };
 
   const effectivePhotos = useMemo(() => {
-    if (sourcePhotos.length === 0 && isOpen) return [];
-    return sourcePhotos.map(normalizeSlide);
-  }, [sourcePhotos, isOpen]) as (Photo | { original: Photo })[];
+    if (finalSourcePhotos.length === 0 && isOpen) return [];
+    return finalSourcePhotos.map(normalizeSlide);
+  }, [finalSourcePhotos, isOpen]) as (Photo | { original: Photo })[];
 
   const handleNext = useCallback(() => {
     if (effectivePhotos.length <= 1) return;
@@ -134,17 +146,37 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   }, [isOpen, handleNext, handlePrev, onClose]);
 
   if (!isOpen) return null;
+  
+  if (isDeepLinkLoading) {
+    return (
+      <div className="fixed inset-0 z-[100] flex flex-col font-sans select-none items-center justify-center">
+        <motion.div 
+           initial={{ opacity: 0 }} 
+           animate={{ opacity: 1 }} 
+           exit={{ opacity: 0 }} 
+           transition="medium"
+          className="absolute inset-0 bg-black/98 z-[110]"
+        />
+        <div className="relative z-[120] text-white opacity-70 flex flex-col items-center gap-4">
+          <Icon name="loader-2" className="animate-spin" size={32} />
+          <span>載入中...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (effectivePhotos.length === 0) return null;
   
   const baseActivePhoto = (effectivePhotos[currentIndex] || effectivePhotos[0]) as Photo | { original: Photo };
   if (!baseActivePhoto) return null;
-  
-  const activeId = ('original' in baseActivePhoto) 
-    ? (baseActivePhoto as { original: Photo }).original.id 
-    : (baseActivePhoto as Photo).id;
-  const activePhoto = ('original' in baseActivePhoto) 
-    ? (baseActivePhoto as { original: Photo }).original 
-    : (baseActivePhoto as Photo);
+  const activeId = ('original' in baseActivePhoto)
+     ? (baseActivePhoto as { original: Photo }).original.id
+     : (baseActivePhoto as Photo).id;
+
+  const { data: activePhotoDetails } = usePhoto(isOpen ? activeId : null);
+  const activePhoto = activePhotoDetails || (('original' in baseActivePhoto)
+     ? (baseActivePhoto as { original: Photo }).original
+     : (baseActivePhoto as Photo));
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col font-sans select-none">

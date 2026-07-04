@@ -2,7 +2,7 @@ import { useAppRouter } from '#lib/router/index.js';
 import React, { Suspense, lazy } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
-import { useAuth } from '#lib/store/index.js';
+import { useAuth } from '#lib/store/index.js';import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 interface UploadModeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -73,7 +73,7 @@ export function AdminPageContent() {
         {/* Other screens are lazy mounted */}
         {!isGallery && (
           <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0 order-0">
-            <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
+            <ErrorBoundary><Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
               {currentScreen === 'batch' ? (
                 <ScreenWrapper key="admin-batch" onClose={navigate.admin}>
                   <BatchEditScreen />
@@ -87,7 +87,7 @@ export function AdminPageContent() {
                   <SettingsPage onClose={navigate.admin} />
                 </div>
               ) : null}
-            </Suspense>
+            </Suspense></ErrorBoundary>
           </div>
         )}
 

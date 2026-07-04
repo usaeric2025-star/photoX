@@ -76,7 +76,7 @@ async function bootstrap() {
       });
     });
 
-    server.listen(PORT, "0.0.0.0", () => {
+    const serverInstance = server.listen(PORT, "0.0.0.0", () => {
       console.log(`>>> [STARTUP] Hono + Vite (Dev) listening on 0.0.0.0:${PORT}`);
       // [DEV-BRIDGE-PREWARMED] v2.11.1
       // Use setTimeout to ensure the server event loop has spun up
@@ -100,6 +100,17 @@ async function bootstrap() {
           });
       }, 500);
     });
+
+    // Graceful Shutdown
+    const shutdown = () => {
+      console.log(">>> [SHUTDOWN] Closing dev server...");
+      serverInstance.close(() => {
+        console.log(">>> [SHUTDOWN] Server closed successfully.");
+        process.exit(0);
+      });
+    };
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
   } else {
     // Production Mode (Standard Node)
     const distPath = path.resolve(process.cwd(), "dist");
@@ -112,7 +123,7 @@ async function bootstrap() {
        console.error(">>> [STARTUP] Critical view check failed in production:", viewErr);
     }
 
-    serve({
+    const serverInstance = serve({
       fetch: (req) => {
         const url = new URL(req.url);
         if (url.pathname.startsWith("/api/")) {
@@ -142,6 +153,17 @@ async function bootstrap() {
       },
       port: PORT,
     });
+    
+    // Graceful Shutdown
+    const shutdown = () => {
+      console.log(">>> [SHUTDOWN] Closing production server...");
+      serverInstance.close(() => {
+        console.log(">>> [SHUTDOWN] Server closed successfully.");
+        process.exit(0);
+      });
+    };
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
   }
 
   console.log(`>>> Hono Server listening on 0.0.0.0:${PORT}`);

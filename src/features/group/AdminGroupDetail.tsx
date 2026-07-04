@@ -14,6 +14,7 @@ import { AdminGroupHeader } from './components/AdminGroupHeader.js';
 import { Button } from '#src/components/shared/Button.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
+import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import { PhotoWallGrid } from '#src/features/photo-wall/components/PhotoWallGrid.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 
@@ -150,7 +151,8 @@ export function AdminGroupDetailPage() {
         />
       </div>
       <div className={`flex-1 bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''} overflow-y-auto p-1 sm:p-2 relative`}>
-        <PhotoWallGrid 
+        <ErrorBoundary>
+          <PhotoWallGrid 
           photos={photos} 
           hasMore={!!hasNextPage} 
           isLoading={loading}
@@ -159,6 +161,7 @@ export function AdminGroupDetailPage() {
           hideGroupBadge={true}
           isGroupDetail={true}
         />
+        </ErrorBoundary>
       </div>
 
       {showAdminTools && (

@@ -90,7 +90,6 @@ export const usePhotoMutations = () => {
       return { previousQueries };
     },
     onSuccess: () => {
-      showToast.success(t.photoUpdated);
     },
     onError: (err, _, context) => {
       if (err instanceof CancelledError) return;

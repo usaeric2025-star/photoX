@@ -57,15 +57,27 @@ export function LightboxInfo({
                     <span>Story</span>
                   </div>
                   <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
-                    {(['zh', 'en', 'ms'] as const).map(l => (
-                      <button
-                        key={l}
-                        onClick={() => onLangChange(l)}
-                        className={`px-2 py-1 rounded text-[9px] font-bold tracking-wider uppercase transition-all ${lang === l ? 'bg-white text-black' : 'text-white/40 active:text-white'}`}
-                      >
-                        {l === 'zh' ? '简' : l === 'en' ? 'EN' : 'MS'}
-                      </button>
-                    ))}
+                    {(['zh', 'en', 'ms'] as const).map(l => {
+                      const hasText = !!(descriptionObj && (typeof descriptionObj === 'object') && (descriptionObj as any)[l]);
+                      // If it's the current language, or it has text, or it's zh (which might be the fallback string)
+                      const isAvailable = hasText || (l === 'zh' && typeof descriptionObj === 'string') || lang === l;
+                      
+                      return (
+                        <button
+                          key={l}
+                          type="button"
+                          disabled={!isAvailable && lang !== l}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onLangChange(l);
+                          }}
+                          className={`px-2 py-1 rounded text-[9px] font-bold tracking-wider uppercase transition-all ${lang === l ? 'bg-white text-black' : isAvailable ? 'text-white/60 hover:text-white cursor-pointer' : 'text-white/20 cursor-not-allowed'}`}
+                        >
+                          {l === 'zh' ? '简' : l === 'en' ? 'EN' : 'MS'}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="text-sm text-white/80 leading-relaxed font-sans font-light">

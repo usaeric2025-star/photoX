@@ -12,7 +12,7 @@
       "destination": "/api"
     },
     {
-      "source": "/((?!api/|assets/|.*\\.[a-zA-Z0-9]+$).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

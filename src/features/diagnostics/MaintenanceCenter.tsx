@@ -27,27 +27,15 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
-            issueId="schema_sync"
-            title="同步資料庫架構" 
-            description="檢查並補全資料庫中缺失的欄位或架構同步。如果遇到查詢報錯，請優先執行此操作。"
-            onSuccess={onSuccess}
-          />
-          <MaintenanceTool 
-            issueId="orphan_files"
-            title="啟動雲端孤兒照片掃描" 
-            description="掃描 R2 雲端儲存，如果發現有照片但在資料庫中丟失了記錄，會嘗試修復。 (開發中)"
+            issueId="repair_integrity"
+            title="修复数据库约束与一致性" 
+            description="针对 ai_audit_logs 约束进行热修复，并重新计算所有合组的封面与成员数量。解决照片合组后消失的问题。"
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
             issueId="deduplicate"
             title="清理重複的照片記錄" 
             description="自動識別基於檔案雜湊 (Hash) 的重複照片記錄，並僅保留最舊的一份。"
-            onSuccess={onSuccess}
-          />
-          <MaintenanceTool 
-            issueId="repair_integrity"
-            title="修复数据库约束与一致性" 
-            description="针对 ai_audit_logs 约束进行热修复，并重新计算所有合组的封面与成员数量。解决照片合组后消失的问题。"
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
@@ -60,6 +48,13 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
             issueId="ghost_records"
             title="清理資料庫殘餘記錄" 
             description="清理資料庫中存在，但在儲存庫中已經遺失的無效照片記錄。"
+            onSuccess={onSuccess}
+          />
+          <MaintenanceTool 
+            issueId="orphan_files"
+            title="啟動雲端孤兒照片掃描" 
+            description="【高級指令】全量掃描 R2 雲端儲存，若發現儲存桶有照片但資料庫無記錄，將強制重建資料。此操作消耗極高流量與 API 資源，請勿頻繁運行。"
+            danger={true}
             onSuccess={onSuccess}
           />
         </div>

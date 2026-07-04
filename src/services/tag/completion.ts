@@ -34,7 +34,7 @@ export async function resolveTagNamesToIds(
 
     uniqueNames.forEach(name => {
       const existing = dbTags.find((t: Tag) => 
-        (t.name && t.name.toUpperCase() === name) || 
+        (String(t.id) === name) || (t.name && t.name.toUpperCase() === name) || 
         (t.aliases && Array.isArray(t.aliases) && t.aliases.some((a: string) => a.toUpperCase() === name))
       );
       

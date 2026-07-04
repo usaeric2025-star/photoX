@@ -96,13 +96,6 @@ export function LightboxStage({
   const src = getPhotoThumb(key, 'LG', hash);
   const lqipSrc = getPhotoThumb(key, 'SM', hash);
 
-  // Preload adjacent images with a slight delay to prioritize current image
-  const [shouldPreload, setShouldPreload] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setShouldPreload(true), 500);
-    return () => clearTimeout(timer);
-  }, [currentIndex]);
-
   const nextIdx = (currentIndex + 1) % totalPhotos;
   const prevIdx = (currentIndex - 1 + totalPhotos) % totalPhotos;
 
@@ -120,6 +113,21 @@ export function LightboxStage({
 
   const nextSrc = nextInfo.key ? getPhotoThumb(nextInfo.key, 'LG', nextInfo.hash) : '';
   const prevSrc = prevInfo.key ? getPhotoThumb(prevInfo.key, 'LG', prevInfo.hash) : '';
+
+  // Preload adjacent images with a slight delay to prioritize current image
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (nextSrc) {
+        const imgNext = new window.Image();
+        imgNext.src = nextSrc;
+      }
+      if (prevSrc) {
+        const imgPrev = new window.Image();
+        imgPrev.src = prevSrc;
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [nextSrc, prevSrc]);
 
   return (
     <div 
@@ -169,13 +177,7 @@ export function LightboxStage({
         </motion.div>
       </AnimatePresence>
 
-      {/* Hidden preloading container */}
-      {totalPhotos > 1 && shouldPreload && (
-        <div className="hidden" aria-hidden="true">
-          {nextSrc && <img src={nextSrc} alt="" loading="lazy" />}
-          {prevSrc && <img src={prevSrc} alt="" loading="lazy" />}
-        </div>
-      )}
+
     </div>
   );
 }
