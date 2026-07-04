@@ -6,7 +6,7 @@ import { useAppForm } from '#lib/forms/useAppForm.js';
 import { useCategories, useManufacturers } from '#src/hooks/index.js';
 import { usePhoto } from './usePhoto.js';
 import { usePhotoMutations } from './usePhotoMutations.js';
-import { PhotoEditSchema, type PhotoEditFormData } from '#src/schemas/photoEdit.js';
+import { PhotoEditSchema, type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { photoEditAdapter } from '#lib/forms/index.js';
 import { generateItemCode } from '#src/services/photo/utils.js';
 import { toSingleString, toMultiObject } from '#lib/forms/utils.js';

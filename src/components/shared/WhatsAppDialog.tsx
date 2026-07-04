@@ -68,7 +68,7 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
                 className="w-full py-3 px-4 bg-emerald-600 text-white rounded-lg font-bold flex items-center justify-between shadow-sm hover:bg-emerald-700 transition-all"
               >
                 <span>{opt.name}</span>
-                {i === 0 ? <Icon name="heart" size={18} /> : <Icon name="sparkles" size={18} />}
+                <Icon name="whatsapp" size={18} />
               </a>
             ))}
           </div>

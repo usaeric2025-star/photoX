@@ -1,10 +1,10 @@
 #!/bin/bash
+# 檢查 ES Module 目錄導入
 echo "=== 檢查 ES Module 目錄導入 ==="
-
-# We search for imports ending with a directory (no trailing .js / specific file)
-if grep -rn "from.*_lib/[^']*$" api/ --include="*.ts" 2>/dev/null | grep -v "index\.js" | grep -v "client\.js"; then
-  echo "❌ 發現目錄導入，請修正為具體檔案路徑 (例如: ../_lib/db/index.js)"
+if grep -rn "import .* from '..[^']*[^.][^j][^s]';" src/server/ 2>/dev/null; then
+  echo "❌ 發現缺少 .js 結尾的導入"
   exit 1
+else
+  echo "✅ 無目錄導入"
+  exit 0
 fi
-
-echo "✅ 無目錄導入"

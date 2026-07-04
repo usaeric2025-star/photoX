@@ -1,13 +1,13 @@
 import * as v from 'valibot';
 import { TranslationType } from '#src/locales/index.js';
 
-const TranslationSchema = v.object({
+export const TranslationSchema = v.object({
   zh: v.string(),
   en: v.optional(v.string()),
   ms: v.optional(v.string())
 });
 
-const DimensionSchema = v.object({
+export const DimensionSchema = v.object({
   label: v.optional(v.nullable(v.string())),
   unit: v.optional(v.nullable(v.string())),
   length: v.optional(v.nullable(v.union([v.number(), v.string()]))),
@@ -38,4 +38,3 @@ export const getPhotoEditSchema = (t: TranslationType) => v.object({
 export const PhotoEditSchema = getPhotoEditSchema({ titleRequired: 'Required', titleTooLong: 'Too long' } as unknown as TranslationType); // Fallback for types
 
 export type PhotoEditFormData = v.InferOutput<typeof PhotoEditSchema>;
-

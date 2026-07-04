@@ -15,7 +15,7 @@ export function TaskBadge() {
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        isTaskDrawerOpen.set(!isTaskDrawerOpen.get());
+        isTaskDrawerOpen.value = !isTaskDrawerOpen.value;
       }}
       className="fixed bottom-6 right-6 bg-slate-900 border border-slate-800 text-white shadow-2xl rounded-full h-12 px-4 flex items-center gap-2.5 transition-all duration-300 hover:scale-105 active:scale-95 group font-sans z-[9990]"
       aria-label="開啟任務佇列"

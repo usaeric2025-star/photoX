@@ -41,7 +41,7 @@ export default function PublicPage() {
   const handleScrollToTop = () => {
     scrollContainerRef.current?.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'auto'
     });
   };
 
@@ -86,7 +86,7 @@ export default function PublicPage() {
           className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"
           title={t.whatsAppInquiry}
         >
-          <Icon name="message-circle" size={26} solid />
+          <Icon name="whatsapp" size={26} />
         </button>
       </div>
 

@@ -26,25 +26,27 @@ export function Image({
     priority = false,
     ...props 
 }: ImageProps) {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [hasError, setHasError] = useState(false);
+    const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+    const [errorSrc, setErrorSrc] = useState<string | null>(null);
     const imgRef = useRef<HTMLImageElement>(null);
 
-    // Reset loaded and error states when src changes
-    useEffect(() => {
-        setIsLoaded(false);
-        setHasError(false);
-    }, [src]);
+    const isLoaded = loadedSrc === src;
+    const hasError = errorSrc === src;
 
-    // Check if already loaded from cache
-    useEffect(() => {
-        if (imgRef.current?.complete) {
-            setIsLoaded(true);
+    // Check if already loaded from cache immediately when rendering
+    const checkCache = () => {
+        if (imgRef.current?.complete && imgRef.current?.src === src && !isLoaded) {
+            setLoadedSrc(src);
         }
+    };
+
+    // Use effect just to check cache after mount, but not to sync state
+    useEffect(() => {
+        checkCache();
     }, [src]);
 
     const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-        setIsLoaded(true);
+        setLoadedSrc(src);
         onLoad?.(e);
     };
 
@@ -105,7 +107,7 @@ export function Image({
                     src={src}
                     alt={alt}
                     onLoad={handleLoad}
-                    onError={() => setHasError(true)}
+                    onError={() => setErrorSrc(src)}
                     className={cn(
                         "absolute inset-0 w-full h-full object-cover object-center z-20",
                         !disableFade && !priority && "transition-opacity duration-200 ease-out",

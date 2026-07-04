@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import { PhotoWallGrid } from '#src/features/photo-wall/components/PhotoWallGrid.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
+import { DataFallback } from '#src/components/ui/DataFallback.js';
 
 export function AdminGroupDetailPage() {
   const { params, navigate } = useAppRouter();
@@ -40,18 +41,6 @@ export function AdminGroupDetailPage() {
 
   const { uiTranslations: t } = useTranslation();
   const { anchor, setAnchor } = useFilters();
-
-  // Redirect to admin index if group is not found or error occurs
-  useEffect(() => {
-    if (!loading) {
-      const isNotFound = group === null || (error && (error.toLowerCase().includes('not found') || error.includes('找不到')));
-      
-      if (isNotFound) {
-        toast.error('該分組不存在或已被刪除，正在跳轉回管理頁面...');
-        navigate.admin();
-      }
-    }
-  }, [loading, group, error, navigate]);
 
   const { open: openLightbox } = useLightbox();
   const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
@@ -105,43 +94,28 @@ export function AdminGroupDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-1 sm:p-2 lg:p-4 w-full h-full bg-slate-50">
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
-           {Array.from({ length: 18 }).map((_, i) => (
-             <div key={i} className="aspect-square w-full bg-surface-soft rounded-xl border border-border-soft animate-shimmer" />
-           ))}
-        </div>
+  const loadingSkeleton = (
+    <div className="p-1 sm:p-2 lg:p-4 w-full h-full bg-slate-50">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
+         {Array.from({ length: 18 }).map((_, i) => (
+           <div key={i} className="aspect-square w-full bg-surface-soft rounded-xl border border-border-soft animate-shimmer" />
+         ))}
       </div>
-    );
-  }
-  
-  if (error || !group) {
-    const isNotFound = group === null || (error && (error.toLowerCase().includes('not found') || error.includes('找不到')));
-    
-    return (
-      <div className="p-4 flex flex-col justify-center items-center h-full bg-slate-50 text-center">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-          <Icon name="search" size={32} className="text-slate-300" />
-        </div>
-        <div className="text-xl font-semibold text-slate-800 mb-2">
-          {isNotFound ? '分組不存在或已合併' : t.errorPrefix}
-        </div>
-        <div className="text-slate-500 max-w-xs mb-6">
-          {isNotFound 
-            ? '該分組可能已被刪除、解散或合併至其他分組。正在跳轉回管理頁面...' 
-            : error}
-        </div>
-        <Button onClick={() => navigate.admin()} className="min-w-[120px]">
-          {t.goBack}
-        </Button>
-      </div>
-    );
-  }
-  
+    </div>
+  );
+
   return (
-    <div className="bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
+    <DataFallback
+      loading={loading}
+      error={error}
+      isEmpty={!loading && !error && !group}
+      emptyTitle="分組不存在或已合併"
+      emptyMessage="該分組可能已被刪除、解散或合併至其他分組。正在跳轉回管理頁面..."
+      onRetry={() => navigate.admin()}
+      loadingSkeleton={loadingSkeleton}
+    >
+      {group && (
+        <div className="bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
       <div className="flex-shrink-0 bg-white border-b border-slate-100 shadow-sm">
         <AdminGroupHeader 
           group={group} 
@@ -181,5 +155,7 @@ export function AdminGroupDetailPage() {
         />
       )}
     </div>
+      )}
+    </DataFallback>
   );
 }

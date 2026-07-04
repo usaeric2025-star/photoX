@@ -132,8 +132,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
       whatsapp1: v.string(),
       whatsapp2Name: v.string(),
       whatsapp2: v.string(),
-      facebook: v.string(),
-      instagram: v.string(),
       accessPasscode: v.string(),
     })),
     mutationFn: async (s: Partial<AppSettings>) => {

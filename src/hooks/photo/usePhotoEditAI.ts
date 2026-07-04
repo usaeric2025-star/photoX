@@ -12,7 +12,7 @@ import { showToast } from '#lib/ui/toast.js';
 
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
-import { PhotoEditFormData } from '#src/schemas/photoEdit.js';
+import { type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 
 // Added static imports to fix Ineffective Dynamic Import warnings
 import { resolveTagNamesToIds } from '#src/services/tag/completion.js';

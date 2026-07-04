@@ -50,8 +50,6 @@ export interface AppSettings {
   whatsapp1?: string;
   whatsapp2Name?: string;
   whatsapp2?: string;
-  facebook?: string;
-  instagram?: string;
   accessPasscode?: string;
   manufacturers?: import('./photo.js').Manufacturer[];
   tags?: import('./photo.js').Tag[];

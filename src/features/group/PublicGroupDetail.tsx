@@ -12,6 +12,7 @@ import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import { PhotoWallGrid } from '#src/features/photo-wall/components/PhotoWallGrid.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
+import { DataFallback } from '#src/components/ui/DataFallback.js';
 
 export function PublicGroupDetailPage() {
   const { params } = useAppRouter();
@@ -73,22 +74,26 @@ export function PublicGroupDetailPage() {
     }
   }, [anchor, photoId, loading, photos.length]);
 
-  if (loading) {
-    return (
-      <div className="p-1 sm:p-2 lg:p-4 w-full h-full">
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
-           {Array.from({ length: 18 }).map((_, i) => (
-             <div key={i} className="aspect-square w-full bg-surface-soft rounded-xl border border-border-soft animate-shimmer" />
-           ))}
-        </div>
+  const loadingSkeleton = (
+    <div className="p-1 sm:p-2 lg:p-4 w-full h-full">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
+         {Array.from({ length: 18 }).map((_, i) => (
+           <div key={i} className="aspect-square w-full bg-surface-soft rounded-xl border border-border-soft animate-shimmer" />
+         ))}
       </div>
-    );
-  }
-  if (error) return <div className="p-4 text-red-500">{t.errorPrefix}{error}</div>;
-  if (!group) return <div className="p-4 flex flex-col justify-center items-center h-full"><div className="text-xl text-slate-500 mb-4">{t.groupNotFound}</div><Button onClick={() => window.history.back()}>{t.goBack}</Button></div>;
-  
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-slate-50 group-detail-public flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none">
+    <DataFallback
+      loading={loading}
+      error={error}
+      isEmpty={!loading && !error && !group}
+      emptyTitle={t.groupNotFound}
+      loadingSkeleton={loadingSkeleton}
+    >
+      {group && (
+        <div className="min-h-screen bg-slate-50 group-detail-public flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none">
       <div className="flex-shrink-0 bg-white border-b border-slate-100 shadow-sm relative">
         <PublicGroupHeader 
           group={group} 
@@ -113,5 +118,7 @@ export function PublicGroupDetailPage() {
         onOpenChange={(val) => patchUI({ showWhatsAppChoice: val })} 
       />
     </div>
+      )}
+    </DataFallback>
   );
 }

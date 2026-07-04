@@ -1,11 +1,15 @@
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { 
   QueryClient,
   QueryClientProvider,
   useQuery,
+  useInfiniteQuery,
   useMutation,
   type UseQueryOptions,
+  type UseInfiniteQueryOptions,
   type UseMutationOptions,
-  type QueryKey
+  type QueryKey,
+  type InfiniteData
 } from '@tanstack/react-query';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { get, set, del } from 'idb-keyval';
@@ -43,7 +47,7 @@ export const asyncPersister = createAsyncStoragePersister({
 });
 
 /**
- * Standard data fetching hook (Legacy wrapper for compatibility)
+ * Standard data fetching hook
  */
 export function useAppQuery<TData = unknown, TError = Error>(
   key: QueryKey | null,
@@ -55,7 +59,37 @@ export function useAppQuery<TData = unknown, TError = Error>(
 
   return useQuery<TData, TError>({
     queryKey,
-    queryFn: () => fetcherFn(...queryKey),
+    queryFn: async () => {
+      try {
+        return await fetcherFn(...queryKey);
+      } catch (error) {
+        ErrorFactory.handle(error, { context: `useAppQuery: ${queryKey.join('-')}` });
+        throw error;
+      }
+    },
+    ...options,
+    enabled,
+  });
+}
+
+export function useAppInfiniteQuery<TData = unknown, TError = Error, TPageParam = unknown>(
+  key: QueryKey | null,
+  fetcherFn: (pageParam: TPageParam) => Promise<TData>,
+  options: any
+) {
+  const queryKey = key === null ? ['__null__'] : (Array.isArray(key) ? key : [key]);
+  const enabled = key !== null && options?.enabled !== false;
+
+  return useInfiniteQuery<TData, TError, InfiniteData<TData>, QueryKey, TPageParam>({
+    queryKey,
+    queryFn: async ({ pageParam }) => {
+      try {
+        return await fetcherFn(pageParam as TPageParam);
+      } catch (error) {
+        ErrorFactory.handle(error, { context: `useAppInfiniteQuery: ${queryKey.join('-')}` });
+        throw error;
+      }
+    },
     ...options,
     enabled,
   });

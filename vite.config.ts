@@ -4,7 +4,6 @@ import babel from '@rolldown/plugin-babel';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const ReactCompilerConfig = {
   target: '19'
@@ -19,11 +18,6 @@ export default defineConfig(({mode}) => {
     },
     base: '/',
     plugins: [
-      nodePolyfills({
-        globals: {
-          Buffer: true,
-        },
-      }),
       babel({
         include: /\.[jt]sx?$/,
         babelConfig: {
@@ -46,6 +40,7 @@ export default defineConfig(({mode}) => {
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
+          format: 'esm',
           manualChunks: (id) => {
             if (id.includes('postgres') || id.includes('pg')) {
               return 'empty';
@@ -53,9 +48,6 @@ export default defineConfig(({mode}) => {
             if (id.includes('node_modules')) {
               if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler') || id.includes('react-router')) {
                 return 'vendor-react';
-              }
-              if (id.includes('@storve/core') || id.includes('@storve/react')) {
-                return 'vendor-storve';
               }
               if (id.includes('@supabase/')) {
                 return 'vendor-supabase';
@@ -86,6 +78,8 @@ export default defineConfig(({mode}) => {
       '__ADMIN_DIAGNOSTICS__': JSON.stringify(mode !== 'production'),
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''),
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''),
+      'process.env': '({ NODE_ENV: ' + JSON.stringify(mode) + ' })',
+      'process': '({ env: { NODE_ENV: ' + JSON.stringify(mode) + ' } })',
     },
     resolve: {
       alias: [

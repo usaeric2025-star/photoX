@@ -89,7 +89,7 @@ export function createTask<T>(config: TaskConfig<T>): string {
   scheduler.enqueue(task);
 
   if (!silent) {
-    isTaskDrawerOpen.set(true);
+    isTaskDrawerOpen.value = true;
   }
 
   return id;

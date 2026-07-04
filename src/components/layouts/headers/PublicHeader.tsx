@@ -155,28 +155,6 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">
                 {t.connectLabel}
               </span>
-              {settings?.facebook && (
-                <a
-                  href={settings.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
-                >
-                  <Icon name="facebook" size={16} className="text-[#1877F2]" />
-                  Facebook
-                </a>
-              )}
-              {settings?.instagram && (
-                <a
-                  href={settings.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-pink-50 text-gray-700"
-                >
-                  <Icon name="instagram" size={16} className="text-[#E4405F]" />
-                  Instagram
-                </a>
-              )}
             </div>
 
             <div className="px-2 py-1.5 flex flex-col gap-1 w-full">

@@ -12,7 +12,7 @@ const envLogger = {
  * [ENV-SCHEMA-DEFINED] Client-side Environment Schema
  * Represents variables available via import('meta').env
  */
-export const clientEnvSchema = v.object({
+const clientEnvSchema = v.object({
   "VITE_SUPABASE_URL": v.pipe(v.string(), v.url(), v.minLength(1)),
   "VITE_SUPABASE_ANON_KEY": v.pipe(v.string(), v.minLength(1)),
   "VITE_SENTRY_DSN": v.optional(v.string()),
@@ -28,7 +28,7 @@ export const clientEnvSchema = v.object({
  * [ENV-SCHEMA-DEFINED] Server-side Environment Schema
  * Represents variables available via process.env
  */
-export const serverEnvSchema = v.object({
+const serverEnvSchema = v.object({
   NODE_ENV: v.optional(v.union([v.literal('development'), v.literal('production'), v.literal('test'), v.string()])),
   PORT: v.optional(v.union([v.string(), v.number(), v.undefined()])),
   

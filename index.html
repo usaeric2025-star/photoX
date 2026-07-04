@@ -12,6 +12,7 @@
     <title>photoX</title>
     <!-- 全局启动错误捕获 with Diagnosis (Global Startup Error Catcher) -->
     <script>
+      window.process = window.process || { env: {} };
       (function() {
         var errors = [];
         window.__STARTUP_ERRORS__ = errors;

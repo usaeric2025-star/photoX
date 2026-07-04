@@ -1,5 +1,4 @@
-import { createStore } from '@storve/core';
-import { signal } from '@storve/core/signals';
+import { signal } from '@preact/signals-react';
 import { initAuthListener, authStore } from './authStore.js';
 import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
 import { loadTagsFromCloud } from '#src/services/tag/queries.js';
@@ -13,13 +12,19 @@ export interface AppStatusState {
   error: Error | null;
 }
 
-export const appStore = createStore<AppStatusState>({
-  isLoading: true,
-  error: null
-});
+export const appLoadingSignal = signal<boolean>(true);
+export const appErrorSignal = signal<Error | null>(null);
 
-export const appLoadingSignal = signal(appStore, 'isLoading');
-export const appErrorSignal = signal(appStore, 'error');
+export const appStore = {
+  getState: () => ({
+    isLoading: appLoadingSignal.value,
+    error: appErrorSignal.value,
+  }),
+  setState: (updates: Partial<AppStatusState>) => {
+    if (updates.isLoading !== undefined) appLoadingSignal.value = updates.isLoading;
+    if (updates.error !== undefined) appErrorSignal.value = updates.error;
+  }
+};
 
 export const initializeApp = async () => {
   try {
@@ -27,7 +32,7 @@ export const initializeApp = async () => {
     initAuthListener();
     
     // 2. 執行初始 Session 獲取
-    await authStore.getState().init();
+    await authStore.init();
     
     // 3. 恢復任務佇列（此時 Auth 已就緒）
     scheduler.restore().catch(e => ErrorFactory.handle(e, { context: '[appStore] Task restore failed' }));

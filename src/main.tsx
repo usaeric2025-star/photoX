@@ -1,7 +1,3 @@
-// Polyfill process for libraries that expect it (like ArkType)
-if (typeof window !== 'undefined' && (typeof (window as unknown as { process: unknown }).process === 'undefined' || (window as unknown as { process: unknown }).process === null)) {
-  (window as unknown as { process: unknown }).process = { env: { NODE_ENV: 'development' } };
-}
 
 // Gracefully filter out the React 19 warning for empty string passed to the boolean attribute 'inert'
 if (typeof window !== 'undefined') {

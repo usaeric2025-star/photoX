@@ -145,6 +145,20 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleNext, handlePrev, onClose]);
 
+  const baseActivePhoto = useMemo(() => {
+    if (effectivePhotos.length === 0) return null;
+    return (effectivePhotos[currentIndex] || effectivePhotos[0]) as Photo | { original: Photo };
+  }, [effectivePhotos, currentIndex]);
+
+  const activeId = useMemo(() => {
+    if (!baseActivePhoto) return null;
+    return ('original' in baseActivePhoto)
+       ? (baseActivePhoto as { original: Photo }).original.id
+       : (baseActivePhoto as Photo).id;
+  }, [baseActivePhoto]);
+
+  const { data: activePhotoDetails } = usePhoto((isOpen && !isDeepLinkLoading && activeId) ? activeId : null);
+
   if (!isOpen) return null;
   
   if (isDeepLinkLoading) {
@@ -156,7 +170,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
            exit={{ opacity: 0 }} 
            transition="medium"
           className="absolute inset-0 bg-black/98 z-[110]"
-        />
+         />
         <div className="relative z-[120] text-white opacity-70 flex flex-col items-center gap-4">
           <Icon name="loader-2" className="animate-spin" size={32} />
           <span>載入中...</span>
@@ -167,13 +181,8 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
 
   if (effectivePhotos.length === 0) return null;
   
-  const baseActivePhoto = (effectivePhotos[currentIndex] || effectivePhotos[0]) as Photo | { original: Photo };
   if (!baseActivePhoto) return null;
-  const activeId = ('original' in baseActivePhoto)
-     ? (baseActivePhoto as { original: Photo }).original.id
-     : (baseActivePhoto as Photo).id;
-
-  const { data: activePhotoDetails } = usePhoto(isOpen ? activeId : null);
+  
   const activePhoto = activePhotoDetails || (('original' in baseActivePhoto)
      ? (baseActivePhoto as { original: Photo }).original
      : (baseActivePhoto as Photo));
@@ -211,15 +220,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         />
 
         {/* Main Stage */}
-        <LightboxStage
-          currentPhoto={activePhoto}
-          currentIndex={currentIndex}
-          totalPhotos={effectivePhotos.length}
-          onNext={handleNext}
-          onPrev={handlePrev}
-          onClose={onClose}
-          photos={effectivePhotos}
-        />
+        <LightboxStage />
 
         {/* Thumbnails */}
         <LightboxThumbnails

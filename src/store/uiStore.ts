@@ -1,10 +1,7 @@
-import { createStore } from '@storve/core';
-import { useStore } from '@storve/react';
-import { signal } from '@storve/core/signals';
+import { signal, batch, computed } from '@preact/signals-react';
 import { STORAGE_KEYS, storage } from '#lib/storage.js';
 import { ProductFormData } from '#src/types/index.js';
-import type { LightboxSlide } from '#lib/lightbox/types.js';
-import { Photo } from '#src/types/photo.js';
+import { LightboxSlide } from '#lib/lightbox/types.js';
 
 export interface UIStoreState {
   appLang: 'zh' | 'en' | 'ms';
@@ -26,27 +23,20 @@ export interface UIStoreState {
   activeDialogCount: number;
   fatalError: Error | null;
   totalCount: number;
-  
-  // Lightbox 状态 (Data only)
   lightboxSlides: LightboxSlide[];
   lightboxCurrentIndex: number;
-
-  // Actions
-  patch: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => void;
+  patch: (updates: Partial<Omit<UIStoreState, 'patch' | 'updateForm' | 'resetForm' | 'incrementDialogCount' | 'decrementDialogCount' | 'setLightboxData' | 'clearLightboxData'>>) => void;
   updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => Partial<ProductFormData>)) => void;
   resetForm: () => void;
-  setInitialDataLoading: (loading: boolean) => void;
   incrementDialogCount: () => void;
   decrementDialogCount: () => void;
-  setFatalError: (error: Error | null) => void;
-  resetUI: () => void;
-  
-  // Lightbox Actions
   setLightboxData: (slides: LightboxSlide[], index?: number) => void;
-  clearLightboxData: () => void;
   setLightboxIndex: (index: number) => void;
+  clearLightboxData: () => void;
+  setFatalError: (error: Error | null) => void;
 }
 
+// Initial state
 const defaultForm: ProductFormData = {
   name: '',
   categoryId: '',
@@ -62,128 +52,150 @@ const defaultForm: ProductFormData = {
   isGroupCover: false
 };
 
-export const uiStore = createStore<UIStoreState>({
-  appLang: (() => {
+// Signals
+export const appLang = signal<'zh' | 'en' | 'ms'>(
+  (() => {
     const raw = storage.get(STORAGE_KEYS.LANG, 'en');
     if (!raw) return 'en';
     const lower = String(raw).toLowerCase();
     if (lower.startsWith('zh')) return 'zh';
     if (lower.startsWith('ms')) return 'ms';
     return 'en';
-  })() as 'zh' | 'en' | 'ms',
-  descLang: (() => {
+  })()
+);
+
+export const descLang = signal<'zh' | 'en' | 'ms'>(
+  (() => {
     const raw = storage.get(STORAGE_KEYS.DESC_LANG, 'zh');
     if (['zh', 'en', 'ms'].includes(String(raw))) return raw as 'zh' | 'en' | 'ms';
     return 'zh';
-  })() as 'zh' | 'en' | 'ms',
-  groupSettingsOpen: storage.get<string>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, 'false') === 'true',
-  uploadAsGroup: storage.get<string>('uploadAsGroup', 'false') === 'true',
-  formState: storage.get(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm),
-  showPassPrompt: false,
-  isPhotoPickerOpen: false,
-  photoPickerGroupId: null,
-  isInitialDataLoading: false,
-  focusedGroupPhotoId: null,
-  showWhatsAppChoice: false,
-  uploadModeDialogOpen: false,
-  isTaskDrawerOpen: false,
-  isSidebarOpen: false,
-  pendingPhotoId: null,
-  pendingFiles: null,
-  activeDialogCount: 0,
-  fatalError: null,
-  totalCount: 0,
-  lightboxSlides: [],
-  lightboxCurrentIndex: 0,
+  })()
+);
 
-  updateForm: (updates) => uiStore.setState((state: UIStoreState) => {
-    const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
-    storage.set(STORAGE_KEYS.EDIT_FORM_DRAFT, nextFormState);
-    return { formState: nextFormState };
-  }),
+export const groupSettingsOpen = signal<boolean>(storage.get<string>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, 'false') === 'true');
+export const uploadAsGroup = signal<boolean>(storage.get<string>('uploadAsGroup', 'false') === 'true');
+export const formState = signal<ProductFormData>(storage.get(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm));
+export const showPassPrompt = signal<boolean>(false);
+export const isPhotoPickerOpen = signal<boolean>(false);
+export const photoPickerGroupId = signal<string | null>(null);
+export const isInitialDataLoading = signal<boolean>(false);
+export const focusedGroupPhotoId = signal<string | null>(null);
+export const showWhatsAppChoice = signal<boolean>(false);
+export const uploadModeDialogOpen = signal<boolean>(false);
+export const isTaskDrawerOpen = signal<boolean>(false);
+export const isSidebarOpen = signal<boolean>(false);
+export const pendingPhotoId = signal<string | null>(null);
+export const pendingFiles = signal<FileList | File[] | null>(null);
+export const activeDialogCount = signal<number>(0);
+export const fatalError = signal<Error | null>(null);
+export const totalCount = signal<number>(0);
+export const lightboxSlides = signal<LightboxSlide[]>([]);
+export const lightboxCurrentIndex = signal<number>(0);
 
-  resetForm: () => {
-    storage.remove(STORAGE_KEYS.EDIT_FORM_DRAFT);
-    uiStore.setState({ formState: defaultForm });
-  },
+export const patch = (updates: Partial<Omit<UIStoreState, 'patch' | 'updateForm' | 'resetForm' | 'incrementDialogCount' | 'decrementDialogCount' | 'setLightboxData' | 'clearLightboxData'>>) => {
+  batch(() => {
+    if (updates.appLang !== undefined) appLang.value = updates.appLang;
+    if (updates.descLang !== undefined) descLang.value = updates.descLang;
+    if (updates.groupSettingsOpen !== undefined) groupSettingsOpen.value = updates.groupSettingsOpen;
+    if (updates.uploadAsGroup !== undefined) uploadAsGroup.value = updates.uploadAsGroup;
+    if (updates.formState !== undefined) formState.value = updates.formState;
+    if (updates.showPassPrompt !== undefined) showPassPrompt.value = updates.showPassPrompt;
+    if (updates.isPhotoPickerOpen !== undefined) isPhotoPickerOpen.value = updates.isPhotoPickerOpen;
+    if (updates.photoPickerGroupId !== undefined) photoPickerGroupId.value = updates.photoPickerGroupId;
+    if (updates.isInitialDataLoading !== undefined) isInitialDataLoading.value = updates.isInitialDataLoading;
+    if (updates.focusedGroupPhotoId !== undefined) focusedGroupPhotoId.value = updates.focusedGroupPhotoId;
+    if (updates.showWhatsAppChoice !== undefined) showWhatsAppChoice.value = updates.showWhatsAppChoice;
+    if (updates.uploadModeDialogOpen !== undefined) uploadModeDialogOpen.value = updates.uploadModeDialogOpen;
+    if (updates.isTaskDrawerOpen !== undefined) isTaskDrawerOpen.value = updates.isTaskDrawerOpen;
+    if (updates.isSidebarOpen !== undefined) isSidebarOpen.value = updates.isSidebarOpen;
+    if (updates.pendingPhotoId !== undefined) pendingPhotoId.value = updates.pendingPhotoId;
+    if (updates.pendingFiles !== undefined) pendingFiles.value = updates.pendingFiles;
+    if (updates.activeDialogCount !== undefined) activeDialogCount.value = updates.activeDialogCount;
+    if (updates.fatalError !== undefined) fatalError.value = updates.fatalError;
+    if (updates.totalCount !== undefined) totalCount.value = updates.totalCount;
+    if (updates.lightboxSlides !== undefined) lightboxSlides.value = updates.lightboxSlides;
+    if (updates.lightboxCurrentIndex !== undefined) lightboxCurrentIndex.value = updates.lightboxCurrentIndex;
+  });
+};
 
-  setInitialDataLoading: (loading) => uiStore.setState({ isInitialDataLoading: loading }),
+export const updateForm = (updates: Partial<ProductFormData> | ((prev: ProductFormData) => Partial<ProductFormData>)) => {
+  const nextFormState = typeof updates === 'function' ? updates(formState.value) : { ...formState.value, ...updates };
+  if (nextFormState.name === undefined) nextFormState.name = '';
+  storage.set(STORAGE_KEYS.EDIT_FORM_DRAFT, nextFormState);
+  formState.value = nextFormState as ProductFormData;
+};
 
-  incrementDialogCount: () => uiStore.setState((state: UIStoreState) => ({ activeDialogCount: state.activeDialogCount + 1 })),
-  
-  decrementDialogCount: () => uiStore.setState((state: UIStoreState) => ({ activeDialogCount: Math.max(0, state.activeDialogCount - 1) })),
-  
-  setFatalError: (error) => uiStore.setState({ fatalError: error }),
-  
-  resetUI: () => uiStore.setState({
-      formState: defaultForm,
-      activeDialogCount: 0,
-      lightboxSlides: [], 
-      lightboxCurrentIndex: 0
-  }),
+export const resetForm = () => {
+  storage.remove(STORAGE_KEYS.EDIT_FORM_DRAFT);
+  formState.value = defaultForm;
+};
 
-  setLightboxData: (slides, index = 0) => uiStore.setState({
-    lightboxSlides: slides, lightboxCurrentIndex: index
-  }),
+export const incrementDialogCount = () => {
+  activeDialogCount.value += 1;
+};
 
-  clearLightboxData: () => uiStore.setState({
-    lightboxSlides: [], lightboxCurrentIndex: 0
-  }),
+export const decrementDialogCount = () => {
+  activeDialogCount.value = Math.max(0, activeDialogCount.value - 1);
+};
 
-  setLightboxIndex: (index) => uiStore.setState({
-    lightboxCurrentIndex: index
-  }),
+export const setLightboxData = (slides: LightboxSlide[], index: number = 0) => {
+  batch(() => {
+    lightboxSlides.value = slides;
+    lightboxCurrentIndex.value = index;
+  });
+};
 
-  patch: (updates: Partial<UIStoreState> | ((state: UIStoreState) => Partial<UIStoreState>)) => {
-    uiStore.setState((state: UIStoreState) => {
-      const nextUpdates = typeof updates === 'function' ? updates(state) : updates;
-      const nextState = { ...state, ...nextUpdates };
-      
-      if ('appLang' in nextUpdates && nextUpdates.appLang !== undefined) {
-        storage.set(STORAGE_KEYS.LANG, nextState.appLang);
-      }
-      if ('descLang' in nextUpdates && nextUpdates.descLang !== undefined) {
-        storage.set(STORAGE_KEYS.DESC_LANG, nextState.descLang);
-      }
-      if ('groupSettingsOpen' in nextUpdates && nextUpdates.groupSettingsOpen !== undefined) {
-        storage.set(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(nextState.groupSettingsOpen));
-      }
-      if ('uploadAsGroup' in nextUpdates && nextUpdates.uploadAsGroup !== undefined) {
-        storage.set('uploadAsGroup', String(nextState.uploadAsGroup));
-      }
-      
-      return nextState;
-    });
-  },
-});
+export const setLightboxIndex = (index: number) => {
+  lightboxCurrentIndex.value = index;
+};
 
-export function useUIStore<T = UIStoreState>(selector?: (state: UIStoreState) => T): T {
-  return useStore(uiStore, selector);
-}
+export const clearLightboxData = () => {
+  batch(() => {
+    lightboxSlides.value = [];
+    lightboxCurrentIndex.value = 0;
+  });
+};
 
-export const useAppLang = () => useStore(uiStore, (s: UIStoreState) => s.appLang) as 'zh' | 'en' | 'ms';
-export const useDescLang = () => useStore(uiStore, (s: UIStoreState) => s.descLang) as 'zh' | 'en' | 'ms';
+export const setFatalError = (error: Error | null) => {
+  fatalError.value = error;
+};
 
-// ============ UI 狀態 Signal (Derived from uiStore) ============
-export const appLangSignal = signal<UIStoreState, 'appLang'>(uiStore, 'appLang');
-export const descLangSignal = signal<UIStoreState, 'descLang'>(uiStore, 'descLang');
+export const uiState = computed<UIStoreState>(() => ({
+  appLang: appLang.value,
+  descLang: descLang.value,
+  groupSettingsOpen: groupSettingsOpen.value,
+  uploadAsGroup: uploadAsGroup.value,
+  formState: formState.value,
+  showPassPrompt: showPassPrompt.value,
+  isPhotoPickerOpen: isPhotoPickerOpen.value,
+  photoPickerGroupId: photoPickerGroupId.value,
+  isInitialDataLoading: isInitialDataLoading.value,
+  focusedGroupPhotoId: focusedGroupPhotoId.value,
+  showWhatsAppChoice: showWhatsAppChoice.value,
+  uploadModeDialogOpen: uploadModeDialogOpen.value,
+  isTaskDrawerOpen: isTaskDrawerOpen.value,
+  isSidebarOpen: isSidebarOpen.value,
+  pendingPhotoId: pendingPhotoId.value,
+  pendingFiles: pendingFiles.value,
+  activeDialogCount: activeDialogCount.value,
+  fatalError: fatalError.value,
+  totalCount: totalCount.value,
+  lightboxSlides: lightboxSlides.value,
+  lightboxCurrentIndex: lightboxCurrentIndex.value,
+  patch,
+  updateForm,
+  resetForm,
+  incrementDialogCount,
+  decrementDialogCount,
+  setLightboxData,
+  setLightboxIndex,
+  clearLightboxData,
+  setFatalError,
+}));
 
 // Sync language to DOM
-if (typeof document !== 'undefined') {
-  const syncLang = (lang: string) => {
+appLang.subscribe((lang) => {
+  if (typeof document !== 'undefined') {
     document.documentElement.dataset.lang = lang;
-  };
-  appLangSignal.subscribe(syncLang);
-  syncLang(appLangSignal.get());
-}
-
-// 燈箱狀態
-export const lightboxSlides = signal<UIStoreState, 'lightboxSlides'>(uiStore, 'lightboxSlides');
-export const lightboxCurrentIndex = signal<UIStoreState, 'lightboxCurrentIndex'>(uiStore, 'lightboxCurrentIndex');
-
-// 搜尋與選取
-// (Selection moved to selectionService)
-
-// UI 狀態開關
-const isSidebarOpen = signal<UIStoreState, 'isSidebarOpen'>(uiStore, 'isSidebarOpen');
-export const isTaskDrawerOpen = signal<UIStoreState, 'isTaskDrawerOpen'>(uiStore, 'isTaskDrawerOpen');
+  }
+});

@@ -43,7 +43,7 @@ export function AdminHeaderActions({
       </button>
 
       <button
-        onClick={() => isTaskDrawerOpenSignal.set(true)}
+        onClick={() => { isTaskDrawerOpenSignal.value = true; }}
         className={cn("w-9 h-9 sm:w-10 sm:h-10 relative shrink-0", theme.button)}
         title={t.taskCenter}
       >

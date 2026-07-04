@@ -1,5 +1,4 @@
-import { createStore } from '@storve/core';
-import { signal } from '@storve/core/signals';
+import { signal } from '@preact/signals-react';
 import type { PhotoListItem } from '#src/types/api.js';
 
 interface PhotoWallState {
@@ -7,7 +6,16 @@ interface PhotoWallState {
   onPhotoClick: ((photo: PhotoListItem) => void) | null;
 }
 
-export const photoWallStore = createStore<PhotoWallState>({
-  mode: 'public',
-  onPhotoClick: null,
-});
+const modeSignal = signal<'admin' | 'public'>('public');
+const onPhotoClickSignal = signal<((photo: PhotoListItem) => void) | null>(null);
+
+export const photoWallStore = {
+  getState: () => ({
+    mode: modeSignal.value,
+    onPhotoClick: onPhotoClickSignal.value,
+  }),
+  setState: (updates: Partial<PhotoWallState>) => {
+    if (updates.mode !== undefined) modeSignal.value = updates.mode;
+    if (updates.onPhotoClick !== undefined) onPhotoClickSignal.value = updates.onPhotoClick;
+  }
+};

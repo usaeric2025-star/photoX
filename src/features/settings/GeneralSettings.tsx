@@ -2,7 +2,6 @@ import React from 'react';
 import { AppNameSection } from './AppNameSection.js';
 import { LogoSection } from './LogoSection.js';
 import { WhatsAppSection } from './WhatsAppSection.js';
-import { SocialLinksSection } from './SocialLinksSection.js';
 import { AppSettings, Category, Tag, Manufacturer, Photo } from '#src/types/index.js';
 
 interface GeneralSettingsProps {
@@ -49,12 +48,6 @@ export function GeneralSettings({
         inputClass={inputClass}
       />
       <WhatsAppSection 
-        settings={settings}
-        setSettingField={setSettingField}
-        cardClass={cardClass}
-        inputClass={inputClass}
-      />
-      <SocialLinksSection 
         settings={settings}
         setSettingField={setSettingField}
         cardClass={cardClass}

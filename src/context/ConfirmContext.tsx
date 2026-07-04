@@ -1,7 +1,7 @@
 import React from 'react';
 import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
-import { createStore } from '@storve/core';
-import { useStore, useUI } from '#lib/store/index.js';
+import { signal } from '@preact/signals-react';
+import { useUI } from '#lib/store/index.js';
 import { translations } from '#src/locales/index.js';
 
 interface ConfirmOptions {
@@ -16,11 +16,18 @@ interface ConfirmState extends ConfirmOptions {
   resolve?: (value: boolean) => void;
 }
 
-const confirmStore = createStore<ConfirmState>({
+const confirmStateSignal = signal<ConfirmState>({
   open: false,
   title: '',
   description: '',
 });
+
+const confirmStore = {
+  getState: () => confirmStateSignal.value,
+  setState: (updates: Partial<ConfirmState>) => {
+    confirmStateSignal.value = { ...confirmStateSignal.value, ...updates };
+  }
+};
 
 const confirmDialog = (options: ConfirmOptions): Promise<boolean> => {
   return new Promise<boolean>((resolve) => {
@@ -37,18 +44,18 @@ export function useConfirm() {
 }
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
-  const state = useStore(confirmStore);
+  const state = confirmStateSignal.value;
   const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const handleConfirm = () => {
     state.resolve?.(true);
-    confirmStore.setState({ ...state, open: false, resolve: undefined });
+    confirmStore.setState({ open: false, resolve: undefined });
   };
 
   const handleCancel = () => {
     state.resolve?.(false);
-    confirmStore.setState({ ...state, open: false, resolve: undefined });
+    confirmStore.setState({ open: false, resolve: undefined });
   };
 
   return (

@@ -1,6 +1,4 @@
-import { createStore } from '@storve/core';
-import { signal } from '@storve/core/signals';
-import { useStore } from '@storve/react';
+import { signal, computed } from '@preact/signals-react';
 import { logger } from '#lib/logger.js';
 import { User } from '#src/types/index.js';
 import { supabase } from '#lib/supabase.js';
@@ -18,13 +16,27 @@ export interface AuthState {
   signOut: () => Promise<void>;
 }
 
-export const authStore = createStore<AuthState>({
-  user: null,
-  isLoading: true,
-  setUser: (user) => {
-    authStore.setState({ user, isLoading: false });
+export const userSignal = signal<User | null>(null);
+export const authLoadingSignal = signal<boolean>(true);
+
+export const authStore = {
+  getState: () => ({
+    user: userSignal.value,
+    isLoading: authLoadingSignal.value,
+  }),
+  setState: (updates: Partial<{ user: User | null; isLoading: boolean }>) => {
+    if (updates.user !== undefined) userSignal.value = updates.user;
+    if (updates.isLoading !== undefined) authLoadingSignal.value = updates.isLoading;
   },
-  setLoading: (loading) => authStore.setState({ isLoading: loading }),
+  user: userSignal.value,
+  isLoading: authLoadingSignal.value,
+  setUser: (user: User | null) => {
+    userSignal.value = user;
+    authLoadingSignal.value = false;
+  },
+  setLoading: (loading: boolean) => {
+    authLoadingSignal.value = loading;
+  },
   
   init: async () => {
     await safeAsync(async () => {
@@ -54,13 +66,15 @@ export const authStore = createStore<AuthState>({
           avatarUrl: (u.user_metadata?.avatar_url as string) || null,
           emailVerified: !!u.email_confirmed_at,
         };
-        authStore.setState({ user: mapped, isLoading: false });
+        userSignal.value = mapped;
+        authLoadingSignal.value = false;
       } else {
-        authStore.setState({ user: null, isLoading: false });
+        userSignal.value = null;
+        authLoadingSignal.value = false;
       }
     }, { 
         context: 'auth-init', 
-        onFinally: () => authStore.setState({ isLoading: false }) 
+        onFinally: () => { authLoadingSignal.value = false; } 
     });
   },
   
@@ -76,21 +90,27 @@ export const authStore = createStore<AuthState>({
   signOut: async () => {
     await safeAsync(async () => {
       await supabase.auth.signOut();
-      authStore.setState({ user: null });
+      userSignal.value = null;
       if (typeof window !== 'undefined') {
         storage.remove('ais_mock_auth_passcode');
         window.location.reload();
       }
     }, { context: 'auth-signout' });
   },
-});
+};
 
 export function useAuthStore<T = AuthState>(selector?: (state: AuthState) => T): T {
-  return useStore(authStore, selector);
+  const state: AuthState = {
+    user: userSignal.value,
+    isLoading: authLoadingSignal.value,
+    setUser: authStore.setUser,
+    setLoading: authStore.setLoading,
+    init: authStore.init,
+    signIn: authStore.signIn,
+    signOut: authStore.signOut,
+  };
+  return selector ? selector(state) : state as any;
 }
-
-export const userSignal = signal(authStore, 'user');
-export const authLoadingSignal = signal(authStore, 'isLoading');
 
 // 全局监听（只初始化一次）
 let authListenerInitialized = false;
@@ -110,9 +130,11 @@ export const initAuthListener = () => {
         avatarUrl: (u.user_metadata?.avatar_url as string) || null,
         emailVerified: !!u.email_confirmed_at,
       };
-      authStore.setState({ user: mapped, isLoading: false });
+      userSignal.value = mapped;
+      authLoadingSignal.value = false;
     } else {
-      authStore.setState({ user: null, isLoading: false });
+      userSignal.value = null;
+      authLoadingSignal.value = false;
     }
   });
   

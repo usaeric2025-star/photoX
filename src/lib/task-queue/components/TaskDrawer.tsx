@@ -108,7 +108,7 @@ export function TaskDrawer() {
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        isTaskDrawerOpen.set(false);
+        isTaskDrawerOpen.value = false;
       }
     };
 
@@ -129,7 +129,7 @@ export function TaskDrawer() {
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            isTaskDrawerOpen.set(false);
+            isTaskDrawerOpen.value = false;
           }}
         />
       )}
@@ -158,7 +158,7 @@ export function TaskDrawer() {
             )}
             <button 
               type="button"
-              onClick={() => isTaskDrawerOpen.set(false)}
+              onClick={() => isTaskDrawerOpen.value = false}
               className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
               aria-label="關閉"
             >

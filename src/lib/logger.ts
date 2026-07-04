@@ -1,9 +1,10 @@
-const isDev = typeof process !== 'undefined' 
-  ? process.env.NODE_ENV !== 'production' 
-  : (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
-const isTest = typeof process !== 'undefined'
-  ? process.env.NODE_ENV === 'test'
-  : (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test');
+const isBrowser = typeof window !== 'undefined';
+const isDev = isBrowser 
+  ? (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.DEV || import.meta.env.MODE !== 'production'))
+  : (typeof globalThis !== 'undefined' && (globalThis as any)['process']?.['env']?.NODE_ENV !== 'production');
+const isTest = isBrowser
+  ? (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test')
+  : (typeof globalThis !== 'undefined' && (globalThis as any)['process']?.['env']?.NODE_ENV === 'test');
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 

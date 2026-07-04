@@ -4,7 +4,7 @@ import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
 import { logger } from '#lib/logger.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSelectedIds } from '#src/hooks/index.js';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 
 export function useAdminBatchActions() {

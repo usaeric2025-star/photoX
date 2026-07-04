@@ -48,7 +48,7 @@ export function AdminContainer() {
   const handleScrollToTop = () => {
     scrollContainerRef.current?.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'auto'
     });
   };
   

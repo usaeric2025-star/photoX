@@ -2,7 +2,7 @@ import { usePhotoEditSessionContext } from "#src/hooks/photo/index.js";
 import React from "react";
 import { Icon } from '#src/components/ui/Icon.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
-import { PhotoEditFormData } from "#src/schemas/photoEdit.js";
+import { type PhotoEditFormData } from "#lib/valibot/schemas/photo.js";
 import {
   usePhoto,
   useRemoveFromGroupMutation,

@@ -182,7 +182,7 @@ class TaskScheduler {
     if (found) return found;
     
     // 再查執行中
-    const tasks = tasksSignal.get();
+    const tasks = tasksSignal.value;
     return tasks.get(id);
   }
 }

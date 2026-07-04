@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { usePhotos } from '#lib/query/hooks/usePhotos.js';
+import { usePhotos } from './usePhotos.js';
 
 export function usePhotoWall(filters?: Record<string, unknown>) {
   // ✅ 使用 useMemo 稳定 filters 引用

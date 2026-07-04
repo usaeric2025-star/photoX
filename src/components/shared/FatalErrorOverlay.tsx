@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { useUI } from '#lib/store/index.js';
+import { fatalError } from '#lib/store/index.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
 import { isAppError, AppError } from '#shared/AppError.js';
 
 export const FatalErrorOverlay = () => {
-  const fatalError = useUI((s) => s.fatalError);
+  const error = fatalError.value;
   const { copy, copied } = useCopyToClipboard({ 
     successMessage: '诊断信息已复制到剪贴板',
     showToast: false // Toast feedback is often hidden behind native dialogs
@@ -12,36 +12,36 @@ export const FatalErrorOverlay = () => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (fatalError) {
+    if (error) {
       dialogRef.current?.showModal();
     } else {
       dialogRef.current?.close();
     }
-  }, [fatalError]);
+  }, [error]);
 
-  if (!fatalError) return null;
+  if (!error) return null;
 
   const handleCopy = () => {
     const timestamp = new Date().toISOString();
-    const errorType = fatalError.name || 'FatalError';
+    const errorType = error.name || 'FatalError';
     
     let errorCode = 'FATAL';
     let traceId = 'N/A';
 
-    if (isAppError(fatalError)) {
-        errorCode = String(fatalError.code);
-        traceId = fatalError.traceId;
-    } else if ('code' in fatalError) {
-        errorCode = String((fatalError as { code?: string | number }).code);
-    } else if ('status' in fatalError) {
-        errorCode = String((fatalError as { status?: string | number }).status);
+    if (isAppError(error)) {
+        errorCode = String(error.code);
+        traceId = error.traceId;
+    } else if ('code' in error) {
+        errorCode = String((error as { code?: string | number }).code);
+    } else if ('status' in error) {
+        errorCode = String((error as { status?: string | number }).status);
     }
 
-    if (!isAppError(fatalError) && 'traceId' in fatalError) {
-        traceId = String((fatalError as { traceId?: string }).traceId);
+    if (!isAppError(error) && 'traceId' in error) {
+        traceId = String((error as { traceId?: string }).traceId);
     }
 
-    const message = fatalError.message || '未知内部错误';
+    const message = error.message || '未知内部错误';
     
     const diagnosticInfo = [
       `--- 核心系统诊断 ---`,
@@ -56,14 +56,14 @@ export const FatalErrorOverlay = () => {
   };
 
   const getDisplayCode = () => {
-      if (isAppError(fatalError)) return fatalError.code;
-      if ('code' in fatalError) return (fatalError as { code?: string | number }).code;
+      if (isAppError(error)) return error.code;
+      if ('code' in error) return (error as { code?: string | number }).code;
       return 'FATAL';
   };
 
   const getDisplayTrace = () => {
-      if (isAppError(fatalError)) return fatalError.traceId;
-      if ('traceId' in fatalError) return (fatalError as { traceId?: string }).traceId;
+      if (isAppError(error)) return error.traceId;
+      if ('traceId' in error) return (error as { traceId?: string }).traceId;
       return 'N/A';
   };
 
@@ -80,7 +80,7 @@ export const FatalErrorOverlay = () => {
           </div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">系统核心组件故障</h2>
           <p className="text-slate-500 text-sm leading-relaxed">
-            {fatalError.message || '系统底层发生了未预期的严重异常，可能影响数据一致性。'}
+            {error.message || '系统底层发生了未预期的严重异常，可能影响数据一致性。'}
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export const FatalErrorOverlay = () => {
             <span className="text-[10px] p-1 bg-white rounded border border-slate-200 text-slate-400 font-mono">CODE: {getDisplayCode()}</span>
           </div>
           <p className="text-xs font-mono text-slate-600 break-all">
-            {fatalError.message || 'Internal System Failure'}
+            {error.message || 'Internal System Failure'}
           </p>
         </div>
 

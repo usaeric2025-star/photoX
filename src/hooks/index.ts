@@ -13,6 +13,7 @@ export * from './selection/index.js';
 
 // Utils
 export * from './ui/useFilters.js';
+export * from './ui/useLightboxInteractions.js';
 export { useUI } from '#lib/store/index.js';
 export type { UIStoreState } from '#lib/store/index.js';
 export { useSearchTransition } from './ui/useSearchTransition.js';

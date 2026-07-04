@@ -25,8 +25,6 @@ adminSettings.get("/get", async (c) => {
         whatsapp_2: settingsRes.whatsapp2 || '',
         whatsapp_1_name: settingsRes.whatsapp1Name || '',
         whatsapp_2_name: settingsRes.whatsapp2Name || '',
-        facebook: '',
-        instagram: '',
         app_name: secretsMap['site_name'] || 'PhotoX',
         agnes_api_key: secretsMap['agnes'] || '',
         openrouter_api_key: secretsMap['openrouter'] || ''

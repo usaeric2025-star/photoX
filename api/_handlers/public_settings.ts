@@ -8,8 +8,8 @@ import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
 export const publicSettings = new Hono();
 
-export let settingsCache: any = null;
-export let settingsCacheTime = 0;
+let settingsCache: any = null;
+let settingsCacheTime = 0;
 
 export function clearSettingsCache() {
     logger.info('[Settings Cache] Cleared public settings cache');
@@ -67,8 +67,6 @@ const handler = async (c: any) => {
             whatsapp2: settingsRes?.whatsapp2 || '601130308865',
             whatsapp1Name: settingsRes?.whatsapp1Name || 'Auntie Shery',
             whatsapp2Name: settingsRes?.whatsapp2Name || 'Company',
-            facebook: '',
-            instagram: '',
             manufacturers: [], 
             tags: [],
             passcodeEnabled,
