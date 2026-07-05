@@ -59,6 +59,7 @@ export function RouterOrchestrator() {
             
             <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
             
+            <Route path="/admin" component={AdminPage} />
             <Route path="/admin/:subpath*" component={AdminPage} />
             
             <Route path="/settings" component={AdminPage} />
