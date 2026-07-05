@@ -3,17 +3,12 @@ import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
 import { Photo } from '#src/types/photo.js';
 import { useLightboxInteractions } from '#src/hooks/ui/useLightboxInteractions.js';
-import { useUI } from '#lib/store/index.js';
-import { setLightboxIndex, clearLightboxData } from '#lib/store/index.js';
+import { useLightbox } from '#lib/lightbox/index.js';
 
 export function LightboxStage() {
-  const { lightboxSlides, lightboxCurrentIndex } = useUI(s => ({
-    lightboxSlides: s.lightboxSlides,
-    lightboxCurrentIndex: s.lightboxCurrentIndex
-  }));
+  const { slides: lightboxSlides, currentIndex: lightboxCurrentIndex, next, prev, clearLightboxData } = useLightbox();
   
   const currentPhoto = lightboxSlides[lightboxCurrentIndex];
-  const totalPhotos = lightboxSlides.length;
 
   const {
     isZoomed,
@@ -23,8 +18,8 @@ export function LightboxStage() {
     handleToggleZoom,
   } = useLightboxInteractions({
     currentIndex: lightboxCurrentIndex,
-    onNext: () => setLightboxIndex((lightboxCurrentIndex + 1) % totalPhotos),
-    onPrev: () => setLightboxIndex((lightboxCurrentIndex - 1 + totalPhotos) % totalPhotos),
+    onNext: next,
+    onPrev: prev,
     minSwipeDistance: 50,
   });
 

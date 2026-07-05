@@ -21,8 +21,8 @@ export function AdminHeaderMenu({ user, signOut, navigate, isStaff, theme, t, la
     <NativePopover
       align="end"
       trigger={
-        <div className={cn("h-9 w-9 sm:h-10 sm:w-10", theme.popoverTrigger)}>
-          <Icon name="menu" size={16} className="sm:size-[18px]" />
+        <div className={cn("h-9 w-9", theme.popoverTrigger)}>
+          <Icon name="menu" size={18} />
         </div>
       }
     >

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, groups as groupsTable, furnitureItems } from '../_lib/db/index.js';
-import { eq, and, inArray, isNull, sql } from 'drizzle-orm';
+import { eq, and, or, inArray, isNull, sql } from 'drizzle-orm';
 import { GroupReqSchema } from '../../shared/apiContractSchema.js';
 import { errorResponse, successResponse } from '../_lib/response.js';
 import { syncGroupCoversAndCount } from '../_lib/groups.js';
@@ -33,7 +33,7 @@ export const groups = new Hono()
     const insertData = {
         ...groupData,
         name: "GROUP",
-        status: (groupData.status as "draft" | "active" | "rejected") || 'active',
+        status: (groupData.status as "active" | "confirmed" | "rejected") || 'active',
         userId: inputUserId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -93,7 +93,7 @@ export const groups = new Hono()
 
     // Ensure status gets a fallback
     if (!cleanUpdates.status) {
-        cleanUpdates.status = 'confirmed';
+        cleanUpdates.status = 'active';
     }
 
     // Ensure userId gets a fallback
@@ -367,10 +367,10 @@ export const groups = new Hono()
         // Ignore if already nullable
     }
 
-    // 2. Set all confirmed to active
+    // 2. Set all draft/confirmed to active
     await db.update(groupsTable)
         .set({ status: 'active' })
-        .where(eq(groupsTable.status, 'confirmed'));
+        .where(or(eq(groupsTable.status, 'confirmed'), eq(groupsTable.status, 'draft')));
 
     // 3. Optimize: Find groups with <= 1 photo using a single query
     const groupStats = await db.select({

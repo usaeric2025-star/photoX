@@ -74,7 +74,7 @@ export const descLang = signal<'zh' | 'en' | 'ms'>(
 
 export const groupSettingsOpen = signal<boolean>(storage.get<string>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, 'false') === 'true');
 export const uploadAsGroup = signal<boolean>(storage.get<string>('uploadAsGroup', 'false') === 'true');
-export const formState = signal<ProductFormData>(storage.get(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm));
+export const formState = signal<ProductFormData>(storage.get(STORAGE_KEYS.EDIT_FORM_CACHE, defaultForm));
 export const showPassPrompt = signal<boolean>(false);
 export const isPhotoPickerOpen = signal<boolean>(false);
 export const photoPickerGroupId = signal<string | null>(null);
@@ -121,12 +121,12 @@ export const patch = (updates: Partial<Omit<UIStoreState, 'patch' | 'updateForm'
 export const updateForm = (updates: Partial<ProductFormData> | ((prev: ProductFormData) => Partial<ProductFormData>)) => {
   const nextFormState = typeof updates === 'function' ? updates(formState.value) : { ...formState.value, ...updates };
   if (nextFormState.name === undefined) nextFormState.name = '';
-  storage.set(STORAGE_KEYS.EDIT_FORM_DRAFT, nextFormState);
+  storage.set(STORAGE_KEYS.EDIT_FORM_CACHE, nextFormState);
   formState.value = nextFormState as ProductFormData;
 };
 
 export const resetForm = () => {
-  storage.remove(STORAGE_KEYS.EDIT_FORM_DRAFT);
+  storage.remove(STORAGE_KEYS.EDIT_FORM_CACHE);
   formState.value = defaultForm;
 };
 

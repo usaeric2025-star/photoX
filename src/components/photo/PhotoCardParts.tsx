@@ -81,11 +81,15 @@ export const PhotoCardInfo = ({
  */
 export const PhotoSelectionIndicator = ({ isSelected }: { isSelected: boolean }) => (
   <div className={cn(
-    "absolute top-2 right-2 w-6 h-6 rounded-full border-2 transition-none flex items-center justify-center shadow-sm",
+    "absolute top-2 right-2 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center shadow-lg",
     isSelected 
-      ? "bg-primary border-primary scale-110 shadow-md" 
-      : "hidden"
+      ? "bg-primary border-primary scale-110" 
+      : "bg-white/80 border-white/50 scale-100"
   )}>
-    {isSelected && <Icon name="check" size={14} className="text-white" />}
+    {isSelected ? (
+      <Icon name="check" size={14} className="text-white stroke-[3]" />
+    ) : (
+      <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+    )}
   </div>
 );

@@ -202,7 +202,7 @@ export const GroupReqSchema = v.object({
     id: v.string(),
     name: v.optional(v.string()),
     coverPhotoId: v.optional(v.string()),
-    status: v.optional(v.union([v.literal('draft'), v.literal('confirmed')]))
+    status: v.optional(v.union([v.literal('active'), v.literal('confirmed')]))
 });
 
 const TranslationSchema = v.object({

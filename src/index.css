@@ -152,19 +152,19 @@
 
   /* --- Photo Card Status Badges --- */
   .badge-base {
-    @apply px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none;
+    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none;
   }
 
   .badge-hidden {
-    @apply px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-danger/95 text-text-on-primary;
+    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-red-500/90 text-white backdrop-blur-sm;
   }
 
   .badge-cover {
-    @apply px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-amber-500/95 text-white;
+    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-amber-500/90 text-white backdrop-blur-sm;
   }
 
   .badge-group {
-    @apply px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-surface-overlay text-text-main border-white/40 transition-all duration-300 min-w-[32px] sm:min-w-[36px] justify-center;
+    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-white/90 text-slate-900 border-white/40 transition-all duration-300 min-w-[32px] sm:min-w-[36px] justify-center backdrop-blur-sm;
   }
 
   /* --- Global Scaffolding --- */

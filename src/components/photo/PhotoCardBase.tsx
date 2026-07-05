@@ -54,18 +54,18 @@ export const PhotoCardBase = ({
         ...props.style
       }}
       className={cn(
-        "aspect-square overflow-hidden cursor-pointer relative group rounded-[4px] bg-surface-base",
-        "transition-[background-color,ring] duration-300",
-        "active:brightness-95",
-        isHidden && "opacity-80 grayscale-[0.3] ring-1 ring-danger inset-ring-1 inset-ring-danger",
-        isSelected && "ring-2 ring-primary bg-primary/10 z-10",
+        "aspect-square overflow-hidden cursor-pointer relative group rounded-xl bg-slate-50 border border-slate-100",
+        "transition-all duration-300 hover:shadow-md hover:border-slate-200 hover:-translate-y-0.5",
+        "active:scale-[0.98]",
+        isHidden && "opacity-80 grayscale-[0.3] ring-1 ring-danger",
+        isSelected && "ring-2 ring-primary bg-primary/10 z-10 shadow-lg",
         className
       )}
       {...props}
     >
       <div className={cn(
-        "relative aspect-square w-full h-full overflow-hidden transition-all duration-700 ease-in-out bg-surface-mute flex items-center justify-center",
-        isSelected ? "scale-[0.92] rounded-md" : "scale-100 rounded-[2px]",
+        "relative aspect-square w-full h-full overflow-hidden transition-all duration-700 ease-in-out bg-slate-200 flex items-center justify-center",
+        isSelected ? "scale-[0.92] rounded-lg" : "scale-100",
       )}>
         <Image
           src={getPhotoThumb(

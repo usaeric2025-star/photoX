@@ -24,10 +24,15 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
       const container = thumbnailContainerRef.current;
       const activeThumb = container.children[currentIndex] as HTMLElement | undefined;
       if (activeThumb) {
-        const containerCenter = container.clientWidth / 2;
-        const thumbCenter = activeThumb.offsetLeft + (activeThumb.clientWidth / 2);
+        const containerWidth = container.clientWidth;
+        const thumbWidth = activeThumb.clientWidth;
+        const thumbLeft = activeThumb.offsetLeft;
+        
+        // Target scroll left puts the thumb in the middle of the container
+        const targetScrollLeft = thumbLeft - (containerWidth / 2) + (thumbWidth / 2);
+        
         container.scrollTo({
-          left: thumbCenter - containerCenter,
+          left: targetScrollLeft,
           behavior: 'smooth'
         });
       }
@@ -40,7 +45,7 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
     <div className="h-[84px] bg-black/95 border-t border-white/5 flex items-center justify-center z-[130] shrink-0">
       <div 
         ref={thumbnailContainerRef} 
-        className="relative flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full px-4 py-2 scroll-smooth"
+        className="relative flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full px-4 py-2"
       >
         {photos.map((p, idx) => {
           const photoData = ('original' in p ? p.original : p) as Photo;

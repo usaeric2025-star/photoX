@@ -59,7 +59,7 @@ export interface Photo {
       color: string | null;
       coverPhotoId: string | null;
       memberCount?: number; // Calculated, not persisted
-      status?: 'draft' | 'confirmed' | 'rejected';
+      status?: 'confirmed' | 'rejected' | 'active';
   } | null;
   categoryName: string;
   manufacturerName: string;
@@ -113,7 +113,7 @@ export interface ProductGroup {
   userId: string;
   createdAt: string;
   updatedAt: string;
-  status?: 'draft' | 'confirmed' | 'rejected';
+  status?: 'confirmed' | 'rejected' | 'active';
   metadata?: Record<string, unknown>;
 }
 

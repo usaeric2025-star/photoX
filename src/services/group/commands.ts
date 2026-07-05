@@ -122,7 +122,7 @@ export const groupPhotos = async (
     id: targetGroupId,
     name: finalName,
     description: metadata?.description ? (typeof metadata.description === 'object' ? JSON.stringify(metadata.description) : metadata.description) : null,
-    status: 'active' as 'active' | 'draft',
+    status: 'active' as 'active' | 'confirmed',
   };
 
   const groupPhotosRes = await api.groups['group-photos'].$post({

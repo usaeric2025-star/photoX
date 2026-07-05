@@ -28,28 +28,28 @@ export function AdminHeaderActions({
     <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0">
       <button
         onClick={toggleMode}
-        className={cn("w-9 h-9 sm:w-10 sm:h-10", multiSelect ? theme.buttonActive : theme.button)}
+        className={cn("w-9 h-9", multiSelect ? theme.buttonActive : theme.button)}
         title={multiSelect ? t('exitSelectMode') : t('selectModeToggle')}
       >
-        <Icon name="check-square" className="size-4 sm:size-4.5" />
+        <Icon name="check-square" size={18} />
       </button>
 
       <button
         onClick={() => batchAiIdentify()}
-        className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
+        className={cn("w-9 h-9", theme.button)}
         title={t('aiSmartIdentify')}
       >
-        <Icon name="sparkles" className="size-4 sm:size-4.5 animate-pulse" />
+        <Icon name="sparkles" size={18} className="animate-pulse" />
       </button>
 
       <button
         onClick={() => { isTaskDrawerOpenSignal.value = true; }}
-        className={cn("w-9 h-9 sm:w-10 sm:h-10 relative shrink-0", theme.button)}
+        className={cn("w-9 h-9 relative shrink-0", theme.button)}
         title={t('taskCenter')}
       >
-        <Icon name="activity" className="size-4 sm:size-4.5" />
+        <Icon name="activity" size={18} />
         {taskCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] w-auto px-1 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-slate-950 animate-in zoom-in duration-300">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] w-auto px-1 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-white animate-in zoom-in duration-300">
             {taskCount > 99 ? '99+' : taskCount}
           </span>
         )}
@@ -57,10 +57,10 @@ export function AdminHeaderActions({
 
       <button
         onClick={handleAuthAction}
-        className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
+        className={cn("w-9 h-9", theme.button)}
         title={t('viewModePublic')}
       >
-        <Icon name="layout-dashboard" className="size-4 sm:size-4.5" />
+        <Icon name="layout-dashboard" size={18} />
       </button>
     </div>
   );

@@ -62,7 +62,7 @@ export function AISecuritySection({
     agnes_model: '' 
   });
   
-  // Local draft states to prevent rapid re-renders from parent/query invalidation
+  // Local temporary states to prevent rapid re-renders from parent/query invalidation
   const [localOpenRouterKey, setLocalOpenRouterKey] = React.useState('');
   const [localAgnesKey, setLocalAgnesKey] = React.useState(initialAgnesKey || '');
 

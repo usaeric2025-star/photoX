@@ -31,6 +31,8 @@ const SettingsPage = lazy(() => import('#src/features/settings/SettingsPage.js')
 
 import { ScreenWrapper } from '#src/components/admin/ScreenWrapper.js';
 
+import { AdminSidebar } from '#src/components/layout/sidebar/AdminSidebar.js';
+
 export function AdminPageContent() {
   const filters = useFilters({ enableStatus: true, enableBatch: true });
   const { user } = useAuth();
@@ -56,49 +58,54 @@ export function AdminPageContent() {
 
   return (
     <AdminAuthGate>
-      <div className="flex flex-col h-screen bg-slate-50 overflow-hidden w-full relative">
-        {/* Gallery is kept alive */}
-        <div className={isGallery ? 'flex-1 relative overflow-hidden order-0' : 'hidden'}>
-          <div key="admin-gallery" className="absolute inset-0 animate-fade-in translate-z-0">
-            <AdminContainer />
+      <div className="flex h-screen bg-slate-50 overflow-hidden w-full relative">
+        <AdminSidebar />
+        
+        <div className="flex-1 flex flex-col min-w-0 relative h-full">
+          {isGallery && (
+            <AdminHeader className="border-b bg-white shadow-none" />
+          )}
+
+          <div className="flex-1 relative overflow-hidden flex flex-col">
+            {/* Gallery is kept alive */}
+            <div className={isGallery ? 'flex-1 relative overflow-hidden flex flex-col' : 'hidden'}>
+              <FilterBar mode="admin" className="bg-white border-b shadow-none z-10" />
+              
+              <div key="admin-gallery" className="flex-1 relative animate-fade-in translate-z-0 overflow-hidden">
+                <AdminContainer />
+              </div>
+              
+              <div className="absolute bottom-8 right-8 z-[9999]">
+                <UploadButton 
+                  onAdd={() => patch({ uploadModeDialogOpen: true })}
+                />
+              </div>
+            </div>
+
+            {/* Other screens are lazy mounted */}
+            {!isGallery && (
+              <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0">
+                <ErrorBoundary><Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
+                  {currentScreen === 'batch' ? (
+                    <ScreenWrapper key="admin-batch" onClose={navigate.admin}>
+                      <BatchEditScreen />
+                    </ScreenWrapper>
+                  ) : currentScreen === 'diagnose' ? (
+                    <ScreenWrapper key="admin-diagnose" onClose={navigate.admin}>
+                      <DiagDashboard />
+                    </ScreenWrapper>
+                  ) : ['settings', 'tasks', 'error-logs'].includes(currentScreen) ? (
+                    <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
+                      <SettingsPage onClose={navigate.admin} />
+                    </div>
+                  ) : null}
+                </Suspense></ErrorBoundary>
+              </div>
+            )}
           </div>
-          
-          <div className="absolute bottom-8 right-8 z-[9999]">
-            <UploadButton 
-              onAdd={() => patch({ uploadModeDialogOpen: true })}
-            />
-          </div>
+
+          <SelectionToolbar />
         </div>
-
-        {/* Other screens are lazy mounted */}
-        {!isGallery && (
-          <div className="flex-1 relative overflow-hidden pb-16 sm:pb-0 order-0">
-            <ErrorBoundary><Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
-              {currentScreen === 'batch' ? (
-                <ScreenWrapper key="admin-batch" onClose={navigate.admin}>
-                  <BatchEditScreen />
-                </ScreenWrapper>
-              ) : currentScreen === 'diagnose' ? (
-                <ScreenWrapper key="admin-diagnose" onClose={navigate.admin}>
-                  <DiagDashboard />
-                </ScreenWrapper>
-              ) : ['settings', 'tasks', 'error-logs'].includes(currentScreen) ? (
-                <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
-                  <SettingsPage onClose={navigate.admin} />
-                </div>
-              ) : null}
-            </Suspense></ErrorBoundary>
-          </div>
-        )}
-
-        <SelectionToolbar />
-
-        {isGallery && (
-          <>
-            <FilterBar mode="admin" className="order-[-1]" />
-            <AdminHeader className="order-first" />
-          </>
-        )}
         
         <input 
           type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 

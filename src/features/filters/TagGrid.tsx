@@ -21,14 +21,14 @@ function TagButton({ tag, isSelected, isPinned, isHot, currentFilters, onClick }
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 cursor-pointer flex items-center gap-1 leading-none ${
+      className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all duration-300 cursor-pointer flex items-center gap-1 leading-none border ${
         isSelected
-          ? 'bg-primary text-text-on-primary shadow-sm scale-105'
+          ? 'bg-slate-900 text-white border-slate-900 shadow-sm scale-105'
           : isPinned
-          ? 'bg-warning/15 text-warning hover:bg-warning/25'
+          ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
           : isHot
-          ? 'bg-danger/5 text-danger hover:bg-danger/10'
-          : 'bg-surface-soft text-text-sub hover:text-text-main hover:bg-surface-mute shadow-sm'
+          ? 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'
+          : 'bg-white text-slate-500 border-slate-200 hover:text-slate-900 hover:bg-slate-50 shadow-sm'
       }`}
     >
       {isPinned && <span className="text-[10px]">📌</span>}

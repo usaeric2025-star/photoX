@@ -53,42 +53,42 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
   const theme = {
     public: {
-      bg: "bg-white border-slate-200 text-slate-800 shadow-[0_1px_10px_rgba(0,0,0,0.02)]",
-      logoColor: "bg-slate-800",
-      logoText: "text-slate-800 font-bold",
-      button: "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200/80 hover:text-slate-900 hover:border-slate-300 active:scale-95 transition-all outline-none rounded-full flex items-center justify-center border",
+      bg: "bg-white border-slate-200 text-slate-800",
+      logoColor: "bg-slate-900",
+      logoText: "text-slate-900 font-bold",
+      button: "bg-white hover:bg-slate-50 text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 transition-all outline-none rounded-lg flex items-center justify-center border shadow-sm",
       badge: "bg-slate-50 border-slate-200 text-slate-600",
       badgeLabel: "text-slate-500",
       badgeVal: "text-slate-900 font-bold",
-      popoverTrigger: "bg-slate-50 hover:bg-slate-100 border-slate-200/80 text-slate-600 hover:text-slate-900 border active:scale-95 transition-all outline-none rounded-full flex items-center justify-center"
+      popoverTrigger: "bg-white hover:bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 border transition-all outline-none rounded-lg flex items-center justify-center shadow-sm"
     }
   }['public'];
 
   return (
-    <header className={cn("h-14 sm:h-16 shrink-0 border-b px-2.5 sm:px-6 flex items-center justify-between transition-all duration-300 relative", theme.bg, className)}>
+    <header className={cn("h-14 shrink-0 border-b px-4 flex items-center justify-between transition-all duration-300 relative", theme.bg, className)}>
       {/* 左侧：Logo & 计数 */}
-      <div className="flex items-center gap-2 sm:gap-4 shrink-0 flex-nowrap z-10">
+      <div className="flex items-center gap-4 shrink-0 flex-nowrap z-10">
         {logoUrl && logoUrl.trim() !== '' ? (
           <img 
             src={logoUrl} 
-            className="h-8 sm:h-10 w-auto object-contain shrink-0 rounded-xl" 
+            className="h-8 w-auto object-contain shrink-0 rounded-lg" 
             alt="Logo" 
             loading="lazy"
           />
         ) : (
           <div className="flex items-center gap-1.5 px-1">
-            <div className={cn("w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-sm text-text-on-primary shrink-0", theme.logoColor)}>
-              <Icon name="camera" size={16} className="sm:size-[18px]" />
+            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shadow-sm text-white shrink-0", theme.logoColor)}>
+              <Icon name="camera" size={16} />
             </div>
-            <span className={cn("text-base sm:text-lg font-bold tracking-tight", theme.logoText)}>
+            <span className={cn("text-base font-bold tracking-tight", theme.logoText)}>
               PhotoX
             </span>
           </div>
         )}
 
         {totalCount !== undefined && (
-          <div className={cn("flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
-            <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{t('totalStock')}</span>
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
+            <span className={cn("uppercase tracking-wider text-[9px] shrink-0", theme.badgeLabel)}>{t('totalStock')}</span>
             <span className={cn("shrink-0", theme.badgeVal)}>
               {totalCount.toLocaleString()}
             </span>
@@ -97,16 +97,16 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
       </div>
 
       {/* 右侧：刷新 & 管理/登录入口 */}
-      <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0 z-10">
+      <div className="flex items-center gap-2 flex-nowrap shrink-0 z-10">
         
         {onRefresh && (
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
-            className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
+            className={cn("w-9 h-9", theme.button)}
             title={t('refresh')}
           >
-            {isRefreshing ? <LoadingSpinner size="xs" /> : <Icon name="refresh-cw" size={16} className="sm:size-[18px]" />}
+            {isRefreshing ? <LoadingSpinner size="xs" /> : <Icon name="refresh-cw" size={18} />}
           </button>
         )}
 
@@ -114,10 +114,10 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
         {(!user || isStaff) && (
           <button
             onClick={handleAuthAction}
-            className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
+            className={cn("w-9 h-9", theme.button)}
             title={isStaff ? (isAdminRoute ? t('viewModePublic') : t('viewModeAdmin')) : t('adminPanel')}
           >
-            <Icon name="layout-dashboard" size={16} className="sm:size-[18px]" />
+            <Icon name="layout-dashboard" size={18} />
           </button>
         )}
 
@@ -125,8 +125,8 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
         <NativePopover
           align="end"
           trigger={
-            <div className={cn("h-9 w-9 sm:h-10 sm:w-10", theme.popoverTrigger)}>
-              <Icon name="menu" size={16} className="sm:size-[18px]" />
+            <div className={cn("h-9 w-9", theme.popoverTrigger)}>
+              <Icon name="menu" size={18} />
             </div>
           }
         >

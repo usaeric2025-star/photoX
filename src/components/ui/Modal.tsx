@@ -139,14 +139,11 @@ export function Modal({
         {showCloseButton && (
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="absolute right-4 top-4 p-2 rounded-full text-text-sub hover:text-text-main hover:bg-surface-soft transition-all active:scale-95 z-10"
+            onClick={() => onClose()}
+            className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer z-[60]"
             aria-label="关闭"
           >
-            <Icon name="x-circle" size={26} solid className="opacity-25 hover:opacity-100 transition-opacity" />
+            <Icon name="x" size={20} className="opacity-60" />
           </button>
         )}
 

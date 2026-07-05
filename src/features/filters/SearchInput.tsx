@@ -38,7 +38,7 @@ export function SearchInput() {
         value={searchTerm}
         onChange={handleChange}
         placeholder={t('searchPlaceholder') || "正在搜索..."}
-        className="w-full pl-10 pr-10 h-10 bg-surface-soft border-none rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm placeholder:text-text-mute"
+        className="w-full pl-10 pr-10 h-10 bg-slate-100 border border-transparent rounded-lg focus:outline-none focus:bg-white focus:border-primary transition-all text-sm placeholder:text-slate-400"
       />
       {!!searchTerm && (
         <button 

@@ -29,10 +29,13 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     slides: hookSlides, 
     currentIndex: hookIndex, 
     close: hookClose,
-    setLightboxIndex
+    setLightboxIndex,
+    next: hookNext,
+    prev: hookPrev
   } = useLightbox();
   
-  const sourcePhotos = (props.photos && props.photos.length > 0) ? props.photos : hookSlides;
+  // Prioritize hookSlides (from store) if present, otherwise fallback to props
+  const sourcePhotos = (hookSlides && hookSlides.length > 0) ? hookSlides : (props.photos && props.photos.length > 0 ? props.photos : []);
   const currentIndex = props.initialIndex ?? hookIndex;
   const isOpen = props.isOpen ?? hookIsOpen;
   const onClose = props.onClose || hookClose;
@@ -112,31 +115,8 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     return finalSourcePhotos.map(normalizeSlide);
   }, [finalSourcePhotos, isOpen]) as (Photo | { original: Photo })[];
 
-  const handleNext = useCallback(() => {
-    if (effectivePhotos.length <= 1) return;
-    const nextIdx = (currentIndex + 1) % effectivePhotos.length;
-    setLightboxIndex(nextIdx);
-    
-    // Update URL if applicable
-    const photoItem = effectivePhotos[nextIdx];
-    const photoData = ('original' in photoItem ? photoItem.original : photoItem) as Photo;
-    if (photoData.id) {
-      setPhotoId(photoData.id);
-    }
-  }, [effectivePhotos, currentIndex, setLightboxIndex, setPhotoId]);
-
-  const handlePrev = useCallback(() => {
-    if (effectivePhotos.length <= 1) return;
-    const prevIdx = (currentIndex - 1 + effectivePhotos.length) % effectivePhotos.length;
-    setLightboxIndex(prevIdx);
-    
-    // Update URL if applicable
-    const photoItem = effectivePhotos[prevIdx];
-    const photoData = ('original' in photoItem ? photoItem.original : photoItem) as Photo;
-    if (photoData.id) {
-      setPhotoId(photoData.id);
-    }
-  }, [effectivePhotos, currentIndex, setLightboxIndex, setPhotoId]);
+  const handleNext = hookNext;
+  const handlePrev = hookPrev;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -163,6 +143,14 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   }, [baseActivePhoto]);
 
   const { data: activePhotoDetails } = usePhoto((isOpen && !isDeepLinkLoading && activeId) ? activeId : null);
+
+  const handleSelect = useCallback((idx: number) => {
+    setLightboxIndex(idx);
+    const photoItem = effectivePhotos[idx];
+    if (!photoItem) return;
+    const photoData = ('original' in photoItem ? photoItem.original : photoItem) as Photo;
+    if (photoData.id) setPhotoId(photoData.id);
+  }, [effectivePhotos, setLightboxIndex, setPhotoId]);
 
   if (!isOpen) return null;
   
@@ -233,12 +221,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
           photos={effectivePhotos}
           currentIndex={currentIndex}
           isOpen={isOpen}
-          onSelect={(idx) => {
-            setLightboxIndex(idx);
-            const photoItem = effectivePhotos[idx];
-            const photoData = ('original' in photoItem ? photoItem.original : photoItem) as Photo;
-            if (photoData.id) setPhotoId(photoData.id);
-          }}
+          onSelect={handleSelect}
         />
       </div>
     </div>

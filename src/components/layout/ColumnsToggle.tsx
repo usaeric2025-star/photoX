@@ -19,7 +19,7 @@ export function ColumnsToggle() {
     <button
       onClick={handleToggle}
       className={cn(
-        "relative h-10 w-10 rounded-full transition-all flex items-center justify-center cursor-pointer active:scale-90 border bg-surface-soft text-text-main border-border-soft hover:bg-surface-mute"
+        "relative h-10 w-10 rounded-lg transition-all flex items-center justify-center cursor-pointer active:scale-90 border bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
       )}
       title={`${t('toggleColumns')} (${t('currentCols')}${columns})`}
     >

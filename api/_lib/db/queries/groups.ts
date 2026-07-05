@@ -12,7 +12,7 @@ export async function getAllGroups(params: GroupListParams = {}) {
 
     if (!isAdminMode) {
         return await db.select().from(groupsTable)
-            .where(eq(groupsTable.status, 'confirmed'))
+            .where(eq(groupsTable.status, 'active'))
             .orderBy(asc(groupsTable.name));
     }
 

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { NativeDialog } from '#src/components/ui/NativeDialog.js';
-import { useUI, UIStoreState } from '#lib/store/index.js';
+import { Modal } from '#src/components/ui/Modal.js';
+import { useUI } from '#lib/store/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useTranslation, usePhoto } from '#src/hooks/index.js';
@@ -52,29 +52,43 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   }, [settings, pendingPhoto, t]);
 
   return (
-    <NativeDialog id="whatsapp-choice-dialog" open={open} onClose={() => onOpenChange(false)}>
-      <div className="w-full p-6">
-        <h3 className="font-bold text-lg mb-4 text-slate-800">{t('chooseInquiryMethod')}</h3>
+    <Modal 
+      id="whatsapp-choice-dialog" 
+      open={open} 
+      onClose={() => onOpenChange(false)}
+      title={t('chooseInquiryMethod') || "选择咨询方式"}
+    >
+      <div className="w-full">
         {options.length === 0 ? (
-          <p className="text-slate-500 text-sm">{t('noInquiryMethods')}</p>
+          <div className="py-4 text-center">
+            <p className="text-slate-500 text-sm">{t('noInquiryMethods') || "暂无可用咨询方式"}</p>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 pb-2">
             {options.map((opt, i) => (
               <a 
                 key={i}
                 href={opt.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => onOpenChange(false)}
-                className="w-full py-3 px-4 bg-emerald-600 text-white rounded-lg font-bold flex items-center justify-between shadow-sm hover:bg-emerald-700 transition-all"
+                onClick={() => {
+                  // Small delay to ensure browser starts navigation before component state changes
+                  setTimeout(() => onOpenChange(false), 50);
+                }}
+                className="w-full py-4 px-5 bg-emerald-500 text-white rounded-xl font-bold flex items-center justify-between shadow-sm hover:bg-emerald-600 active:scale-[0.98] transition-all"
               >
-                <span>{opt.name}</span>
-                <Icon name="whatsapp" size={18} />
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                    <Icon name="whatsapp" size={20} />
+                  </div>
+                  <span className="text-base">{opt.name}</span>
+                </div>
+                <Icon name="external-link" size={16} className="opacity-60" />
               </a>
             ))}
           </div>
         )}
       </div>
-    </NativeDialog>
+    </Modal>
   );
 };

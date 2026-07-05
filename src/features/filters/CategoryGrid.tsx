@@ -19,10 +19,10 @@ function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick
       id={`category-${cat.id ?? 'all'}`}
       onClick={onClick}
       className={`
-        px-2 py-2 rounded-xl text-[13px] font-semibold truncate transition-all duration-300 active:scale-95 cursor-pointer
+        px-2 py-2 rounded-lg text-[13px] font-bold truncate transition-all duration-300 active:scale-95 cursor-pointer border
         ${isSelected
-          ? 'bg-primary text-text-on-primary shadow-md'
-          : 'bg-surface-soft text-text-sub hover:text-text-main hover:bg-surface-mute'
+          ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+          : 'bg-slate-50 text-slate-500 border-slate-100 hover:text-slate-900 hover:bg-white hover:border-slate-200'
         }
       `}
     >

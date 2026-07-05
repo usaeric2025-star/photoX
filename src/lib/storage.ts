@@ -18,7 +18,7 @@ export const STORAGE_KEYS = {
   VIEW_MODE: 'viewMode',
   ACTIVE_SCREEN: 'activeScreen',
   SIDEBAR_COLLAPSED: 'isSidebarCollapsed',
-  EDIT_FORM_DRAFT: 'edit_form_draft',
+  EDIT_FORM_CACHE: 'edit_form_cache',
   SORT_ORDER: 'sortOrder',
   RECENTLY_VIEWED: 'recently_viewed',
   LAST_MAINTENANCE_RUN: 'last_maintenance_day',

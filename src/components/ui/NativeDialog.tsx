@@ -167,10 +167,10 @@ export function NativeDialog({
               e.stopPropagation();
               onClose();
             }}
-            className="absolute right-4 top-4 p-2 rounded-full text-text-sub hover:text-text-main hover:bg-surface-soft transition-all active:scale-95"
+            className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all active:scale-95"
             aria-label="关闭"
           >
-            <Icon name="x-circle" size={26} solid className="opacity-25 hover:opacity-100 transition-opacity" />
+            <Icon name="x" size={20} className="opacity-70 hover:opacity-100 transition-opacity" />
           </button>
         )}
 

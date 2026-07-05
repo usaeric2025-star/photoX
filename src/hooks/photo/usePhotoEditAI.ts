@@ -58,7 +58,7 @@ export function usePhotoEditAI() {
           onProgress(0.3, appLang === 'zh' ? '正在由 AI 智能识别各项属性 (约需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
           const resp = await analyzePhoto(editPhotoId);
           
-          onProgress(0.7, appLang === 'zh' ? '正在解析模型识别结果并写入草稿表單...' : 'Parsing AI attributes and injecting...');
+          onProgress(0.7, appLang === 'zh' ? '正在解析模型识别结果并写入表單...' : 'Parsing AI attributes and injecting...');
           
           if (!resp) {
             throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能识别', String(editPhotoId));

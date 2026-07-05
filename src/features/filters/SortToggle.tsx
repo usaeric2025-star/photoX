@@ -18,19 +18,19 @@ export function SortToggle() {
       type="button"
       onClick={handleClick}
       className={cn(
-        "h-10 px-3 flex items-center gap-2 rounded-full bg-surface-soft text-text-main border border-border-bold hover:bg-surface-mute transition-all active:scale-95 shrink-0 cursor-pointer",
-        !isNewest && "bg-primary/5 border-primary/30"
+        "h-10 px-3 flex items-center gap-2 rounded-lg bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all active:scale-95 shrink-0 cursor-pointer",
+        !isNewest && "bg-slate-50 border-slate-300 text-slate-900"
       )}
       title={isNewest ? '排序: 從新到舊' : '排序: 從舊到新'}
     >
       <Icon 
         name="arrow-up-down" 
         size={16} 
-        className={cn("transition-transform duration-300 text-text-sub", !isNewest && "rotate-180 text-primary")} 
+        className={cn("transition-transform duration-300", !isNewest && "rotate-180 text-primary")} 
       />
       <span className={cn(
-        "text-[13px] font-bold hidden sm:inline",
-        !isNewest ? "text-primary" : "text-text-main"
+        "text-[13px] font-medium hidden sm:inline",
+        !isNewest ? "text-slate-900" : "text-slate-600"
       )}>
         {isNewest ? '最新' : '最舊'}
       </span>

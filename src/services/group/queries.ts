@@ -14,7 +14,7 @@ const mapGroup = (item: Record<string, unknown>): ProductGroup => ({
   createdAt: (item.createdAt || item.created_at) as string,
   updatedAt: (item.updatedAt || item.updated_at) as string,
   userId: (item.userId || item.user_id) as string,
-  status: item.status as 'draft' | 'confirmed',
+  status: item.status as 'confirmed' | 'active' | 'rejected',
   metadata: (item.metadata || {}) as Record<string, unknown>,
 });
 

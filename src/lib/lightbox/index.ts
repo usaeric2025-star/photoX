@@ -18,6 +18,28 @@ export function useLightbox() {
     (route.name === 'photo' || route.name === 'adminPhoto' ? (route.params as Record<string, string>).photoId : null);
   const isOpen = !!(photoId && modal !== 'edit');
   
+  const next = () => {
+    if (slides.length <= 1) return;
+    const nextIdx = (currentIndex + 1) % slides.length;
+    setLightboxIndex(nextIdx);
+    
+    const nextSlide = slides[nextIdx];
+    if (nextSlide?.id) {
+      setPhotoId(nextSlide.id);
+    }
+  };
+
+  const prev = () => {
+    if (slides.length <= 1) return;
+    const prevIdx = (currentIndex - 1 + slides.length) % slides.length;
+    setLightboxIndex(prevIdx);
+    
+    const prevSlide = slides[prevIdx];
+    if (prevSlide?.id) {
+      setPhotoId(prevSlide.id);
+    }
+  };
+
   const open = (slides: LightboxSlide[], index: number = 0) => {
     setLightboxData(slides, index);
     if (slides[index]?.id) {
@@ -39,6 +61,8 @@ export function useLightbox() {
     setLightboxIndex,
     open,
     close,
+    next,
+    prev,
   };
 }
 
