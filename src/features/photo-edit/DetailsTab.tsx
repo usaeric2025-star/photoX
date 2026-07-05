@@ -1,4 +1,5 @@
 import React from 'react';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
 import { DimensionEditor } from './DimensionEditor.js';
 import { Dimension } from '#src/types/index.js';
@@ -25,7 +26,12 @@ export function DetailsTab() {
 
   const onAiAnalyze = async () => {
     if (detailPhoto?.imageUrl) {
-      await handleAiAnalyze(undefined, detailPhoto.imageUrl);
+      try {
+        await handleAiAnalyze(undefined, detailPhoto.imageUrl);
+        showToast.success(appLang === 'zh' ? '分析请求已发送' : 'Analysis request sent');
+      } catch (e) {
+        ErrorFactory.handle(e, { context: 'AI 识别' });
+      }
     }
   };
 

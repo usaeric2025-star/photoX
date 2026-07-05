@@ -1,6 +1,5 @@
 import React from 'react';
 import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
-import { FormSectionHeader } from '#src/components/admin/FormShared.js';
 import { useManufacturers, useManufacturerCreate, useTags } from '#src/hooks/index.js';
 import { useTagCreate, useTagEdit, useTagDelete } from '#src/hooks/tag/index.js';
 import { useUI } from '#lib/store/index.js';
@@ -12,6 +11,8 @@ import { ManufacturerSelect } from '#src/components/admin/ManufacturerSelect.js'
 import { Icon } from '#src/components/ui/Icon.js';
 import { AppField } from '#lib/forms/AppField.js';
 
+import { showToast } from '#lib/ui/toast.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { VisibilityToggle } from './components/VisibilityToggle.js';
 
 export function OrgTab() {
@@ -30,16 +31,27 @@ export function OrgTab() {
   const t = translations[appLang as keyof typeof translations] || translations.en;
   
   return (
-    <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
+    <div className="m-0 p-4 space-y-8 animate-in fade-in slide-in-from-right-2 duration-300 pb-10">
       
-      <AppField form={form} name="isHidden">
-        {({ value, onChange }) => (
-          <VisibilityToggle value={!!value} onChange={onChange} />
-        )}
-      </AppField>
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Icon name="eye" size={12} className="text-slate-400" />
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">状态控制 / VISIBILITY</span>
+        </div>
+        <AppField form={form} name="isHidden">
+          {({ value, onChange }) => (
+            <VisibilityToggle value={!!value} onChange={(val) => {
+              onChange(val);
+              showToast.success(val ? (appLang === 'zh' ? '已设置为隐藏' : 'Hidden') : (appLang === 'zh' ? '已设置为可见' : 'Visible'));
+            }} />
+          )}
+        </AppField>
+      </section>
 
+      {/* 1. 分类 */}
       <CategorySelect />
       
+      {/* 2. 标签 */}
       <section className="space-y-4">
         <AppField form={form} name="tags">
           {({ value, onChange }) => (
@@ -48,22 +60,51 @@ export function OrgTab() {
               onChange={onChange}
               tags={tags}
               addTag={async (name) => {
-                const result = await addTagMut(name);
-                return result?.id ? String(result.id) : null;
+                try {
+                  const result = await addTagMut(name);
+                  showToast.success(appLang === 'zh' ? '标签已创建' : 'Tag created');
+                  return result?.id ? String(result.id) : null;
+                } catch (e) {
+                  ErrorFactory.handle(e, { context: '创建标签' });
+                  return null;
+                }
               }}
-              updateTag={async (id, name) => updateTagMut({ id: Number(id), updates: { name } })}
-              deleteTag={async (id) => deleteTagMut(Number(id))}
+              updateTag={async (id, name) => {
+                try {
+                  await updateTagMut({ id: Number(id), updates: { name } });
+                  showToast.success(appLang === 'zh' ? '标签已更新' : 'Tag updated');
+                } catch (e) {
+                  ErrorFactory.handle(e, { context: '更新标签' });
+                }
+              }}
+              deleteTag={async (id) => {
+                try {
+                  await deleteTagMut(Number(id));
+                  showToast.success(appLang === 'zh' ? '标签已删除' : 'Tag deleted');
+                } catch (e) {
+                  ErrorFactory.handle(e, { context: '删除标签' });
+                }
+              }}
             />
           )}
         </AppField>
       </section>
 
+      {/* 3. 厂商 */}
       <section className="space-y-4">
-        <FormSectionHeader 
-          title="厂商名称" 
-          subtitle="MANUFACTURER" 
-          onAction={() => setAddMfrOpen(true)} 
-        />
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <Icon name="factory" size={12} className="text-slate-400" />
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">厂商名称 / MANUFACTURER</span>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setAddMfrOpen(true)}
+            className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-tighter"
+          >
+            + {appLang === 'zh' ? '新建厂商' : 'NEW'}
+          </button>
+        </div>
         <ManufacturerSelect form={form} name="manufacturerId" manufacturers={manufacturers} />
       </section>
 
@@ -73,7 +114,12 @@ export function OrgTab() {
         title={t.newMfrTitle}
         placeholder={t.mfrNamePlaceholder}
         onConfirm={async (name: string) => {
-          await addManMut(name);
+          try {
+            await addManMut(name);
+            showToast.success(appLang === 'zh' ? '厂商已创建' : 'Manufacturer created');
+          } catch (e) {
+            ErrorFactory.handle(e, { context: '创建厂商' });
+          }
         }}
       />
     </div>

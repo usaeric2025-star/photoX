@@ -1,4 +1,5 @@
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { showToast } from '#lib/ui/toast.js';
 import React from 'react';
 import { usePhotoEditAI, usePhotoAIResult, useCopyToClipboard } from '#src/hooks/index.js';
 import { useUI } from '#lib/store/index.js';
@@ -13,6 +14,15 @@ export function AISourceTab() {
     successMessage: appLang === 'zh' ? '已复制' : 'Copied'
   });
   const { data: aiResult, isPending, error } = usePhotoAIResult(photoId);
+
+  const onReExtract = async (raw: any) => {
+    try {
+      await handleReExtract(raw);
+      showToast.success(appLang === 'zh' ? '二次提取成功' : 'Re-extraction successful');
+    } catch (e) {
+      ErrorFactory.handle(e, { context: '二次提取' });
+    }
+  };
 
   if (isPending) {
     return (
@@ -83,7 +93,7 @@ export function AISourceTab() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => handleReExtract(aiResult.rawResult)}
+            onClick={() => onReExtract(aiResult.rawResult)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 text-xs font-sans font-medium hover:bg-indigo-100 transition-all active:scale-95"
           >
             <Icon name="refresh-cw" className="w-3.5 h-3.5" />

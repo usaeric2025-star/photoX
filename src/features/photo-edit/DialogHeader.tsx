@@ -50,15 +50,25 @@ export function DialogHeader({
 
   const onRemoveFromGroup = async () => {
     if (editPhotoId && detailPhoto?.groupId) {
-      await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.groupId });
-      onClose();
+      try {
+        await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.groupId });
+        showToast.success(appLang === 'zh' ? '已移出合组' : 'Removed from group');
+        onClose();
+      } catch (e) {
+        ErrorFactory.handle(e, { context: '移出合组' });
+      }
     }
   };
 
   const onAiAnalyze = async () => {
     const finalImageUrl = detailPhoto?.imageUrl;
     if (finalImageUrl) {
-      await handleAiAnalyze(finalImageUrl);
+      try {
+        await handleAiAnalyze(finalImageUrl);
+        showToast.success(appLang === 'zh' ? '分析请求已发送' : 'Analysis request sent');
+      } catch (e) {
+        ErrorFactory.handle(e, { context: 'AI 识别' });
+      }
     } else {
       ErrorFactory.handle(appLang === 'zh' ? '照片信息缺失，无法识别' : 'Photo data missing', { context: 'AI 识别' });
     }
@@ -111,9 +121,14 @@ export function DialogHeader({
                   type="button"
                   onClick={async () => {
                     const newState = !active;
-                    form.setFieldValue('isGroupCover', newState);
-                    if (newState && detailPhoto?.groupId && editPhotoId) {
-                      await setCover.mutateAsync({ groupId: detailPhoto.groupId, photoId: editPhotoId });
+                    try {
+                      form.setFieldValue('isGroupCover', newState);
+                      if (newState && detailPhoto?.groupId && editPhotoId) {
+                        await setCover.mutateAsync({ groupId: detailPhoto.groupId, photoId: editPhotoId });
+                        showToast.success(appLang === 'zh' ? '已设置为封面' : 'Set as cover');
+                      }
+                    } catch (e) {
+                      ErrorFactory.handle(e, { context: '设置封面' });
                     }
                   }}
                   title={l.cover}
@@ -152,7 +167,12 @@ export function DialogHeader({
         <button
           type="button"
           onClick={async () => {
-            await commit();
+            try {
+              await commit();
+              showToast.success(appLang === 'zh' ? '保存成功' : 'Saved successfully');
+            } catch (e) {
+              ErrorFactory.handle(e, { context: '保存' });
+            }
           }}
           disabled={isSubmitting || isAnalyzing}
           className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSubmitting || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}

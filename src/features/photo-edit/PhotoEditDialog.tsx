@@ -11,7 +11,8 @@ import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner.js";
 import { TaskIndicator } from "#src/components/admin/TaskIndicator.js";
 import { logger } from "#lib/logger.js";
 import { useAdminMaintenance, useFilters } from '#src/hooks/index.js';
-
+import { showToast } from '#lib/ui/toast.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { StandardModalLayout } from "#src/components/ui/StandardModalLayout.js";
 
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
@@ -33,11 +34,18 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   const handleDiscard = () => {
     discard();
     setShowConfirm(false);
+    showToast.success(appLang === 'zh' ? '已放弃修改' : 'Changes discarded');
     handleClose();
   };
   
   const handleSave = async () => {
-    await commit();
+    try {
+        await commit();
+        showToast.success(appLang === 'zh' ? '保存成功' : 'Saved successfully');
+        handleClose();
+    } catch (e) {
+        ErrorFactory.handle(e, { context: '保存' });
+    }
   };
 
   return (
@@ -56,8 +64,13 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
             className="bg-surface-soft"
             header={<DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
               logger.info('[PhotoEditDialog] Delete clicked for photo:', editPhotoId);
-              await adminActions.deletePhoto.mutateAsync([editPhotoId]);
-              handleClose();
+              try {
+                await adminActions.deletePhoto.mutateAsync([editPhotoId]);
+                showToast.success(appLang === 'zh' ? '删除成功' : 'Deleted successfully');
+                handleClose();
+              } catch (e) {
+                ErrorFactory.handle(e, { context: '删除照片' });
+              }
             }} />}
           >
             {isPending ? (

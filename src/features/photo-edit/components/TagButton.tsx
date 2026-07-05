@@ -15,7 +15,7 @@ interface TagButtonProps {
   onLongPress: () => void;
 }
 
-export const TagButton = ({ 
+export const TagButton = React.memo(({ 
   tag, 
   isSelected, 
   isHot, 
@@ -88,4 +88,13 @@ export const TagButton = ({
       </button>
     </div>
   );
-};
+}, (prev, next) => {
+  return (
+    prev.isSelected === next.isSelected &&
+    prev.isHot === next.isHot &&
+    prev.isPinned === next.isPinned &&
+    prev.isDisabled === next.isDisabled &&
+    prev.tag.id === next.tag.id &&
+    prev.tag.name === next.tag.name
+  );
+});
