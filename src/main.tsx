@@ -48,92 +48,49 @@ import { scheduler } from './lib/task-queue/scheduler.js';
 import { setupQuerySync } from './lib/task-queue/querySync.js';
 
 async function init() {
-  // No migration
-  
-  // 初始化 Task Queue
-  const cleanupQuerySync = setupQuerySync();
-  // scheduler.restore() 已移動到 appStore.ts 初始化邏輯中
+  setupQuerySync();
 
   if (typeof window !== 'undefined') {
     window.addEventListener('unhandledrejection', (event) => {
       const reason = event.reason;
       const message = reason?.message || String(reason || '');
-      const isChunkError = /chunk|dynamically imported|module script/i.test(message);
-      
-      // If it's a chunk error, let the specialized handler (initChunkHandler) take over.
-      // Do NOT call preventDefault here yet to allow other listeners to see it.
-      if (isChunkError) return;
-
+      if (/chunk|dynamically imported|module script/i.test(message)) return;
       event.preventDefault();
-      const isCancellation = 
-        reason?.name === 'AbortError' || 
-        /cancel|abort|precondition|offline|websocket|websocket|hmr/i.test(message) ||
-        /ResizeObserver/i.test(message) ||
-        message.includes('DOMException') ||
-        message.includes('user_cancel') ||
-        message.includes('Failed to fetch') ||
-        message.includes('NetworkError');
-        
-      if (isCancellation) return;
-      
+      if (/AbortError|cancel|abort|precondition|offline|websocket|hmr|ResizeObserver|DOMException|user_cancel|Failed to fetch|NetworkError/i.test(message)) return;
       ErrorFactory.capture(reason || new Error(message || 'Unhandled Promise Rejection'));
     });
 
     window.addEventListener('error', (event) => {
       const message = event.message || event.error?.message || '';
-      const isNoise = 
-        /ResizeObserver/i.test(message) || 
-        /chunk|dynamically imported|module script/i.test(message) ||
-        /AbortError/i.test(message) ||
-        /cancel|abort|precondition|offline|websocket|hmr/i.test(message) ||
-        message.includes('DOMException') ||
-        message.includes('user_cancel') ||
-        message.includes('Failed to fetch') ||
-        message.includes('NetworkError');
-
-      if (isNoise) return;
-
+      if (/ResizeObserver|chunk|dynamically imported|module script|AbortError|cancel|abort|precondition|offline|websocket|hmr|DOMException|user_cancel|Failed to fetch|NetworkError/i.test(message)) return;
       ErrorFactory.capture(event.error || new Error(event.message || 'Global runtime error'));
     });
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    await import('./lib/resizeObserverPolyfill.js');
-  }
-
-  // 啟動每日維護 (P0: Robustness)
-  dailyWorker.checkAndRun();
-  initChunkHandler();
+  // 異步加載輔助模組，不阻塞主渲染 (P0: 提高 FCP)
+  import('./lib/resizeObserverPolyfill.js').catch(e => console.warn("RO Polyfill load failed", e));
+  
+  // 啟動背景 Worker
+  setTimeout(() => {
+    try {
+      dailyWorker.checkAndRun();
+      initChunkHandler();
+    } catch (e) {
+      console.warn("Background workers init failed", e);
+    }
+  }, 1000);
 
   const container = document.getElementById("root");
   if (container) {
     const root = createRoot(container, {
-      onCaughtError: (error, errorInfo) => {
-        const message = (error as Error)?.message || String(error || '');
-        if (/chunk|dynamically imported|module script|ResizeObserver/i.test(message)) return;
-        // Caught errors are handled locally by error boundaries. Log but do not trigger global crash screen.
+      onCaughtError: (error) => {
+        if (/chunk|dynamically imported|module script|ResizeObserver/i.test((error as Error)?.message || '')) return;
         ErrorFactory.capture(error);
       },
       onUncaughtError: (error) => {
         const message = (error as Error)?.message || String(error || '');
-        const isNoise = 
-          /chunk|dynamically imported|module script|ResizeObserver/i.test(message) ||
-          /AbortError/i.test(message) ||
-          /cancel|abort|precondition|offline|websocket|hmr/i.test(message) ||
-          message.includes('DOMException') ||
-          message.includes('user_cancel') ||
-          message.includes('Failed to fetch') ||
-          message.includes('NetworkError');
-
-        if (isNoise) {
-          return;
-        }
-        
+        if (/chunk|dynamically imported|module script|ResizeObserver|AbortError|cancel|abort|precondition|offline|websocket|hmr|DOMException|user_cancel|Failed to fetch|NetworkError/i.test(message)) return;
         storeAccessor.ui.setFatalError(error instanceof Error ? error : new Error(String(error)));
-      },
-      onRecoverableError: (error) => {
-        if (/chunk|dynamically imported|module script|ResizeObserver/i.test((error as Error)?.message || '')) return;
-        // ignore recoverable
       },
     });
     
@@ -143,7 +100,7 @@ async function init() {
           client={queryClient}
           persistOptions={{
             persister: asyncPersister,
-            maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+            maxAge: 1000 * 60 * 60 * 24 * 7,
           }}
         >
           <NuqsAdapter>
@@ -158,8 +115,6 @@ async function init() {
         </PersistQueryClientProvider>
       </StrictMode>
     );
-
-    // 移除启动骨架屏逻辑，改由 LoadingScreen 控制
   }
 }
 

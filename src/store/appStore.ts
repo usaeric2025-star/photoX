@@ -1,11 +1,12 @@
 import { signal } from '@preact/signals-react';
-import { initAuthListener, authStore } from './authStore.js';
+import { initAuthListener, authStore, authLoadingSignal } from './authStore.js';
 import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
 import { loadTagsFromCloud } from '#src/services/tag/queries.js';
 import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { scheduler } from '#lib/task-queue/scheduler.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { withTimeout } from '#lib/utils.js';
 
 export interface AppStatusState {
   isLoading: boolean;
@@ -31,8 +32,13 @@ export const initializeApp = async () => {
     // 1. 設置全域 Auth 監聽
     initAuthListener();
     
-    // 2. 執行初始 Session 獲取
-    await authStore.init();
+    // 2. 執行初始 Session 獲取 (P0: 增加強制逾時，避免 SDK 掛起導致全白屏)
+    try {
+      await withTimeout(authStore.init(), 4000, 'Auth Store Init');
+    } catch (e) {
+      ErrorFactory.handle(e, { context: '[appStore] Auth init timeout or error, proceeding as guest' });
+      authLoadingSignal.value = false; // 強制結束加載狀態
+    }
     
     // 3. 恢復任務佇列（此時 Auth 已就緒）
     scheduler.restore().catch(e => ErrorFactory.handle(e, { context: '[appStore] Task restore failed' }));

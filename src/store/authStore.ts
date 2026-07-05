@@ -1,4 +1,5 @@
 import { signal, computed } from '@preact/signals-react';
+import { useComputed } from '@preact/signals-react';
 import { logger } from '#lib/logger.js';
 import { User } from '#src/types/index.js';
 import { supabase } from '#lib/supabase.js';
@@ -100,16 +101,18 @@ export const authStore = {
 };
 
 export function useAuthStore<T = AuthState>(selector?: (state: AuthState) => T): T {
-  const state: AuthState = {
-    user: userSignal.value,
-    isLoading: authLoadingSignal.value,
-    setUser: authStore.setUser,
-    setLoading: authStore.setLoading,
-    init: authStore.init,
-    signIn: authStore.signIn,
-    signOut: authStore.signOut,
-  };
-  return selector ? selector(state) : state as any;
+  return useComputed(() => {
+    const state: AuthState = {
+      user: userSignal.value,
+      isLoading: authLoadingSignal.value,
+      setUser: authStore.setUser,
+      setLoading: authStore.setLoading,
+      init: authStore.init,
+      signIn: authStore.signIn,
+      signOut: authStore.signOut,
+    };
+    return selector ? selector(state) : (state as unknown as T);
+  }).value;
 }
 
 // 全局监听（只初始化一次）

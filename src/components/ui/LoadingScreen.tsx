@@ -1,6 +1,7 @@
 import { logger } from '#lib/logger.js';
-import React, { useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useEffect } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
+import { PhotoGridSkeleton } from '#src/components/photo/PhotoSkeleton.js';
 
 export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetry?: () => void }) => {
   logger.debug('🔄 [LoadingScreen] Rendered');
@@ -92,7 +93,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
         <div className="absolute top-0 left-0 h-full w-[35%] bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 rounded-full animate-[loading-bar_1.2s_infinite_ease-in-out]"></div>
       </div>
 
-      {/* Mock Header skeleton */}
+      {/* Header skeleton */}
       <header className="h-14 border-b border-slate-100 bg-white px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="text-brand-navy font-black tracking-widest text-sm flex items-center gap-1">
@@ -107,7 +108,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
         </div>
       </header>
 
-      {/* Mock Categories pill skeleton row */}
+      {/* Filter bar skeleton */}
       <div className="py-3 px-4 bg-white/50 border-b border-slate-100 flex gap-2 overflow-hidden shrink-0">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="w-16 h-7 rounded-full bg-slate-100 border border-slate-200/50 px-3 py-1 flex items-center justify-center">
@@ -116,19 +117,9 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
         ))}
       </div>
 
-      {/* Mock Grid skeleton layout */}
-      <div className="flex-1 p-2 sm:p-4 overflow-hidden relative">
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 sm:gap-3 h-full">
-          {Array.from({ length: 18 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-square w-full rounded-lg bg-white border border-slate-100 shadow-sm p-1 flex flex-col justify-between animate-pulse"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <div className="w-full h-[82%] rounded-md bg-slate-100/70"></div>
-            </div>
-          ))}
-        </div>
+      {/* Refined Grid Skeleton */}
+      <div className="flex-1 p-3 sm:p-4 overflow-hidden relative">
+        <PhotoGridSkeleton count={24} isAggregated={false} />
       </div>
     </div>
   );

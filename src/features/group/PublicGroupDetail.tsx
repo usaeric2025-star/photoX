@@ -13,6 +13,7 @@ import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import { PhotoWallGrid } from '#src/features/photo-wall/components/PhotoWallGrid.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 import { DataFallback } from '#src/components/ui/DataFallback.js';
+import { PhotoGridSkeleton } from '#src/components/photo/PhotoSkeleton.js';
 
 export function PublicGroupDetailPage() {
   const { params } = useAppRouter();
@@ -76,11 +77,7 @@ export function PublicGroupDetailPage() {
 
   const loadingSkeleton = (
     <div className="p-1 sm:p-2 lg:p-4 w-full h-full">
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1 sm:gap-2">
-         {Array.from({ length: 18 }).map((_, i) => (
-           <div key={i} className="aspect-square w-full bg-surface-soft rounded-xl border border-border-soft animate-shimmer" />
-         ))}
-      </div>
+      <PhotoGridSkeleton count={24} />
     </div>
   );
 

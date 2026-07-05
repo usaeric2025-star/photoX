@@ -61,6 +61,8 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
     );
   }
 
+  const isAggregated = !!props.filters?.onlyGroupsCover;
+
   return (
     <PhotoWallGrid
       photos={photos}
@@ -68,6 +70,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
       isLoading={isLoading}
       isLoadingMore={isLoadingMore}
       loadMore={loadMore}
+      isAggregated={isAggregated}
     />
   );
 }

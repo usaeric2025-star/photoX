@@ -1,3 +1,4 @@
+import { logger } from '#lib/logger.js';
 import { usePhotoEditSessionContext } from "#src/hooks/photo/index.js";
 import React from "react";
 import { Icon } from '#src/components/ui/Icon.js';
@@ -169,9 +170,9 @@ export function DialogHeader({
           onClick={async () => {
             try {
               await commit();
-              showToast.success(appLang === 'zh' ? '保存成功' : 'Saved successfully');
             } catch (e) {
-              ErrorFactory.handle(e, { context: '保存' });
+              // commit inside PhotoEditSession handles its own toast
+              logger.error('[PhotoEdit] Save error intercepted in header', e);
             }
           }}
           disabled={isSubmitting || isAnalyzing}

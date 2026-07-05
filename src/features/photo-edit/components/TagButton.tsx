@@ -45,8 +45,6 @@ export const TagButton = React.memo(({
           pointerEvents: "auto",
         }}
         onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
           if (isDisabled) return;
           onToggle(tag);
         }}

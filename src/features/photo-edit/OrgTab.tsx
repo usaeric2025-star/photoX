@@ -33,20 +33,14 @@ export function OrgTab() {
   return (
     <div className="m-0 p-4 space-y-8 animate-in fade-in slide-in-from-right-2 duration-300 pb-10">
       
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
-          <Icon name="eye" size={12} className="text-slate-400" />
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">状态控制 / VISIBILITY</span>
-        </div>
-        <AppField form={form} name="isHidden">
-          {({ value, onChange }) => (
-            <VisibilityToggle value={!!value} onChange={(val) => {
-              onChange(val);
-              showToast.success(val ? (appLang === 'zh' ? '已设置为隐藏' : 'Hidden') : (appLang === 'zh' ? '已设置为可见' : 'Visible'));
-            }} />
-          )}
-        </AppField>
-      </section>
+      <AppField form={form} name="isHidden">
+        {({ value, onChange }) => (
+          <VisibilityToggle value={!!value} onChange={(val) => {
+            onChange(val);
+            showToast.success(val ? (appLang === 'zh' ? '已隐藏' : 'Hidden') : (appLang === 'zh' ? '已公开' : 'Visible'));
+          }} />
+        )}
+      </AppField>
 
       {/* 1. 分类 */}
       <CategorySelect />

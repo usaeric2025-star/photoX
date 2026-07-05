@@ -1,5 +1,6 @@
 import { logger } from '#lib/logger.js';
 import { showToast } from '#lib/ui/toast.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { useAppForm } from '#lib/forms/useAppForm.js';
@@ -90,7 +91,8 @@ export const PhotoEditSessionProvider = ({
       updates: saveData as unknown as Partial<Photo>
     });
     
-    showToast.success('Saved successfully');
+    // Success toast handled by caller or here? Let's make it consistent
+    // showToast.success(appLang === 'zh' ? '保存成功' : 'Saved successfully');
     
     onSuccess?.();
   }, [photoId, photo?.tags, photo?.createdAt, editPhotoAsync, onSuccess, categories, manufacturers]);
@@ -111,19 +113,16 @@ export const PhotoEditSessionProvider = ({
       await formObj.form.handleSubmit();
       
       const state = formObj.form.state;
-      if (Object.keys(state.errors).length > 0 || state.fieldMeta && Object.values(state.fieldMeta).some(m => m?.errorMap?.onChange)) {
-         ErrorFactory.handle(new Error('Form validation failed'), { 
-            context: 'PhotoEdit', 
-            errors: state.errors 
-         });
-         
-         showToast.error(`Please check your input (form validation failed): ${Object.values(state.errors).join(', ')}`);
+      const hasErrors = Object.keys(state.errors).length > 0 || (state.fieldMeta && Object.values(state.fieldMeta).some(m => m?.errorMap?.onChange));
+      
+      if (hasErrors) {
+         logger.warn('[PhotoEdit] Form validation failed', state.errors);
          return;
       }
     } catch (err) {
       const error = err as Error;
       logger.error('[PhotoEdit] Commit failed:', error);
-      showToast.error(error?.message || 'Failed to save changes');
+      ErrorFactory.handle(error, { context: 'PhotoEdit.commit' });
     }
   }, [formObj]);
 

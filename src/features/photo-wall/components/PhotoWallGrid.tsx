@@ -3,6 +3,7 @@ import { DreamMasonry } from 'dream-masonry';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCard } from './PhotoCard.js';
 import { useGrid } from '#src/context/GridContext.js';
+import { PhotoSkeleton } from '#src/components/photo/PhotoSkeleton.js';
 
 interface PhotoWallGridProps {
   photos: PhotoListItem[];
@@ -12,6 +13,7 @@ interface PhotoWallGridProps {
   loadMore: () => void;
   hideGroupBadge?: boolean;
   isGroupDetail?: boolean;
+  isAggregated?: boolean;
 }
 
 export function PhotoWallGrid({
@@ -22,6 +24,7 @@ export function PhotoWallGrid({
   loadMore,
   hideGroupBadge = false,
   isGroupDetail = false,
+  isAggregated = false,
 }: PhotoWallGridProps) {
   const { columns } = useGrid();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -65,10 +68,15 @@ export function PhotoWallGrid({
   ), [hideGroupBadge, isGroupDetail]);
 
   const renderLoader = useCallback(() => (
-    <div className="flex justify-center items-center py-12 w-full">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+      {Array.from({ length: columns * 3 }).map((_, i) => (
+        <PhotoSkeleton 
+          key={`loader-skeleton-${i}`} 
+          isGroup={isAggregated && i % 4 === 0} 
+        />
+      ))}
     </div>
-  ), []);
+  ), [columns, isAggregated]);
 
   const renderEmpty = useCallback(() => (
     <div className="text-center py-20 text-gray-500 w-full">
@@ -83,7 +91,7 @@ export function PhotoWallGrid({
         items={photos as PhotoListItem[]}
         hasMore={hasMore}
         onLoadMore={handleLoadMore}
-        isLoading={isLoading && !photos.length}
+        isLoading={isLoading && photos.length === 0}
         isFetchingMore={isLoadingMore}
         scrollContainer={scrollContainer as React.RefObject<HTMLElement> | undefined}
         maxColumnCount={columns}
@@ -98,9 +106,13 @@ export function PhotoWallGrid({
         hysteresis={20}
       />
       
-      {isLoadingMore && (
-        <div className="py-4 flex justify-center w-full">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+      {isLoadingMore && photos.length > 0 && (
+        <div className="py-12 flex justify-center w-full">
+           <div className="flex gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></div>
+           </div>
         </div>
       )}
     </div>

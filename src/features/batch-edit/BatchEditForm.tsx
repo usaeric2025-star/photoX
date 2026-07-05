@@ -93,26 +93,6 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
             )}
          </Field>
 
-         <Field form={formObj.form} name="manufacturerId">
-            {({ state, handleChange }) => (
-                <div className="space-y-2">
-                    <label className="text-sm font-bold">{t.manufacturer.toUpperCase()} / MANUFACTURER</label>
-                    <select 
-                      value={String(state.value || '')} 
-                      onChange={(e) => {
-                          handleChange(e.target.value || null);
-                      }}
-                      className="w-full border p-2 rounded"
-                    >
-                      <option value="">{t.unchanged}</option>
-                      {manufacturers.map(m => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                      ))}
-                    </select>
-                </div>
-            )}
-         </Field>
-
          <Field form={formObj.form} name="tags">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
@@ -131,6 +111,26 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                       ))}
                     </select>
                     <p className="text-xs text-slate-500">Select multiple tags to add to all selected photos. Existing tags will not be removed.</p>
+                </div>
+            )}
+         </Field>
+
+         <Field form={formObj.form} name="manufacturerId">
+            {({ state, handleChange }) => (
+                <div className="space-y-2">
+                    <label className="text-sm font-bold">{t.manufacturer.toUpperCase()} / MANUFACTURER</label>
+                    <select 
+                      value={String(state.value || '')} 
+                      onChange={(e) => {
+                          handleChange(e.target.value || null);
+                      }}
+                      className="w-full border p-2 rounded"
+                    >
+                      <option value="">{t.unchanged}</option>
+                      {manufacturers.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
                 </div>
             )}
          </Field>
