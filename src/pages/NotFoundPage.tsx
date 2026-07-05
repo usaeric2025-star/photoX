@@ -7,7 +7,7 @@ import { api } from '#src/lib/api.js';
 
 export const NotFoundPage = () => {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const appLang = useUI(s => s.appLang);
+  const appLang = useUI(s => s?.appLang) || 'en';
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const [copied, setCopied] = React.useState(false);

@@ -38,7 +38,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const onClose = props.onClose || hookClose;
   const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
   const { isAdmin } = usePermission();
-  const { descLang, patch } = useUI();
+  const { descLang: currentDescLang, patch } = useUI();
   
   // Auto-fetch photo if we are deep-linked but have no slides loaded
   const needsDeepLinkFetch = isOpen && sourcePhotos.length === 0 && !!queryPhotoId;
