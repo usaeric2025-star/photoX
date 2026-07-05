@@ -112,7 +112,11 @@ export const PhotoEditSessionProvider = ({
       
       const state = formObj.form.state;
       if (Object.keys(state.errors).length > 0 || state.fieldMeta && Object.values(state.fieldMeta).some(m => m?.errorMap?.onChange)) {
-         console.error('[PhotoEdit] Form validation failed:', state.errors);
+         ErrorFactory.handle(new Error('Form validation failed'), { 
+            context: 'PhotoEdit', 
+            errors: state.errors 
+         });
+         
          showToast.error(`Please check your input (form validation failed): ${Object.values(state.errors).join(', ')}`);
          return;
       }

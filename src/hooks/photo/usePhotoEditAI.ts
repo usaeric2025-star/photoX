@@ -211,7 +211,8 @@ export function usePhotoEditAI() {
                     return Array.from(existingMap.values());
                   });
 
-                  updates.tags = uniqueIds;
+                  // FIX: Map resolved IDs back to full Tag objects
+                  updates.tags = uniqueIds.map(id => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
               } else {
                   updates.tags = [];
               }
@@ -303,7 +304,9 @@ export function usePhotoEditAI() {
     },
     onSuccess: () => {
     },
-    onError: () => {
+    onError: (err: unknown) => {
+      ErrorFactory.handle(err, { context: 'AI Analysis' });
+      showToast.error(appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed');
     },
     successMessage: appLang === 'zh' ? 'AI 識別補全成功' : 'AI Analysis completed',
     errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'
@@ -362,7 +365,9 @@ export function usePhotoEditAI() {
       if (sourceTags.length > 0) {
           const rawNames = sourceTags.map((t: any) => typeof t === 'object' ? (t.name || t.id || '') : String(t)).filter(Boolean);
           const resolved = await resolveTagNamesToIds(rawNames, allTags);
-          if (resolved.length > 0) updates.tags = resolved.slice(0, 5);
+          if (resolved.length > 0) {
+             updates.tags = resolved.slice(0, 5).map(id => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
+          }
       }
 
       // Description
@@ -390,7 +395,8 @@ export function usePhotoEditAI() {
           invalidateList();
           showToast.success('Re-extraction successful');
       } catch (e) {
-          showToast.error('Failed to save extracted data');
+          ErrorFactory.handle(e, { context: 'AI Re-extraction' });
+          showToast.error(appLang === 'zh' ? '數據保存失敗' : 'Failed to save extracted data');
       }
   }, [editPhotoId, categories, allTags, form, updatePhoto, invalidateDetail, invalidateList]);
 
