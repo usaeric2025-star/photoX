@@ -1,104 +1,92 @@
-import { useRef, useEffect } from 'react';
-import { hapticFeedback } from '#lib/ui/haptics.js';
+import { useCallback, useRef, useEffect } from 'react';
 
 interface UseLongPressOptions {
+  /** 长按触发时间（毫秒），默认 500ms */
   delay?: number;
-  onLongPress: (e?: PointerEvent | TouchEvent) => void;
+  /** 长按触发回调 */
+  onLongPress: (e: React.MouseEvent | React.TouchEvent) => void;
+  /** 短按点击回调（可选） */
+  onClick?: (e: React.MouseEvent | React.TouchEvent) => void;
+  /** 是否禁用 */
+  disabled?: boolean;
 }
 
-export function useLongPress(
-  ref: React.RefObject<HTMLElement | null>,
-  { onLongPress, delay = 600 }: UseLongPressOptions
-) {
-  const timerRef = useRef<number | null>(null);
-  const isLongPress = useRef(false);
-  const startPos = useRef<{ x: number; y: number } | null>(null);
-  
-  const callbackRef = useRef(onLongPress);
+export function useLongPress<T extends HTMLElement = HTMLDivElement>({
+  delay = 500,
+  onLongPress,
+  onClick,
+  disabled = false,
+}: UseLongPressOptions) {
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressRef = useRef(false);
+  const isPressedRef = useRef(false);
+  const elementRef = useRef<T | null>(null);
 
-  useEffect(() => {
-    callbackRef.current = onLongPress;
-  }, [onLongPress]);
+  // ✅ 清理定时器
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+  // ✅ 按下事件
+  const handleStart = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      if (disabled) return;
+      isPressedRef.current = true;
+      isLongPressRef.current = false;
 
-    const clearTimer = () => {
-      if (timerRef.current !== null) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-
-    const handleStart = (e: PointerEvent | TouchEvent) => {
-      // Ignore right clicks or multi-touch
-      if ('button' in e && e.button !== 0) return;
-      if ('touches' in e && e.touches.length > 1) return;
-      
-      clearTimer();
-      isLongPress.current = false;
-      const clientX = 'touches' in e ? e.touches[0].clientX : (e as PointerEvent).clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : (e as PointerEvent).clientY;
-      startPos.current = { x: clientX, y: clientY };
-
-      timerRef.current = window.setTimeout(() => {
-        isLongPress.current = true;
-        callbackRef.current?.(e);
-        hapticFeedback.heavy();
-      }, delay);
-    };
-
-    const handleMove = (e: PointerEvent | TouchEvent) => {
-      if (!startPos.current) return;
-      const clientX = 'touches' in e ? e.touches[0].clientX : (e as PointerEvent).clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : (e as PointerEvent).clientY;
-      const dx = clientX - startPos.current.x;
-      const dy = clientY - startPos.current.y;
-      if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+      // 启动长按计时器
+      timerRef.current = setTimeout(() => {
+        if (isPressedRef.current) {
+          isLongPressRef.current = true;
+          onLongPress(e);
+        }
         clearTimer();
-      }
-    };
+      }, delay);
+    },
+    [disabled, delay, onLongPress, clearTimer]
+  );
 
-    const handleEnd = (e: PointerEvent | TouchEvent) => {
+  // ✅ 释放事件
+  const handleEnd = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      if (disabled) return;
       clearTimer();
-      if (isLongPress.current) {
-        if (e.cancelable) e.preventDefault();
-        
-        // Add a one-time capture listener to swallow the following click
-        const swallowClick = (clickEvent: MouseEvent) => {
-          clickEvent.stopImmediatePropagation();
-          clickEvent.preventDefault();
-          el.removeEventListener('click', swallowClick, true);
-        };
-        el.addEventListener('click', swallowClick, true);
-        
-        // Safety timeout to remove the listener if no click fires
-        setTimeout(() => {
-          el.removeEventListener('click', swallowClick, true);
-        }, 300);
+
+      // ✅ 如果不是长按，且有点击回调，触发点击
+      if (!isLongPressRef.current && onClick) {
+        onClick(e);
       }
-    };
 
-    const handleContextMenu = (e: Event) => {
-      e.preventDefault();
-    };
+      isPressedRef.current = false;
+    },
+    [disabled, clearTimer, onClick]
+  );
 
-    // We use pointer events as the primary source for modern reliability
-    // They handle both touch and mouse consistently
-    el.addEventListener('pointerdown', handleStart as EventListener);
-    el.addEventListener('pointermove', handleMove as EventListener);
-    el.addEventListener('pointerup', handleEnd as EventListener);
-    el.addEventListener('pointercancel', handleEnd as EventListener);
-    el.addEventListener('contextmenu', handleContextMenu);
+  // ✅ 离开元素（取消长按）
+  const handleLeave = useCallback(() => {
+    if (disabled) return;
+    clearTimer();
+    isPressedRef.current = false;
+  }, [disabled, clearTimer]);
 
+  // ✅ 清理（组件卸载时）
+  useEffect(() => {
     return () => {
       clearTimer();
-      el.removeEventListener('pointerdown', handleStart as EventListener);
-      el.removeEventListener('pointermove', handleMove as EventListener);
-      el.removeEventListener('pointerup', handleEnd as EventListener);
-      el.removeEventListener('pointercancel', handleEnd as EventListener);
-      el.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [ref, delay]);
+  }, [clearTimer]);
+
+  // ✅ 返回事件绑定
+  return {
+    onMouseDown: handleStart,
+    onMouseUp: handleEnd,
+    onMouseLeave: handleLeave,
+    onTouchStart: handleStart,
+    onTouchEnd: handleEnd,
+    onTouchCancel: handleLeave,
+    ref: elementRef,
+  };
 }

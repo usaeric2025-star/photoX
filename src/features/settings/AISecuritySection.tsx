@@ -32,6 +32,8 @@ const TestConnectionSchema = v.object({
   apiKey: v.string(),
 });
 
+import { useTranslation } from '#src/hooks/index.js';
+
 interface AISecuritySectionProps {
   agnesApiKey: string;
   setAgnesApiKey: (key: string) => void;
@@ -50,7 +52,7 @@ export function AISecuritySection({
   inputClass
 }: AISecuritySectionProps) {
   const appLang = useUI(s => s.appLang);
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t } = useTranslation();
 
   const [keysStatus, setKeysStatus] = React.useState({ 
     openrouter: false, 

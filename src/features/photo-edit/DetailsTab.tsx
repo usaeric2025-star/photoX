@@ -5,9 +5,8 @@ import { DimensionEditor } from './DimensionEditor.js';
 import { Dimension } from '#src/types/index.js';
 import { safeArray } from '#lib/utils.js';
 import { useUI, useSignal } from '#lib/store/index.js';
-import { usePhoto, useFilters } from '#src/hooks/index.js';
+import { usePhoto, useFilters, useTranslation } from '#src/hooks/index.js';
 import { showToast } from '#lib/ui/toast.js';
-import { translations } from '#src/locales/index.js';
 import { usePhotoEditAI } from '#src/hooks/index.js';
 import { AppField } from '#lib/forms/AppField.js';
 import { MultilingualInput } from '#src/components/shared/MultilingualInput.js';
@@ -22,15 +21,15 @@ export function DetailsTab() {
   const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
   const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
 
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t } = useTranslation();
 
   const onAiAnalyze = async () => {
     if (detailPhoto?.imageUrl) {
       try {
         await handleAiAnalyze(undefined, detailPhoto.imageUrl);
-        showToast.success(appLang === 'zh' ? '分析请求已发送' : 'Analysis request sent');
+        showToast.success(t('analysisSent'));
       } catch (e) {
-        ErrorFactory.handle(e, { context: 'AI 识别' });
+        ErrorFactory.handle(e, { context: t('aiRecognize') });
       }
     }
   };
@@ -39,7 +38,7 @@ export function DetailsTab() {
     if (detailPhoto?.id) {
       const success = await copyToClipboard(detailPhoto.id);
       if (success) {
-        showToast.success(appLang === 'zh' ? 'ID 已复制' : 'ID Copied');
+        showToast.success(t('idCopied'));
       }
     }
   };

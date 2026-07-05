@@ -18,12 +18,12 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
   // Re-define mutation here to use standard TanStack Query
   const { deletePhotoAsync, deleteMutation } = usePhotoMutations();
 
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
   const handleConfirm = async () => {
     if (await confirm({
-      title: t.confirmDeleteTitleBatch,
-      description: t.confirmDeleteCount(selectedIds.length),
-      confirmText: t.delete,
+      title: t('confirmDeleteTitleBatch'),
+      description: t('confirmDeleteCount', selectedIds.length),
+      confirmText: t('delete'),
       variant: "destructive"
     })) {
       await deletePhotoAsync(selectedIds);
@@ -41,7 +41,7 @@ function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], 
         className="h-10 px-3 flex items-center justify-center gap-1.5"
         leftIcon={!deleteMutation.isPending && <Icon name="trash-2" size={16} />}
       >
-        {deleteMutation.isPending ? t.deleting : `${t.delete} (${selectedIds.length})`}
+        {deleteMutation.isPending ? t('deleting') : `${t('delete')} (${selectedIds.length})`}
       </Button>
     </div>
   );
@@ -62,7 +62,7 @@ export const BatchEditScreen = () => {
   const selectedIds = useSelectedIds();
   const { clearSelection } = useSelectionActions();
 
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
 
   const { submit: saveBatch, isLoading: isSaving } = useFormSubmit({
     schema: v.object({}),
@@ -74,8 +74,8 @@ export const BatchEditScreen = () => {
     onSuccess: () => {
       handleClose();
     },
-    successMessage: t.saveSuccessToast,
-    errorMessage: t.updateFailedToast
+    successMessage: t('saveSuccessToast'),
+    errorMessage: t('updateFailedToast')
   });
 
   // Convert formState to match BatchEditForm's expected type (name as string)
@@ -91,7 +91,7 @@ export const BatchEditScreen = () => {
       header={
         <div className="flex items-center justify-between gap-3 w-full">
           <h2 className="font-black text-base text-slate-800">
-            {t.batchEditTitle(batchEditIds.length)}
+            {t('batchEditTitle', batchEditIds.length)}
           </h2>
           
           <div className="flex items-center gap-2">
@@ -109,12 +109,12 @@ export const BatchEditScreen = () => {
               className="px-3 h-10 flex items-center justify-center gap-1.5 shadow-md text-sm bg-blue-600 hover:bg-blue-700"
               leftIcon={!(isSaving || isSyncing) && <Icon name="save" size={16} />}
             >
-              {(isSaving || isSyncing) ? t.saving : t.save}
+              {(isSaving || isSyncing) ? t('saving') : t('save')}
             </Button>
             
             <button onClick={handleClose}
               className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-slate-900"
-              title={t.closeBatchEdit}
+              title={t('closeBatchEdit')}
             >
               <Icon name="x" size={24} />
             </button>

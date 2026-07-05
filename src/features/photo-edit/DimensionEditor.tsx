@@ -10,7 +10,7 @@ interface DimensionEditorProps {
   showAiButton?: boolean;
   isAnalyzing?: boolean;
   onAiAnalyze?: () => void;
-  t: TranslationType;
+  t: (key: string, ...args: any[]) => string;
 }
 
 import { DimensionItem } from './components/DimensionItem.js';
@@ -63,7 +63,7 @@ export function DimensionEditor({
     <div className="space-y-3 pt-2">
       <div className="flex items-center justify-between pl-1">
         <div className="flex items-center gap-1">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">{t.dimensionsTitle}</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">{t('dimensionsTitle')}</span>
           <button 
             type="button"
             onClick={() => showToast.info('AI 识别可自动提取照片中的尺寸规格信息')}
@@ -79,7 +79,7 @@ export function DimensionEditor({
               loading={isAnalyzing}
               className={`min-h-[44px] min-w-[44px] text-[9px] font-black px-3 py-1 rounded-xl border transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}
               leftIcon={!isAnalyzing && <Icon name="sparkles" size={16} />}
-              title={t.aiRecognize}
+              title={t('aiRecognize')}
             >
               <span className="hidden sm:inline">{isAnalyzing ? '识别中...' : 'AI 识别'}</span>
               <span className="sm:hidden">{isAnalyzing ? '...' : 'AI'}</span>
@@ -91,7 +91,7 @@ export function DimensionEditor({
             className="min-h-[44px] px-3 sm:px-4 text-[9px] sm:text-xs font-black text-blue-600 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
           >
             <span className="text-base sm:text-lg">+</span>
-            <span className="hidden sm:inline">{t.addSpec}</span>
+            <span className="hidden sm:inline">{t('addSpec')}</span>
             <span className="sm:hidden">+</span>
           </button>
         </div>

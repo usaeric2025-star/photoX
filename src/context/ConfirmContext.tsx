@@ -1,8 +1,7 @@
 import React from 'react';
 import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { signal } from '@preact/signals-react';
-import { useUI } from '#lib/store/index.js';
-import { translations } from '#src/locales/index.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 interface ConfirmOptions {
   title: string;
@@ -45,8 +44,7 @@ export function useConfirm() {
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   const state = confirmStateSignal.value;
-  const appLang = useUI(s => s.appLang);
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t } = useTranslation();
 
   const handleConfirm = () => {
     state.resolve?.(true);
@@ -68,8 +66,8 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
         }}
         title={state.title}
         description={state.description}
-        confirmText={state.confirmText || t.confirmText}
-        cancelText={t.cancelText}
+        confirmText={state.confirmText || t('confirmText')}
+        cancelText={t('cancelText')}
         variant={state.variant || 'default'}
         onConfirm={handleConfirm}
         onCancel={handleCancel}

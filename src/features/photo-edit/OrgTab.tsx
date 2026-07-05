@@ -15,6 +15,8 @@ import { showToast } from '#lib/ui/toast.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { VisibilityToggle } from './components/VisibilityToggle.js';
 
+import { useTranslation } from '#src/hooks/index.js';
+
 export function OrgTab() {
   const { form } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
@@ -28,7 +30,7 @@ export function OrgTab() {
 
   const [isAddMfrOpen, setAddMfrOpen] = React.useState(false);
 
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t } = useTranslation();
   
   return (
     <div className="m-0 p-4 space-y-8 animate-in fade-in slide-in-from-right-2 duration-300 pb-10">
@@ -37,7 +39,7 @@ export function OrgTab() {
         {({ value, onChange }) => (
           <VisibilityToggle value={!!value} onChange={(val) => {
             onChange(val);
-            showToast.success(val ? (appLang === 'zh' ? '已隐藏' : 'Hidden') : (appLang === 'zh' ? '已公开' : 'Visible'));
+            showToast.success(val ? t('hidden') : t('visible'));
           }} />
         )}
       </AppField>
@@ -56,27 +58,27 @@ export function OrgTab() {
               addTag={async (name) => {
                 try {
                   const result = await addTagMut(name);
-                  showToast.success(appLang === 'zh' ? '标签已创建' : 'Tag created');
+                  showToast.success(t('tagCreated'));
                   return result?.id ? String(result.id) : null;
                 } catch (e) {
-                  ErrorFactory.handle(e, { context: '创建标签' });
+                  ErrorFactory.handle(e, { context: t('createTag') });
                   return null;
                 }
               }}
               updateTag={async (id, name) => {
                 try {
                   await updateTagMut({ id: Number(id), updates: { name } });
-                  showToast.success(appLang === 'zh' ? '标签已更新' : 'Tag updated');
+                  showToast.success(t('tagUpdated'));
                 } catch (e) {
-                  ErrorFactory.handle(e, { context: '更新标签' });
+                  ErrorFactory.handle(e, { context: t('updateTag') });
                 }
               }}
               deleteTag={async (id) => {
                 try {
                   await deleteTagMut(Number(id));
-                  showToast.success(appLang === 'zh' ? '标签已删除' : 'Tag deleted');
+                  showToast.success(t('tagDeleted'));
                 } catch (e) {
-                  ErrorFactory.handle(e, { context: '删除标签' });
+                  ErrorFactory.handle(e, { context: t('deleteTag') });
                 }
               }}
             />
@@ -89,14 +91,14 @@ export function OrgTab() {
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <Icon name="factory" size={12} className="text-slate-400" />
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">厂商名称 / MANUFACTURER</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('manufacturer').toUpperCase()} / MANUFACTURER</span>
           </div>
           <button 
             type="button"
             onClick={() => setAddMfrOpen(true)}
             className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-tighter"
           >
-            + {appLang === 'zh' ? '新建厂商' : 'NEW'}
+            + {t('newManufacturer')}
           </button>
         </div>
         <ManufacturerSelect form={form} name="manufacturerId" manufacturers={manufacturers} />
@@ -105,14 +107,14 @@ export function OrgTab() {
       <PromptDialog
         open={isAddMfrOpen}
         onOpenChange={setAddMfrOpen}
-        title={t.newMfrTitle}
-        placeholder={t.mfrNamePlaceholder}
+        title={t('newMfrTitle')}
+        placeholder={t('mfrNamePlaceholder')}
         onConfirm={async (name: string) => {
           try {
             await addManMut(name);
-            showToast.success(appLang === 'zh' ? '厂商已创建' : 'Manufacturer created');
+            showToast.success(t('mfrCreated'));
           } catch (e) {
-            ErrorFactory.handle(e, { context: '创建厂商' });
+            ErrorFactory.handle(e, { context: t('createMfr') });
           }
         }}
       />

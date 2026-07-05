@@ -22,7 +22,7 @@ interface OpenRouterConfigBlockProps {
   isSaving: 'openrouter' | 'agnes' | null;
   isTesting: 'openrouter' | 'agnes' | null;
   appLang: string;
-  t: typeof translations.en;
+  t: (key: string, ...args: any[]) => string;
 }
 
 export function OpenRouterConfigBlock({
@@ -58,7 +58,7 @@ export function OpenRouterConfigBlock({
             }}
             className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingOpenRouter ? 'bg-slate-200 text-slate-600' : 'bg-brand-navy text-white'}`}
           >
-            {isEditingOpenRouter ? t.cancel || '取消' : t.edit || '編輯'}
+            {isEditingOpenRouter ? t('cancel') || '取消' : t('edit') || '編輯'}
           </button>
         </div>
       </div>

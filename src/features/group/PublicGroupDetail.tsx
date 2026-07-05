@@ -24,7 +24,7 @@ export function PublicGroupDetailPage() {
   const groupId = pathSlug || ((params as { slug?: string }).slug) || fGroupId;
   
   const [anchor, setAnchor] = React.useState(true);
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
   
   const { 
     group, 
@@ -86,7 +86,7 @@ export function PublicGroupDetailPage() {
       loading={loading}
       error={error}
       isEmpty={!loading && !error && !group}
-      emptyTitle={t.groupNotFound}
+      emptyTitle={t('groupNotFound')}
       loadingSkeleton={loadingSkeleton}
     >
       {group && (

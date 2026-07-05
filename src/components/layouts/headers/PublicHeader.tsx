@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useAuth } from '#lib/store/index.js';
-import { useUI, usePublicSettings, usePermission, UIStoreState } from '#src/hooks/index.js';
+import { useUI, usePublicSettings, usePermission, UIStoreState, useTranslation } from '#src/hooks/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
@@ -27,8 +27,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const isAdminRoute = route?.name === 'admin' || route?.name === 'adminGroup' || pathname.startsWith('/admin');
   const isGroupPage = route?.name === 'publicGroup' || route?.name === 'adminGroup' || pathname.startsWith('/group/') || pathname.startsWith('/admin/group/');
 
-  const lang = useUI((s: UIStoreState) => s.appLang);
-  const t = translations[lang as keyof typeof translations] || translations.en;
+  const { t } = useTranslation();
 
   const cachedSettings = React.useMemo(() => {
     try {
@@ -89,7 +88,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
         {totalCount !== undefined && (
           <div className={cn("flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
-            <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{t.totalStock}</span>
+            <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{t('totalStock')}</span>
             <span className={cn("shrink-0", theme.badgeVal)}>
               {totalCount.toLocaleString()}
             </span>
@@ -105,7 +104,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             onClick={onRefresh}
             disabled={isRefreshing}
             className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
-            title={t.refresh}
+            title={t('refresh')}
           >
             {isRefreshing ? <LoadingSpinner size="xs" /> : <Icon name="refresh-cw" size={16} className="sm:size-[18px]" />}
           </button>
@@ -116,7 +115,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
           <button
             onClick={handleAuthAction}
             className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
-            title={isStaff ? (isAdminRoute ? t.viewModePublic : t.viewModeAdmin) : t.adminPanel}
+            title={isStaff ? (isAdminRoute ? t('viewModePublic') : t('viewModeAdmin')) : t('adminPanel')}
           >
             <Icon name="layout-dashboard" size={16} className="sm:size-[18px]" />
           </button>
@@ -141,11 +140,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                   <Icon name="user" size={10} />
                   )}
                 </div>
-                {user ? user.email?.split("@")[0] : t.staffUser}
+                {user ? user.email?.split("@")[0] : t('staffUser')}
               </div>
             ) : (
               <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">
-                {t.guestLabel}
+                {t('guestLabel')}
               </div>
             )}
             
@@ -153,12 +152,12 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
             <div className="px-2 py-1.5 flex flex-col gap-1 w-full border-t border-slate-50 mt-1">
               <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">
-                {t.connectLabel}
+                {t('connectLabel')}
               </span>
             </div>
 
             <div className="px-2 py-1.5 flex flex-col gap-1 w-full">
-              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t.systemLabel}</span>
+              <span className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 select-none">{t('systemLabel')}</span>
               {isStaff ? (
                 <>
                   {!isAdminRoute && (
@@ -168,7 +167,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                       className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                     >
                       <Icon name="layout-dashboard" size={16} />
-                      {t.adminPanel}
+                      {t('adminPanel')}
                     </button>
                   )}
                 </>
@@ -179,7 +178,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                   className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-blue-50 text-gray-700"
                 >
                   <Icon name="log-in" size={16} />
-                  {t.adminPanel}
+                  {t('adminPanel')}
                 </button>
               )}
               <div className="mt-1">
@@ -196,7 +195,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                   className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer outline-none hover:bg-red-50 text-red-600"
                 >
                 <Icon name="log-out" size={16} />
-                  {t.signOutAccount}
+                  {t('signOutAccount')}
                 </button>
               </>
             )}

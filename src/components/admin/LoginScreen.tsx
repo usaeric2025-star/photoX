@@ -1,9 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { usePublicSettings } from '#src/hooks/index.js';
-import { useUI } from '#lib/store/index.js';
+import { usePublicSettings, useTranslation } from '#src/hooks/index.js';
+import { useUI, UIStoreState } from '#lib/store/index.js';
 import { AppLink } from '#src/components/router/AppLink.js';
-import { translations } from '#src/locales/index.js';
 import { storage } from '#src/services/storage/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
@@ -20,7 +19,7 @@ interface LoginScreenProps {
 export function LoginScreen({ signIn }: LoginScreenProps) {
   const { data: settings } = usePublicSettings();
   const appLang = useUI(s => s.appLang);
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t } = useTranslation();
 
 
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
@@ -39,7 +38,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
         storage.setItem('ais_mock_auth_passcode', JSON.stringify(passcode));
         return true;
       } else {
-        throw new Error(t.invalidCode);
+        throw new Error(t('invalidCode'));
       }
     },
     onSuccess: () => {
@@ -119,7 +118,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
               }`}
             >
               <Icon name="shield" size={14} fill={mode === 'admin' ? 'currentColor' : 'none'} className={mode === 'admin' ? 'opacity-80' : 'opacity-40'} />
-              {t.loginTitleAdmin}
+              {t('loginTitleAdmin')}
             </button>
             <button
               onClick={() => { setMode('staff'); setPassError(false); }}
@@ -128,7 +127,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
               }`}
             >
               <Icon name="users" size={14} fill={mode === 'staff' ? 'currentColor' : 'none'} className={mode === 'staff' ? 'opacity-80' : 'opacity-40'} />
-              {t.loginTitleStaff}
+              {t('loginTitleStaff')}
             </button>
           </div>
 
@@ -150,12 +149,12 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                 className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black group"
                 leftIcon={!isAdminLoggingIn && <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" />}
               >
-                {t.login}
+                {t('login')}
               </Button>
               
               <p className="text-[10px] text-slate-400 font-medium text-center leading-relaxed max-w-[240px]">
-                {t.agreeByConnecting} <br/>
-                <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t.termsOfService}</span> & <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t.privacyPolicy}</span>
+                {t('agreeByConnecting')} <br/>
+                <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t('termsOfService')}</span> & <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t('privacyPolicy')}</span>
               </p>
             </div>
 
@@ -172,7 +171,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                 <input
                   autoFocus
                   type="password"
-                  placeholder={t.enterPasscode}
+                  placeholder={t('enterPasscode')}
                   value={passInput}
                   onChange={(e) => {
                     setPassInput(e.target.value);
@@ -198,7 +197,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                 className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black"
                 leftIcon={!isStaffLoggingIn && <Icon name="log-in" size={18} />}
               >
-                {t.unlockAndAccess}
+                {t('unlockAndAccess')}
               </Button>
             </form>
           </div>
@@ -213,7 +212,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
             <span className="w-5 h-5 rounded-lg bg-slate-900/5 flex items-center justify-center group-hover:bg-slate-900/10 transition-colors">
               <Icon name="x" size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
             </span>
-            {t.backToShowcase}
+            {t('backToShowcase')}
           </AppLink>
         </div>
       </div>

@@ -10,7 +10,7 @@ interface DimensionItemProps {
   onUpdateLabel: (idx: number, prefix: string, content: string) => void;
   onUpdateUnit: (idx: number, unit: string) => void;
   isAnalyzing?: boolean;
-  t: TranslationType;
+  t: (key: string, ...args: any[]) => string;
 }
 
 export function DimensionItem({
@@ -41,7 +41,7 @@ export function DimensionItem({
         <button 
           onClick={() => onRemove(idx)}
           className="absolute -top-2 -right-2 sm:top-2 sm:right-2 p-1.5 bg-white sm:bg-transparent text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shadow-sm sm:shadow-none border border-slate-100 sm:border-0"
-          title={t.deleteSpec}
+          title={t('deleteSpec')}
         >
           <Icon name="x" size={16} />
         </button>
@@ -49,7 +49,7 @@ export function DimensionItem({
       <div className="grid grid-cols-5 gap-2">
         <div className="col-span-2 space-y-1">
           <div className="flex items-center justify-between pl-1">
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t.part}</span>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t('part')}</span>
             {dim.isAi && (
               <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">
                 <Icon name="sparkles" size={10} className="animate-pulse" />
@@ -66,7 +66,7 @@ export function DimensionItem({
           />
         </div>
         <div className="col-span-3 space-y-1">
-          <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">{t.unit}</span>
+          <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">{t('unit')}</span>
           <div className="flex gap-1">
             {['cm', 'mm', 'inch'].map(u => (
               <button 
@@ -83,7 +83,7 @@ export function DimensionItem({
       </div>
       <div className="space-y-1">
         <div className="flex justify-between items-center pl-1">
-          <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t.dimensionContent} (H x W x D)</span>
+          <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t('dimensionContent')} (H x W x D)</span>
         </div>
         <input 
           type="text" 

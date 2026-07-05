@@ -31,7 +31,7 @@ export function TagItem({
     if (activeTagMenuId === tag.id) setActiveTagMenuId(null);
   });
 
-  useLongPress(itemRef, {
+  const longPress = useLongPress<HTMLDivElement>({
     delay: 400,
     onLongPress: () => {
       setActiveTagMenuId(tag.id);
@@ -62,7 +62,13 @@ export function TagItem({
 
   return (
     <div
-      ref={itemRef}
+      ref={longPress.ref}
+      onMouseDown={longPress.onMouseDown}
+      onMouseUp={longPress.onMouseUp}
+      onMouseLeave={longPress.onMouseLeave}
+      onTouchStart={longPress.onTouchStart}
+      onTouchEnd={longPress.onTouchEnd}
+      onTouchCancel={longPress.onTouchCancel}
       className={`bg-white border border-brand-navy/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeTagMenuId === tag.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
     >
       <div className="flex flex-col">

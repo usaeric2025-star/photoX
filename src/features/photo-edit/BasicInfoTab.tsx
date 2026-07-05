@@ -15,7 +15,7 @@ import { PhotoZoomOverlay } from './components/PhotoZoomOverlay.js';
 
 export function BasicInfoTab() {
   const { form } = usePhotoEditSessionContext();
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
   const { modal, photoId } = useFilters();
   const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
   
@@ -61,7 +61,7 @@ export function BasicInfoTab() {
             SYSTEM CODE
           </h3>
           <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate">
-            {detailPhoto?.itemCode || t.systemCodeAuto}
+            {detailPhoto?.itemCode || t('systemCodeAuto')}
           </div>
         </div>
         <div className="space-y-1.5 opacity-50 select-none">

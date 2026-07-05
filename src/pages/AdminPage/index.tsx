@@ -4,15 +4,13 @@ import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
 import { loadTagsFromCloud } from '#src/services/tag/queries.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { AdminPageContent } from './AdminPageContent.js';
-import { useUI } from '#lib/store/index.js';
-import { translations } from '#src/locales/index.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 export default function AdminPage() {
-  const appLang = useUI((s) => s.appLang);
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t, appLang } = useTranslation();
 
   useEffect(() => {
-    document.title = t.adminPanelTitle;
+    document.title = t('adminPanelTitle');
     
     if (!window.location.pathname.startsWith('/admin')) {
       console.warn('[Admin] Pathname deviation detected:', window.location.pathname);

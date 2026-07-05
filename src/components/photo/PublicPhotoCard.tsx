@@ -33,7 +33,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
 }: PublicPhotoCardProps) {
   const { columns } = useGrid();
   
-  const { cardRef, handleClick } = usePhotoCard({
+  const { cardRef, handleClick, longPressHandlers } = usePhotoCard({
     photo,
     isManagement: false,
     isMultiSelect: false,
@@ -57,6 +57,12 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       priority={priority}
       onClick={handleClick}
       ref={cardRef}
+      onMouseDown={longPressHandlers.onMouseDown}
+      onMouseUp={longPressHandlers.onMouseUp}
+      onMouseLeave={longPressHandlers.onMouseLeave}
+      onTouchStart={longPressHandlers.onTouchStart}
+      onTouchEnd={longPressHandlers.onTouchEnd}
+      onTouchCancel={longPressHandlers.onTouchCancel}
     >
       <PhotoStatusBadges 
         photo={photo} 

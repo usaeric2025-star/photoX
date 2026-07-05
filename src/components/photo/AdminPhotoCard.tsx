@@ -82,7 +82,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   const isPhotoSelected = useIsPhotoSelected(photo.id);
   const { can } = usePermission();
   
-  const { cardRef, handleClick } = usePhotoCard({
+  const { cardRef, handleClick, longPressHandlers } = usePhotoCard({
     photo,
     isManagement: true,
     isMultiSelect,
@@ -108,6 +108,12 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       priority={priority}
       onClick={handleClick}
       ref={cardRef}
+      onMouseDown={longPressHandlers.onMouseDown}
+      onMouseUp={longPressHandlers.onMouseUp}
+      onMouseLeave={longPressHandlers.onMouseLeave}
+      onTouchStart={longPressHandlers.onTouchStart}
+      onTouchEnd={longPressHandlers.onTouchEnd}
+      onTouchCancel={longPressHandlers.onTouchCancel}
     >
       {isMultiSelect && (
         <PhotoSelectionIndicator isSelected={isPhotoSelected} />

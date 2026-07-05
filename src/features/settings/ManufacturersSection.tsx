@@ -8,8 +8,7 @@ import { ManufacturerItem } from '#src/components/admin/ManufacturerItem.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 
 import { normalizeManufacturerName } from "#lib/utils.js";
-import { useUI } from '#lib/store/index.js';
-import { translations } from '#src/locales/index.js';
+import { useUI, useTranslation } from '#src/hooks/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { FormProvider } from '#lib/forms/useFormField.js';
@@ -37,7 +36,7 @@ export function ManufacturersSection({
   
   const [isAddOpen, addDialog] = useDisclosure(false);
   const appLang = useUI(s => s.appLang);
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t } = useTranslation();
 
   const { submit: runAddManufacturer, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
     schema: v.object({ name: v.pipe(v.string(), v.minLength(1)) }),
@@ -46,8 +45,8 @@ export function ManufacturersSection({
       if (!normalized) return null;
       return await rawAddManufacturer(normalized);
     },
-    successMessage: appLang === 'zh' ? '已新增生產商' : 'Manufacturer added',
-    errorMessage: appLang === 'zh' ? '新增失敗' : 'Add failed'
+    successMessage: t('addMfrSuccess'),
+    errorMessage: t('addMfrError')
   });
 
   const { submit: runUpdateManufacturer, isLoading: isUpdating, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
@@ -56,8 +55,8 @@ export function ManufacturersSection({
       await rawUpdateManufacturer(id, { name });
       return true;
     },
-    successMessage: appLang === 'zh' ? '已更新' : 'Updated',
-    errorMessage: appLang === 'zh' ? '更新失敗' : 'Update failed'
+    successMessage: t('updateSuccess'),
+    errorMessage: t('updateError')
   });
 
   return (
@@ -65,7 +64,7 @@ export function ManufacturersSection({
       <div className="flex items-center justify-between">
         <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
           <div className="w-1.5 h-3.5 bg-brand-navy rounded-full"></div>
-          {appLang === 'zh' ? '生產商設定 / MANUFACTURERS' : 'Manufacturers Setting'}
+          {t('manufacturersSettingsTitle')}
         </h3>
         <span className="text-[10px] text-brand-navy/40 font-black uppercase">
           {(manufacturers || []).length} Items
@@ -79,7 +78,7 @@ export function ManufacturersSection({
            leftIcon={!isAdding && <Icon name="plus" size={16} />}
            variant="primary"
         >
-          {appLang === 'zh' ? '新增生產商' : 'Add New'}
+          {t('addManufacturer')}
         </Button>
       </div>
       <FormProvider fieldErrors={updateFieldErrors} clearFieldError={updateClearFieldError}>
@@ -102,8 +101,8 @@ export function ManufacturersSection({
           open={isAddOpen}
           onOpenChange={addDialog.toggle}
           loading={isAdding}
-          title={t.newMfrTitle}
-          description={t.mfrNamePlaceholder}
+          title={t('newMfrTitle')}
+          description={t('mfrNamePlaceholder')}
           onConfirm={async (name: string) => {
             if (!name.trim()) return false;
             return await runAddManufacturer({ name });

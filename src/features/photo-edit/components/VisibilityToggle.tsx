@@ -9,7 +9,6 @@ interface VisibilityToggleProps {
 export function VisibilityToggle({ value, onChange }: VisibilityToggleProps) {
   return (
     <section className="space-y-4">
-      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">显示状态 / VISIBILITY</h3>
       <div className="flex gap-3">
         <button
           type="button"

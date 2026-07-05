@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from '#lib/utils.js';
 import { useAuth, activeTaskCountSignal, useSignal } from '#lib/store/index.js';
 import { useComputed } from '@preact/signals-react';
-import { useUI, useSettings, useAdminBatchActions, usePermission } from '#src/hooks/index.js';
+import { useUI, useSettings, useAdminBatchActions, usePermission, useTranslation } from '#src/hooks/index.js';
 import { useAppQuery } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { translations, TranslationType } from '#src/locales/index.js';
@@ -24,10 +24,9 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const { role, isAdmin, isStaff } = usePermission();
   const { navigate } = useAppRouter();
 
-  const lang = useUI((s) => s.appLang);
+  const { t, lang } = useTranslation();
   const isMultiSelect = useIsMultiSelect();
   const { toggleMode } = useSelectionActions();
-  const t = (translations[lang as keyof typeof translations] || translations.en) as TranslationType;
 
   const taskCount = useComputed(() => activeTaskCountSignal.value).value;
 

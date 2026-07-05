@@ -22,7 +22,7 @@ interface AgnesConfigBlockProps {
   isSaving: 'openrouter' | 'agnes' | null;
   isTesting: 'openrouter' | 'agnes' | null;
   appLang: string;
-  t: typeof translations.en;
+  t: (key: string, ...args: any[]) => string;
 }
 
 export function AgnesConfigBlock({
@@ -58,7 +58,7 @@ export function AgnesConfigBlock({
             }}
             className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingAgnes ? 'bg-slate-200 text-slate-600' : 'bg-blue-600 text-white'}`}
           >
-            {isEditingAgnes ? t.cancel || '取消' : t.edit || '編輯'}
+            {isEditingAgnes ? t('cancel') || '取消' : t('edit') || '編輯'}
           </button>
         </div>
       </div>

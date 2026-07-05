@@ -41,7 +41,6 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   const handleSave = async () => {
     try {
         await commit();
-        showToast.success(appLang === 'zh' ? '保存成功' : 'Saved successfully');
         handleClose();
     } catch (e) {
         ErrorFactory.handle(e, { context: '保存' });

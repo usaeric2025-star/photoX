@@ -26,7 +26,7 @@ export function DataFallback({
   emptyMessage,
   children
 }: DataFallbackProps) {
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
 
   if (loading) {
     if (loadingSkeleton) return <>{loadingSkeleton}</>;
@@ -45,13 +45,13 @@ export function DataFallback({
           <Icon name="alert-circle" size={32} />
         </div>
         <div className="text-xl font-semibold text-text-base mb-2">
-          {t.errorPrefix}
+          {t('errorPrefix')}
         </div>
         <p className="text-text-soft mb-6 max-w-md">{errorMsg}</p>
         {onRetry ? (
-          <Button onClick={onRetry}>{((t as any).retry) || 'Retry'}</Button>
+          <Button onClick={onRetry}>{t('retry') || 'Retry'}</Button>
         ) : (
-          <Button onClick={() => window.history.back()}>{t.goBack}</Button>
+          <Button onClick={() => window.history.back()}>{t('goBack')}</Button>
         )}
       </div>
     );

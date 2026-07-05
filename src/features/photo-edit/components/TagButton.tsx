@@ -1,8 +1,8 @@
-import React, { useRef } from 'react';
+import React, { memo } from 'react';
 import { cn } from "#lib/utils.js";
 import { Icon } from '#src/components/ui/Icon.js';
 import { Tag } from '#src/types/index.js';
-import { useLongPress } from "#src/hooks/core/useLongPress.js";
+import { useLongPress } from "#src/hooks/index.js";
 
 interface TagButtonProps {
   tag: Tag;
@@ -15,7 +15,7 @@ interface TagButtonProps {
   onLongPress: () => void;
 }
 
-export const TagButton = React.memo(({ 
+export const TagButton = memo(function TagButton({ 
   tag, 
   isSelected, 
   isHot, 
@@ -23,19 +23,23 @@ export const TagButton = React.memo(({
   isDisabled, 
   hideHotLabel, 
   onToggle, 
-  onLongPress: onLongPressProp 
-}: TagButtonProps) => {
-  const btnRef = useRef<HTMLButtonElement>(null);
-  
-  useLongPress(btnRef, {
-    delay: 400,
-    onLongPress: onLongPressProp
+  onLongPress 
+}: TagButtonProps) {
+  const handlers = useLongPress<HTMLButtonElement>({
+    delay: 500,
+    onLongPress: () => {
+      onLongPress();
+    },
+    onClick: () => {
+      onToggle(tag);
+    },
+    disabled: isDisabled
   });
 
   return (
-    <div className="relative">
+    <div className="relative" id={`tag-${tag.id}`}>
       <button
-        ref={btnRef}
+        {...handlers}
         type="button"
         style={{
           WebkitTouchCallout: "none",
@@ -43,10 +47,6 @@ export const TagButton = React.memo(({
           userSelect: "none",
           touchAction: "pan-y",
           pointerEvents: "auto",
-        }}
-        onClick={(e) => {
-          if (isDisabled) return;
-          onToggle(tag);
         }}
         className={cn(
           "px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border select-none flex items-center gap-1 w-auto shadow-sm min-h-[32px] cursor-pointer",
@@ -85,14 +85,5 @@ export const TagButton = React.memo(({
         )}
       </button>
     </div>
-  );
-}, (prev, next) => {
-  return (
-    prev.isSelected === next.isSelected &&
-    prev.isHot === next.isHot &&
-    prev.isPinned === next.isPinned &&
-    prev.isDisabled === next.isDisabled &&
-    prev.tag.id === next.tag.id &&
-    prev.tag.name === next.tag.name
   );
 });

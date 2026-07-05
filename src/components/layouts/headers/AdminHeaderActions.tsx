@@ -12,7 +12,7 @@ interface AdminHeaderActionsProps {
   taskCount: number;
   handleAuthAction: () => void;
   theme: Theme;
-  t: TranslationType;
+  t: (key: string, ...args: any[]) => any;
 }
 
 export function AdminHeaderActions({ 
@@ -29,7 +29,7 @@ export function AdminHeaderActions({
       <button
         onClick={toggleMode}
         className={cn("w-9 h-9 sm:w-10 sm:h-10", multiSelect ? theme.buttonActive : theme.button)}
-        title={multiSelect ? t.exitSelectMode : t.selectModeToggle}
+        title={multiSelect ? t('exitSelectMode') : t('selectModeToggle')}
       >
         <Icon name="check-square" className="size-4 sm:size-4.5" />
       </button>
@@ -37,7 +37,7 @@ export function AdminHeaderActions({
       <button
         onClick={() => batchAiIdentify()}
         className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
-        title={t.aiSmartIdentify}
+        title={t('aiSmartIdentify')}
       >
         <Icon name="sparkles" className="size-4 sm:size-4.5 animate-pulse" />
       </button>
@@ -45,7 +45,7 @@ export function AdminHeaderActions({
       <button
         onClick={() => { isTaskDrawerOpenSignal.value = true; }}
         className={cn("w-9 h-9 sm:w-10 sm:h-10 relative shrink-0", theme.button)}
-        title={t.taskCenter}
+        title={t('taskCenter')}
       >
         <Icon name="activity" className="size-4 sm:size-4.5" />
         {taskCount > 0 && (
@@ -58,7 +58,7 @@ export function AdminHeaderActions({
       <button
         onClick={handleAuthAction}
         className={cn("w-9 h-9 sm:w-10 sm:h-10", theme.button)}
-        title={t.viewModePublic}
+        title={t('viewModePublic')}
       >
         <Icon name="layout-dashboard" className="size-4 sm:size-4.5" />
       </button>

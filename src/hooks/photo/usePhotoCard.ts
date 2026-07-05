@@ -95,7 +95,7 @@ export function usePhotoCard({
     handleOpenLightbox();
   };
 
-  useLongPress(cardRef, {
+  const longPress = useLongPress<HTMLDivElement>({
     delay: 600,
     onLongPress: () => {
       longPressTriggered.current = true;
@@ -111,7 +111,7 @@ export function usePhotoCard({
         } else {
           toggleSelect(photo.id);
         }
-        if ('vibrate' in navigator) navigator.vibrate(50);
+        if ('vibrate' in navigator) (navigator as any).vibrate(50);
       } else {
         patch({ showWhatsAppChoice: true, pendingPhotoId: photo.id });
       }
@@ -119,7 +119,8 @@ export function usePhotoCard({
   });
 
   return {
-    cardRef,
-    handleClick
+    cardRef: longPress.ref,
+    handleClick,
+    longPressHandlers: longPress
   };
 }

@@ -88,10 +88,9 @@ interface ManufacturerButtonProps {
 }
 
 const ManufacturerButton = ({ mfr, isSelected, onSelect, onEdit, onDelete }: ManufacturerButtonProps) => {
-  const btnRef = useRef<HTMLButtonElement>(null);
   const [isMenuOpen, menuDialog] = useDisclosure(false);
 
-  useLongPress(btnRef, {
+  const longPress = useLongPress<HTMLButtonElement>({
     delay: 600,
     onLongPress: () => {
       if (onEdit || onDelete) {
@@ -103,10 +102,16 @@ const ManufacturerButton = ({ mfr, isSelected, onSelect, onEdit, onDelete }: Man
   return (
     <>
       <button
-        ref={btnRef}
+        ref={longPress.ref}
         type="button"
         onClick={() => onSelect(isSelected ? null : String(mfr.id))}
         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? "bg-slate-800 text-white border-slate-800 shadow-lg" : "bg-white border-slate-200 text-slate-600 active:bg-slate-50"}`}
+        onMouseDown={longPress.onMouseDown}
+        onMouseUp={longPress.onMouseUp}
+        onMouseLeave={longPress.onMouseLeave}
+        onTouchStart={longPress.onTouchStart}
+        onTouchEnd={longPress.onTouchEnd}
+        onTouchCancel={longPress.onTouchCancel}
       >
         {(mfr.name || "").toUpperCase()}
       </button>

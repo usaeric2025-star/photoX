@@ -7,17 +7,25 @@ export function useTranslation() {
   const appLang = useAppLang();
 
   /** 
-   * t - Function to resolve localized strings from a data object (e.g. photo.name)
+   * resolveString - Function to resolve localized strings from a data object (e.g. photo.name)
    */
-  const t = (translations: Translations, fallback?: string) => {
+  const resolveString = (translations: Translations, fallback?: string) => {
     if (!translations) return fallback || '';
     return translations[appLang] || translations.en || fallback || '';
   };
 
   /**
-   * uiTranslations - The full translation object for the current language
+   * t - Function to resolve UI strings from the current language translation object
    */
   const uiTranslations = (allTranslations[appLang as keyof typeof allTranslations] || allTranslations.en) as TranslationType;
+  const t = (key: string, ...args: any[]): string => {
+    const val = (uiTranslations as any)[key];
+    if (val === undefined) return key;
+    if (typeof val === 'function') {
+      return val(...args);
+    }
+    return val;
+  };
 
-  return { t, appLang, lang: appLang, uiTranslations };
+  return { resolveString, t, appLang, lang: appLang, uiTranslations };
 }

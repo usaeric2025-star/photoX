@@ -31,7 +31,7 @@ export default function PublicPage() {
   
   const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
   const patch = useUI(s => s.patch);
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
@@ -84,7 +84,7 @@ export default function PublicPage() {
           }}
           type="button"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-success text-text-on-primary shadow-lg hover:opacity-90 transition-all active:scale-90 focus:outline-none"
-          title={t.whatsAppInquiry}
+          title={t('whatsAppInquiry')}
         >
           <Icon name="whatsapp" size={26} />
         </button>

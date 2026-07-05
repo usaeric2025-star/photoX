@@ -15,7 +15,7 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   const { data: settings } = usePublicSettings();
   const pendingPhotoId = useUI(s => s.pendingPhotoId);
   const { data: pendingPhoto } = usePhoto(pendingPhotoId || '');
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
 
   const options = React.useMemo(() => {
     const opts = [];
@@ -24,12 +24,12 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
 
     let message = '';
     if (pendingPhoto) {
-      const prompt = t.sharePrompt || "您好，我对这个家具感兴趣：";
+      const prompt = t('sharePrompt') || "您好，我对这个家具感兴趣：";
       const name = pendingPhoto.name || "";
       const url = pendingPhoto.imageUrl || "";
       message = `${prompt}\n*${name}*\n${url}`;
     } else {
-      message = t.inquiryDefaultMessage;
+      message = t('inquiryDefaultMessage');
     }
     const encodedText = encodeURIComponent(message);
 
@@ -44,7 +44,7 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
     if (opts.length === 0) {
       const fallback = getEnv('VITE_WHATSAPP_NUMBER');
       if (fallback) {
-        opts.push({ name: t.whatsAppInquiry || 'WhatsApp', url: `https://wa.me/${fallback.replace(/\D/g, '')}?text=${encodedText}` });
+        opts.push({ name: t('whatsAppInquiry') || 'WhatsApp', url: `https://wa.me/${fallback.replace(/\D/g, '')}?text=${encodedText}` });
       }
     }
 
@@ -54,9 +54,9 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   return (
     <NativeDialog id="whatsapp-choice-dialog" open={open} onClose={() => onOpenChange(false)}>
       <div className="w-full p-6">
-        <h3 className="font-bold text-lg mb-4 text-slate-800">{t.chooseInquiryMethod}</h3>
+        <h3 className="font-bold text-lg mb-4 text-slate-800">{t('chooseInquiryMethod')}</h3>
         {options.length === 0 ? (
-          <p className="text-slate-500 text-sm">{t.noInquiryMethods}</p>
+          <p className="text-slate-500 text-sm">{t('noInquiryMethods')}</p>
         ) : (
           <div className="space-y-3">
             {options.map((opt, i) => (

@@ -39,7 +39,7 @@ function CategoryItem({
     if (activeMenuId === cat.id) setActiveMenuId(null);
   });
 
-  useLongPress(menuRef, {
+  const longPress = useLongPress<HTMLDivElement>({
     delay: 400,
     onLongPress: () => {
       setActiveMenuId(cat.id);
@@ -53,7 +53,13 @@ function CategoryItem({
 
   return (
       <div
-      ref={menuRef}
+      ref={longPress.ref}
+      onMouseDown={longPress.onMouseDown}
+      onMouseUp={longPress.onMouseUp}
+      onMouseLeave={longPress.onMouseLeave}
+      onTouchStart={longPress.onTouchStart}
+      onTouchEnd={longPress.onTouchEnd}
+      onTouchCancel={longPress.onTouchCancel}
       className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === cat.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
     >
       <div className="flex flex-col">

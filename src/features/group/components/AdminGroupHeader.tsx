@@ -22,7 +22,7 @@ interface TitleInputProps {
   onBlur: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   disabled: boolean;
-  t: TranslationType;
+  t: (key: string, ...args: any[]) => string;
 }
 
 function TitleInput({ value, onChange, onBlur, onKeyDown, disabled, t }: TitleInputProps) {
@@ -42,7 +42,7 @@ function TitleInput({ value, onChange, onBlur, onKeyDown, disabled, t }: TitleIn
       error={error}
       className="text-xl font-bold"
       containerClassName="w-full max-w-sm"
-      placeholder={t.titlePlaceholder}
+      placeholder={t('titlePlaceholder')}
     />
   );
 }
@@ -60,13 +60,13 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(group.name);
   
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
   const { toggleMode } = useSelectionActions();
   const isMultiSelect = useIsMultiSelect();
 
   // Create a dynamic schema to use translated error messages
   const dynamicSchema = v.object({
-    title: v.pipe(v.string(), v.minLength(3, t.titleMinLength)),
+    title: v.pipe(v.string(), v.minLength(3, t('titleMinLength'))),
   });
 
   const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit<typeof dynamicSchema, boolean>({
@@ -78,14 +78,14 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
     onSuccess: () => {
       setIsEditingTitle(false);
     },
-    successMessage: t.updateTitleSuccess,
-    errorMessage: t.updateTitleFailed
+    successMessage: t('updateTitleSuccess'),
+    errorMessage: t('updateTitleFailed')
   });
 
   const handleCopyId = async () => {
     const success = await copyToClipboard(group.id);
     if (success) {
-      showToast.success(t.groupIdCopied);
+      showToast.success(t('groupIdCopied'));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -95,7 +95,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
     const url = `${window.location.origin}/group/${group.id}`;
     const success = await copyToClipboard(url);
     if (success) {
-      showToast.success(t.shareLinkCopied);
+      showToast.success(t('shareLinkCopied'));
     }
   };
 
@@ -132,23 +132,23 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
                 onChange={setEditTitleValue}
                 onBlur={handleSaveTitle}
                 onKeyDown={handleKeyDown}
-                t={t}
+                t={t as any}
               />
             </FormProvider>
           ) : (
             <h1 
               className="text-xl font-bold text-slate-900 truncate cursor-pointer hover:underline decoration-slate-300 underline-offset-4"
               onClick={() => setIsEditingTitle(true)}
-              title={t.clickToEditTitle}
+              title={t('clickToEditTitle')}
             >
-              {group.name || t.clickToAddTitle}
+              {group.name || t('clickToAddTitle')}
             </h1>
           )}
           
           <button 
             onClick={handleCopyId}
             className="flex items-center gap-1.5 p-1 px-2 text-slate-400 hover:text-slate-700 transition-colors shrink-0 rounded hover:bg-slate-100 group"
-            title={t.copyGroupId}
+            title={t('copyGroupId')}
           >
             <span className="text-xs font-mono tracking-wider">{group.id.substring(0, 4)}</span>
             {copied ? <Icon name="check" className="w-3 h-3 text-emerald-500" /> : <Icon name="copy" className="w-3 h-3 transition-transform group-active:scale-90" />}
@@ -157,7 +157,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
         
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold whitespace-nowrap border border-indigo-100">
-            {photoCount > 0 ? t.photoCountNum(photoCount) : t.noPhotosText}
+            {photoCount > 0 ? t('photoCountNum', photoCount) : t('noPhotosText')}
           </span>
         </div>
       </div>
@@ -166,7 +166,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
         <button 
           onClick={handleShare}
           className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
-          title={t.copyShareLink}
+          title={t('copyShareLink')}
         >
           <Icon name="share" className="w-4 h-4" />
         </button>
@@ -175,17 +175,17 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
           onClick={toggleMode}
           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all font-medium ${isMultiSelect ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent'}`}
         >
-          {isMultiSelect ? t.cancel : t.selectAction}
+          {isMultiSelect ? t('cancel') : t('selectAction')}
         </button>
         <button onClick={onEditSettings} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm transition-all font-medium">
           <Icon name="edit" className="w-4 h-4" />
-          <span className="hidden sm:inline">{t.settings}</span>
+          <span className="hidden sm:inline">{t('settings')}</span>
         </button>
         
         <button 
           onClick={() => navigate.admin()}
           className="p-2 -mr-2 text-slate-500 hover:text-slate-800 transition-colors ml-1"
-          title={t.backToHome}
+          title={t('backToHome')}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>

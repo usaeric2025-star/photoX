@@ -4,7 +4,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { useAppForm } from '#lib/forms/useAppForm.js';
-import { useCategories, useManufacturers } from '#src/hooks/index.js';
+import { useCategories, useManufacturers, useTranslation } from '#src/hooks/index.js';
 import { usePhoto } from './usePhoto.js';
 import { usePhotoMutations } from './usePhotoMutations.js';
 import { PhotoEditSchema, type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
@@ -40,6 +40,7 @@ export const PhotoEditSessionProvider = ({
   const { editPhotoAsync } = usePhotoMutations();
   const { categories = [] } = useCategories();
   const { manufacturers = [] } = useManufacturers();
+  const { t } = useTranslation();
   
   const defaultValues = useMemo(() => {
     const p = (photo || {}) as Partial<Photo>;
@@ -91,11 +92,10 @@ export const PhotoEditSessionProvider = ({
       updates: saveData as unknown as Partial<Photo>
     });
     
-    // Success toast handled by caller or here? Let's make it consistent
-    // showToast.success(appLang === 'zh' ? '保存成功' : 'Saved successfully');
+    showToast.success(t('saveSuccess') || 'Saved successfully');
     
     onSuccess?.();
-  }, [photoId, photo?.tags, photo?.createdAt, editPhotoAsync, onSuccess, categories, manufacturers]);
+  }, [photoId, photo?.tags, photo?.createdAt, editPhotoAsync, onSuccess, categories, manufacturers, t]);
 
   const formObj = useAppForm({
     schema: PhotoEditSchema,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useTags } from '#src/hooks/tag/index.js';
-import { useFilterState } from '#src/hooks/index.js';
+import { useFilterState, useTranslation } from '#src/hooks/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { useTagSorting } from '#src/hooks/photo/index.js';
 import { useUI } from '#lib/store/index.js';
@@ -44,7 +44,7 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
   const { data: settings } = usePublicSettings();
   
   const appLang = useUI(s => s.appLang);
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t } = useTranslation();
 
   // Use the standard hook to resolve sorted, pinned, and hot tags according to database parameters
   const { tagsToRender, pinnedIds, hotIds } = useTagSorting(tags || [], settings);
@@ -80,14 +80,14 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
     <div className="border-t border-border-soft/50 pt-3 mt-1">
       <div className="flex items-center justify-between pb-2">
         <span className="text-[11px] font-bold text-text-mute uppercase tracking-tight">
-          🏷️ {t.tagFilter(tagsToRender.length)}
+          🏷️ {t('tagFilter', tagsToRender.length)}
         </span>
         {hasSelectedTags && (
           <button
             onClick={clearTags}
             className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-danger/10 text-danger hover:bg-danger/20 transition cursor-pointer"
           >
-            {t.reset}
+            {t('reset')}
           </button>
         )}
       </div>

@@ -79,12 +79,8 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
       const keys = orphans.map((o) => o.key);
       
       // 2. 执行批量恢复 (SSE Stream)
-      const res = await fetch('/api/admin/maintenance/storage/recover-orphans', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ keys })
+      const res = await api.admin.maintenance.storage['recover-orphans'].$post({
+        json: { keys }
       });
 
       if (!res.ok) {

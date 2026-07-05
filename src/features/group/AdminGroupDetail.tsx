@@ -40,7 +40,7 @@ export function AdminGroupDetailPage() {
   } = useGroupData({ groupId, isAdmin: true });
   const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
 
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
   const { anchor, setAnchor } = useFilters();
 
   const { open: openLightbox } = useLightbox();
@@ -148,7 +148,7 @@ export function AdminGroupDetailPage() {
             navigate.admin();
           }}
           update={async (updates) => { if (groupId) await update.mutateAsync({ id: groupId, updates }); }}
-          t={(key: string) => String((t as Record<string, unknown>)[key] || key)}
+          t={t}
         />
       )}
     </div>
