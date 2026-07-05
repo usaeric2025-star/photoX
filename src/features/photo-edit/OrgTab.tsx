@@ -44,7 +44,7 @@ export function OrgTab() {
         <AppField form={form} name="tags">
           {({ value, onChange }) => (
             <PhotoTagSelector 
-              selectedTagIds={(value as string[]) || []}
+              selectedTagIds={Array.isArray(value) ? (typeof value[0] === 'object' ? value.map(t => String((t as any).id)) : value as string[]) : []}
               onChange={onChange}
               tags={tags}
               addTag={async (name) => {

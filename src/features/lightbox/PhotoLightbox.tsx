@@ -3,7 +3,7 @@ import { motion } from 'lite-sleek';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';
-import { useUI } from '#lib/store/index.js';
+import { useUI, descLang, useSignal } from '#lib/store/index.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 import { Photo } from '#src/types/photo.js';
 import { usePhoto } from '#src/hooks/index.js';
@@ -56,9 +56,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   });
 
   const [showInfo, setShowInfo] = useState(false);
+  const lang = useSignal(descLang);
 
   const handleLangChange = (newLang: 'zh' | 'en' | 'ms') => {
-    patch({ descLang: newLang });
+    descLang.value = newLang;
   };
   const normalizeSlide = (slide: Photo | { original: Photo } | LightboxSlide): Photo | { original: Photo } => {
     if (slide && typeof slide === 'object') {
@@ -213,9 +214,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
 
         {/* Info Panel */}
         <LightboxInfo
+          key={lang}
           currentPhoto={activePhoto}
           showInfo={showInfo}
-          lang={descLang}
+          lang={lang}
           onLangChange={handleLangChange}
         />
 

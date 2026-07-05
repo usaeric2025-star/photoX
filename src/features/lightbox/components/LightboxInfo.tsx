@@ -28,6 +28,8 @@ export function LightboxInfo({
   
   const title = getLocalizedDisplay(photoData.name || '照片', lang);
   const uuid = photoData.id || 'N/A';
+  const categoryName = photoData.categoryName || '无分类';
+  const tags = photoData.tags || [];
 
   const { isStaff } = usePermission();
   const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id, { 
@@ -47,6 +49,12 @@ export function LightboxInfo({
           <div className="space-y-6">
             <div>
               <h3 className="text-white font-medium text-base sm:text-lg leading-snug mb-2">{title}</h3>
+              <div className="flex flex-wrap gap-2 text-[10px] text-white/50">
+                  <span className="bg-white/5 px-2 py-0.5 rounded-full">{categoryName}</span>
+                  {tags.map(tag => (
+                      <span key={tag.id} className="bg-white/5 px-2 py-0.5 rounded-full">#{tag.name}</span>
+                  ))}
+              </div>
             </div>
             
             {displayDescription && (
@@ -74,7 +82,7 @@ export function LightboxInfo({
                           }}
                           className={`px-2 py-1 rounded text-[9px] font-bold tracking-wider uppercase transition-all ${lang === l ? 'bg-white text-black' : isAvailable ? 'text-white/60 hover:text-white cursor-pointer' : 'text-white/20 cursor-not-allowed'}`}
                         >
-                          {l === 'zh' ? '简' : l === 'en' ? 'EN' : 'MS'}
+                          {l === 'zh' ? '中' : l === 'en' ? 'EN' : 'MS'}
                         </button>
                       );
                     })}
