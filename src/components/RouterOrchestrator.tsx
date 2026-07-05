@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { ErrorBoundary } from "#src/components/shared/ErrorBoundary.js";
 import { motion, AnimatePresence } from "lite-sleek";
 import { Switch, Route, useLocation } from "wouter";
 import { NotFoundPage } from "#src/pages/NotFoundPage.js";
@@ -51,24 +52,26 @@ export function RouterOrchestrator() {
         transition="easeOut"
         className="flex-1 flex flex-col h-full w-full"
       >
-        <Suspense fallback={<LoadingScreen />}>
-          <Switch>
-            <Route path="/" component={PublicPage} />
-            <Route path="/photo/:photoId" component={PublicPage} />
-            <Route path="/group/:slug" component={PublicGroupDetailPage} />
-            
-            <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
-            
-            <Route path="/admin" component={AdminPage} />
-            <Route path="/admin/:subpath*" component={AdminPage} />
-            
-            <Route path="/settings" component={AdminPage} />
-            
-            <Route path="/diagnostics" component={DiagnosticsRoute} />
-            
-            <Route component={NotFoundPage} />
-          </Switch>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingScreen />}>
+            <Switch>
+              <Route path="/" component={PublicPage} />
+              <Route path="/photo/:photoId" component={PublicPage} />
+              <Route path="/group/:slug" component={PublicGroupDetailPage} />
+              
+              <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
+              
+              <Route path="/admin" component={AdminPage} />
+              <Route path="/admin/:subpath*" component={AdminPage} />
+              
+              <Route path="/settings" component={AdminPage} />
+              
+              <Route path="/diagnostics" component={DiagnosticsRoute} />
+              
+              <Route component={NotFoundPage} />
+            </Switch>
+          </Suspense>
+        </ErrorBoundary>
       </motion.div>
     </AnimatePresence>
   );

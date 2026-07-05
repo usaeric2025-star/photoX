@@ -8,8 +8,15 @@ import { api } from '#src/lib/api.js';
 export const NotFoundPage = () => {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const appLang = useUI(s => s?.appLang) || 'en';
-  const t = translations[appLang as keyof typeof translations] || translations.en;
-
+  
+  // Extremely safe translation access
+  let t: any = {};
+  try {
+    t = (translations as any)[appLang] || translations.en;
+  } catch (e) {
+    t = translations.en;
+  }
+  
   const [copied, setCopied] = React.useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(`Path not found: ${pathname}\nURL: ${window.location.href}`).then(() => {
@@ -40,48 +47,57 @@ export const NotFoundPage = () => {
   
   // Categorize the 404 cause based on the current pathname
   const getCauseDetails = () => {
-    if (!pathname) {
+    try {
+      if (!pathname) {
+        return {
+          title: t.notFoundDefaultTitle || 'Page Not Found',
+          description: t.notFoundDefaultDesc || 'The page you are looking for does not exist.',
+          icon: 'file-question',
+          colorClass: 'text-slate-400 bg-slate-100',
+        };
+      }
+      
+      if (pathname.startsWith('/api')) {
+        return {
+          title: t.apiNotFoundTitle || 'API Error',
+          description: typeof t.apiNotFoundDesc === 'function' ? t.apiNotFoundDesc(pathname) : (t.apiNotFoundDesc || 'API endpoint not found'),
+          icon: 'server-crash',
+          colorClass: 'text-red-500 bg-red-50 border border-red-100',
+        };
+      }
+      
+      if (pathname.startsWith('/admin')) {
+        return {
+          title: t.adminNotFoundTitle || 'Admin Error',
+          description: typeof t.adminNotFoundDesc === 'function' ? t.adminNotFoundDesc(pathname) : (t.adminNotFoundDesc || 'Admin resource not found'),
+          icon: 'shield-alert',
+          colorClass: 'text-amber-500 bg-amber-50 border border-amber-100',
+        };
+      }
+      
+      if (/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(pathname)) {
+        return {
+          title: t.resourceNotFoundTitle || 'Resource Not Found',
+          description: typeof t.resourceNotFoundDesc === 'function' ? t.resourceNotFoundDesc(pathname) : (t.resourceNotFoundDesc || 'Image or file not found'),
+          icon: 'image',
+          colorClass: 'text-blue-500 bg-blue-50 border border-blue-100',
+        };
+      }
+      
       return {
-        title: t.notFoundDefaultTitle,
-        description: t.notFoundDefaultDesc,
-        icon: 'file-question',
-        colorClass: 'text-slate-400 bg-slate-100',
+        title: t.pathNotFoundTitle || 'Page Not Found',
+        description: typeof t.pathNotFoundDesc === 'function' ? t.pathNotFoundDesc(pathname) : (t.pathNotFoundDesc || `Path "${pathname}" not found`),
+        icon: 'map-pin-off',
+        colorClass: 'text-slate-500 bg-slate-100',
+      };
+    } catch (e) {
+      return {
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        icon: 'alert-triangle',
+        colorClass: 'text-red-500 bg-red-50',
       };
     }
-    
-    if (pathname.startsWith('/api')) {
-      return {
-        title: t.apiNotFoundTitle,
-        description: typeof t.apiNotFoundDesc === 'function' ? t.apiNotFoundDesc(pathname) : t.apiNotFoundDesc,
-        icon: 'server-crash',
-        colorClass: 'text-red-500 bg-red-50 border border-red-100',
-      };
-    }
-    
-    if (pathname.startsWith('/admin')) {
-      return {
-        title: t.adminNotFoundTitle,
-        description: typeof t.adminNotFoundDesc === 'function' ? t.adminNotFoundDesc(pathname) : t.adminNotFoundDesc,
-        icon: 'shield-alert',
-        colorClass: 'text-amber-500 bg-amber-50 border border-amber-100',
-      };
-    }
-    
-    if (/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(pathname)) {
-      return {
-        title: t.resourceNotFoundTitle,
-        description: typeof t.resourceNotFoundDesc === 'function' ? t.resourceNotFoundDesc(pathname) : t.resourceNotFoundDesc,
-        icon: 'image',
-        colorClass: 'text-blue-500 bg-blue-50 border border-blue-100',
-      };
-    }
-    
-    return {
-      title: t.pathNotFoundTitle,
-      description: typeof t.pathNotFoundDesc === 'function' ? t.pathNotFoundDesc(pathname) : t.pathNotFoundDesc,
-      icon: 'map-pin-off',
-      colorClass: 'text-slate-500 bg-slate-100',
-    };
   };
 
   const details = getCauseDetails();
@@ -98,7 +114,7 @@ export const NotFoundPage = () => {
         </h1>
         
         <div className="w-full bg-slate-50 rounded-2xl p-4 mb-8 text-left border border-slate-100">
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">{t.errorDiagnose}</p>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">{t.errorDiagnose || 'Diagnosis'}</p>
           <p className="text-sm text-slate-600 leading-relaxed">
             {details.description}
           </p>
@@ -126,7 +142,7 @@ export const NotFoundPage = () => {
             className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm tracking-wide hover:bg-black transition-all active:scale-[0.98]"
           >
             <Icon name="home" size={16} />
-            {t.backToHome}
+            {t.backToHome || 'Home'}
           </AppLink>
           
           <button 
@@ -134,11 +150,10 @@ export const NotFoundPage = () => {
             className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200 px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all active:scale-[0.98]"
           >
             <Icon name="arrow-left" size={16} />
-            {t.goBack}
+            {t.goBack || 'Go Back'}
           </button>
         </div>
       </div>
     </div>
   );
 };
-
