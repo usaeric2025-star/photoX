@@ -266,12 +266,22 @@ export function usePhotoEditAI() {
               
               queryClient.setQueryData(detailKey, (oldPhoto: Photo | undefined) => {
                 if (!oldPhoto) return oldPhoto;
+
+                const resolvedTags = Array.isArray(updates.tags)
+                  ? allTags.filter(t => (updates.tags as string[]).includes(String(t.id)))
+                  : oldPhoto.tags;
+                
+                const resolvedCategory = updates.categoryId
+                  ? categories.find(c => String(c.id) === String(updates.categoryId))
+                  : null;
+
                 return {
                   ...oldPhoto,
                   name: updates.name ? (updates.name as string) : oldPhoto.name,
                   description: (updates.description as { zh: string; en: string; ms: string }) || oldPhoto.description,
                   categoryId: (updates.categoryId as string) || oldPhoto.categoryId,
-                  tags: (updates.tags as Tag[]) || oldPhoto.tags,
+                  categoryName: resolvedCategory ? resolvedCategory.name : oldPhoto.categoryName,
+                  tags: resolvedTags || oldPhoto.tags,
                   dimensions: (updates.dimensions as import('#src/types/index.js').Dimension[]) || oldPhoto.dimensions,
                   isAiDimensions: (updates.isAiDimensions as boolean) ?? oldPhoto.isAiDimensions,
                   itemCode: (updates.itemCode as string) || oldPhoto.itemCode,
@@ -344,7 +354,7 @@ export function usePhotoEditAI() {
               );
               if (found) matchedId = String(found.id);
           }
-          if (matchedId) updates.categoryId = matchedId;
+          if (matchedId) updates.categoryId = String(matchedId);
       }
 
       // Tags
