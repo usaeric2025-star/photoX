@@ -1,12 +1,11 @@
 import { logger } from '#lib/logger.js';
 import { createClient } from '@supabase/supabase-js';
 import { ErrorFactory } from './error/ErrorFactory.js';
-import { getClientEnv } from '#shared/envSchema.js';
+import { getEnv } from '#lib/env.js';
 
-const clientEnv = getClientEnv(import.meta.env);
-
-const supabaseUrl = clientEnv.VITE_SUPABASE_URL;
-const supabaseAnonKey = clientEnv.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = getEnv('VITE_SUPABASE_URL');
+const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
+const mode = getEnv('MODE');
 
 // 验证环境变量
 let isSupabaseConfigured = true;
@@ -61,7 +60,7 @@ export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabas
 }) as unknown as ReturnType<typeof createClient>);
 
 // 开发环境挂载到 window，方便调试（可选）
-if (typeof window !== 'undefined' && clientEnv.MODE === 'development') {
+if (typeof window !== 'undefined' && mode === 'development') {
   (window as unknown as { supabase: unknown }).supabase = supabase;
 }
 

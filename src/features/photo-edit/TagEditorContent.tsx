@@ -114,10 +114,6 @@ export function TagEditor({
       </div>
       <div 
         className="pb-1 max-h-[220px] overflow-y-auto flex flex-wrap gap-[6px] content-start"
-        style={{
-          contentVisibility: 'auto',
-          containIntrinsicSize: '200px',
-        }}
       >
         {filteredTags.slice(0, 150).map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));

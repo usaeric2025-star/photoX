@@ -1,5 +1,6 @@
 import { getPathFromUrl } from '#lib/utils.js';
 import { cleanTranslationPrefixes } from '#src/features/ai/safeText.js';
+import { getEnv } from '#lib/env.js';
 
 /**
  * 取得圖片 URL（支援縮圖）
@@ -13,8 +14,7 @@ export const getThumbnailUrl = (imageUrlOrKey: string, width?: number, height?: 
   if (!imageUrlOrKey) return '';
   if (imageUrlOrKey.startsWith('data:')) return imageUrlOrKey;
 
-  const env = import.meta.env;
-  const workerUrl = env.VITE_IMAGE_WORKER_URL;
+  const workerUrl = getEnv('VITE_IMAGE_WORKER_URL');
   
   // If we have a worker, we can resize
   if (workerUrl) {
@@ -50,7 +50,7 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
     const match = processedUrl.match(/photox\/(public|thumb|original)\/(.+)/);
     if (match) {
         const pathAndFilename = match[0];
-        const r2Base = import.meta.env.VITE_R2_BASE_URL || import.meta.env.VITE_R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
+        const r2Base = getEnv('VITE_R2_BASE_URL') || getEnv('VITE_R2_PUBLIC_URL_PREFIX') || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
         const cleanBase = r2Base.endsWith('/') ? r2Base.slice(0, -1) : r2Base;
         return `${cleanBase}/${pathAndFilename}`;
     }

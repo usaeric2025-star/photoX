@@ -4,6 +4,7 @@ import { useUI, UIStoreState } from '#lib/store/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useTranslation, usePhoto } from '#src/hooks/index.js';
+import { getEnv } from '#lib/env.js';
 
 interface WhatsAppDialogProps {
   open: boolean;
@@ -41,7 +42,7 @@ export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
     
     // Fallback if no numbers configured but we have an env variable
     if (opts.length === 0) {
-      const fallback = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WHATSAPP_NUMBER : '';
+      const fallback = getEnv('VITE_WHATSAPP_NUMBER');
       if (fallback) {
         opts.push({ name: t.whatsAppInquiry || 'WhatsApp', url: `https://wa.me/${fallback.replace(/\D/g, '')}?text=${encodedText}` });
       }

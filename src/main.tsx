@@ -97,7 +97,7 @@ async function init() {
     });
   }
 
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV !== 'production') {
     await import('./lib/resizeObserverPolyfill.js');
   }
 

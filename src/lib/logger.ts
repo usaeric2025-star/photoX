@@ -1,10 +1,6 @@
 const isBrowser = typeof window !== 'undefined';
-const isDev = isBrowser 
-  ? (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.DEV || import.meta.env.MODE !== 'production'))
-  : (typeof globalThis !== 'undefined' && (globalThis as any)['process']?.['env']?.NODE_ENV !== 'production');
-const isTest = isBrowser
-  ? (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'test')
-  : (typeof globalThis !== 'undefined' && (globalThis as any)['process']?.['env']?.NODE_ENV === 'test');
+const isDev = process.env.NODE_ENV !== 'production';
+const isTest = process.env.NODE_ENV === 'test';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 

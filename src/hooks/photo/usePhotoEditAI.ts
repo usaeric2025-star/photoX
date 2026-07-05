@@ -320,11 +320,15 @@ export function usePhotoEditAI() {
   }, [handleAiAnalyze]);
 
   const handleReExtract = useCallback(async (rawResult: any) => {
-      if (!editPhotoId) return;
+      console.log('handleReExtract called for', editPhotoId);
+      if (!editPhotoId) {
+          showToast.error(appLang === 'zh' ? '未找到照片 ID' : 'Photo ID not found');
+          return;
+      }
       
       const result = (Array.isArray(rawResult) && rawResult.length > 0) ? rawResult[0] : rawResult;
       if (!result || typeof result !== 'object') {
-          showToast.error('Invalid raw data format');
+          showToast.error(appLang === 'zh' ? '原始数据格式无效' : 'Invalid raw data format');
           return;
       }
 
@@ -393,12 +397,12 @@ export function usePhotoEditAI() {
           await updatePhoto({ id: editPhotoId, updates });
           invalidateDetail(editPhotoId);
           invalidateList();
-          showToast.success('Re-extraction successful');
+          showToast.success(appLang === 'zh' ? '二次提取成功' : 'Re-extraction successful');
       } catch (e) {
           ErrorFactory.handle(e, { context: 'AI Re-extraction' });
           showToast.error(appLang === 'zh' ? '數據保存失敗' : 'Failed to save extracted data');
       }
-  }, [editPhotoId, categories, allTags, form, updatePhoto, invalidateDetail, invalidateList]);
+  }, [editPhotoId, categories, allTags, form, updatePhoto, invalidateDetail, invalidateList, appLang]);
 
   return { handleAiAnalyze: onAnalyze, handleReExtract, isAnalyzing };
 }

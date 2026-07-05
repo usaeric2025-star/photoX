@@ -37,38 +37,71 @@ export default defineConfig(({mode}) => {
     build: {
       emptyOutDir: true,
       outDir: 'dist',
+      // ✅ 调整 chunk 大小警告阈值
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           format: 'esm',
+          // ✅ 手动代码拆分
           manualChunks: (id) => {
             if (id.includes('postgres') || id.includes('pg')) {
               return 'empty';
             }
-            if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler') || id.includes('react-router')) {
-                return 'vendor-react';
-              }
-              if (id.includes('@supabase/')) {
-                return 'vendor-supabase';
-              }
-              if (id.includes('@tanstack/react-form') || id.includes('@tanstack/valibot-form-adapter') || id.includes('valibot') || id.includes('drizzle')) {
-                return 'vendor-form';
-              }
-              if (
-                id.includes('lucide-react') || 
-                id.includes('sonner') || 
-                id.includes('@mshafiqyajid/react-lightbox') || 
-                id.includes('virtua') ||
-                id.includes('react-image-gallery')
-              ) {
-                return 'vendor-ui';
-              }
-              return 'vendor'; // all other dependencies
+            // 1. React 核心（稳定，极少变化）
+            if (id.includes('node_modules/react/') || 
+                id.includes('node_modules/react-dom/') || 
+                id.includes('node_modules/react/jsx-runtime')) {
+              return 'vendor-react-core';
             }
-          }
-        }
-      }
+            // 2. 路由（较少变化）
+            if (id.includes('node_modules/wouter/') || 
+                id.includes('node_modules/nuqs/')) {
+              return 'vendor-router';
+            }
+            // 3. 数据层（较少变化）
+            if (id.includes('node_modules/@tanstack/react-query/')) {
+              return 'vendor-query';
+            }
+            // 4. UI 组件库（较少变化）
+            if (id.includes('node_modules/lucide-react/') || 
+                id.includes('node_modules/sonner/') || 
+                id.includes('node_modules/motion/')) {
+              return 'vendor-ui';
+            }
+            // 5. 工具库（极少变化）
+            if (id.includes('node_modules/dayjs/') || 
+                id.includes('node_modules/clsx/') || 
+                id.includes('node_modules/tailwind-merge/')) {
+              return 'vendor-utils';
+            }
+            // 6. 其他大库（变化少）
+            if (id.includes('node_modules/@supabase/') || 
+                id.includes('node_modules/drizzle-orm/') || 
+                id.includes('node_modules/valibot/')) {
+              return 'vendor-other';
+            }
+            // 7. 剩余 node_modules
+            if (id.includes('node_modules/')) {
+              return 'vendor-rest';
+            }
+          },
+          entryFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash].[ext]',
+        },
+      },
+      // ✅ 启用 CSS 代码拆分
+      cssCodeSplit: true,
+      // ✅ 启用源码 map（生产环境可关闭）
+      sourcemap: false,
+      // ✅ 压缩配置
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true, // 生产环境移除 console
+          drop_debugger: true,
+        },
+      },
     },
     esbuild: {
       pure: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
