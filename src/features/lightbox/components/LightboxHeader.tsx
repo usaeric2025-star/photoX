@@ -76,7 +76,7 @@ export function LightboxHeader({
             const key = photoData.imageUrl || photoData.uri || '';
             if (key) {
               const url = new URL(key, window.location.origin);
-              navigator.clipboard.writeText(url.toString());
+              navigator.clipboard.writeText(`Image: ${url.toString()}`);
               toast.success('Image Link Copied');
             }
           }}

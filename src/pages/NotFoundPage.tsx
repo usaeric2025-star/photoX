@@ -12,7 +12,7 @@ export const NotFoundPage = () => {
 
   const [copied, setCopied] = React.useState(false);
   const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    navigator.clipboard.writeText(`Path not found: ${pathname}\nURL: ${window.location.href}`).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
