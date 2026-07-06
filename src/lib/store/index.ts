@@ -129,38 +129,28 @@ export function useUI<T = UIStoreState>(selector?: (state: UIStoreState) => T): 
 
   const subscribe = useCallback((onStoreChange: () => void) => {
     let isInitial = true;
+    let lastSelected: any = undefined;
+
     const dispose = effect(() => {
-      // Access every signal value so the effect registers a dependency on all of them
-      appLang.value;
-      descLang.value;
-      groupSettingsOpen.value;
-      uploadAsGroup.value;
-      formState.value;
-      showPassPrompt.value;
-      isPhotoPickerOpen.value;
-      photoPickerGroupId.value;
-      isInitialDataLoading.value;
-      focusedGroupPhotoId.value;
-      showWhatsAppChoice.value;
-      uploadModeDialogOpen.value;
-      isTaskDrawerOpen.value;
-      isSidebarOpen.value;
-      pendingPhotoId.value;
-      pendingFiles.value;
-      activeDialogCount.value;
-      fatalError.value;
-      totalCount.value;
-      lightboxSlides.value;
-      lightboxCurrentIndex.value;
+      // Running getUIState inside effect automatically registers dependencies on all read signals
+      const state = getUIState();
+      const currentSelector = selectorRef.current;
+      const selected = currentSelector ? currentSelector(state) : state;
 
       if (isInitial) {
+        lastSelected = selected;
         return;
       }
-      onStoreChange();
+
+      if (!isShallowEqual(lastSelected, selected)) {
+        lastSelected = selected;
+        onStoreChange();
+      }
     });
+
     isInitial = false;
     return dispose;
-  }, []);
+  }, [getUIState]);
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
@@ -206,18 +196,27 @@ export function useAuth<T = AuthState>(selector?: (state: AuthState) => T): T {
 
   const subscribe = useCallback((onStoreChange: () => void) => {
     let isInitial = true;
+    let lastSelected: any = undefined;
+
     const dispose = effect(() => {
-      userSignal.value;
-      authLoadingSignal.value;
+      const state = getAuthState();
+      const currentSelector = selectorRef.current;
+      const selected = currentSelector ? currentSelector(state) : state;
 
       if (isInitial) {
+        lastSelected = selected;
         return;
       }
-      onStoreChange();
+
+      if (!isShallowEqual(lastSelected, selected)) {
+        lastSelected = selected;
+        onStoreChange();
+      }
     });
+
     isInitial = false;
     return dispose;
-  }, []);
+  }, [getAuthState]);
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

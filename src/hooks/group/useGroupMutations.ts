@@ -11,7 +11,9 @@ import {
 } from '#src/services/group/commands.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { ProductGroup } from '#src/types/index.js';
-import { useSelectionActions, useInvalidatePhotos, useTranslation } from '#src/hooks/index.js';
+import { useSelectionActions } from '../../services/selection/selectionService.js';
+import { useInvalidatePhotos } from '../photo/useInvalidatePhotos.js';
+import { useTranslation } from '../core/useTranslation.js';
 import { showToast } from '#lib/ui/toast.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 

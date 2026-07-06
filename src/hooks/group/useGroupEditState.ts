@@ -2,7 +2,7 @@ import { ErrorFactory } from "#lib/error/ErrorFactory.js";
 import { useCallback } from "react";
 import { queryClient } from '#lib/query/index.js';
 import { ProductGroup, Photo } from '#src/types/index.js';
-import { useGroupDetail } from '#src/hooks/index.js';
+import { useGroupDetail } from './useGroups.js';
 import { useAuth } from '#lib/store/index.js';
 import { upsertGroup } from "#src/services/group/commands.js";
 import { queryKeys } from '#lib/query/keys.js';
@@ -16,7 +16,7 @@ export const useGroupEditState = (
   dbGroupPhotos: Photo[] | undefined,
   onUpdatePhoto: (id: string, data: Partial<Photo>) => Promise<unknown>
 ) => {
-  const { user } = useAuth();
+  const user = useAuth(s => s.user);
 
   const { group: queriedGroupData, isLoading: isGroupDataPending } =
     useGroupDetail(activeGroupId, true);

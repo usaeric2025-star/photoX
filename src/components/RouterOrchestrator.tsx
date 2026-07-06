@@ -32,7 +32,7 @@ const AdminGroupDetailRoute = () => (
 
 export function RouterOrchestrator() {
   const [location] = useLocation();
-  const { isLoading: isAuthLoading } = useAuth();
+  const isAuthLoading = useAuth(s => s.isLoading);
   
   const getPageGroupKey = (pathname: string) => {
     if (pathname === '/' || pathname.startsWith('/photo/')) return 'public-home';

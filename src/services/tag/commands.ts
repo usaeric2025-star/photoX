@@ -2,6 +2,7 @@ import { api } from '#lib/api.js';
 import { supabase } from '#lib/supabase.js';
 import { Tag } from '#src/types/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { mapFieldsToDb } from '#src/services/mappers/index.js';
 
 const TABLE_NAME = 'tags';
 const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'userId', 'hot_score'];
@@ -12,16 +13,7 @@ const FIELD_MAP: Record<string, string> = {
 };
 
 const mapToDb = (updates: Partial<Tag> & Record<string, unknown>): Record<string, unknown> => {
-    const dbUpdates: Record<string, unknown> = {};
-
-    for (const key of ALLOWED_FIELDS) {
-        if (key in updates && !NEVER_ALLOWED.includes(key)) {
-            const dbKey = FIELD_MAP[key] || key;
-            dbUpdates[dbKey] = updates[key];
-        }
-    }
-
-    return dbUpdates;
+    return mapFieldsToDb(updates, ALLOWED_FIELDS, NEVER_ALLOWED, FIELD_MAP);
 };
 
 /**

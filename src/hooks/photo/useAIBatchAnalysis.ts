@@ -8,10 +8,10 @@ import { createTask } from '#lib/task-queue/index.js';
 import { generateId } from '#lib/id.js';
 import { useAuth } from '#lib/store/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { useTranslation } from '#src/hooks/index.js';
+import { useTranslation } from '../core/useTranslation.js';
 
 export function useAIBatchAnalysis() {
-  const { user } = useAuth();
+  const user = useAuth(s => s.user);
   const { invalidateAll } = useInvalidatePhotos();
   const { uiTranslations: t } = useTranslation();
 

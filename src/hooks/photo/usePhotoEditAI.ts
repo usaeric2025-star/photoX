@@ -4,7 +4,11 @@ import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSession
 import { ErrorFactory } from '#lib/error/index.js';
 import { useAppQuery, queryClient } from '#lib/query/index.js';
 import { executeTask } from '#lib/task-queue/index.js';
-import { useAdminMaintenance, useSettings, useCategories, useTags, useFilters } from '#src/hooks/index.js';
+import { useAdminMaintenance } from '../admin/useAdminMaintenance.js';
+import { useSettings } from '../settings/useSettings.js';
+import { useCategories } from '../category/useCategories.js';
+import { useTags } from '../tag/useTags.js';
+import { useFilters } from '../ui/useFilters.js';
 import { Tag, Photo } from '#src/types/index.js';
 import { analyzePhoto } from '#src/features/ai/commands.js';
 import { useUI, useAuth } from '#lib/store/index.js';
@@ -29,7 +33,7 @@ import { useInvalidatePhotos } from './useInvalidatePhotos.js';
  * Hook to handle AI Analysis and backfilling for Photo Editing
  */
 export function usePhotoEditAI() {
-  const { user } = useAuth();
+  const user = useAuth(s => s.user);
   const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;

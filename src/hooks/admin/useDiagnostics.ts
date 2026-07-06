@@ -4,7 +4,7 @@ import { api } from '#lib/api.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { executeTask } from '#lib/task-queue/index.js';
-import { useTranslation } from '#src/hooks/index.js';
+import { useTranslation } from '../core/useTranslation.js';
 
 /**
  * useDiagnostics

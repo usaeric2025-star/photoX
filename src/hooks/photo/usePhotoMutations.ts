@@ -1,7 +1,9 @@
 import { useQueryClient } from '#lib/query/index.js';
 import { updatePhoto, deleteMany, batchUpdate } from '#src/services/photo/commands.js';
 import { showToast } from '#lib/ui/toast.js';
-import { useTranslation, useSelectionActions, useInvalidatePhotos } from '#src/hooks/index.js';
+import { useTranslation } from '../core/useTranslation.js';
+import { useSelectionActions } from '../../services/selection/selectionService.js';
+import { useInvalidatePhotos } from './useInvalidatePhotos.js';
 import { Photo } from '#src/types/index.js';
 import { useOptimisticPhotoMutation } from '#lib/query/optimistic.js';
 

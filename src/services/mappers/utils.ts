@@ -157,3 +157,25 @@ export const mapTranslationField = (value: unknown): { zh: string; en: string; m
     ms: '',
   };
 };
+
+/**
+ * 泛用的欄位資料庫映射工具，減少多個 commands.ts 中的重複程式碼
+ */
+export const mapFieldsToDb = (
+  updates: Record<string, any>,
+  allowedFields: string[],
+  neverAllowed: string[],
+  fieldMap: Record<string, string>
+): Record<string, any> => {
+  const dbUpdates: Record<string, any> = {};
+
+  for (const key of allowedFields) {
+    if (key in updates && !neverAllowed.includes(key)) {
+      const dbKey = fieldMap[key] || key;
+      dbUpdates[dbKey] = updates[key];
+    }
+  }
+
+  return dbUpdates;
+};
+

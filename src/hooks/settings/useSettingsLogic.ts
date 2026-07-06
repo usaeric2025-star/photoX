@@ -10,7 +10,7 @@ import {
   normalizeManufacturerName,
 } from "#lib/utils.js";
 import { api } from "#lib/api.js";
-import { useInvalidatePhotos } from '#src/hooks/index.js';
+import { useInvalidatePhotos } from '../photo/useInvalidatePhotos.js';
 import { executeTask } from '#lib/task-queue/index.js';
 import { uploadToR2 } from '#src/features/upload/services/r2Client.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';

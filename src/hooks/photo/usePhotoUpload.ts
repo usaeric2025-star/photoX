@@ -9,7 +9,7 @@ import { generateId } from '#lib/id.js';
 import { logger } from '#lib/logger.js';
 
 export function usePhotoUpload() {
-  const { user } = useAuth();
+  const user = useAuth(s => s.user);
 
   const uploadFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);

@@ -67,7 +67,9 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const { user, signIn, signOut } = useAuth();
+  const user = useAuth(s => s.user);
+  const signIn = useAuth(s => s.signIn);
+  const signOut = useAuth(s => s.signOut);
   const { settings, agnesApiKey, accessPasscode, updateSettings } = useSettings();
   const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnesApiKey: key });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, accessPasscode: code });

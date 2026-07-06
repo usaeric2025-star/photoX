@@ -25,7 +25,7 @@ interface RemoteJob {
  */
 export function useGlobalTasks() {
   const isAdminPath = useAdminMode();
-  const { user } = useAuth();
+  const user = useAuth(s => s.user);
   const isAdmin = isAdminPath && !!user;
   const route = useAppRoute();
   const routeName = route?.name;

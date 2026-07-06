@@ -1,4 +1,4 @@
-import { useGroupDetail } from '#src/hooks/group/index.js';
+import { useGroupDetail } from './useGroups.js';
 import { usePhotos } from '#src/hooks/photo/usePhotos.js';
 import { useFilters } from '#src/features/filters/index.js';
 

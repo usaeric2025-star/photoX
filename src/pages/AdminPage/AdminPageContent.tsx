@@ -86,7 +86,7 @@ function AdminGroupDetailRoute() {
 }
 
 export function AdminPageContent() {
-  const { user } = useAuth();
+  const user = useAuth(s => s.user);
   const { uploadFiles } = usePhotoUpload();
   
   const uploadModeDialogOpen = useUI(s => s.uploadModeDialogOpen);

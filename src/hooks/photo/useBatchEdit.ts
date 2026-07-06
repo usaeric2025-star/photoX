@@ -1,4 +1,4 @@
-import { useSelectionActions } from '#src/hooks/index.js';
+import { useSelectionActions } from '../../services/selection/selectionService.js';
 import { selectionStore } from '#src/services/selection/selectionService.js';
 import { useSignal, useUI, UIStoreState } from '#lib/store/index.js';
 import { batchEditingIdsSignal } from '#src/services/selection/selectionService.js';

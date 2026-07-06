@@ -3,7 +3,7 @@ import { copyToClipboard, CopyOptions } from '#src/utils/clipboard.js';
 import { showToast } from '#lib/ui/toast.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
-import { useTranslation } from '#src/hooks/index.js';
+import { useTranslation } from './useTranslation.js';
 
 interface UseCopyToClipboardOptions extends CopyOptions {
   /** 複製後的 callback */

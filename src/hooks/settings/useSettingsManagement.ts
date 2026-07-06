@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useTranslation } from '#src/hooks/core/useTranslation.js';
-import { useCategoryCreate, useCategoryEdit, useCategoryDelete } from '#src/hooks/category/index.js';
-import { useTagCreate, useTagEdit, useTagDelete } from '#src/hooks/tag/index.js';
-import { useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '#src/hooks/manufacturer/index.js';
+import { useCategoryCreate, useCategoryEdit, useCategoryDelete } from '../category/useCategoryMutations.js';
+import { useTagCreate, useTagEdit, useTagDelete } from '../tag/useTagMutations.js';
+import { useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../manufacturer/useManufacturerMutations.js';
 
 export const useSettingsManagement = () => {
     const patch = useUI((s: UIStoreState) => s.patch);

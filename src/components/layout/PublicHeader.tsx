@@ -18,7 +18,9 @@ interface PublicHeaderProps {
 }
 
 export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }: PublicHeaderProps) {
-  const { user, isLoading, signOut } = useAuth();
+  const user = useAuth(s => s.user);
+  const isLoading = useAuth(s => s.isLoading);
+  const signOut = useAuth(s => s.signOut);
   const { data: settings } = usePublicSettings();
   const { role, isStaff, isAdmin: isGlobalAdmin } = usePermission();
   const patch = useUI((s: UIStoreState) => s.patch);

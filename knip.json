@@ -1,6 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
+    "src/main.tsx",
+    "server.ts",
     "api/index.ts"
   ],
   "project": [
@@ -10,5 +12,15 @@
   ],
   "ignoreDependencies": [
     "@tanstack/query-core"
-  ]
+  ],
+  "rules": {
+    "files": "warn",
+    "exports": "warn",
+    "types": "warn",
+    "nsExports": "warn",
+    "nsTypes": "warn",
+    "enumMembers": "warn",
+    "classMembers": "warn",
+    "duplicates": "warn"
+  }
 }

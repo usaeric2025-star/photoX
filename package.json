@@ -27,7 +27,13 @@
     "test:watch": "vitest --watch",
     "storage:audit": "npx tsx scripts/storage/auditR2.ts",
     "storage:clean": "npx tsx scripts/storage/cleanOrphans.ts",
-    "check:schema-compat": "npx tsx scripts/schema-compat-check.ts"
+    "check:schema-compat": "npx tsx scripts/schema-compat-check.ts",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*(src|api)/**/*.{ts,tsx}": [
+      "node scripts/check-imports.js"
+    ]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1079.0",
@@ -76,8 +82,10 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.18.1",
     "esbuild": "^0.28.1",
+    "husky": "^9.1.7",
     "jsdom": "29.1.1",
     "knip": "^6.24.0",
+    "lint-staged": "^17.0.8",
     "rollup-plugin-visualizer": "7.0.1",
     "tailwindcss": "^4.3.2",
     "terser": "^5.48.0",

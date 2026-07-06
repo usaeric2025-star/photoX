@@ -18,7 +18,8 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ className }: AdminHeaderProps) {
   const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
-  const { user, signOut } = useAuth();
+  const user = useAuth(s => s.user);
+  const signOut = useAuth(s => s.signOut);
   const { settings } = useSettings();
   const { role, isAdmin, isStaff } = usePermission();
   const { navigate } = useAppRouter();

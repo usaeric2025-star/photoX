@@ -5,7 +5,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useAuth } from '#lib/store/index.js';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
-  const { user } = useAuth();
+  const user = useAuth(s => s.user);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);

@@ -1,6 +1,6 @@
 import { useAuth, useUI } from '#lib/store/index.js';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '#src/config/permissions.js';
-import { useSettings } from '#src/hooks/settings/index.js';
+import { useSettings } from '../../settings/useSettings.js';
 import { useLocalStorage } from '#src/hooks/core/useLocalStorage.js';
 
 /**
@@ -8,7 +8,7 @@ import { useLocalStorage } from '#src/hooks/core/useLocalStorage.js';
  * Migrated to atomized capabilities (can('scope:action')) for PhotoX v2.0.
  */
 export function usePermission() {
-  const { user } = useAuth();
+  const user = useAuth(s => s.user);
   const { settings } = useSettings();
   
   const [passcode] = useLocalStorage({

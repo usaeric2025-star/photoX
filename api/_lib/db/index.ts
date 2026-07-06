@@ -26,7 +26,7 @@ export function getDb() {
   // To avoid exhausting connection limits, we limit the pool size to 1.
   // In non-serverless environments like Cloud Run, we allow up to 10 connections to handle parallel requests.
   const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
-  const maxConnections = isServerless ? 5 : 10;
+  const maxConnections = isServerless ? 1 : 10;
 
   // Function to append query parameters to connection string
   function appendDbParam(url: string, key: string, value: string) {
@@ -66,6 +66,37 @@ export function getDb() {
   });
 
   return globalForDb.drizzleDb;
+}
+
+// Graceful shutdown function to close Postgres connection pool in serverless/container environments
+export async function closeDbConnection() {
+  if (globalForDb.postgresClient) {
+    try {
+      const client = globalForDb.postgresClient;
+      globalForDb.postgresClient = undefined;
+      globalForDb.drizzleDb = undefined;
+      await client.end({ timeout: 2 });
+      console.log('🔌 [DB] Database connection pool closed gracefully.');
+    } catch (err) {
+      console.error('❌ [DB-ERROR] Error closing database connection pool:', err);
+    }
+  }
+}
+
+// Register termination listeners for clean container exits
+if (typeof process !== 'undefined') {
+  process.on('SIGTERM', () => {
+    console.info('📥 [DB] Received SIGTERM signal. Initiating graceful shutdown...');
+    closeDbConnection().finally(() => {
+      process.exit(0);
+    });
+  });
+  process.on('SIGINT', () => {
+    console.info('📥 [DB] Received SIGINT signal. Initiating graceful shutdown...');
+    closeDbConnection().finally(() => {
+      process.exit(0);
+    });
+  });
 }
 
 // Proxied db export for completely transparent lazy initialization

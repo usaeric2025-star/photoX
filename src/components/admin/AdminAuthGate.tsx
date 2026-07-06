@@ -26,7 +26,9 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
     }
   });
 
-  const { user, isLoading: isAuthLoading, signIn } = useAuth();
+  const user = useAuth(s => s.user);
+  const isAuthLoading = useAuth(s => s.isLoading);
+  const signIn = useAuth(s => s.signIn);
   const { data: settings, isLoading: isSettingsLoading } = usePublicSettings();
   
   const isStaffMode = !!settings?.accessPasscode && String(passcode) === settings.accessPasscode;
