@@ -1,10 +1,14 @@
-import { supabase } from '#lib/supabase.js';
+import { supabase, isSupabaseConfigured } from '#lib/supabase.js';
 import { logger } from '#lib/logger.js';
 import { Task, TaskType } from '#lib/task-queue/types.js';
 
 export const taskTable = {
   // 插入新任務
   insert: async (task: Task) => {
+    if (!isSupabaseConfigured) {
+      logger.debug('[Task] Supabase not configured, skipping persistent insert.');
+      return;
+    }
     // 優先使用任務自帶的 userId，否則嘗試從 session 獲取
     let userId = task.userId;
     
@@ -35,6 +39,9 @@ export const taskTable = {
 
   // 更新狀態
   updateStatus: async (id: string, status: string, data?: unknown) => {
+    if (!isSupabaseConfigured) {
+      return;
+    }
     const payload: Record<string, unknown> = { status };
     if (data !== undefined) payload.data = data;
     
@@ -47,6 +54,9 @@ export const taskTable = {
 
   // 恢復未完成任務
   restorePending: async (): Promise<Task[]> => {
+    if (!isSupabaseConfigured) {
+      return [];
+    }
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId) return [];

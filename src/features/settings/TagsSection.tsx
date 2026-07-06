@@ -1,6 +1,6 @@
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { useStore } from '#lib/store/index.js';
-import { taskStore } from '#src/services/task/taskService.js';
+import { useSignal } from '#lib/store/index.js';
+import { tasksSignal } from '#src/services/task/taskService.js';
 import { executeTask } from '#lib/task-queue/index.js';
 import React, { useState } from "react";
 import { Icon } from '#src/components/ui/Icon.js';
@@ -56,7 +56,8 @@ export function TagsSection({
     //   inside map:
     // isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
   
-  const isRunning = useStore(taskStore, s => Array.from(s.tasks.values()).some((t) => t.state?.status === "processing"));
+  const tasks = useSignal(tasksSignal);
+  const isRunning = Array.from(tasks.values()).some((t) => t.state?.status === "processing");
 
   const [isAddOpen, addDialog] = useDisclosure(false);
   const [isEditOpen, editDialog] = useDisclosure(false);

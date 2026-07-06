@@ -28,9 +28,16 @@ export function PhotoWallGrid({
 }: PhotoWallGridProps) {
   const { columns } = useGrid();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
+  const [scrollParent, setScrollParent] = useState<HTMLElement | null>(() => {
+    if (typeof document !== 'undefined') {
+      return document.getElementById('photo-wall-scroll-container');
+    }
+    return null;
+  });
 
   useEffect(() => {
+    if (scrollParent) return; // Already resolved synchronously
+
     if (!containerRef.current) return;
     
     // Find closest parent that is scrollable
@@ -53,8 +60,9 @@ export function PhotoWallGrid({
   }, [scrollParent]);
 
   const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || isLoading) return;
     loadMore();
-  }, [loadMore]);
+  }, [loadMore, isLoadingMore, isLoading]);
 
   const renderItem = useCallback((photo: PhotoListItem, index?: number) => (
     <div className="w-full h-full" data-photo-id={photo.id}>
@@ -101,9 +109,9 @@ export function PhotoWallGrid({
         renderItem={renderItem}
         renderLoader={renderLoader}
         renderEmpty={renderEmpty}
-        scrollThreshold={3000}
-        overscan={2400}
-        hysteresis={20}
+        scrollThreshold={1000}
+        overscan={600}
+        hysteresis={10}
       />
       
       {isLoadingMore && photos.length > 0 && (

@@ -1,10 +1,34 @@
 import { AppSettings } from '#src/types/index.js';
 import React from 'react';
-import { useAppQuery } from '#lib/query/index.js';
+import { useAppQuery, useAppMutation, queryClient } from '#lib/query/index.js';
 import { fetchPublicSettings } from '#src/services/settings/queries.js';
+import { saveSettings, uploadLogo } from '#src/services/settings/commands.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { queryKeys } from '#lib/query/keys.js';
-import { useSettingsMutations } from './useSettingsMutations.js';
+
+const SETTINGS_KEY = ['settings', 'public'];
+
+export const useSettingsMutations = () => {
+  const updateMutation = useAppMutation({
+    mutationFn: saveSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SETTINGS_KEY });
+    }
+  });
+
+  const uploadMutation = useAppMutation({
+    mutationFn: uploadLogo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SETTINGS_KEY });
+    }
+  });
+
+  return { 
+    update: updateMutation.mutateAsync, 
+    upload: uploadMutation.mutateAsync,
+    isPending: updateMutation.isPending || uploadMutation.isPending
+  };
+};
 
 export function useSettings() {
   const { data: settings, isPending } = useAppQuery<AppSettings>(

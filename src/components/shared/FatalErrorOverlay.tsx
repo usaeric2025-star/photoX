@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { fatalError } from '#lib/store/index.js';
+import { fatalError, useSignal } from '#lib/store/index.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
 import { isAppError, AppError } from '#shared/AppError.js';
 
 export const FatalErrorOverlay = () => {
-  const error = fatalError.value;
+  const error = useSignal(fatalError);
   const { copy, copied } = useCopyToClipboard({ 
     successMessage: '诊断信息已复制到剪贴板',
     showToast: false // Toast feedback is often hidden behind native dialogs

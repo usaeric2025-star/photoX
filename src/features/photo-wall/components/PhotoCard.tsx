@@ -1,6 +1,6 @@
 import React, { memo, useCallback } from 'react';
-import { useStore } from '#lib/store/index.js';
-import { photoWallStore } from '../signal.js';
+import { useSignal } from '#lib/store/index.js';
+import { photoWallModeSignal, onPhotoClickSignal } from '../signal.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { AdminPhotoCard } from '#src/components/photo/AdminPhotoCard.js';
 import { PublicPhotoCard } from '#src/components/photo/PublicPhotoCard.js';
@@ -13,7 +13,8 @@ interface PhotoCardProps {
 }
 
 export const PhotoCard = memo(function PhotoCard({ photo, hideGroupBadge, isGroupDetail, priority }: PhotoCardProps) {
-  const { mode, onPhotoClick } = useStore(photoWallStore);
+  const mode = useSignal(photoWallModeSignal);
+  const onPhotoClick = useSignal(onPhotoClickSignal);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (onPhotoClick) {

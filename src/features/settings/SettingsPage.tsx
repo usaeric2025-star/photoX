@@ -15,7 +15,7 @@ import { useSettingsManagement } from '#src/hooks/settings/useSettingsManagement
 import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { 
   useCategories, useTags, useManufacturers,
-  useAdminCategory, useSettings
+  useSettings
 } from '#src/hooks/index.js';
 import { useSettingsLogic } from '#src/hooks/index.js';
 import { SettingsTabs } from './SettingsTabs.js';
@@ -26,8 +26,8 @@ import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 
 import { useSyncMutation } from '#src/hooks/index.js';
-import { useStore } from '#lib/store/index.js';
-import { taskStore } from '#src/services/task/taskService.js';
+import { useSignal } from '#lib/store/index.js';
+import { tasksSignal } from '#src/services/task/taskService.js';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings.js').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings.js').then(m => ({ default: m.AISettings })));
@@ -61,7 +61,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     if (file) await uploadLogo(file);
   };
   
-  const isMaintenanceRunning = useStore(taskStore, s => Array.from(s.tasks.values()).some(t => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing'));
+  const tasks = useSignal(tasksSignal);
+  const isMaintenanceRunning = Array.from(tasks.values()).some(t => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
   
   const appLang = useUI(s => s.appLang);
   const t = translations[appLang as keyof typeof translations] || translations.en;

@@ -38,7 +38,7 @@ export const tags = new Hono()
     const data = await filteredQuery.limit(20);
     return successResponse(c, data);
   })
-  .put('/:id', async (c) => {
+  .put('/:id{[0-9]+}', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     const check = v.safeParse(v.object({ updates: v.omit(TagReqSchema, ["id"]) }), body);
@@ -69,7 +69,7 @@ export const tags = new Hono()
     clearTagsCache();
     return c.json({ success: true, data });
   })
-  .delete('/:id', async (c) => {
+  .delete('/:id{[0-9]+}', async (c) => {
     const id = c.req.param('id');
     await db.delete(tagsTable).where(eq(tagsTable.id, parseInt(id)));
     clearTagsCache();

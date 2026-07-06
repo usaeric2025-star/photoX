@@ -10,14 +10,10 @@ interface SelectionState {
 }
 
 // These signals now act as transient/derived state or for non-URL selection state if needed
-const batchEditingIdsSignal = signal<string[] | null>(null);
-const isAvoidingSelectionSignal = signal<boolean>(false);
+export const batchEditingIdsSignal = signal<string[] | null>(null);
+export const isAvoidingSelectionSignal = signal<boolean>(false);
 
 export const selectionStore = {
-  getState: () => ({
-    batchEditingIds: batchEditingIdsSignal.value,
-    isAvoidingSelection: isAvoidingSelectionSignal.value,
-  }),
   setTransientState: (updates: Partial<Pick<SelectionState, 'batchEditingIds' | 'isAvoidingSelection'>>) => {
     if (updates.batchEditingIds !== undefined) batchEditingIdsSignal.value = updates.batchEditingIds;
     if (updates.isAvoidingSelection !== undefined) isAvoidingSelectionSignal.value = updates.isAvoidingSelection;

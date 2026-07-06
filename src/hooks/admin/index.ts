@@ -18,11 +18,6 @@ export * from './useGlobalTasks.js';
  */
 export * from './usePerformanceAudit.js';
 
-/**
- * 管理員分類/標籤/製造商刪除操作
- */
-export * from './useAdminCategory.js';
-
 // Modularized business hooks
 export * from './useAdminMutations.js';
 export * from './useAdminBatch.js';

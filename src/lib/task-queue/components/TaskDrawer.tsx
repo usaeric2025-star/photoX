@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSignal, storeAccessor, isTaskDrawerOpen } from '#lib/store/index.js';
+import { useSignal, isTaskDrawerOpen } from '#lib/store/index.js';
 import { tasksSignal, clearAll, addTask } from '#src/services/task/taskService.js';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';

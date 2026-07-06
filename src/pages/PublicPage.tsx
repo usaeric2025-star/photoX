@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { useFilters } from '#src/features/filters/index.js';
 import { useTranslation } from '#src/hooks/index.js';
-import { PublicHeader } from '#src/components/layouts/headers/PublicHeader.js';
+import { PublicHeader } from '#src/components/layout/PublicHeader.js';
 import { FilterBar } from '#src/features/filters/index.js';
 import { PhotoWall } from '#src/features/photo-wall/index.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
@@ -55,6 +55,7 @@ export default function PublicPage() {
       <FilterBar mode="public" className="border-b shadow-sm" />
 
       <div 
+        id="photo-wall-scroll-container"
         ref={scrollContainerRef}
         onScroll={handleScroll}
         className="flex-1 min-h-0 relative bg-surface-soft overflow-y-auto"

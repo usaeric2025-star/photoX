@@ -6,6 +6,7 @@ import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { api } from '#lib/api.js';
+import { useAppQuery } from '#lib/query/index.js';
 
 interface PhotoWallContainerProps {
   mode?: 'admin' | 'public';
@@ -25,34 +26,8 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   onPhotoClickRef.current = props.onPhotoClick;
 
   const isAggregated = !!props.filters?.onlyGroupsCover;
-  const expandedPhotosRef = useRef<PhotoListItem[] | null>(null);
 
-  // Pre-fetch expanded photos in background when photos change in aggregated mode
-  useEffect(() => {
-    if (isAggregated && photos.length > 0) {
-      const fetchExpanded = async () => {
-        try {
-          const res = await api.photos.list.$post({ 
-            json: { 
-              ...props.filters, 
-              onlyGroupsCover: false, 
-              limit: 1000, 
-              isAdminMode: props.mode === 'admin'
-            } 
-          });
-          if (res.ok) {
-            const result = await res.json();
-            expandedPhotosRef.current = result.data;
-          }
-        } catch (e) {
-          console.error('Background pre-fetch failed:', e);
-        }
-      };
-      fetchExpanded();
-    } else {
-      expandedPhotosRef.current = null;
-    }
-  }, [photos, isAggregated, props.filters, props.mode]);
+  const expandedPhotosRef = useRef<PhotoListItem[] | null>(null);
 
   const handlePhotoClickStable = useCallback(async (photo: PhotoListItem) => {
     if (onPhotoClickRef.current) {
@@ -87,13 +62,13 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
     if (isAggregated) {
       try {
         const res = await api.photos.list.$post({ 
-          json: { 
-            ...props.filters, 
-            onlyGroupsCover: false, 
-            limit: 1000, 
-            isAdminMode: props.mode === 'admin'
+           json: { 
+             ...props.filters,
+             onlyGroupsCover: false,
+             limit: 1000,
+             isAdminMode: props.mode === 'admin'
           } 
-        });
+         });
         
         if (res.ok) {
           const result = await res.json();
@@ -103,9 +78,9 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
           if (allPhotos && allPhotos.length > 0) {
             const expandedSlides = photosToLightboxSlides(allPhotos);
             
-            let newIndex = allPhotos.findIndex(p => p.id === photo.id);
+            let newIndex = allPhotos.findIndex((p: PhotoListItem) => p.id === photo.id);
             if (newIndex === -1 && photo.groupId) {
-                newIndex = allPhotos.findIndex(p => p.groupId === photo.groupId);
+                newIndex = allPhotos.findIndex((p: PhotoListItem) => p.groupId === photo.groupId);
             }
 
             if (newIndex !== -1) {
@@ -114,18 +89,17 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
               
               let finalIndex = newIndex;
               if (currentPhotoId) {
-                const indexInNewList = allPhotos.findIndex(p => p.id === currentPhotoId);
+                const indexInNewList = allPhotos.findIndex((p: PhotoListItem) => p.id === currentPhotoId);
                 if (indexInNewList !== -1) {
                   finalIndex = indexInNewList;
                 }
               }
-
               setLightboxData(expandedSlides, finalIndex);
             }
           }
         }
       } catch (e) {
-        console.error('Failed to background expand groups for lightbox:', e);
+        ErrorFactory.handleError(e, 'Failed to background expand groups for lightbox');
       }
     }
   }, [openLightbox, setLightboxData, isAggregated, props.mode, props.filters]);

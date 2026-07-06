@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useAppInfiniteQuery, photoKeys, keepPreviousData } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { PhotoListItem } from '#src/types/api.js';
@@ -35,8 +36,17 @@ export function usePhotos(params: PhotoListFilters = {}) {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isFetching, error } = result;
 
+  const mappedData = useMemo(() => {
+    if (!data?.pages) {
+      return { pages: [] };
+    }
+    return {
+      pages: data.pages.map((p) => ({ items: p.data, total: p.total }))
+    };
+  }, [data]);
+
   return {
-    data: { pages: data?.pages.map(p => ({ items: p.data, total: p.total })) || [] },
+    data: mappedData,
     isPending: isLoading,
     isFetching,
     isError: !!error,

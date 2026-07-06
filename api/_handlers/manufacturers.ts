@@ -47,7 +47,7 @@ export const manufacturers = new Hono()
     
     return successResponse(c, data);
   })
-  .put('/:id', async (c) => {
+  .put('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     const check = v.safeParse(v.object({ updates: v.omit(ManufacturerReqSchema, ["id"]) }), body);
@@ -61,7 +61,7 @@ export const manufacturers = new Hono()
     
     return successResponse(c, null);
   })
-  .delete('/:id', async (c) => {
+  .delete('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', async (c) => {
     const id = c.req.param('id');
     await db
       .delete(manufacturersTable)

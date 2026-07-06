@@ -1,5 +1,5 @@
 import { signal } from '@preact/signals-react';
-import { initAuthListener, authStore, authLoadingSignal } from './authStore.js';
+import { initAuthListener, initAuth, authLoadingSignal } from './authStore.js';
 import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
 import { loadTagsFromCloud } from '#src/services/tag/queries.js';
 import { queryClient } from '#lib/query/index.js';
@@ -16,17 +16,6 @@ export interface AppStatusState {
 export const appLoadingSignal = signal<boolean>(true);
 export const appErrorSignal = signal<Error | null>(null);
 
-export const appStore = {
-  getState: () => ({
-    isLoading: appLoadingSignal.value,
-    error: appErrorSignal.value,
-  }),
-  setState: (updates: Partial<AppStatusState>) => {
-    if (updates.isLoading !== undefined) appLoadingSignal.value = updates.isLoading;
-    if (updates.error !== undefined) appErrorSignal.value = updates.error;
-  }
-};
-
 export const initializeApp = async () => {
   try {
     // 1. 設置全域 Auth 監聽
@@ -34,7 +23,7 @@ export const initializeApp = async () => {
     
     // 2. 執行初始 Session 獲取 (P0: 增加強制逾時，避免 SDK 掛起導致全白屏)
     try {
-      await withTimeout(authStore.init(), 4000, 'Auth Store Init');
+      await withTimeout(initAuth(), 4000, 'Auth Store Init');
     } catch (e) {
       ErrorFactory.handle(e, { context: '[appStore] Auth init timeout or error, proceeding as guest' });
       authLoadingSignal.value = false; // 強制結束加載狀態
@@ -50,9 +39,11 @@ export const initializeApp = async () => {
     ]).catch(e => ErrorFactory.handle(e, { context: '[appStore] Background prefetch failed' }));
     
     // 5. 標記初始化完成
-    appStore.setState({ isLoading: false, error: null });
+    appLoadingSignal.value = false;
+    appErrorSignal.value = null;
   } catch (error) {
-    appStore.setState({ isLoading: false, error: error as Error });
+    appLoadingSignal.value = false;
+    appErrorSignal.value = error as Error;
     ErrorFactory.handle(error, { context: '[appStore] Initialization failed' });
   }
 };

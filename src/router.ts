@@ -7,9 +7,9 @@ export const ALL_ROUTES = {
   adminGroup: "/admin/group/:id",
   admin: "/admin",
   adminTasks: "/admin/tasks",
-  adminDiagnostics: "/diagnostics",
-  adminDiagnosticsLogs: "/diagnostics/logs",
-  adminBatchEdit: "/admin/batch",
+  adminDiagnostics: "/admin/diagnostics",
+  adminDiagnosticsLogs: "/admin/error-logs",
+  adminBatchEdit: "/admin/batch-edit",
   settings: "/settings",
   diagnostics: "/diagnostics",
 } as const;

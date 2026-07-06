@@ -1,4 +1,4 @@
-import { storeAccessor } from '#lib/store/index.js';
+import { descLang } from '#lib/store/index.js';
 
 /**
  * Common utility to get a display string from potentially localized content
@@ -6,7 +6,7 @@ import { storeAccessor } from '#lib/store/index.js';
  */
 export const getLocalizedDisplay = (val: unknown, lang?: 'zh' | 'en' | 'ms'): string => {
   if (!val) return '';
-  const currentLang = lang || storeAccessor.ui.descLang || 'zh';
+  const currentLang = lang || descLang.value || 'zh';
 
   if (typeof val === 'string') {
     try {

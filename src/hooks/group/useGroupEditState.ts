@@ -1,5 +1,5 @@
 import { ErrorFactory } from "#lib/error/ErrorFactory.js";
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { queryClient } from '#lib/query/index.js';
 import { ProductGroup, Photo } from '#src/types/index.js';
 import { useGroupDetail } from '#src/hooks/index.js';
@@ -18,36 +18,25 @@ export const useGroupEditState = (
 ) => {
   const { user } = useAuth();
 
-  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const { group: queriedGroupData, isLoading: isGroupDataPending } =
     useGroupDetail(activeGroupId, true);
 
-  // Sync with cloud data when it changes
-  useEffect(() => {
-    if (queriedGroupData) {
-      setGroupData(queriedGroupData);
-    } else if (activeGroupId && !isGroupDataPending) {
-      setGroupData({
-        id: activeGroupId,
-        name: "GROUP",
-        description: "",
-        coverPhotoId: null,
-        userId: user?.id || "",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'active'
-      });
-    } else {
-      setGroupData(null);
-    }
-  }, [queriedGroupData, activeGroupId, isGroupDataPending, user]);
+  const initialGroupData = queriedGroupData || (activeGroupId && !isGroupDataPending ? {
+    id: activeGroupId,
+    name: "GROUP",
+    description: "",
+    coverPhotoId: null,
+    userId: user?.id || "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    status: 'active'
+  } : null) as ProductGroup | null;
 
   const handleUpdateGroupData = useCallback(
     async (updates: Partial<ProductGroup>) => {
-      if (!activeGroupId || !groupData) return;
+      if (!activeGroupId || !initialGroupData) return;
 
-      const nextGroupData = { ...groupData, ...updates };
-      setGroupData(nextGroupData);
+      const nextGroupData = { ...initialGroupData, ...updates };
 
       try {
         await upsertGroup(nextGroupData);
@@ -68,15 +57,14 @@ export const useGroupEditState = (
     },
     [
       activeGroupId,
-      groupData,
+      initialGroupData,
       onUpdatePhoto,
       dbGroupPhotos
     ],
   );
 
   return {
-    groupData,
-    setGroupData,
+    groupData: initialGroupData,
     isGroupDataPending,
     handleUpdateGroupData
   };

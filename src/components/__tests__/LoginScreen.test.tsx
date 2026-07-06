@@ -49,14 +49,36 @@ vi.mock('#src/store/useUI', () => ({
   useUI: (cb: (state: { appLang: string }) => unknown) => cb({ appLang: 'en' }),
 }));
 
-// Mock settings
-vi.mock('../../hooks', () => ({
-  usePublicSettings: () => ({
-    data: {
-      access_passcode: '123456'
-    }
-  })
-}));
+// Mock settings and translation
+vi.mock('../../hooks', () => {
+  const mockTranslations = {
+    loginTitleAdmin: 'Admin',
+    loginTitleStaff: 'Staff',
+    login: 'Login',
+    enterPasscode: 'Enter Passcode',
+    unlockAndAccess: 'Unlock',
+    invalidCode: 'Invalid code',
+    loginFailed: 'Login failed',
+    agreeByConnecting: 'By connecting, you agree to our',
+    termsOfService: 'Terms',
+    privacyPolicy: 'Privacy',
+    backToShowcase: 'Back to Showcase'
+  };
+  return {
+    usePublicSettings: () => ({
+      data: {
+        access_passcode: '123456'
+      }
+    }),
+    useTranslation: () => ({
+      resolveString: (translations: any, fallback?: string) => fallback || '',
+      t: (key: string) => (mockTranslations as any)[key] || key,
+      appLang: 'en',
+      lang: 'en',
+      uiTranslations: mockTranslations
+    })
+  };
+});
 
 describe('LoginScreen', () => {
   it('renders correctly and allows mode switching', async () => {

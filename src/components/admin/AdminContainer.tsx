@@ -73,6 +73,7 @@ export function AdminContainer() {
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative animate-fade-in" id="main-admin-screen">
        <div 
+         id="photo-wall-scroll-container"
          ref={scrollContainerRef}
          onScroll={handleScroll}
          className="flex-1 min-h-0 relative overflow-y-auto"

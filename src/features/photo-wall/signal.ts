@@ -6,16 +6,16 @@ interface PhotoWallState {
   onPhotoClick: ((photo: PhotoListItem) => void) | null;
 }
 
-const modeSignal = signal<'admin' | 'public'>('public');
-const onPhotoClickSignal = signal<((photo: PhotoListItem) => void) | null>(null);
+export const photoWallModeSignal = signal<'admin' | 'public'>('public');
+export const onPhotoClickSignal = signal<((photo: PhotoListItem) => void) | null>(null);
 
 export const photoWallStore = {
   getState: () => ({
-    mode: modeSignal.value,
+    mode: photoWallModeSignal.value,
     onPhotoClick: onPhotoClickSignal.value,
   }),
   setState: (updates: Partial<PhotoWallState>) => {
-    if (updates.mode !== undefined) modeSignal.value = updates.mode;
+    if (updates.mode !== undefined) photoWallModeSignal.value = updates.mode;
     if (updates.onPhotoClick !== undefined) onPhotoClickSignal.value = updates.onPhotoClick;
   }
 };

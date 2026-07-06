@@ -16,9 +16,11 @@ import {
   selectedIdsParser 
 } from '#lib/nuqs/parsers.js';
 import { Router } from '#src/router.js';
-import { useUI, uiStore, lightboxCurrentIndex } from '#lib/store/index.js';
+import { useUI, lightboxCurrentIndex } from '#lib/store/index.js';
 import { useAppRoute } from '#lib/router/index.js';
 import type { FilterState, SortOrder } from '#src/features/filters/types.js';
+
+const EMPTY_ARRAY: string[] = [];
 
 export interface UseFiltersOptions {
   enableStatus?: boolean;
@@ -47,34 +49,19 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
     history: 'replace',
   });
 
-  // Force update this Hook instance when url-change event is dispatched by other instances
-  const [, setTick] = useState({});
-  useEffect(() => {
-    const handleUrlChange = () => {
-      setTick({});
-    };
-    window.addEventListener('url-change', handleUrlChange);
-    return () => window.removeEventListener('url-change', handleUrlChange);
-  }, []);
+  // Nuqs handles URL state synchronization automatically across instances.
+  // No need for custom url-change events.
 
-  const wrappedSetQuery = useCallback((updates: Record<string, unknown>) => {
-    const promise = setQuery(updates);
-    promise.then(() => {
-      window.dispatchEvent(new Event('url-change'));
-    });
-    return promise;
-  }, [setQuery]);
+  const setSearch = useCallback((val: string) => setQuery({ q: val || null }), [setQuery]);
+  const setCategory = useCallback((val: string) => setQuery({ cat: val || null }), [setQuery]);
+  const setTags = useCallback((vals: string[]) => setQuery({ tag: vals?.length ? vals : null }), [setQuery]);
+  const setSort = useCallback((val: string) => setQuery({ sort: val as SortOrder }), [setQuery]);
+  const setStatus = useCallback((val: string) => setQuery({ status: val === 'all' ? null : val }), [setQuery]);
+  const setBatchFilter = useCallback((val: boolean) => setQuery({ batch: val || null }), [setQuery]);
 
-  const setSearch = useCallback((val: string) => wrappedSetQuery({ q: val || null }), [wrappedSetQuery]);
-  const setCategory = useCallback((val: string) => wrappedSetQuery({ cat: val || null }), [wrappedSetQuery]);
-  const setTags = useCallback((vals: string[]) => wrappedSetQuery({ tag: vals?.length ? vals : null }), [wrappedSetQuery]);
-  const setSort = useCallback((val: string) => wrappedSetQuery({ sort: val as SortOrder }), [wrappedSetQuery]);
-  const setStatus = useCallback((val: string) => wrappedSetQuery({ status: val === 'all' ? null : val }), [wrappedSetQuery]);
-  const setBatchFilter = useCallback((val: boolean) => wrappedSetQuery({ batch: val || null }), [wrappedSetQuery]);
-  
   const setPhotoId = useCallback((val: string | null) => {
       const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-      if (route?.name === 'photo' || pathname.startsWith('/photo/')) {
+      if (route?.name === 'photo' || pathname.startsWith('/photo/')) { 
          if (val) {
             if (val !== query.photoId) Router.push("photo", { photoId: val });
          } else {
@@ -82,31 +69,31 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
          }
          return;
       }
-      wrappedSetQuery({ photoId: val || null, modal: (val === null && query.modal === 'edit') ? null : query.modal });
-  }, [route?.name, query.photoId, query.modal, wrappedSetQuery]);
+      setQuery({ photoId: val || null, modal: (val === null && query.modal === 'edit') ? null : query.modal });
+  }, [route?.name, query.photoId, query.modal, setQuery]);
 
-  const setGroupId = useCallback((val: string | null) => wrappedSetQuery({ groupId: val || null }), [wrappedSetQuery]);
-  const setModal = useCallback((val: string | null) => wrappedSetQuery({ modal: val || null }), [wrappedSetQuery]);
-  const setView = useCallback((val: 'grid' | 'list') => wrappedSetQuery({ view: val === 'grid' ? null : 'list' }), [wrappedSetQuery]);
-  const setAnchor = useCallback((val: boolean) => wrappedSetQuery({ anchor: val || null }), [wrappedSetQuery]);
-  const setShowGroupsCollapsed = useCallback((val: boolean) => wrappedSetQuery({ showGroupsCollapsed: val === true ? null : false }), [wrappedSetQuery]);
+  const setGroupId = useCallback((val: string | null) => setQuery({ groupId: val || null }), [setQuery]);
+  const setModal = useCallback((val: string | null) => setQuery({ modal: val || null }), [setQuery]);
+  const setView = useCallback((val: 'grid' | 'list') => setQuery({ view: val === 'grid' ? null : 'list' }), [setQuery]);
+  const setAnchor = useCallback((val: boolean) => setQuery({ anchor: val || null }), [setQuery]);
+  const setShowGroupsCollapsed = useCallback((val: boolean) => setQuery({ showGroupsCollapsed: val === true ? null : false }), [setQuery]);
 
   const updateFilters = useCallback((updates: Partial<typeof query>) => {
-    wrappedSetQuery(updates);
-  }, [wrappedSetQuery]);
+    setQuery(updates);
+  }, [setQuery]);
 
   const reset = useCallback(() => {
-    wrappedSetQuery({
+    setQuery({
       q: null, cat: null, tag: null, sort: null, status: null, batch: null,
       photoId: null, groupId: null, modal: null, view: null, anchor: null,
       showGroupsCollapsed: null, selected: null,
     });
-  }, [wrappedSetQuery]);
+  }, [setQuery]);
 
   // Derived state
   const search = query.q || '';
   const category = query.cat || 'all';
-  const tags = query.tag || [];
+  const tags = query.tag || EMPTY_ARRAY;
   const sort = query.sort || 'newest';
   const status = options.enableStatus ? (query.status || 'all') : 'all';
   const batchFilter = options.enableBatch ? !!query.batch : false;

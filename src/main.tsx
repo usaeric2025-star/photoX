@@ -43,7 +43,7 @@ import './index.css';
 // Removed migration
 import { initChunkHandler } from './lib/chunkErrorHandler.js';
 import { dailyWorker } from './features/diagnostics/DailyWorker.js';
-import { useUI, storeAccessor } from './lib/store/index.js';
+import { useUI, setFatalError } from './lib/store/index.js';
 import { scheduler } from './lib/task-queue/scheduler.js';
 import { setupQuerySync } from './lib/task-queue/querySync.js';
 
@@ -90,7 +90,7 @@ async function init() {
       onUncaughtError: (error) => {
         const message = (error as Error)?.message || String(error || '');
         if (/chunk|dynamically imported|module script|ResizeObserver|AbortError|cancel|abort|precondition|offline|websocket|hmr|DOMException|user_cancel|Failed to fetch|NetworkError/i.test(message)) return;
-        storeAccessor.ui.setFatalError(error instanceof Error ? error : new Error(String(error)));
+        setFatalError(error instanceof Error ? error : new Error(String(error)));
       },
     });
     

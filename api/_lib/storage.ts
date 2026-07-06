@@ -2,12 +2,15 @@ import { logger } from './logger.js';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getServerEnv } from "../../shared/envSchema.js";
 
-const serverEnv = getServerEnv(process.env);
+export function getStorageEnv() {
+  return getServerEnv(process.env);
+}
 
 export async function getR2Client() {
-  let r2Endpoint = serverEnv.R2_ENDPOINT;
-  let r2AccessKeyId = serverEnv.R2_ACCESS_KEY_ID || '';
-  let r2SecretAccessKey = serverEnv.R2_SECRET_ACCESS_KEY || '';
+  const env = getStorageEnv();
+  let r2Endpoint = env.R2_ENDPOINT;
+  let r2AccessKeyId = env.R2_ACCESS_KEY_ID || '';
+  let r2SecretAccessKey = env.R2_SECRET_ACCESS_KEY || '';
   
   if (r2Endpoint && !r2Endpoint.startsWith("http://") && !r2Endpoint.startsWith("https://")) {
     r2Endpoint = `https://${r2Endpoint}`;
@@ -39,7 +42,8 @@ export async function getR2Client() {
 const uploadToR2 = async (key: string, content: string): Promise<{ success: boolean; error?: string }> => {
   try {
     const client = await getR2Client();
-    const bucket = serverEnv.R2_BUCKET_NAME;
+    const env = getStorageEnv();
+    const bucket = env.R2_BUCKET_NAME;
     if (!bucket) throw new Error('R2_BUCKET_NAME not set');
 
     await client.send(new PutObjectCommand({
@@ -57,7 +61,8 @@ const uploadToR2 = async (key: string, content: string): Promise<{ success: bool
 const getFromR2 = async (key: string): Promise<string | null> => {
   try {
     const client = await getR2Client();
-    const bucket = serverEnv.R2_BUCKET_NAME;
+    const env = getStorageEnv();
+    const bucket = env.R2_BUCKET_NAME;
     if (!bucket) throw new Error('R2_BUCKET_NAME not set');
 
     const { GetObjectCommand } = await import("@aws-sdk/client-s3");
@@ -77,7 +82,8 @@ const getFromR2 = async (key: string): Promise<string | null> => {
 const deleteFromR2 = async (key: string): Promise<void> => {
   try {
     const client = await getR2Client();
-    const bucket = serverEnv.R2_BUCKET_NAME;
+    const env = getStorageEnv();
+    const bucket = env.R2_BUCKET_NAME;
     if (!bucket) return;
 
     await client.send(new DeleteObjectCommand({

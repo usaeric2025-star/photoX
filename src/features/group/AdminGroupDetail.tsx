@@ -82,7 +82,7 @@ export function AdminGroupDetailPage() {
 
   const adminActions = useAdminMaintenance();
   
-  const { groupData, setGroupData, handleUpdateGroupData } = useGroupEditState(
+  const { groupData, handleUpdateGroupData } = useGroupEditState(
     groupId,
     photos as unknown as Photo[],
     async (_id, _data) => {}
@@ -141,7 +141,6 @@ export function AdminGroupDetailPage() {
           setShowGroupSettings={setShowAdminTools}
           activeGroupId={groupId || null}
           groupData={groupData}
-          setGroupData={setGroupData}
           handleUpdateGroupData={handleUpdateGroupData}
           onUngroup={async (id) => {
             await dissolve.mutateAsync(id);

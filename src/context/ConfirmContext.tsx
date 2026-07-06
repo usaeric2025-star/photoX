@@ -2,6 +2,7 @@ import React from 'react';
 import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { signal } from '@preact/signals-react';
 import { useTranslation } from '#src/hooks/index.js';
+import { useSignal } from '#lib/store/index.js';
 
 interface ConfirmOptions {
   title: string;
@@ -43,7 +44,7 @@ export function useConfirm() {
 }
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
-  const state = confirmStateSignal.value;
+  const state = useSignal(confirmStateSignal);
   const { t } = useTranslation();
 
   const handleConfirm = () => {

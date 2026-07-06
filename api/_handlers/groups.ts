@@ -14,7 +14,7 @@ export const groups = new Hono()
     const data = await getAllGroups({ isAdminMode: isAdminByQuery });
     return successResponse(c, data);
   })
-  .get('/:id', async (c) => {
+  .get('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', async (c) => {
     const id = c.req.param('id');
     const data = await getGroupById(id);
     if (!data) return errorResponse(c, 'Not found', 404);
@@ -42,7 +42,7 @@ export const groups = new Hono()
     const [data] = await db.insert(groupsTable).values([insertData as unknown as typeof groupsTable.$inferInsert]).returning();
     return successResponse(c, data);
   })
-  .put('/:id', async (c) => {
+  .put('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     
@@ -107,7 +107,7 @@ export const groups = new Hono()
 
     return successResponse(c, data);
   })
-  .delete('/:id', async (c) => {
+  .delete('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', async (c) => {
     const id = c.req.param('id');
     await deleteGroup(id);
     await refreshPhotosView();

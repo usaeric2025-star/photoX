@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "#src/components/shared/Alert.js";
 import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner.js";
 import { ISSUE_ACTIONS } from "./issueActions.js";
 import { Icon } from '#src/components/ui/Icon.js';
-import { useUI, storeAccessor } from '#lib/store/index.js';
+import { useUI } from '#lib/store/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { MaintPreviewDialog } from './MaintPreviewDialog.js';
 import { useMaintenanceExecution } from '#src/hooks/index.js';

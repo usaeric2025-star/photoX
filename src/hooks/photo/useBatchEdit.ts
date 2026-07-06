@@ -1,11 +1,12 @@
 import { useSelectionActions } from '#src/hooks/index.js';
 import { selectionStore } from '#src/services/selection/selectionService.js';
-import { useUI, UIStoreState, useStore } from '#lib/store/index.js';
+import { useSignal, useUI, UIStoreState } from '#lib/store/index.js';
+import { batchEditingIdsSignal } from '#src/services/selection/selectionService.js';
 import { useAppRouter } from '#lib/router/index.js';
 import { usePhotoMutations } from '#src/hooks/photo/usePhotoMutations.js';
 
 export function useBatchEdit() {
-  const batchEditingIds = useStore(selectionStore, s => s.batchEditingIds);
+  const batchEditingIds = useSignal(batchEditingIdsSignal);
   const { patch: patchSelection } = useSelectionActions();
   const formState = useUI((s: UIStoreState) => s.formState);
   const patch = useUI((state: UIStoreState) => state.patch);

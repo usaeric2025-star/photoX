@@ -93,7 +93,7 @@ export const categories = new Hono()
     
     return successResponse(c, data);
   })
-  .put('/:id', async (c) => {
+  .put('/:id{[0-9]+}', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     const check = v.safeParse(v.object({ updates: v.omit(CategoryReqSchema, ["id"]) }), body);
@@ -109,7 +109,7 @@ export const categories = new Hono()
     
     return successResponse(c, null);
   })
-  .delete('/:id', async (c) => {
+  .delete('/:id{[0-9]+}', async (c) => {
     const id = c.req.param('id');
     await db
         .delete(categoriesTable)

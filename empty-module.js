@@ -1,3 +1,3 @@
 // empty-module.js
-// 用于替代 postgres 等后端专用模块
+// Used to replace backend-only modules like 'postgres' in the client bundle
 export default {};

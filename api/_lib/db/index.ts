@@ -3,73 +3,101 @@ import postgres from 'postgres';
 import * as schema from './schema.js';
 import { getServerEnv } from '../../../shared/envSchema.js';
 
-const env = getServerEnv(process.env);
-
-const connectionString = env.DATABASE_URL;
-
-if (!connectionString) {
-  // If we don't have a database URL, we provide a dummy db or throw if in production
-  console.error('❌ [DB-CRITICAL] DATABASE_URL is missing in process.env! Queries will fail.');
-} else {
-    console.log('✅ [DB-INFO] DATABASE_URL successfully loaded (length:', connectionString.length, ')');
-}
-
-// In serverless environments like Vercel, each function invocation is short-lived.
-// To avoid exhausting connection limits, we limit the pool size to 1.
-// In non-serverless environments like Cloud Run, we allow up to 10 connections to handle parallel requests.
-const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
-const maxConnections = isServerless ? 5 : 10;
-
 // Reuse the postgres client and drizzle db across invocations in serverless/development
 const globalForDb = globalThis as unknown as {
   postgresClient: postgres.Sql | undefined;
   drizzleDb: any | undefined;
 };
 
-// Function to append query parameters to connection string
-function appendDbParam(url: string, key: string, value: string) {
-  if (!url) return url;
-  try {
-    const u = new URL(url);
-    u.searchParams.set(key, value);
-    return u.toString();
-  } catch {
-    // Fallback for non-standard formats
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}${key}=${encodeURIComponent(value)}`;
+// Lazy initialization function
+export function getDb() {
+  if (globalForDb.drizzleDb) {
+    return globalForDb.drizzleDb;
   }
-}
 
-// Ensure statement_timeout is set at the connection level
-const finalConnectionString = appendDbParam(connectionString || '', 'options', '-c statement_timeout=35000');
+  const env = getServerEnv(process.env);
+  const connectionString = env.DATABASE_URL;
 
-const clientOptions: postgres.Options<{}> = {
-  max: maxConnections,
-  idle_timeout: isServerless ? 5 : 10, // Close idle connections quickly within 10 seconds to avoid connection leaks
-  connect_timeout: 20, // 20s as requested
-  prepare: false, // Required for PgBouncer/Supabase transaction pooling
-  onnotice: () => {},
-};
+  if (!connectionString) {
+    throw new Error('❌ [DB-CRITICAL] DATABASE_URL is missing in process.env! Cannot initialize database client.');
+  }
 
-if (!globalForDb.postgresClient && connectionString) {
-  globalForDb.postgresClient = postgres(finalConnectionString, {
-    ...clientOptions,
-    keep_alive: 30000, // 30s keep-alive to prevent stale half-closed connections
-  });
-}
+  // In serverless environments like Vercel, each function invocation is short-lived.
+  // To avoid exhausting connection limits, we limit the pool size to 1.
+  // In non-serverless environments like Cloud Run, we allow up to 10 connections to handle parallel requests.
+  const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
+  const maxConnections = isServerless ? 5 : 10;
 
-const client = globalForDb.postgresClient || postgres(finalConnectionString || '', clientOptions);
+  // Function to append query parameters to connection string
+  function appendDbParam(url: string, key: string, value: string) {
+    if (!url) return url;
+    try {
+      const u = new URL(url);
+      u.searchParams.set(key, value);
+      return u.toString();
+    } catch {
+      // Fallback for non-standard formats
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}${key}=${encodeURIComponent(value)}`;
+    }
+  }
 
-if (!globalForDb.drizzleDb && connectionString) {
-  globalForDb.drizzleDb = drizzle(client, { 
+  // Ensure statement_timeout is set at the connection level
+  const finalConnectionString = appendDbParam(connectionString, 'options', '-c statement_timeout=35000');
+
+  const clientOptions: postgres.Options<{}> = {
+    max: maxConnections,
+    idle_timeout: isServerless ? 5 : 10, // Close idle connections quickly within 10 seconds to avoid connection leaks
+    connect_timeout: 20, // 20s as requested
+    prepare: false, // Required for PgBouncer/Supabase transaction pooling
+    onnotice: () => {},
+  };
+
+  if (!globalForDb.postgresClient) {
+    globalForDb.postgresClient = postgres(finalConnectionString, {
+      ...clientOptions,
+      keep_alive: 30000, // 30s keep-alive to prevent stale half-closed connections
+    });
+  }
+
+  globalForDb.drizzleDb = drizzle(globalForDb.postgresClient, {
     schema: { ...schema },
     casing: 'camelCase'
   });
+
+  return globalForDb.drizzleDb;
 }
 
-export const db = globalForDb.drizzleDb || drizzle(client, { 
-  schema: { ...schema },
-  casing: 'camelCase'
+// Proxied db export for completely transparent lazy initialization
+export const db = new Proxy({} as any, {
+  get(target, prop, receiver) {
+    // Return base property if it's a Symbol (e.g. inspected by Node console or promise check)
+    if (typeof prop === 'symbol') {
+      return Reflect.get(target, prop, receiver);
+    }
+    const database = getDb();
+    const value = Reflect.get(database, prop, receiver);
+    if (typeof value === 'function') {
+      return value.bind(database);
+    }
+    return value;
+  },
+  set(target, prop, value, receiver) {
+    const database = getDb();
+    return Reflect.set(database, prop, value, receiver);
+  },
+  has(target, prop) {
+    const database = getDb();
+    return Reflect.has(database, prop);
+  },
+  ownKeys(target) {
+    const database = getDb();
+    return Reflect.ownKeys(database);
+  },
+  getOwnPropertyDescriptor(target, prop) {
+    const database = getDb();
+    return Reflect.getOwnPropertyDescriptor(database, prop);
+  }
 });
 
 export * from './schema.js';

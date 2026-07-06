@@ -1,4 +1,4 @@
-import { useAuth, uiStore } from '#lib/store/index.js';
+import { useAuth, uploadAsGroup } from '#lib/store/index.js';
 import { useCallback } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { showToast } from '#lib/ui/toast.js';
@@ -21,7 +21,7 @@ export function usePhotoUpload() {
       const userId = user?.id;
       
       // Check if we should group them
-      const isGroup = uiStore.getState().uploadAsGroup && fileArray.length > 1;
+      const isGroup = uploadAsGroup.value && fileArray.length > 1;
       const groupId = isGroup ? generateId() : undefined;
       
       // Batch enqueue via TaskFactory (Drawer opens immediately!)

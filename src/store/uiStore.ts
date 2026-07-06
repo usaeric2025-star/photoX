@@ -160,42 +160,12 @@ export const setFatalError = (error: Error | null) => {
   fatalError.value = error;
 };
 
-export const uiState = computed<UIStoreState>(() => ({
-  appLang: appLang.value,
-  descLang: descLang.value,
-  groupSettingsOpen: groupSettingsOpen.value,
-  uploadAsGroup: uploadAsGroup.value,
-  formState: formState.value,
-  showPassPrompt: showPassPrompt.value,
-  isPhotoPickerOpen: isPhotoPickerOpen.value,
-  photoPickerGroupId: photoPickerGroupId.value,
-  isInitialDataLoading: isInitialDataLoading.value,
-  focusedGroupPhotoId: focusedGroupPhotoId.value,
-  showWhatsAppChoice: showWhatsAppChoice.value,
-  uploadModeDialogOpen: uploadModeDialogOpen.value,
-  isTaskDrawerOpen: isTaskDrawerOpen.value,
-  isSidebarOpen: isSidebarOpen.value,
-  pendingPhotoId: pendingPhotoId.value,
-  pendingFiles: pendingFiles.value,
-  activeDialogCount: activeDialogCount.value,
-  fatalError: fatalError.value,
-  totalCount: totalCount.value,
-  lightboxSlides: lightboxSlides.value,
-  lightboxCurrentIndex: lightboxCurrentIndex.value,
-  patch,
-  updateForm,
-  resetForm,
-  incrementDialogCount,
-  decrementDialogCount,
-  setLightboxData,
-  setLightboxIndex,
-  clearLightboxData,
-  setFatalError,
-}));
-
 // Sync language to DOM
 appLang.subscribe((lang) => {
+  storage.set(STORAGE_KEYS.LANG, lang);
   if (typeof document !== 'undefined') {
     document.documentElement.dataset.lang = lang;
   }
 });
+
+descLang.subscribe(l => storage.set(STORAGE_KEYS.DESC_LANG, l));

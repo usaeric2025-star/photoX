@@ -156,15 +156,15 @@
   }
 
   .badge-hidden {
-    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-red-500/90 text-white backdrop-blur-sm;
+    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-red-500/90 text-white;
   }
 
   .badge-cover {
-    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-amber-500/90 text-white backdrop-blur-sm;
+    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-amber-500/90 text-white;
   }
 
   .badge-group {
-    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-white/90 text-slate-900 border-white/40 transition-all duration-300 min-w-[32px] sm:min-w-[36px] justify-center backdrop-blur-sm;
+    @apply px-2 py-0.5 sm:px-2 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm border border-white/20 uppercase tracking-tight select-none pointer-events-none bg-white/90 text-slate-900 border-white/40 transition-all duration-300 min-w-[32px] sm:min-w-[36px] justify-center;
   }
 
   /* --- Global Scaffolding --- */

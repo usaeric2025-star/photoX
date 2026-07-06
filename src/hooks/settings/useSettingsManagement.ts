@@ -1,15 +1,28 @@
 import { useState } from 'react';
-import { useAdminCategory } from '#src/hooks/admin/useAdminCategory.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useTranslation } from '#src/hooks/core/useTranslation.js';
+import { useCategoryCreate, useCategoryEdit, useCategoryDelete } from '#src/hooks/category/index.js';
+import { useTagCreate, useTagEdit, useTagDelete } from '#src/hooks/tag/index.js';
+import { useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '#src/hooks/manufacturer/index.js';
 
 export const useSettingsManagement = () => {
     const patch = useUI((s: UIStoreState) => s.patch);
     const confirm = useConfirm();
     const { uiTranslations: t } = useTranslation();
 
-    const adminActions = useAdminCategory();
+    const { mutateAsync: deleteCategory } = useCategoryDelete();
+    const { mutateAsync: deleteTag } = useTagDelete();
+    const { mutateAsync: deleteManufacturer } = useManufacturerDelete();
+    
+    const { mutateAsync: addCategory } = useCategoryCreate();
+    const { mutateAsync: updateCategory } = useCategoryEdit();
+    
+    const { mutateAsync: addTag } = useTagCreate();
+    const { mutateAsync: updateTag } = useTagEdit();
+    
+    const { mutateAsync: addManufacturer } = useManufacturerCreate();
+    const { mutateAsync: updateManufacturer } = useManufacturerEdit();
 
     const triggerTagDelete = async (id: number) => {
         if (await confirm({
@@ -18,7 +31,7 @@ export const useSettingsManagement = () => {
             confirmText: t.deleteBtn || "Delete",
             variant: "destructive"
         })) {
-            await adminActions.deleteTag(id);
+            await deleteTag(id);
         }
     };
 
@@ -29,7 +42,7 @@ export const useSettingsManagement = () => {
             confirmText: t.deleteBtn || "Delete",
             variant: "destructive"
         })) {
-            await adminActions.deleteCategory(id);
+            await deleteCategory(id);
         }
     };
 
@@ -40,14 +53,19 @@ export const useSettingsManagement = () => {
             confirmText: t.deleteBtn || "Delete",
             variant: "destructive"
         })) {
-            await adminActions.deleteManufacturer(id);
+            await deleteManufacturer(id);
         }
     };
 
     return {
-        ...adminActions,
-        deleteTag: triggerTagDelete,
         deleteCategory: triggerCategoryDelete,
+        deleteTag: triggerTagDelete,
         deleteManufacturer: triggerManufacturerDelete,
+        addCategory,
+        updateCategory,
+        addTag,
+        updateTag,
+        addManufacturer,
+        updateManufacturer
     };
 };

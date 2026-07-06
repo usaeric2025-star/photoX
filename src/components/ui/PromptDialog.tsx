@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NativeDialog } from '#src/components/ui/NativeDialog.js';
 import { Input } from '#src/components/shared/Input.js';
-import { useUI, storeAccessor } from '#lib/store/index.js';
+import { useUI, incrementDialogCount, decrementDialogCount } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Button } from '#src/components/ui/Button.js';
 import { useFormField } from '#lib/forms/useFormField.js';
@@ -35,14 +35,14 @@ export const PromptDialog = ({
   useEffect(() => {
     if (open) {
       setValue(defaultValue);
-      storeAccessor.ui.incrementDialogCount();
+      incrementDialogCount();
     }
   }, [open, defaultValue]);
 
   const handleClose = () => {
     if (loading) return;
     onOpenChange(false);
-    storeAccessor.ui.decrementDialogCount();
+    decrementDialogCount();
   };
 
   const handleConfirm = async () => {
@@ -51,7 +51,7 @@ export const PromptDialog = ({
     if (result === false) return;
     
     onOpenChange(false);
-    storeAccessor.ui.decrementDialogCount();
+    decrementDialogCount();
     setValue('');
     if (clearError) clearError();
   };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { motion } from 'lite-sleek';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
@@ -65,7 +66,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     try {
         patch({ descLang: newLang });
     } catch (e) {
-        console.error('Failed to change language:', e);
+        ErrorFactory.handleError(e, 'Failed to change language');
     }
   };
   const normalizeSlide = (slide: Photo | { original: Photo } | LightboxSlide): Photo | { original: Photo } => {

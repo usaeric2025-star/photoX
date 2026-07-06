@@ -14,15 +14,19 @@ const AdminAuthGate = lazy(() => import("./admin/AdminAuthGate.js").then(m => ({
 const SettingsPage = lazy(() => import("#src/features/settings/SettingsPage.js").then(m => ({ default: m.SettingsPage })));
 const DiagDashboard = lazy(() => import("#src/features/diagnostics/DiagDashboard.js").then(m => ({ default: m.DiagDashboard })));
 
+/**
+ * ⚠️ 路由配置锁定
+ * - ADMIN_PATH 和 PUBLIC_PATH 禁止修改
+ * - 新增 Admin 子页面去 AdminPage.tsx 或 AdminPageContent.tsx 添加
+ * - 修改前请阅读 AGENTS.md 中的路由规范
+ * - 任何修改必须经过 review 并更新文档
+ */
+const ADMIN_PATH = '/admin/:subpath*';
+const PUBLIC_PATH = '/';
+
 const AdminGroupDetailRoute = () => (
   <AdminAuthGate>
     <AdminGroupDetailPage />
-  </AdminAuthGate>
-);
-
-const DiagnosticsRoute = () => (
-  <AdminAuthGate>
-    <DiagDashboard />
   </AdminAuthGate>
 );
 
@@ -33,7 +37,6 @@ export function RouterOrchestrator() {
   const getPageGroupKey = (pathname: string) => {
     if (pathname === '/' || pathname.startsWith('/photo/')) return 'public-home';
     if (pathname.startsWith('/admin')) return 'admin-dashboard';
-    if (pathname.startsWith('/diagnostics')) return 'diag-dashboard';
     if (pathname.startsWith('/group/')) return 'public-group';
     return pathname;
   };
@@ -42,6 +45,26 @@ export function RouterOrchestrator() {
 
   if (isAuthLoading) {
     return <LoadingScreen />;
+  }
+
+  // Admin 强制守卫 (简化路由匹配，避免 wouter 对子路由的 404)
+  if (location.startsWith('/admin') || location.startsWith('/settings') || location.startsWith('/diagnostics')) {
+    return (
+      <AnimatePresence>
+        <motion.div 
+          key="admin-dashboard"
+          variant="fade"
+          transition="easeOut"
+          className="flex-1 flex flex-col h-full w-full"
+        >
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingScreen />}>
+              <AdminPage />
+            </Suspense>
+          </ErrorBoundary>
+        </motion.div>
+      </AnimatePresence>
+    );
   }
 
   return (
@@ -55,18 +78,9 @@ export function RouterOrchestrator() {
         <ErrorBoundary>
           <Suspense fallback={<LoadingScreen />}>
             <Switch>
-              <Route path="/" component={PublicPage} />
+              <Route path={PUBLIC_PATH} component={PublicPage} />
               <Route path="/photo/:photoId" component={PublicPage} />
               <Route path="/group/:slug" component={PublicGroupDetailPage} />
-              
-              <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
-              
-              <Route path="/admin" component={AdminPage} />
-              <Route path="/admin/:subpath*" component={AdminPage} />
-              
-              <Route path="/settings" component={AdminPage} />
-              
-              <Route path="/diagnostics" component={DiagnosticsRoute} />
               
               <Route component={NotFoundPage} />
             </Switch>

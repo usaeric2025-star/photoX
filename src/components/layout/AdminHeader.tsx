@@ -2,7 +2,6 @@ import { useAppRouter } from '#lib/router/index.js';
 import React from 'react';
 import { cn } from '#lib/utils.js';
 import { useAuth, activeTaskCountSignal, useSignal } from '#lib/store/index.js';
-import { useComputed } from '@preact/signals-react';
 import { useUI, useSettings, useAdminBatchActions, usePermission, useTranslation } from '#src/hooks/index.js';
 import { useAppQuery } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
@@ -28,7 +27,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const isMultiSelect = useIsMultiSelect();
   const { toggleMode } = useSelectionActions();
 
-  const taskCount = useComputed(() => activeTaskCountSignal.value).value;
+  const taskCount = useSignal(activeTaskCountSignal);
 
   const uiTotalCount = useUI((s) => s.totalCount);
   const totalCount = uiTotalCount || 0;
