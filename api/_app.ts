@@ -68,6 +68,26 @@ apiApp.use('*', async (c, next) => {
 // 全域中間件（含錯誤處理、Auth、Materialized View 刷新）
 setupMiddlewares(apiApp, { NODE_ENV: serverEnv.NODE_ENV });
 
+// --- Health Check Shortcut Route ---
+apiApp.get('/health', async (c) => {
+    try {
+        const { db } = await import('./_lib/db/index.js');
+        const { sql } = await import('drizzle-orm');
+        await db.execute(sql`SELECT 1`);
+        return c.json({ 
+            status: 'ok', 
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('[Health] Root DB Ping failed:', err);
+        return c.json({ 
+            success: false, 
+            status: 'error', 
+            error: err instanceof Error ? err.message : String(err)
+        }, 503);
+    }
+});
+
 // --- API Routes (Distributed) ---
 apiApp.route('/admin', adminApp);
 apiApp.route('/public/settings', publicSettings);

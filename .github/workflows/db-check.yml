@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Check database health
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: bash scripts/check-db-health.sh

@@ -56,7 +56,7 @@ export function getDb() {
   if (!globalForDb.postgresClient) {
     globalForDb.postgresClient = postgres(finalConnectionString, {
       ...clientOptions,
-      keep_alive: 30000, // 30s keep-alive to prevent stale half-closed connections
+      keep_alive: 30, // 30s keep-alive to prevent stale half-closed connections (unit is seconds in postgres.js)
     });
   }
 

@@ -22,6 +22,7 @@
     "clean": "rm -rf dist",
     "analyze": "vite build --mode analyze",
     "lint": "tsc --noEmit && bash scripts/check-imports.sh",
+    "knip": "knip",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "storage:audit": "npx tsx scripts/storage/auditR2.ts",

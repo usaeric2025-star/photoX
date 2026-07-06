@@ -1,4 +1,9 @@
 #!/bin/bash
+if [ -z "$DATABASE_URL" ]; then
+  echo "⚠️ DATABASE_URL is not set. Skipping database health check."
+  exit 0
+fi
+
 echo "=== 檢查是否有 base64 流入 image_url ==="
 psql $DATABASE_URL -c "
   SELECT COUNT(*) as base64_count 
