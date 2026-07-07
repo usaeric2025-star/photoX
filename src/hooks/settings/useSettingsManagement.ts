@@ -2,27 +2,31 @@ import { useState } from 'react';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useTranslation } from '#src/hooks/core/useTranslation.js';
-import { useCategoryCreate, useCategoryEdit, useCategoryDelete } from '../category/useCategoryMutations.js';
-import { useTagCreate, useTagEdit, useTagDelete } from '../tag/useTagMutations.js';
-import { useManufacturerCreate, useManufacturerEdit, useManufacturerDelete } from '../manufacturer/useManufacturerMutations.js';
+import { useCategoryMutations } from '../category/index.js';
+import { useTagMutations } from '../tag/index.js';
+import { useManufacturerMutations } from '../manufacturer/index.js';
 
 export const useSettingsManagement = () => {
     const patch = useUI((s: UIStoreState) => s.patch);
     const confirm = useConfirm();
     const { uiTranslations: t } = useTranslation();
 
-    const { mutateAsync: deleteCategory } = useCategoryDelete();
-    const { mutateAsync: deleteTag } = useTagDelete();
-    const { mutateAsync: deleteManufacturer } = useManufacturerDelete();
+    const categoryMutations = useCategoryMutations();
+    const tagMutations = useTagMutations();
+    const manufacturerMutations = useManufacturerMutations();
+
+    const deleteCategory = categoryMutations.remove.mutateAsync;
+    const deleteTag = tagMutations.remove.mutateAsync;
+    const deleteManufacturer = manufacturerMutations.remove.mutateAsync;
     
-    const { mutateAsync: addCategory } = useCategoryCreate();
-    const { mutateAsync: updateCategory } = useCategoryEdit();
+    const addCategory = categoryMutations.create.mutateAsync;
+    const updateCategory = categoryMutations.edit.mutateAsync;
     
-    const { mutateAsync: addTag } = useTagCreate();
-    const { mutateAsync: updateTag } = useTagEdit();
+    const addTag = tagMutations.create.mutateAsync;
+    const updateTag = tagMutations.edit.mutateAsync;
     
-    const { mutateAsync: addManufacturer } = useManufacturerCreate();
-    const { mutateAsync: updateManufacturer } = useManufacturerEdit();
+    const addManufacturer = manufacturerMutations.create.mutateAsync;
+    const updateManufacturer = manufacturerMutations.edit.mutateAsync;
 
     const triggerTagDelete = async (id: number) => {
         if (await confirm({

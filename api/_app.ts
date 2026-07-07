@@ -89,18 +89,19 @@ apiApp.get('/health', async (c) => {
 });
 
 // --- API Routes (Distributed) ---
-apiApp.route('/admin', adminApp);
-apiApp.route('/public/settings', publicSettings);
-apiApp.route('/ai', ai);
-apiApp.route('/tags', tags);
-apiApp.route('/categories', categories);
-apiApp.route('/manufacturers', manufacturers);
-apiApp.route('/groups', groups);
-apiApp.route('/photos', photos);
-apiApp.route('/cron/refresh-view', cronRefreshView);
-apiApp.route('/system', system);
-apiApp.route('/', storage);
+const routes = apiApp
+  .route('/admin', adminApp)
+  .route('/public/settings', publicSettings)
+  .route('/ai', ai)
+  .route('/tags', tags)
+  .route('/categories', categories)
+  .route('/manufacturers', manufacturers)
+  .route('/groups', groups)
+  .route('/photos', photos)
+  .route('/cron/refresh-view', cronRefreshView)
+  .route('/system', system)
+  .route('/', storage);
 
-export const app = new Hono().route('/api', apiApp);
+export const app = new Hono().route('/api', routes);
 
 export type AppType = typeof app;

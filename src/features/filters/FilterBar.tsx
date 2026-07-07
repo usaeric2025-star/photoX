@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { SearchInput } from './SearchInput.js';
 import { SortToggle } from './SortToggle.js';
 import { CategoryGrid } from './CategoryGrid.js';
-import { TagGrid } from './TagGrid.js';
 import { ColumnsToggle } from '#src/components/layout/ColumnsToggle.js';
 import { GroupToggle } from '#src/components/ui/GroupToggle.js';
-import { useFilters, useFilterState } from '#src/hooks/index.js';
+import { useFilters } from '#src/hooks/index.js';
 import { useTags } from '#src/hooks/tag/index.js';
 import { cn } from '#lib/utils.js';
+
+const TagGrid = lazy(() => import('./TagGrid.js').then(m => ({ default: m.TagGrid })));
 
 interface FilterBarProps {
   mode: 'public' | 'admin';
@@ -17,9 +18,14 @@ interface FilterBarProps {
 
 export function FilterBar({ mode, className }: FilterBarProps) {
   const isAdmin = mode === 'admin';
-  const { showGroupsCollapsed, setShowGroupsCollapsed } = useFilters();
+  const { 
+    showGroupsCollapsed, 
+    setShowGroupsCollapsed, 
+    filters, 
+    setTags
+  } = useFilters({ enableStatus: isAdmin });
+  
   const [showTags, setShowTags] = useState(false);
-  const { filters, updateFilters } = useFilterState();
   
   // 延遲載入非關鍵資料 (P1)
   const [isReadyForNonCritical, setIsReadyForNonCritical] = useState(false);
@@ -35,9 +41,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
   const selectedTags = allTags?.filter(tag => filters.tagIds.includes(String(tag.id))) || [];
 
   const removeTag = (tagId: string) => {
-    updateFilters({
-      tagIds: filters.tagIds.filter(id => id !== tagId)
-    });
+    setTags(filters.tagIds.filter(id => id !== tagId));
   };
 
   return (
@@ -101,7 +105,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
               </span>
             ))}
             <button
-              onClick={() => updateFilters({ tagIds: [] })}
+              onClick={() => setTags([])}
               className="text-[10px] text-slate-400 hover:text-slate-900 font-bold ml-1 cursor-pointer transition-colors uppercase tracking-tight"
             >
               Clear
@@ -110,7 +114,11 @@ export function FilterBar({ mode, className }: FilterBarProps) {
         )}
         
         {/* 標籤 - 默認折疊，由上方按鈕控制 */}
-        {showTags && <TagGrid onClose={() => setShowTags(false)} />}
+        {showTags && (
+          <Suspense fallback={<div className="h-40 flex items-center justify-center bg-slate-50/50 rounded-xl animate-pulse text-slate-400 text-xs font-bold uppercase tracking-widest">Loading Tags...</div>}>
+            <TagGrid onClose={() => setShowTags(false)} />
+          </Suspense>
+        )}
       </div>
     </div>
   );

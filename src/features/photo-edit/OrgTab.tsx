@@ -1,7 +1,6 @@
 import React from 'react';
 import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
-import { useManufacturers, useManufacturerCreate, useTags } from '#src/hooks/index.js';
-import { useTagCreate, useTagEdit, useTagDelete } from '#src/hooks/tag/index.js';
+import { useManufacturers, useManufacturerMutations, useTags, useTagMutations } from '#src/hooks/index.js';
 import { useUI } from '#lib/store/index.js';
 import { PromptDialog } from '#src/components/ui/PromptDialog.js';
 import { translations } from '#src/locales/index.js';
@@ -23,10 +22,13 @@ export function OrgTab() {
   const { manufacturers = [] } = useManufacturers();
   const { tags = [] } = useTags();
   
-  const { mutateAsync: addManMut } = useManufacturerCreate();
-  const { mutateAsync: addTagMut } = useTagCreate();
-  const { mutateAsync: updateTagMut } = useTagEdit();
-  const { mutateAsync: deleteTagMut } = useTagDelete();
+  const manufacturerMutations = useManufacturerMutations();
+  const tagMutations = useTagMutations();
+  
+  const addManMut = manufacturerMutations.create.mutateAsync;
+  const addTagMut = tagMutations.create.mutateAsync;
+  const updateTagMut = tagMutations.edit.mutateAsync;
+  const deleteTagMut = tagMutations.remove.mutateAsync;
 
   const [isAddMfrOpen, setAddMfrOpen] = React.useState(false);
 
@@ -56,30 +58,14 @@ export function OrgTab() {
               onChange={onChange}
               tags={tags}
               addTag={async (name) => {
-                try {
-                  const result = await addTagMut(name);
-                  showToast.success(t('tagCreated'));
-                  return result?.id ? String(result.id) : null;
-                } catch (e) {
-                  ErrorFactory.handle(e, { context: t('createTag') });
-                  return null;
-                }
+                const result = await addTagMut(name);
+                return result?.id ? String(result.id) : null;
               }}
               updateTag={async (id, name) => {
-                try {
-                  await updateTagMut({ id: Number(id), updates: { name } });
-                  showToast.success(t('tagUpdated'));
-                } catch (e) {
-                  ErrorFactory.handle(e, { context: t('updateTag') });
-                }
+                await updateTagMut({ id: Number(id), updates: { name } });
               }}
               deleteTag={async (id) => {
-                try {
-                  await deleteTagMut(Number(id));
-                  showToast.success(t('tagDeleted'));
-                } catch (e) {
-                  ErrorFactory.handle(e, { context: t('deleteTag') });
-                }
+                await deleteTagMut(Number(id));
               }}
             />
           )}
@@ -110,12 +96,7 @@ export function OrgTab() {
         title={t('newMfrTitle')}
         placeholder={t('mfrNamePlaceholder')}
         onConfirm={async (name: string) => {
-          try {
-            await addManMut(name);
-            showToast.success(t('mfrCreated'));
-          } catch (e) {
-            ErrorFactory.handle(e, { context: t('createMfr') });
-          }
+          await addManMut(name);
         }}
       />
     </div>

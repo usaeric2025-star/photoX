@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
+import { sValidator } from '@hono/standard-validator';
 import * as v from 'valibot';
 import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../../shared/apiContractSchema.js';
 import { errorResponse, successResponse } from '../_lib/response.js';
-import { getAllCategories, getCategoryById } from '../_lib/db/queries/categories.js';
+import { getAllCategories } from '../_lib/db/queries/categories.js';
 
 interface FormattedCategory {
     id: number;
@@ -13,7 +14,7 @@ interface FormattedCategory {
     zh: string;
     en: string;
     ms: string;
-    sort_order: number;
+    sortOrder: number;
 }
 
 let categoriesCache: FormattedCategory[] | null = null;
@@ -29,8 +30,7 @@ export const categories = new Hono()
     const data = await getAllCategories();
     const activeData = data.filter(c => c.isActive);
 
-    // Transform to frontend format: { id, name, code, zh, en, ms, sortOrder }
-    const formatted = activeData.map((item) => ({
+    const formatted: FormattedCategory[] = activeData.map((item) => ({
         id: item.id,
         name: item.nameZh || '',
         zh: item.nameZh || '',
@@ -40,12 +40,11 @@ export const categories = new Hono()
         sortOrder: item.sortOrder || 0,
     }));
 
-    categoriesCache = formatted as any;
+    categoriesCache = formatted;
     cacheTime = now;
     return successResponse(c, formatted);
   })
   .post('/seed', async (c) => {
-    // Clean up using Drizzle
     await db.delete(categoriesTable).where(sql`true`);
     
     const seedData = [
@@ -59,17 +58,11 @@ export const categories = new Hono()
     ];
 
     await db.insert(categoriesTable).values(seedData);
-    
-    categoriesCache = null; // Clear cache
-    
+    categoriesCache = null;
     return successResponse(c, { message: 'Database seeded successfully' });
   })
-  .post('/clear-photos', async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ categoryId: v.number() }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { categoryId } = check.output;
+  .post('/clear-photos', sValidator('json', v.object({ categoryId: v.number() })), async (c) => {
+    const { categoryId } = c.req.valid('json');
     const updated = await db
         .update(furnitureItems)
         .set({ categoryId: null })
@@ -78,44 +71,34 @@ export const categories = new Hono()
     
     return successResponse(c, updated.map(i => i.id));
   })
-  .post('/', async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ categoryData: CategoryReqSchema }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { categoryData } = check.output;
+  .post('/', sValidator('json', v.object({ categoryData: CategoryReqSchema })), async (c) => {
+    const { categoryData } = c.req.valid('json');
     const [data] = await db
         .insert(categoriesTable)
-        .values([categoryData as typeof categoriesTable.$inferInsert])
+        .values([categoryData as any])
         .returning();
     
-    categoriesCache = null; // Clear cache
-    
+    categoriesCache = null;
     return successResponse(c, data);
   })
-  .put('/:id{[0-9]+}', async (c) => {
-    const id = c.req.param('id');
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ updates: v.omit(CategoryReqSchema, ["id"]) }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { updates } = check.output;
+  .put('/:id{[0-9]+}', sValidator('json', v.object({ updates: v.omit(CategoryReqSchema, ["id"]) })), async (c) => {
+    const id = parseInt(c.req.param('id'));
+    const { updates } = c.req.valid('json');
+    
     await db
         .update(categoriesTable)
-        .set(updates)
-        .where(eq(categoriesTable.id, parseInt(id)));
+        .set(updates as any)
+        .where(eq(categoriesTable.id, id));
     
-    categoriesCache = null; // Clear cache
-    
+    categoriesCache = null;
     return successResponse(c, null);
   })
   .delete('/:id{[0-9]+}', async (c) => {
-    const id = c.req.param('id');
+    const id = parseInt(c.req.param('id'));
     await db
         .delete(categoriesTable)
-        .where(eq(categoriesTable.id, parseInt(id)));
+        .where(eq(categoriesTable.id, id));
     
-    categoriesCache = null; // Clear cache
-    
+    categoriesCache = null;
     return successResponse(c, null);
   });

@@ -5,7 +5,7 @@ import { relations } from 'drizzle-orm';
  * Categories Table
  */
 export const categories = pgTable('categories', {
-    id: integer('id').primaryKey(),
+    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
     code: text('code').unique(),
     nameZh: text('name_zh'),
     nameEn: text('name_en'),
@@ -82,7 +82,7 @@ export const furnitureItems = pgTable('furniture_items', {
  * Tags Table
  */
 export const tags = pgTable('tags', {
-    id: integer('id').primaryKey(),
+    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
     name: text('name').unique(),
     isPinned: boolean('is_pinned').default(false),
     usageCount: integer('usage_count').default(0),

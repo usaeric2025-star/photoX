@@ -14,7 +14,7 @@ interface WhatsAppDialogProps {
 export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   const { data: settings } = usePublicSettings();
   const pendingPhotoId = useUI(s => s.pendingPhotoId);
-  const { data: pendingPhoto } = usePhoto(pendingPhotoId || '');
+  const { data: pendingPhoto } = usePhoto(open && pendingPhotoId ? pendingPhotoId : null);
   const { t } = useTranslation();
 
   const options = React.useMemo(() => {

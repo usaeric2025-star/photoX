@@ -1,8 +1,13 @@
 import { useGlobalTasks } from '#src/hooks/admin/useGlobalTasks.js';
 import { Icon } from '#src/components/ui/Icon.js';
+import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 
 export function TaskIndicator() {
+  const { isStaff } = usePermission();
   const { tasks } = useGlobalTasks();
+  
+  if (!isStaff) return null;
+  
   const activeTasks = tasks.filter(t => t.status === 'processing');
 
   if (activeTasks.length === 0) return null;

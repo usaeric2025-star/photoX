@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { sValidator } from '@hono/standard-validator';
 import { db, manufacturers as manufacturersTable } from '../_lib/db/index.js';
 import { eq, asc } from 'drizzle-orm';
 import * as v from 'valibot';
@@ -14,12 +15,8 @@ export const manufacturers = new Hono()
     
     return successResponse(c, data);
   })
-  .post('/clear-photos', async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ manufacturerId: v.string() }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { manufacturerId } = check.output;
+  .post('/clear-photos', sValidator('json', v.object({ manufacturerId: v.string() })), async (c) => {
+    const { manufacturerId } = c.req.valid('json');
     const { furnitureItems } = await import('../_lib/db/index.js');
     const updated = await db
         .update(furnitureItems)
@@ -29,12 +26,8 @@ export const manufacturers = new Hono()
     
     return successResponse(c, updated.map(i => i.id));
   })
-  .post('/', async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ manufacturerData: ManufacturerReqSchema }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { manufacturerData } = check.output;
+  .post('/', sValidator('json', v.object({ manufacturerData: ManufacturerReqSchema })), async (c) => {
+    const { manufacturerData } = c.req.valid('json');
     const crypto = await import('node:crypto');
     const [data] = await db
       .insert(manufacturersTable)
@@ -47,13 +40,10 @@ export const manufacturers = new Hono()
     
     return successResponse(c, data);
   })
-  .put('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', async (c) => {
+  .put('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', sValidator('json', v.object({ updates: v.omit(ManufacturerReqSchema, ["id"]) })), async (c) => {
     const id = c.req.param('id');
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ updates: v.omit(ManufacturerReqSchema, ["id"]) }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    const { updates } = c.req.valid('json');
 
-    const { updates } = check.output;
     await db
       .update(manufacturersTable)
       .set({ name: updates.name })

@@ -1,4 +1,4 @@
-import { usePhotoMutations } from '#src/hooks/photo/usePhotoMutations.js';
+import { usePhotoMutations } from '#src/hooks/photo/usePhotos.js';
 import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
 
 /**

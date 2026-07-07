@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { sValidator } from '@hono/standard-validator';
 import * as v from 'valibot';
 import { db, tags as tagsTable, photoTags } from '../_lib/db/index.js';
 import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
@@ -38,42 +39,30 @@ export const tags = new Hono()
     const data = await filteredQuery.limit(20);
     return successResponse(c, data);
   })
-  .put('/:id{[0-9]+}', async (c) => {
-    const id = c.req.param('id');
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ updates: v.omit(TagReqSchema, ["id"]) }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { updates } = check.output;
-    await db.update(tagsTable).set(updates).where(eq(tagsTable.id, parseInt(id)));
+  .put('/:id{[0-9]+}', sValidator('json', v.object({ updates: v.omit(TagReqSchema, ["id"]) })), async (c) => {
+    const id = parseInt(c.req.param('id'));
+    const { updates } = c.req.valid('json');
+    await db.update(tagsTable).set(updates as any).where(eq(tagsTable.id, id));
     clearTagsCache();
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
-  .post('/', async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ tagData: TagReqSchema }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { tagData } = check.output;
-    const [data] = await db.insert(tagsTable).values(tagData).returning();
+  .post('/', sValidator('json', v.object({ tagData: TagReqSchema })), async (c) => {
+    const { tagData } = c.req.valid('json');
+    const [data] = await db.insert(tagsTable).values(tagData as any).returning();
     clearTagsCache();
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
-  .post('/batch', async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(v.object({ tags: v.array(TagReqSchema) }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { tags: tagsData } = check.output;
-    const data = await db.insert(tagsTable).values(tagsData).returning({ id: tagsTable.id, name: tagsTable.name });
+  .post('/batch', sValidator('json', v.object({ tags: v.array(TagReqSchema) })), async (c) => {
+    const { tags: tagsData } = c.req.valid('json');
+    const data = await db.insert(tagsTable).values(tagsData as any).returning({ id: tagsTable.id, name: tagsTable.name });
     clearTagsCache();
-    return c.json({ success: true, data });
+    return successResponse(c, data);
   })
   .delete('/:id{[0-9]+}', async (c) => {
-    const id = c.req.param('id');
-    await db.delete(tagsTable).where(eq(tagsTable.id, parseInt(id)));
+    const id = parseInt(c.req.param('id'));
+    await db.delete(tagsTable).where(eq(tagsTable.id, id));
     clearTagsCache();
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/refresh-hot-scores', async (c) => {
     await db.execute(sql`SELECT refresh_tag_hot_scores()`);

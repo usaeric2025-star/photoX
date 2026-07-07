@@ -1,89 +1,91 @@
-import { type QueryClient, useMutation, useQueryClient, CancelledError } from '#lib/query/index.js';
-import { type UseMutationOptions } from '@tanstack/react-query';
-import { queryKeys } from '#lib/query/keys.js';
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { photoKeys } from './index.js';
 import { Photo } from '#src/types/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
-export interface PhotoPage {
-  items?: Photo[];
-  data?: Photo[];
+interface OptimisticPhotoMutationOptions<TVariables, TData> {
+  mutationFn: (variables: TVariables) => Promise<TData>;
+  onMutateOptimistic: (variables: TVariables) => {
+    ids: string | string[];
+    updater: (photo: Photo) => Photo | null;
+  };
+  errorContext: string;
+  onSuccess?: (data: TData, variables: TVariables) => void;
+  onSettled?: (data: TData | undefined, error: Error | null, variables: TVariables) => void;
 }
 
-export interface InfinitePhotoData {
-  pages: PhotoPage[];
-  pageParams: unknown[];
-}
-
-export interface SinglePhotoQuery {
-  id?: string;
-  data?: Photo;
-}
-
-export const backupPhotosCache = async (queryClient: QueryClient) => {
-  await queryClient.cancelQueries({ queryKey: queryKeys.photos.all });
-  return queryClient.getQueriesData({ queryKey: queryKeys.photos.all });
-};
-
-export const rollbackPhotosCache = (queryClient: QueryClient, previousQueries: [unknown, unknown][]) => {
-  previousQueries.forEach(([queryKey, previousData]) => {
-    queryClient.setQueryData(queryKey as any, previousData);
-  });
-};
-
-export const updatePhotosCache = (
-  queryClient: QueryClient,
-  ids: string | string[],
-  updater: (photo: Photo) => Photo | null
-) => {
-  const idArray = Array.isArray(ids) ? ids : [ids];
-  queryClient.setQueriesData({ queryKey: queryKeys.photos.all }, (old: InfinitePhotoData | Photo[] | SinglePhotoQuery | Photo | undefined) => {
-    if (!old) return old;
-    if (typeof old === 'object' && 'pages' in old && Array.isArray(old.pages)) {
-      return {
-        ...old,
-        pages: old.pages.map((page: PhotoPage) => ({
-          ...page,
-          data: page.data?.map(p => idArray.includes(p.id) ? updater(p) : p).filter((p): p is Photo => p !== null),
-          items: page.items?.map(p => idArray.includes(p.id) ? updater(p) : p).filter((p): p is Photo => p !== null),
-        })),
-      };
-    }
-    if (Array.isArray(old)) {
-      return old.map(p => idArray.includes(p.id) ? updater(p) : p).filter((p): p is Photo => p !== null);
-    }
-    const singleOld = old as SinglePhotoQuery;
-    const photoId = singleOld.id || (singleOld.data?.id);
-    if (photoId && idArray.includes(photoId)) {
-      if (singleOld.data) {
-        const updated = updater(singleOld.data);
-        return updated ? { ...singleOld, data: updated } : null;
-      }
-      return updater(old as unknown as Photo);
-    }
-    return old;
-  });
-};
-
-export function useOptimisticPhotoMutation<TVariables, TData>(
-  options: Omit<UseMutationOptions<TData, Error, TVariables, { previousQueries: [unknown, unknown][] }>, 'onMutate' | 'onError'> & {
-    mutationFn: (variables: TVariables) => Promise<TData>,
-    onMutateOptimistic: (variables: TVariables) => { ids: string | string[], updater: (photo: Photo) => Photo | null },
-    errorContext: string
-  }
+/**
+ * 專為照片設計的樂觀更新 Hook
+ * 會同時更新照片列表 (Infinite Query) 與單張照片詳情
+ */
+export function useOptimisticPhotoMutation<TVariables = any, TData = any>(
+  options: OptimisticPhotoMutationOptions<TVariables, TData>
 ) {
   const queryClient = useQueryClient();
+  const { mutationFn, onMutateOptimistic, errorContext, onSuccess, onSettled } = options;
+
   return useMutation({
-    ...options,
-    onMutate: async (variables) => {
-      const previousQueries = await backupPhotosCache(queryClient);
-      const { ids, updater } = options.onMutateOptimistic(variables);
-      updatePhotosCache(queryClient, ids, updater);
-      return { previousQueries };
+    mutationFn,
+    onMutate: async (variables: TVariables) => {
+      const { ids, updater } = onMutateOptimistic(variables);
+      const idArray = Array.isArray(ids) ? ids : [ids];
+
+      // 1. 取消所有照片相關查詢
+      await queryClient.cancelQueries({ queryKey: photoKeys.all });
+
+      // 2. 備份舊數據 (列表與詳情)
+      const previousLists = queryClient.getQueriesData<InfiniteData<any>>({ queryKey: photoKeys.lists() });
+      const previousDetails = idArray.map(id => ({
+        id,
+        data: queryClient.getQueryData(photoKeys.detail(id))
+      }));
+
+      // 3. 執行樂觀更新 - 更新列表
+      queryClient.setQueriesData<InfiniteData<{ photos: Photo[], total: number }>>(
+        { queryKey: photoKeys.lists() },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map(page => ({
+              ...page,
+              photos: page.photos.map(p => idArray.includes(p.id) ? updater(p) : p).filter((p): p is Photo => p !== null)
+            }))
+          };
+        }
+      );
+
+      // 4. 執行樂觀更新 - 更新詳情
+      idArray.forEach(id => {
+        queryClient.setQueryData(photoKeys.detail(id), (old: any) => {
+          if (!old) return old;
+          return updater(old as Photo);
+        });
+      });
+
+      return { previousLists, previousDetails };
     },
-    onError: (err, _, context) => {
-      if (err instanceof CancelledError) return;
-      if (context?.previousQueries) rollbackPhotosCache(queryClient, context.previousQueries);
-      ErrorFactory.handle(err, { context: options.errorContext });
+    onError: (err, variables, context: any) => {
+      // 錯誤回滾
+      if (context?.previousLists) {
+        context.previousLists.forEach(([key, data]: [any, any]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+      if (context?.previousDetails) {
+        context.previousDetails.forEach(({ id, data }: any) => {
+          queryClient.setQueryData(photoKeys.detail(id), data);
+        });
+      }
+      ErrorFactory.handle(err, { context: errorContext });
     },
+    onSuccess: (data, variables) => {
+      if (onSuccess) onSuccess(data, variables);
+    },
+    onSettled: (data, error, variables) => {
+      if (onSettled) onSettled(data, error, variables);
+      // 最後確保數據刷新
+      queryClient.invalidateQueries({ queryKey: photoKeys.all });
+    }
   });
 }

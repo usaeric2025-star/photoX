@@ -3,7 +3,7 @@ import { selectionStore } from '#src/services/selection/selectionService.js';
 import { useSignal, useUI, UIStoreState } from '#lib/store/index.js';
 import { batchEditingIdsSignal } from '#src/services/selection/selectionService.js';
 import { useAppRouter } from '#lib/router/index.js';
-import { usePhotoMutations } from '#src/hooks/photo/usePhotoMutations.js';
+import { usePhotoMutations } from '#src/hooks/photo/usePhotos.js';
 
 export function useBatchEdit() {
   const batchEditingIds = useSignal(batchEditingIdsSignal);

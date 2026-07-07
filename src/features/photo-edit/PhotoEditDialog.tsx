@@ -3,7 +3,7 @@ import { Modal } from "#src/components/ui/Modal.js";
 import { NativeDialog } from "#src/components/ui/NativeDialog.js";
 import { AppErrorBoundary } from "#src/components/layout/AppErrorBoundary.js";
 import { appLang as appLangSignal, useSignal } from '#lib/store/index.js';
-import { usePhoto } from "#src/hooks/photo/usePhoto.js";
+import { usePhoto } from "#src/hooks/photo/usePhotos.js";
 import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "#src/hooks/photo/index.js";
 import { PhotoEditTabs } from "./PhotoEditTabs.js";
 import { DialogHeader } from "./DialogHeader.js";

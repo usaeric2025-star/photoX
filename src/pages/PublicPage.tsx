@@ -6,8 +6,10 @@ import { FilterBar } from '#src/features/filters/index.js';
 import { PhotoWall } from '#src/features/photo-wall/index.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import { useUI, type UIStoreState } from '#lib/store/index.js';
-import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
 import { Icon } from '#src/components/ui/Icon.js';
+import { Suspense, lazy } from 'react';
+
+const WhatsAppDialog = lazy(() => import('#src/components/shared/WhatsAppDialog.js').then(m => ({ default: m.WhatsAppDialog })));
 
 export default function PublicPage() {
   const { 
@@ -21,13 +23,18 @@ export default function PublicPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  const filters = useMemo(() => ({
-    categoryId: (category && category !== 'all' && category !== '') ? category : undefined,
-    tagId: (tags && tags.length > 0) ? tags[0] : undefined,
-    searchQuery: search || undefined,
-    sortOrder: sort || undefined,
-    onlyGroupsCover: showGroupsCollapsed
-  }), [category, tags, search, sort, showGroupsCollapsed]);
+  const filters = useMemo(() => {
+    const categoryId = (category && category !== 'all' && category !== '') ? category : undefined;
+    const tagId = (tags && tags.length > 0) ? tags[0] : undefined;
+    
+    return {
+      categoryId,
+      tagId,
+      searchQuery: search || undefined,
+      sortOrder: sort || undefined,
+      onlyGroupsCover: showGroupsCollapsed
+    };
+  }, [category, tags, search, sort, showGroupsCollapsed]);
   
   const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
   const patch = useUI(s => s.patch);
@@ -52,7 +59,7 @@ export default function PublicPage() {
     >
       <PublicHeader />
 
-      <FilterBar mode="public" className="border-b shadow-sm" />
+      <FilterBar mode="public" />
 
       <div 
         id="photo-wall-scroll-container"
@@ -91,10 +98,14 @@ export default function PublicPage() {
         </button>
       </div>
 
-      <WhatsAppDialog 
-        open={showWhatsAppChoice} 
-        onOpenChange={(val) => patch({ showWhatsAppChoice: val })} 
-      />
+      {showWhatsAppChoice && (
+        <Suspense fallback={null}>
+          <WhatsAppDialog 
+            open={showWhatsAppChoice} 
+            onOpenChange={(val) => patch({ showWhatsAppChoice: val })} 
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -61,8 +61,7 @@ export function getDb() {
   }
 
   globalForDb.drizzleDb = drizzle(globalForDb.postgresClient, {
-    schema: { ...schema },
-    casing: 'camelCase'
+    schema: { ...schema }
   });
 
   return globalForDb.drizzleDb;

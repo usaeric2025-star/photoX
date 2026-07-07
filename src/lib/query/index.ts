@@ -5,6 +5,7 @@ import {
   useQuery,
   useInfiniteQuery,
   useMutation,
+  useQueryClient,
   type UseQueryOptions,
   type UseInfiniteQueryOptions,
   type UseMutationOptions,
@@ -13,6 +14,7 @@ import {
 } from '@tanstack/react-query';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { get, set, del } from 'idb-keyval';
+import { showToast } from '#lib/ui/toast.js';
 
 export * from '@tanstack/react-query';
 
@@ -96,12 +98,54 @@ export function useAppInfiniteQuery<TData = unknown, TError = Error, TPageParam 
 }
 
 /**
- * Standard mutation hook (Legacy wrapper for compatibility)
+ * Standard mutation hook
  */
-export function useAppMutation<TVariables = unknown, TData = unknown, TError = Error>(
-  options: UseMutationOptions<TData, TError, TVariables>
+export function useAppMutation<TData = any, TVariables = any, TContext = any>(
+  options: {
+    mutationFn: (variables: TVariables) => Promise<TData>;
+    invalidateKeys?: readonly (readonly any[])[];
+    successMessage?: string;
+    errorContext?: string;
+  } & Omit<UseMutationOptions<TData, Error, TVariables, TContext>, 'mutationFn'>
 ) {
-  return useMutation<TData, TError, TVariables>(options);
+  const queryClient = useQueryClient();
+  const { 
+    mutationFn,
+    invalidateKeys, 
+    successMessage, 
+    errorContext, 
+    onSuccess, 
+    onError,
+    ...rest 
+  } = options;
+
+  return useMutation({
+    mutationFn,
+    onSuccess: (data, variables, context) => {
+      if (successMessage) {
+        showToast.success(successMessage);
+      }
+      
+      if (invalidateKeys) {
+        invalidateKeys.forEach(key => {
+          queryClient.invalidateQueries({ queryKey: key as any });
+        });
+      }
+
+      if (onSuccess) {
+        (onSuccess as any)(data, variables, context);
+      }
+    },
+    onError: (err, variables, context) => {
+      if (errorContext) {
+        ErrorFactory.handle(err, { context: errorContext });
+      }
+      if (onError) {
+        (onError as any)(err, variables, context);
+      }
+    },
+    ...rest
+  });
 }
 
 // Query Key Factory

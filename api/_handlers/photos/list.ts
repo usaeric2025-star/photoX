@@ -3,12 +3,12 @@ import * as v from 'valibot';
 import { errorResponse, successResponse } from '../../_lib/response.js';
 import { errorFactory } from '../../_lib/error/factory.js';
 import { normalizeI18n } from '../../../shared/i18n.js';
-import { vValidator } from '@hono/valibot-validator';
+import { sValidator } from '@hono/standard-validator';
 import { PhotoListReqSchema, PhotoListItemSchema } from '../../../shared/apiContractSchema.js';
 import { getPhotosList, getGroupCounts } from '../../_lib/db/queries/photos.js';
 
-export const listHandler = (app: Hono) => {
-  app.post('/list', vValidator('json', PhotoListReqSchema), async (c) => {
+export const listRoutes = new Hono()
+  .post('/list', sValidator('json', PhotoListReqSchema), async (c) => {
     const params = c.req.valid('json');
     const { page = 0, limit = 100, isAdminMode = false } = params;
     
@@ -71,4 +71,3 @@ export const listHandler = (app: Hono) => {
       throw errorFactory.wrap(error, 'photos.list', 'QUERY_FAILURE');
     }
   });
-};
