@@ -88,7 +88,7 @@ export function TagEditor({
     const bPinned = pinnedSet.has(bId);
     if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
-    return a.name.localeCompare(a.name, undefined, { numeric: true });
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
   });
 
   return (

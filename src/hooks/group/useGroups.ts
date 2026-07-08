@@ -101,13 +101,13 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
 export function useGroupMutations() {
   const { clearSelection } = useSelectionActions();
   const { invalidateList } = useInvalidatePhotos();
-  const { uiTranslations: t } = useTranslation();
+  const { t, uiTranslations: labels } = useTranslation();
 
   const createMutation = useAppMutation({
     mutationFn: (args: { name: string; userId: string }) => 
       createGroup({ name: args.name, userId: args.userId }),
     onSuccess: () => {
-      showToast.success(t.groupCreated || '分組已建立');
+      showToast.success(labels.groupCreated || '分組已建立');
       invalidateList();
     },
     onError: (err: Error) => ErrorFactory.handle(err, { context: 'group-create' })
@@ -117,7 +117,7 @@ export function useGroupMutations() {
     mutationFn: (args: { id: string; updates: Partial<ProductGroup> }) => 
       updateGroup(args.id, args.updates),
     onSuccess: () => {
-      showToast.success(t.groupUpdated || '分組資訊已更新');
+      showToast.success(labels.groupUpdated || '分組資訊已更新');
       invalidateList();
     },
     onError: (err: Error) => ErrorFactory.handle(err, { context: 'group-update' })
@@ -126,7 +126,7 @@ export function useGroupMutations() {
   const deleteMutation = useAppMutation({
     mutationFn: deleteGroup,
     onSuccess: () => {
-      showToast.success(t.groupDeleted || '分組已刪除');
+      showToast.success(labels.groupDeleted || '分組已刪除');
       invalidateList();
     },
     onError: (err: Error) => ErrorFactory.handle(err, { context: 'group-delete' })
@@ -137,7 +137,7 @@ export function useGroupMutations() {
       return setPhotoAsGroupCover(args.photoId, args.groupId);
     },
     onSuccess: () => {
-      showToast.success(t.setCoverSuccess || '已成功設定封面照片');
+      showToast.success(labels.setCoverSuccess || '已成功設定封面照片');
       invalidateList();
     },
     onError: (err: Error) => {
@@ -151,7 +151,7 @@ export function useGroupMutations() {
       return movePhotosToGroup(args.photoIds, args.groupId);
     },
     onSuccess: (_, variables) => {
-      showToast.success(t.addPhotosSuccess?.(variables.photoIds.length) || `成功將 ${variables.photoIds.length} 張照片加入分組`);
+      showToast.success(t('addPhotosSuccess', variables.photoIds.length) || `成功將 ${variables.photoIds.length} 張照片加入分組`);
       clearSelection();
       invalidateList();
     },
@@ -166,7 +166,7 @@ export function useGroupMutations() {
       return ungroupPhotos(groupId);
     },
     onSuccess: () => {
-      showToast.success(t.groupDissolved || '分組已解散');
+      showToast.success(labels.groupDissolved || '分組已解散');
       invalidateList();
     },
     onError: (err: Error) => {
@@ -180,7 +180,7 @@ export function useGroupMutations() {
     },
     onSuccess: (data: { newGroupId: string }, variables) => {
       const count = variables.photoIds.length;
-      showToast.success(t.mergePhotosSuccess?.(count) || `成功將 ${count} 張照片合併`);
+      showToast.success(t('mergePhotosSuccess', count) || `成功將 ${count} 張照片合併`);
       clearSelection();
       invalidateList();
     },
@@ -283,14 +283,14 @@ export const useGroupPhotosMutation = () => {
 export const useRemoveFromGroupMutation = () => {
   const { isPending } = useGroupMutations();
   const { invalidateList } = useInvalidatePhotos();
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
 
   return { 
     mutateAsync: (args: { photoIds: string[]; groupId?: string }) => {
       if (!args.groupId) throw new Error('groupId is required to remove photos from group');
       
       return removePhotosFromGroup(args.photoIds, args.groupId).then((res) => {
-          showToast.success(t.removePhotosSuccess?.(args.photoIds.length) || `成功將 ${args.photoIds.length} 張照片移出合組`);
+          showToast.success(t('removePhotosSuccess', args.photoIds.length) || `成功將 ${args.photoIds.length} 張照片移出合組`);
           invalidateList();
           return res;
       }).catch(err => {

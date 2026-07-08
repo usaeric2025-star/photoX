@@ -29,7 +29,7 @@ export function AdminHeaderActions({
   taskCount, 
   handleAuthAction, 
   theme, 
-  t,
+  t = (key: string) => key,
   user,
   signOut,
   isStaff,

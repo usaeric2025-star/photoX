@@ -32,20 +32,21 @@ type Translations = Record<string, string> | null | undefined;
 export function useTranslation() {
   const appLang = useAppLang();
 
-  const resolveString = (translations: Translations, fallback?: string) => {
+  const resolveString = useCallback((translations: Translations, fallback?: string) => {
     if (!translations) return fallback || '';
     return translations[appLang] || translations.en || fallback || '';
-  };
+  }, [appLang]);
 
-  const uiTranslations = (allTranslations[appLang as keyof typeof allTranslations] || allTranslations.en) as TranslationType;
-  const t = (key: string, ...args: unknown[]): string => {
+  const uiTranslations = ((allTranslations || {})[appLang as keyof typeof allTranslations] || (allTranslations || {}).en || {}) as TranslationType;
+  
+  const t = useCallback((key: string, ...args: unknown[]): string => {
     const val = (uiTranslations as unknown as Record<string, unknown>)[key];
     if (val === undefined) return key;
     if (typeof val === 'function') {
       return val(...args);
     }
     return String(val);
-  };
+  }, [uiTranslations]);
 
   return { resolveString, t, appLang, lang: appLang, uiTranslations };
 }
@@ -122,19 +123,19 @@ interface UseCopyToClipboardOptions {
 
 export const useCopyToClipboard = (options?: UseCopyToClipboardOptions) => {
   const [copied, setCopied] = useState(false);
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
   const copy = useCallback(
     async (text: string) => {
       const success = await copyToClipboard(text, options);
       if (success) {
         setCopied(true);
         if (options?.showToast !== false) {
-          showToast.success(options?.successMessage || t.copySuccess);
+          showToast.success(options?.successMessage || t('copySuccess'));
         }
         options?.onCopy?.(text);
         setTimeout(() => setCopied(false), 2000);
       } else {
-        ErrorFactory.handle(options?.errorMessage || t.copyFailed, { context: 'clipboard-op' });
+        ErrorFactory.handle(options?.errorMessage || t('copyFailed'), { context: 'clipboard-op' });
       }
     },
     [options, t]
@@ -288,17 +289,38 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
   const isLongPressRef = useRef(false);
   const isPressedRef = useRef(false);
   const elementRef = useRef<T | null>(null);
+  const startCoordsRef = useRef<{ x: number; y: number } | null>(null);
+
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
   }, []);
+
   const handleStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       if (disabled) return;
+      
+      let clientX = 0;
+      let clientY = 0;
+      if ('touches' in e) {
+        if (e.touches.length > 1) {
+          clearTimer();
+          isPressedRef.current = false;
+          return;
+        }
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      
+      startCoordsRef.current = { x: clientX, y: clientY };
       isPressedRef.current = true;
       isLongPressRef.current = false;
+      
       timerRef.current = setTimeout(() => {
         if (isPressedRef.current) {
           isLongPressRef.current = true;
@@ -309,32 +331,68 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
     },
     [disabled, delay, onLongPress, clearTimer]
   );
+
+  const handleMove = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      if (disabled || !isPressedRef.current || !startCoordsRef.current) return;
+      
+      let clientX = 0;
+      let clientY = 0;
+      if ('touches' in e) {
+        if (e.touches.length === 0) return;
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      
+      const diffX = clientX - startCoordsRef.current.x;
+      const diffY = clientY - startCoordsRef.current.y;
+      const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+      
+      // Cancel long press if user swiped/scrolled or dragged more than 15px (relaxed for better touch UX)
+      if (distance > 15) {
+        clearTimer();
+        isPressedRef.current = false;
+      }
+    },
+    [disabled, clearTimer]
+  );
+
   const handleEnd = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       if (disabled) return;
       clearTimer();
-      if (!isLongPressRef.current && onClick) {
+      if (isPressedRef.current && !isLongPressRef.current && onClick) {
         onClick(e);
       }
       isPressedRef.current = false;
+      startCoordsRef.current = null;
     },
     [disabled, clearTimer, onClick]
   );
+
   const handleLeave = useCallback(() => {
     if (disabled) return;
     clearTimer();
     isPressedRef.current = false;
+    startCoordsRef.current = null;
   }, [disabled, clearTimer]);
+
   useEffect(() => {
     return () => {
       clearTimer();
     };
   }, [clearTimer]);
+
   return {
     onMouseDown: handleStart,
+    onMouseMove: handleMove,
     onMouseUp: handleEnd,
     onMouseLeave: handleLeave,
     onTouchStart: handleStart,
+    onTouchMove: handleMove,
     onTouchEnd: handleEnd,
     onTouchCancel: handleLeave,
     ref: elementRef,

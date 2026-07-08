@@ -11,14 +11,14 @@ import { useTranslation } from '../core/index.js';
  * Handles infrastructure and storage maintenance tasks
  */
 export function useDiagnostics() {
-  const { uiTranslations: t } = useTranslation();
+  const { t, uiTranslations: labels } = useTranslation();
 
   const { data: auditResult, isFetching: isAuditing } = useAppQuery(
     null, // manually triggered
     async () => {
       const res = await api.admin.maintenance.storage.audit.$get();
       const data = await res.json() as { success: boolean; data?: unknown; error?: string };
-      if (!data.success) throw new Error(data.error || t.storageAuditFailed);
+      if (!data.success) throw new Error(data.error || labels.storageAuditFailed);
       return data.data;
     },
     { staleTime: STALE_TIMES.SHORT * 5 }
@@ -26,14 +26,14 @@ export function useDiagnostics() {
 
   const runAudit = async () => {
     return executeTask({
-      label: t.storageAuditComplete,
+      label: labels.storageAuditComplete,
       type: 'repair',
       execute: async (signal, onProgress) => {
-        onProgress(0, t.diagnosing);
+        onProgress(0, labels.diagnosing);
         const res = await api.admin.maintenance.storage.audit.$get();
         const data = await res.json() as { success: boolean; data?: unknown; error?: string };
-        if (!data.success) throw new Error(data.error || t.storageAuditFailed);
-        onProgress(1, t.storageAuditComplete);
+        if (!data.success) throw new Error(data.error || labels.storageAuditFailed);
+        onProgress(1, labels.storageAuditComplete);
         return data.data;
       }
     });
@@ -43,16 +43,16 @@ export function useDiagnostics() {
     {
       mutationFn: async () => {
         return executeTask({
-          label: t.deduplicateComplete(0).split('!')[0],
+          label: t('deduplicateComplete', 0).split('!')[0],
           type: 'repair',
           execute: async (signal, onProgress) => {
-            onProgress(0, t.processing);
+            onProgress(0, labels.processing);
             const res = await api.admin.maintenance.storage.deduplicate.$post();
             const json = await res.json() as { success: boolean; error?: string };
-            if (!json.success) throw new Error(json.error || t.mutationFailed);
+            if (!json.success) throw new Error(json.error || labels.mutationFailed);
             
             queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
-            onProgress(1, t.deduplicateComplete(0));
+            onProgress(1, t('deduplicateComplete', 0));
             return json;
           }
         });
@@ -71,14 +71,14 @@ export function useDiagnostics() {
     auditResult: auditResult || null,
     runDailyCleanup: async () => {
       return executeTask({
-        label: t.systemMaint,
+        label: labels.systemMaint,
         type: 'repair',
         execute: async (signal, onProgress) => {
-          onProgress(0, t.diagnosing);
+          onProgress(0, labels.diagnosing);
           const res = await api.admin.maintenance['daily-cleanup'].$post();
           const data = await res.json() as { success: boolean; data?: unknown; error?: string };
-          if (!data.success) throw new Error(data.error || t.mutationFailed);
-          onProgress(1, t.diagHealthy);
+          if (!data.success) throw new Error(data.error || labels.mutationFailed);
+          onProgress(1, labels.diagHealthy);
           return data;
         }
       });

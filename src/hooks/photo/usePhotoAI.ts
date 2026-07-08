@@ -465,16 +465,16 @@ export function usePhotoAIResult(photoId: string, options?: { enabled?: boolean 
 export function useAIBatchAnalysis() {
   const user = useAuth(s => s.user);
   const { invalidateAll } = useInvalidatePhotos();
-  const { uiTranslations: t } = useTranslation();
+  const { t } = useTranslation();
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[]) => {
     if (!targetPhotos || targetPhotos.length === 0) {
-      ErrorFactory.handle(t.selectPhotoFirst, { context: t.batchAi });
+      ErrorFactory.handle(t('selectPhotoFirst'), { context: t('batchAi') });
       return;
     }
     
-    showToast.info(t.aiAnalyzing);
-    const taskTitle = t.aiBatchTask(targetPhotos.length);
+    showToast.info(t('aiAnalyzing'));
+    const taskTitle = t('aiBatchTask', targetPhotos.length);
 
     createTask<{ successCount: number; groupSuccess: boolean }>({
         label: taskTitle,
@@ -491,7 +491,7 @@ export function useAIBatchAnalysis() {
             return { successCount, groupSuccess };
         },
         onComplete: (result) => {
-            showToast.success(t.aiAnalyzeSuccess(result.successCount));
+            showToast.success(t('aiAnalyzeSuccess', result.successCount));
         }
     });
 

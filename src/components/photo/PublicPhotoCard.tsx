@@ -58,9 +58,11 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       onClick={handleClick}
       ref={cardRef}
       onMouseDown={longPressHandlers.onMouseDown}
+      onMouseMove={longPressHandlers.onMouseMove}
       onMouseUp={longPressHandlers.onMouseUp}
       onMouseLeave={longPressHandlers.onMouseLeave}
       onTouchStart={longPressHandlers.onTouchStart}
+      onTouchMove={longPressHandlers.onTouchMove}
       onTouchEnd={longPressHandlers.onTouchEnd}
       onTouchCancel={longPressHandlers.onTouchCancel}
     >

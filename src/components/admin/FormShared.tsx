@@ -107,9 +107,11 @@ const ManufacturerButton = ({ mfr, isSelected, onSelect, onEdit, onDelete }: Man
         onClick={() => onSelect(isSelected ? null : String(mfr.id))}
         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? "bg-slate-800 text-white border-slate-800 shadow-lg" : "bg-white border-slate-200 text-slate-600 active:bg-slate-50"}`}
         onMouseDown={longPress.onMouseDown}
+        onMouseMove={longPress.onMouseMove}
         onMouseUp={longPress.onMouseUp}
         onMouseLeave={longPress.onMouseLeave}
         onTouchStart={longPress.onTouchStart}
+        onTouchMove={longPress.onTouchMove}
         onTouchEnd={longPress.onTouchEnd}
         onTouchCancel={longPress.onTouchCancel}
       >

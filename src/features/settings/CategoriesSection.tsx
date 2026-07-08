@@ -55,9 +55,11 @@ function CategoryItem({
       <div
       ref={longPress.ref}
       onMouseDown={longPress.onMouseDown}
+      onMouseMove={longPress.onMouseMove}
       onMouseUp={longPress.onMouseUp}
       onMouseLeave={longPress.onMouseLeave}
       onTouchStart={longPress.onTouchStart}
+      onTouchMove={longPress.onTouchMove}
       onTouchEnd={longPress.onTouchEnd}
       onTouchCancel={longPress.onTouchCancel}
       className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === cat.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
