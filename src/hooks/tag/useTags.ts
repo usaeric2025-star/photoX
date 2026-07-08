@@ -5,6 +5,7 @@ import { STALE_TIMES } from '#lib/query/config.js';
 import { api } from '#lib/api.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/usePhotos.js';
 import type { ApiResponse } from '#shared/apiContractSchema.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 export function useTags(options?: { enabled?: boolean }) {
   const isEnabled = options?.enabled ?? true;
@@ -33,13 +34,14 @@ export function useTags(options?: { enabled?: boolean }) {
  * Perform server-side tag search with debounce handling (via queryKey)
  */
 export const useTagSearch = (keyword: string) => {
+  const { t } = useTranslation();
   return useAppQuery<Tag[]>(
     keyword.length >= 0 ? ['tags', 'search', keyword] : null,
     async () => {
       const resp = await api.tags.search.$get({ query: { keyword } });
       const body = await resp.json() as unknown as ApiResponse<Tag[]>;
       if (!body.success || !body.data) {
-        throw new Error(body.error || '搜索标签失败');
+        throw new Error(body.error || t('searchTagFailed'));
       }
       return body.data;
     },
@@ -48,6 +50,7 @@ export const useTagSearch = (keyword: string) => {
 };
 
 export function useTagMutations() {
+  const { t } = useTranslation();
   const { invalidateTags, invalidateList } = useInvalidatePhotos();
   const invalidateKeys = [queryKeys.tags.list()];
 
@@ -64,11 +67,11 @@ export function useTagMutations() {
       });
       const json = await res.json() as unknown as ApiResponse<Tag>;
       if (json.success && json.data) return json.data;
-      throw new Error(json.error || '標籤創建失敗');
+      throw new Error(json.error || t('tagCreateFailed'));
     },
     invalidateKeys,
     errorContext: 'tag-create',
-    successMessage: '標籤已創建',
+    successMessage: t('tagCreated'),
     onSuccess: () => {
       invalidateTags();
       invalidateList();
@@ -83,11 +86,11 @@ export function useTagMutations() {
       });
       const json = await res.json() as ApiResponse<boolean>;
       if (json.success) return true;
-      throw new Error(json.error || '標籤更新失敗');
+      throw new Error(json.error || t('tagUpdateFailed'));
     },
     invalidateKeys,
     errorContext: 'tag-edit',
-    successMessage: '標籤已更新',
+    successMessage: t('tagUpdated'),
     onSuccess: () => {
       invalidateTags();
       invalidateList();
@@ -101,11 +104,11 @@ export function useTagMutations() {
       });
       const json = await res.json() as ApiResponse<boolean>;
       if (json.success) return true;
-      throw new Error(json.error || '標籤刪除失敗');
+      throw new Error(json.error || t('tagDeleteFailed'));
     },
     invalidateKeys,
     errorContext: 'tag-delete',
-    successMessage: '標籤已刪除',
+    successMessage: t('tagDeleted'),
     onSuccess: () => {
       invalidateTags();
       invalidateList();

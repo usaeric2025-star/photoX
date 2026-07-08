@@ -10,6 +10,7 @@ import { SupabasePhotoRaw } from '#src/types/supabase.js';
 import { useOptimisticPhotoMutation } from '#lib/query/optimistic.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useAuth, uploadAsGroup, useSignal, useUI, UIStoreState } from '#lib/store/index.js';
+import { useTranslation } from '#src/hooks/index.js';
 import { hapticFeedback } from '#lib/ui/haptics.js';
 import { createTask } from '#lib/task-queue/index.js';
 import { executeBatchUpload } from '#lib/task-queue/adapters/upload.js';
@@ -81,6 +82,7 @@ export function usePhotos(params: PhotoListFilters = {}) {
 // --- Detail Hook ---
 
 export const usePhoto = (photoId: string | null | undefined) => {
+  const { t } = useTranslation();
   return useAppQuery(
     photoId ? photoKeys.detail(photoId) : null,
     async () => {
@@ -90,7 +92,7 @@ export const usePhoto = (photoId: string | null | undefined) => {
       });
       const json = await response.json();
       const result = json as unknown as ApiResponse<SupabasePhotoRaw[]>;
-      if (!result.success || !result.data) throw new Error(result.error || '獲取照片失敗');
+      if (!result.success || !result.data) throw new Error(result.error || t('fetchPhotoFailed'));
       const rawData = result.data[0];
       return rawData ? mapSupabasePhoto(rawData) : null;
     },
@@ -103,6 +105,7 @@ export const usePhoto = (photoId: string | null | undefined) => {
 // --- Mutation Hooks (with Optimistic Updates) ---
 
 export function usePhotoMutations() {
+  const { t } = useTranslation();
   // 1. 通用更新 Mutation (支援樂觀更新)
   const updateMutation = useOptimisticPhotoMutation<{ id: string; updates: Partial<Photo> }>({
     mutationFn: async ({ id, updates }) => {
@@ -129,7 +132,7 @@ export function usePhotoMutations() {
     }),
     errorContext: 'photo-delete',
     onSuccess: () => {
-      showToast.success('照片已刪除');
+      showToast.success(t('photoDeleted'));
     }
   });
 
@@ -145,7 +148,7 @@ export function usePhotoMutations() {
     }),
     errorContext: 'photo-batch-update',
     onSuccess: () => {
-      showToast.success('批量修改成功');
+      showToast.success(t('batchUpdateSuccess'));
     }
   });
 
@@ -281,8 +284,10 @@ export function usePhotoUpload() {
       const isGroup = uploadAsGroup.value && fileArray.length > 1;
       const groupId = isGroup ? generateId() : undefined;
 
+      const { t } = useTranslation();
+
       createTask({
-        label: `上傳 ${fileArray.length} 張照片`,
+        label: t('uploadTaskLabel', fileArray.length),
         type: 'upload',
         userId,
         meta: {

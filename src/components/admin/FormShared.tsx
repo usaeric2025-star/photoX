@@ -2,9 +2,8 @@ import { getTranslatedCategoryName } from "#src/services/category/utils.js";
 import { createTranslate } from '#src/locales/index.js';
 import React, { useRef } from "react";
 import { Category, Manufacturer } from '#src/types/index.js';
-import { useLongPress } from "#src/hooks/core/index.js";
+import { useLongPress, useDisclosure, useTranslation } from "#src/hooks/index.js";
 import { MenuDialog } from "#src/components/ui/MenuDialog.js";
-import { useDisclosure } from '#src/hooks/core/index.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 
 interface SectionHeaderProps {
@@ -20,6 +19,7 @@ export function FormSectionHeader({
   onAction,
   actionLabel,
 }: SectionHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-between px-1 mb-3">
       <div className="flex flex-col">
@@ -35,7 +35,7 @@ export function FormSectionHeader({
           onClick={onAction}
           className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 active:bg-blue-100 transition-colors"
         >
-          {actionLabel || "+ 新增"}
+          {actionLabel || `+ ${t('add')}`}
         </button>
       )}
     </div>
@@ -87,6 +87,7 @@ interface ManufacturerButtonProps {
 }
 
 const ManufacturerButton = ({ mfr, isSelected, onSelect, onEdit, onDelete }: ManufacturerButtonProps) => {
+  const { t } = useTranslation();
   const [isMenuOpen, menuDialog] = useDisclosure(false);
 
   const longPress = useLongPress<HTMLButtonElement>({
@@ -119,12 +120,12 @@ const ManufacturerButton = ({ mfr, isSelected, onSelect, onEdit, onDelete }: Man
       <MenuDialog
         open={isMenuOpen}
         onOpenChange={menuDialog.toggle}
-        title={`管理厂商: ${mfr.name}`}
-        description="请选择操作"
-        primaryActionLabel="删除"
+        title={t('manageMfr', mfr.name)}
+        description={t('selectAction')}
+        primaryActionLabel={t('delete')}
         primaryActionVariant="destructive"
         onPrimaryAction={() => onDelete?.(mfr)}
-        secondaryActionLabel="编辑"
+        secondaryActionLabel={t('edit')}
         onSecondaryAction={() => onEdit?.(mfr)}
       />
     </>

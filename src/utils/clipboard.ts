@@ -16,7 +16,7 @@ export interface CopyOptions {
 export async function copyToClipboard(text: string, options?: CopyOptions): Promise<boolean> {
   // ✅ 防止複製空內容或無效內容
   if (!text || text.trim() === '' || text === '{}') {
-    logger.warn('[copyToClipboard] 內容為空或無效，取消複製');
+    logger.warn('[copyToClipboard] Content is empty or invalid, cancelling copy');
     return false;
   }
 
@@ -28,7 +28,7 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
     }
     throw new Error('navigator.clipboard unavailable');
   } catch (err) {
-    logger.warn('[copyToClipboard] navigator.clipboard 失敗，嘗試降級方案:', err);
+    logger.warn('[copyToClipboard] navigator.clipboard failed, trying fallback:', err);
     
     // 2. 降級方案 (Fallback using textarea)
     try {
@@ -51,7 +51,7 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
       document.body.removeChild(textArea);
       return !!success;
     } catch (fallbackErr) {
-      logger.error('[copyToClipboard] 降級方案也失敗:', fallbackErr);
+      logger.error('[copyToClipboard] Fallback also failed:', fallbackErr);
     }
   }
 

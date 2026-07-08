@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from 'react';
-import { fatalError, useSignal } from '#lib/store/index.js';
+import { fatalError, useSignal, useTranslation } from '#src/hooks/index.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
 import { isAppError, AppError } from '#shared/AppError.js';
 
 export const FatalErrorOverlay = () => {
+  const { t } = useTranslation();
   const error = useSignal(fatalError);
   const { copy, copied } = useCopyToClipboard({ 
-    successMessage: '诊断信息已复制到剪贴板',
+    successMessage: t('copySuccess'),
     showToast: false // Toast feedback is often hidden behind native dialogs
   });
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -26,11 +27,11 @@ export const FatalErrorOverlay = () => {
     const errorType = error.name || 'FatalError';
     
     let errorCode = 'FATAL';
-    let traceId = 'N/A';
+    let traceIdStr = 'N/A';
 
     if (isAppError(error)) {
         errorCode = String(error.code);
-        traceId = error.traceId;
+        traceIdStr = error.traceId;
     } else if ('code' in error) {
         errorCode = String((error as { code?: string | number }).code);
     } else if ('status' in error) {
@@ -38,18 +39,18 @@ export const FatalErrorOverlay = () => {
     }
 
     if (!isAppError(error) && 'traceId' in error) {
-        traceId = String((error as { traceId?: string }).traceId);
+        traceIdStr = String((error as { traceId?: string }).traceId);
     }
 
-    const message = error.message || '未知内部错误';
+    const message = error.message || t('unknownInternalError');
     
     const diagnosticInfo = [
-      `--- 核心系统诊断 ---`,
-      `时间戳: ${timestamp}`,
-      `错误类型: ${errorType}`,
-      `代码: ${errorCode}`,
-      `Trace ID: ${traceId}`,
-      `原始信息: ${message}`
+      t('diagnosticReport'),
+      `${t('timestamp')}: ${timestamp}`,
+      `${t('errorType')}: ${errorType}`,
+      `${t('errorCode')}: ${errorCode}`,
+      `${t('traceId')}: ${traceIdStr}`,
+      `${t('rawInfo')}: ${message}`
     ].join('\n');
     
     copy(diagnosticInfo);
@@ -78,15 +79,15 @@ export const FatalErrorOverlay = () => {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-red-50 text-red-600 animate-pulse">
              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">系统核心组件故障</h2>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t('fatalErrorTitle')}</h2>
           <p className="text-slate-500 text-sm leading-relaxed">
-            {error.message || '系统底层发生了未预期的严重异常，可能影响数据一致性。'}
+            {error.message || t('fatalErrorDefault')}
           </p>
         </div>
 
         <div className="bg-slate-50 rounded-2xl p-4 text-left border border-slate-100">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">故障摘要</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('errorSummary')}</span>
             <span className="text-[10px] p-1 bg-white rounded border border-slate-200 text-slate-400 font-mono">CODE: {getDisplayCode()}</span>
           </div>
           <p className="text-xs font-mono text-slate-600 break-all">
@@ -100,7 +101,7 @@ export const FatalErrorOverlay = () => {
             className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-            重载应用
+            {t('reloadApp')}
           </button>
           <button
             onClick={handleCopy}
@@ -109,7 +110,7 @@ export const FatalErrorOverlay = () => {
             }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            {copied ? '已复制' : '复制诊断'}
+            {copied ? t('copied') : t('copyDiag')}
           </button>
         </div>
         

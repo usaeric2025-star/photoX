@@ -2,6 +2,7 @@ import React from 'react';
 import { Field } from "@tanstack/react-form";
 import { FormApi } from "@tanstack/react-form";
 import { Manufacturer } from '#src/types/index.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 interface ManufacturerSelectProps {
   form: unknown;
@@ -10,6 +11,7 @@ interface ManufacturerSelectProps {
 }
 
 export const ManufacturerSelect = ({ form, name, manufacturers }: ManufacturerSelectProps) => {
+  const { t } = useTranslation();
   return (
     <Field form={form as never} name={name as never}>
       {(field) => (
@@ -36,7 +38,7 @@ export const ManufacturerSelect = ({ form, name, manufacturers }: ManufacturerSe
                 );
               })
             ) : (
-              <div className="text-sm text-slate-400">尚无厂商，请先添加 / No manufacturers yet</div>
+              <div className="text-sm text-slate-400">{t('noManufacturers')}</div>
             )}
           </div>
           

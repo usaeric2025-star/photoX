@@ -29,7 +29,7 @@ export * from './selection/index.js';
 
 // Utils
 export * from './ui/index.js';
-export { useUI } from '#lib/store/index.js';
+export { useUI, useSignal, useAuth, fatalError, isTaskDrawerOpen, tasksSignal } from '#lib/store/index.js';
 export type { UIStoreState } from '#lib/store/index.js';
 
 

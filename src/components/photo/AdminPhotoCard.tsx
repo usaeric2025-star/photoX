@@ -4,7 +4,7 @@ import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCardBase } from './PhotoCardBase.js';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts.js';
 import { PinButton } from './PinButton.js';
-import { usePermission, usePerformance } from '#src/hooks/index.js';
+import { usePermission, usePerformance, useTranslation } from '#src/hooks/index.js';
 import { useIsMultiSelect, useIsPhotoSelected } from '#src/hooks/index.js';
 import { useGrid } from '#src/context/GridContext.js';
 import { useUI } from '#lib/store/index.js';
@@ -25,6 +25,7 @@ const SetCoverButton = memo(function SetCoverButton({
   isCover,
   offsetRight,
 }: SetCoverButtonProps) {
+  const { t } = useTranslation();
   const { setCover } = useGroupMutations();
 
   const handleClick = (e: React.MouseEvent) => {
@@ -38,7 +39,7 @@ const SetCoverButton = memo(function SetCoverButton({
     <button
       type="button"
       onClick={handleClick}
-      title="設為封面 / Set as Cover"
+      title={t('setAsCover')}
       className={`absolute top-2 p-1.5 sm:p-2 rounded-full border active:scale-95 transition-all duration-200 bg-slate-950/40 text-white border-white/10 md:hover:bg-slate-950/60 shadow-sm ${
         offsetRight ? 'right-11' : 'right-2'
       }`}

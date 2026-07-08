@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { ISSUE_ACTIONS, PreviewResult } from "#src/features/diagnostics/issueActions.js";
 import { createTask } from '#lib/task-queue/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { useAuth } from '#lib/store/index.js';
+import { useAuth, useTranslation } from '#src/hooks/index.js';
 
 export function useMaintenanceExecution(issueId: string, title: string, onSuccess?: () => void) {
+  const { t } = useTranslation();
   const user = useAuth(s => s.user);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
@@ -24,7 +25,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
         setShowPreviewDialog(true);
       }
     } catch (e: unknown) {
-      ErrorFactory.handleError(e, '預覽操作');
+      ErrorFactory.handleError(e, t('previewAction'));
     } finally {
       setIsPreviewing(false);
     }
@@ -44,9 +45,9 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
           onProgress(p, msg);
           setProgress(p * 100);
         };
-        update(0.1, '正在初始化...');
+        update(0.1, t('initializing'));
         const result = await action.execute(update);
-        update(1, '完成');
+        update(1, t('completed'));
         return result;
       },
       onComplete: () => {

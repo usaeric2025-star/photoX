@@ -6,8 +6,10 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSelectedIds } from '../../services/selection/selectionService.js';
 import { useQueryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 export function useAdminBatchActions() {
+  const { t } = useTranslation();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const selectedIds = useSelectedIds();
   const queryClient = useQueryClient();
@@ -50,7 +52,7 @@ export function useAdminBatchActions() {
     }
     
     if (photosToProcess.length === 0) {
-      ErrorFactory.handle('请选择照片或特定合组进行识别', { context: '批量操作' });
+      ErrorFactory.handle(t('selectPhotosToIdentify'), { context: t('batchAction') });
       return;
     }
 

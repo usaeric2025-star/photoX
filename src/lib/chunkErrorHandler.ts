@@ -63,7 +63,7 @@ async function clearCaches() {
       const registrations = await navigator.serviceWorker.getRegistrations()
       await Promise.all(registrations.map(reg => reg.unregister()))
     } catch (e) {
-      logger.warn('[Chunk] Service Worker 清理失敗', e)
+      logger.warn('[Chunk] Service Worker cleanup failed', e)
     }
   }
   
@@ -72,7 +72,7 @@ async function clearCaches() {
       const keys = await caches.keys()
       await Promise.all(keys.map(key => caches.delete(key)))
     } catch (e) {
-      logger.warn('[Chunk] Cache API 清理失敗', e)
+      logger.warn('[Chunk] Cache API cleanup failed', e)
     }
   }
 }
@@ -84,7 +84,7 @@ function showFallbackErrorPage() {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>更新失敗 - PhotoX</title>
+        <title>更新失敗 / Update Failed - PhotoX</title>
         <style>
           body { margin: 0; padding: 2rem; font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
           .container { max-width: 480px; background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; }
@@ -95,9 +95,10 @@ function showFallbackErrorPage() {
       </head>
       <body>
         <div class="container">
-          <h2>⚠️ 應用更新失敗</h2>
-          <p>尝试自动恢复多次后仍无法载入最新版本。请点击下方按钮清除缓存后重新进入。</p>
-          <button onclick="localStorage.clear(); sessionStorage.clear(); location.reload();">清除緩存並重試</button>
+          <h2>⚠️ 應用更新失敗 / App Update Failed</h2>
+          <p>嘗試多次自動恢復後仍無法載入最新版本。請點擊下方按鈕清除快取後重新進入。</p>
+          <p style="font-size: 14px; color: #666; margin-top: -10px;">Failed to load the latest version after multiple attempts. Please clear cache and reload.</p>
+          <button onclick="localStorage.clear(); sessionStorage.clear(); location.reload();">清除快取並重試 / Clear Cache & Retry</button>
         </div>
       </body>
     </html>

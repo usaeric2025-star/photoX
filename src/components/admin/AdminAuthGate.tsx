@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '#lib/store/index.js';
-import { usePublicSettings } from '#src/hooks/index.js';
+import { usePublicSettings, useTranslation } from '#src/hooks/index.js';
 import { useLocalStorage } from '#src/hooks/core/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
@@ -12,6 +12,7 @@ interface AdminAuthGateProps {
 }
 
 export function AdminAuthGate({ children }: AdminAuthGateProps) {
+  const { t } = useTranslation();
   const [passcode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
@@ -49,7 +50,7 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
         <div className="flex flex-col items-center justify-center">
           <LoadingSpinner size="lg" className="mb-4" />
           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
-            验证身份中 / Authenticating...
+            {t('authenticating')}
           </p>
         </div>
       </div>

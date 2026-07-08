@@ -62,7 +62,7 @@ export function usePhotoEditAI() {
   const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
   const editPhotoId = modal === 'edit' ? photoId : null;
-  const appLang = useUI((s) => s.appLang);
+  const { t } = useTranslation();
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
   const { invalidateDetail, invalidateList, invalidateTags } = useInvalidatePhotos();
 
@@ -76,26 +76,26 @@ export function usePhotoEditAI() {
       if (!editPhotoId) throw new Error('Missing editPhotoId');
       
       const result = await executeTask({
-        label: appLang === 'zh' ? "AI 識別" : "AI Identification",
+        label: t('aiAnalyze'),
         type: 'ai-analyze',
         userId: user?.id,
         execute: async (signal, onProgress) => {
-          onProgress(0, appLang === 'zh' ? '正在啟動 AI 識別模塊...' : 'Starting AI module...');
-          onProgress(0.1, appLang === 'zh' ? '正在準備分析照片...' : 'Preparing photo files...');
+          onProgress(0, t('aiStarting'));
+          onProgress(0.1, t('aiPreparing'));
           
-          onProgress(0.3, appLang === 'zh' ? '正在由 AI 智能識別各項屬性 (約需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
+          onProgress(0.3, t('aiAnalyzingAttributes'));
           const resp = await analyzePhoto(editPhotoId);
           
-          onProgress(0.7, appLang === 'zh' ? '正在解析模型識別結果並寫入表單...' : 'Parsing AI attributes and injecting...');
+          onProgress(0.7, t('aiParsingResult'));
           
           if (!resp) {
-            throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能識別', String(editPhotoId));
+            throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), t('aiAnalyze'), String(editPhotoId));
           }
 
           let result = (Array.isArray(resp) && resp.length > 0) ? resp[0] : resp;
           
           if (!result || typeof result !== 'object') {
-            throw ErrorFactory.wrap(new Error('Invalid AI format'), 'AI智能識別結果解析', String(editPhotoId));
+            throw ErrorFactory.wrap(new Error('Invalid AI format'), t('invalidRawFormat'), String(editPhotoId));
           }
 
           const updates: Record<string, unknown> = {};
@@ -261,7 +261,7 @@ export function usePhotoEditAI() {
             updates.dimensions = result.dimensions.map((d: unknown) => {
               const dim = d as Record<string, unknown>;
               return {
-                label: String(dim.label || 'Dimension'),
+                label: String(dim.label || t('dimensions')),
                 unit: (dim.unit === 'inch' || dim.unit === 'mm') ? dim.unit : 'cm',
                 length: Number(dim.length) || 0,
                 width: Number(dim.width) || 0,
@@ -311,7 +311,7 @@ export function usePhotoEditAI() {
                 };
               });
             } catch (saveError: unknown) {
-              logger.warn('AI識別結果自動保存失敗(但不影響回填):', saveError);
+              logger.warn(t('aiSaveFailedWarning'), saveError);
             }
           }
         
@@ -323,10 +323,10 @@ export function usePhotoEditAI() {
     },
     onError: (err: unknown) => {
       ErrorFactory.handle(err, { context: 'AI Analysis' });
-      showToast.error(appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed');
+      showToast.error(t('aiAnalyzeFailed'));
     },
-    successMessage: appLang === 'zh' ? 'AI 識別補全成功' : 'AI Analysis completed',
-    errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'
+    successMessage: t('aiAnalyzeSuccessSimple'),
+    errorMessage: t('aiAnalyzeFailed')
   });
 
   const onAnalyze = useCallback(async (previewSrc?: string, imageUrl?: string) => {
@@ -337,13 +337,13 @@ export function usePhotoEditAI() {
 
   const handleReExtract = useCallback(async (rawResult: unknown) => {
       if (!editPhotoId) {
-          showToast.error(appLang === 'zh' ? '未找到照片 ID' : 'Photo ID not found');
+          showToast.error(t('photoIdNotFound'));
           return;
       }
       
       const result = (Array.isArray(rawResult) && rawResult.length > 0) ? rawResult[0] : (rawResult as Record<string, unknown>);
       if (!result || typeof result !== 'object') {
-          showToast.error(appLang === 'zh' ? '原始數據格式無效' : 'Invalid raw data format');
+          showToast.error(t('invalidRawFormat'));
           return;
       }
 
@@ -413,12 +413,12 @@ export function usePhotoEditAI() {
           await updatePhoto({ id: editPhotoId, updates });
           invalidateDetail(editPhotoId);
           invalidateList();
-          showToast.success(appLang === 'zh' ? '二次提取成功' : 'Re-extraction successful');
+          showToast.success(t('reExtractSuccess'));
       } catch (e) {
           ErrorFactory.handle(e, { context: 'AI Re-extraction' });
-          showToast.error(appLang === 'zh' ? '數據保存失敗' : 'Failed to save extracted data');
+          showToast.error(t('saveDataFailed'));
       }
-  }, [editPhotoId, categories, allTags, form, updatePhoto, invalidateDetail, invalidateList, appLang]);
+  }, [editPhotoId, categories, allTags, form, updatePhoto, invalidateDetail, invalidateList, t]);
 
   return { handleAiAnalyze: onAnalyze, handleReExtract, isAnalyzing };
 }

@@ -57,7 +57,7 @@ export const useSettingsLogic = ({
         String(settings.agnesApiKey || ""),
         provider,
       );
-      if (!ok) throw new Error('連接失敗 / Connection failed');
+      if (!ok) throw new Error(t('aiConnectFailed'));
       return true;
     },
     onSuccess: () => {
@@ -66,8 +66,8 @@ export const useSettingsLogic = ({
     onError: (msg: unknown) => {
       setTestResult({ success: false, error: String(msg) });
     },
-    successMessage: appLang === 'zh' ? 'AI 服務連線成功' : 'AI Connection successful',
-    errorMessage: appLang === 'zh' ? 'AI 服務連線失敗' : 'AI Connection failed'
+    successMessage: t('aiConnectSuccess'),
+    errorMessage: t('aiConnectFailed')
   });
 
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
@@ -107,7 +107,7 @@ export const useSettingsLogic = ({
 
   const uploadLogo = async (file: File) => {
     return executeTask({
-      label: appLang === 'zh' ? '上传系统 Logo' : 'Upload System Logo',
+      label: t('uploadLogoTask'),
       type: 'upload',
       execute: async () => {
         const fileKey = `settings/logo_${Date.now()}`;

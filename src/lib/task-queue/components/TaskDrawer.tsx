@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSignal, isTaskDrawerOpen } from '#lib/store/index.js';
+import { useSignal, isTaskDrawerOpen, useTranslation } from '#src/hooks/index.js';
 import { tasksSignal, clearAll, addTask } from '#src/services/task/taskService.js';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
@@ -7,6 +7,7 @@ import { Progress } from '#src/components/shared/Progress.js';
 import { Task } from '#lib/task-queue/types.js';
 
 function TaskItem({ task }: { task: Task }) {
+  const { t } = useTranslation();
   const statusBg = {
     queued: 'bg-slate-50 border-slate-100',
     processing: 'bg-blue-50/10 border-blue-100/50',
@@ -16,11 +17,11 @@ function TaskItem({ task }: { task: Task }) {
   } as const;
 
   const statusLabels = {
-    queued: '等待中',
-    processing: '處理中',
-    completed: '已完成',
-    failed: '失敗',
-    cancelled: '已取消'
+    queued: t('statusQueued'),
+    processing: t('statusProcessing'),
+    completed: t('statusCompleted'),
+    failed: t('statusFailed'),
+    cancelled: t('statusCancelled')
   } as const;
 
   const typeIcons: Record<string, string> = {
@@ -80,7 +81,7 @@ function TaskItem({ task }: { task: Task }) {
       {(task.state.status === 'processing' || task.state.status === 'queued') && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[9px] font-bold text-slate-400">
-            <span>PROGRESS</span>
+            <span>{t('progress')}</span>
             <span className="tabular-nums text-slate-600">{progressPercent}%</span>
           </div>
           <Progress value={progressPercent} className="h-1.5" />
@@ -91,6 +92,7 @@ function TaskItem({ task }: { task: Task }) {
 }
 
 export function TaskDrawer() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = React.useState(false);
   
   React.useEffect(() => {
@@ -141,7 +143,7 @@ export function TaskDrawer() {
         )}
       >
         <div className="p-4 border-b border-slate-100 h-16 flex items-center justify-between shrink-0">
-          <span className="font-extrabold text-sm text-slate-800 uppercase tracking-tight">任務佇列 (Queue)</span>
+          <span className="font-extrabold text-sm text-slate-800 uppercase tracking-tight">{t('taskQueue')}</span>
           <div className="flex items-center gap-1.5">
             {tasks.some(t => t.state.status === 'completed' || t.state.status === 'failed') && (
               <button 
@@ -153,14 +155,14 @@ export function TaskDrawer() {
                 }}
                 className="text-xs text-blue-500 hover:text-blue-600 font-bold px-2 py-1 select-none active:scale-95 transition-all"
               >
-                清除歷史
+                {t('clearHistory')}
               </button>
             )}
             <button 
               type="button"
               onClick={() => isTaskDrawerOpen.value = false}
               className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
-              aria-label="關閉"
+              aria-label={t('close')}
             >
               <Icon name="x" size={18} />
             </button>
@@ -172,9 +174,9 @@ export function TaskDrawer() {
               <div className="p-3 bg-slate-50 rounded-2xl text-slate-400 animate-pulse">
                 <Icon name="inbox" size={32} />
               </div>
-              <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">暫無佇列任務</h4>
+              <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('noTasks')}</h4>
               <p className="text-[10px] text-slate-400 max-w-[200px] leading-normal font-medium">
-                上傳照片或執行系統維護時，將在此處顯示詳細的任務狀態與即時進度。
+                {t('noTasksDesc')}
               </p>
             </div>
           ) : (

@@ -1,4 +1,5 @@
 import { perfAudit, PerfIncident } from '#lib/perfAudit.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 interface PerformanceIssue {
   id: string;
@@ -13,6 +14,7 @@ interface PerformanceIssue {
 }
 
 export function usePerformanceAudit() {
+  const { t } = useTranslation();
   const incidents = perfAudit.getIncidents();
 
   const issues: PerformanceIssue[] = [];
@@ -33,11 +35,11 @@ export function usePerformanceAudit() {
         id: `perf_${label}`,
         category: 'performance',
         severity: 'P2',
-        title: `${label} 性能分析预警`,
-        description: `检测到 ${label} 在近期运行中多次触发阈值。平均耗时 ${avgDuration.toFixed(2)}ms，最大耗时 ${maxDuration.toFixed(2)}ms。当前处于 L2 观察期，若平均耗时持续超过阈值将触发 L3 优化。`,
+        title: t('perfAuditTitle', label),
+        description: t('perfAuditDesc', label, avgDuration.toFixed(2), maxDuration.toFixed(2)),
         affectedCount: list.length,
         autoFixable: true,
-        actionName: '清除统计/忽略',
+        actionName: t('clearAudit'),
         isClientOnly: true
       });
     }

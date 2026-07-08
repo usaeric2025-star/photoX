@@ -21,8 +21,8 @@ export const PhotoStatusBadges = ({
   const isManagement = useIsManagement();
   
   const shouldShowGroup = !hideGroupBadge && photo.groupId;
-  const hiddenLabel = t('hidden') || '已隐藏';
-  const coverLabel = t('cover') || '封面';
+  const hiddenLabel = t('hidden');
+  const coverLabel = t('cover');
 
   return (
     <div className="absolute top-2 left-2 flex flex-col items-start gap-1 pointer-events-none select-none">

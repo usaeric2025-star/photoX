@@ -5,6 +5,7 @@ import { queryKeys } from '#lib/query/keys.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/usePhotos.js';
 import type { ApiResponse } from '#shared/apiContractSchema.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 export function useCategories(options?: { enabled?: boolean }) {
   const isEnabled = options?.enabled ?? true;
@@ -30,6 +31,7 @@ export function useCategories(options?: { enabled?: boolean }) {
 }
 
 export function useCategoryMutations() {
+  const { t } = useTranslation();
   const { invalidateCategories, invalidateList } = useInvalidatePhotos();
   const invalidateKeys = [queryKeys.categories.list()];
   
@@ -47,11 +49,11 @@ export function useCategoryMutations() {
       });
       const json = await res.json() as unknown as ApiResponse<Category>;
       if (json.success && json.data) return json.data;
-      throw new Error(json.error || '分類創建失敗');
+      throw new Error(json.error || t('categoryCreateFailed'));
     },
     invalidateKeys,
     errorContext: 'category-create',
-    successMessage: '分類已創建',
+    successMessage: t('categoryCreated'),
     onSuccess: () => {
       invalidateCategories();
       invalidateList();
@@ -66,11 +68,11 @@ export function useCategoryMutations() {
       });
       const json = await res.json() as ApiResponse<boolean>;
       if (json.success) return true;
-      throw new Error(json.error || '分類更新失敗');
+      throw new Error(json.error || t('categoryUpdateFailed'));
     },
     invalidateKeys,
     errorContext: 'category-edit',
-    successMessage: '分類已更新',
+    successMessage: t('categoryUpdated'),
     onSuccess: () => {
       invalidateCategories();
       invalidateList();
@@ -84,11 +86,11 @@ export function useCategoryMutations() {
       });
       const json = await res.json() as ApiResponse<boolean>;
       if (json.success) return true;
-      throw new Error(json.error || '分類刪除失敗');
+      throw new Error(json.error || t('categoryDeleteFailed'));
     },
     invalidateKeys,
     errorContext: 'category-delete',
-    successMessage: '分類已刪除',
+    successMessage: t('categoryDeleted'),
     onSuccess: () => {
       invalidateCategories();
       invalidateList();

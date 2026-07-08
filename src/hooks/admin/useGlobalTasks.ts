@@ -8,6 +8,7 @@ import { useAdminMode } from '#src/hooks/core/auth/useAdminMode.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { logger } from '#lib/logger.js';
 import { useAppRoute } from '#lib/router/index.js';
+import { useTranslation } from '#src/hooks/index.js';
 import type { Task } from '#lib/task-queue/types.js';
 
 interface RemoteJob {
@@ -24,6 +25,7 @@ interface RemoteJob {
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
  */
 export function useGlobalTasks() {
+  const { t } = useTranslation();
   const isAdminPath = useAdminMode();
   const user = useAuth(s => s.user);
   const isAdmin = isAdminPath && !!user;
@@ -105,9 +107,9 @@ export function useGlobalTasks() {
     aggregatedTasks.push({
       id: rj.id,
       source: 'maintenance',
-      title: rj.id.startsWith('sync') ? '计数值同步' :
-             rj.id.startsWith('backfill') ? '哈希补全' :
-             rj.id.startsWith('restore') ? '孤兒照片導出' : '系统维护',
+      title: rj.id.startsWith('sync') ? t('taskSyncCount') :
+             rj.id.startsWith('backfill') ? t('taskHashFill') :
+             rj.id.startsWith('restore') ? t('taskOrphanExport') : t('taskSystemMaint'),
       status,
       progress: rj.progress || 0,
       processed: rj.processed,

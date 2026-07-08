@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Icon } from '#src/components/ui/Icon.js';
-import { useDisclosure } from '#src/hooks/core/index.js';
+import { useDisclosure, useTranslation } from '#src/hooks/index.js';
 import { useClickOutside } from '#src/hooks/core/index.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 import { useLongPress } from "#src/hooks/core/index.js";
@@ -22,6 +22,7 @@ export const ManufacturerItem = ({
   onUpdate,
   onDelete,
 }: ManufacturerProps) => {
+  const { t } = useTranslation();
   const [isEditOpen, editDialog] = useDisclosure(false);
   const confirm = useConfirm();
 
@@ -55,15 +56,15 @@ export const ManufacturerItem = ({
             }}
             className="px-3 py-2 text-slate-700 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors"
           >
-            <Icon name="pencil" size={12} /> 编辑名称
+            <Icon name="pencil" size={12} /> {t('edit')}
           </button>
           <button
             onClick={async (e) => {
               e.stopPropagation();
               if (await confirm({
-                title: "确认删除",
-                description: `确定要删除「${manufacturer.name}」吗？此操作不可恢复。`,
-                confirmText: "删除",
+                title: t('confirmDeleteTitleBatch'),
+                description: t('confirmDeleteMfrDesc', manufacturer.name),
+                confirmText: t('delete'),
                 variant: "destructive"
               })) {
                 onDelete(manufacturer.id);
@@ -71,7 +72,7 @@ export const ManufacturerItem = ({
             }}
             className="px-3 py-2 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 rounded-lg flex items-center gap-2 transition-colors"
           >
-            <Icon name="trash-2" size={12} /> 删除
+            <Icon name="trash-2" size={12} /> {t('delete')}
           </button>
         </div>
       </NativePopover>
@@ -79,8 +80,8 @@ export const ManufacturerItem = ({
       <PromptDialog
         open={isEditOpen}
         onOpenChange={editDialog.toggle}
-        title="编辑厂商名称 / Edit Manufacturer"
-        description="输入新的名称 / Enter new name:"
+        title={t('editMfrTitle')}
+        description={t('enterNewName')}
         defaultValue={manufacturer.name}
         placeholder={manufacturer.name}
         onConfirm={(name) => {

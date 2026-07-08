@@ -4,6 +4,7 @@ import { queryKeys } from '#lib/query/keys.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { api } from '#lib/api.js';
 import type { ApiResponse } from '#shared/apiContractSchema.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 export function useManufacturers() {
   const { data, isLoading, error } = useAppQuery<Manufacturer[]>(
@@ -27,6 +28,7 @@ export function useManufacturers() {
 }
 
 export function useManufacturerMutations() {
+  const { t } = useTranslation();
   const invalidateKeys = [
     queryKeys.manufacturers.all,
     queryKeys.photos.all
@@ -41,12 +43,12 @@ export function useManufacturerMutations() {
         }
       });
       const json = await res.json() as unknown as ApiResponse<Manufacturer>;
-      if (!json.success || !json.data) throw new Error(json.error || '廠商創建失敗');
+      if (!json.success || !json.data) throw new Error(json.error || t('mfrCreateFailed'));
       return json.data;
     },
     invalidateKeys,
     errorContext: 'manufacturer-create',
-    successMessage: '廠商已創建'
+    successMessage: t('mfrCreated')
   });
 
   const edit = useAppMutation({
@@ -56,12 +58,12 @@ export function useManufacturerMutations() {
         json: { updates }
       });
       const json = await res.json() as ApiResponse<boolean>;
-      if (!json.success) throw new Error(json.error || '廠商更新失敗');
+      if (!json.success) throw new Error(json.error || t('mfrUpdateFailed'));
       return true;
     },
     invalidateKeys,
     errorContext: 'manufacturer-edit',
-    successMessage: '廠商已更新'
+    successMessage: t('mfrUpdated')
   });
 
   const remove = useAppMutation({
@@ -70,12 +72,12 @@ export function useManufacturerMutations() {
         param: { id }
       });
       const json = await res.json() as ApiResponse<boolean>;
-      if (!json.success) throw new Error(json.error || '廠商刪除失敗');
+      if (!json.success) throw new Error(json.error || t('mfrDeleteFailed'));
       return true;
     },
     invalidateKeys,
     errorContext: 'manufacturer-delete',
-    successMessage: '廠商已刪除'
+    successMessage: t('mfrDeleted')
   });
 
   return { create, edit, remove };
