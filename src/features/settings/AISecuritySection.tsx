@@ -7,7 +7,6 @@ import React, { useCallback } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { AppSettings } from '#src/types/index.js';
 import { useUI } from '#lib/store/index.js';
-import { translations } from '#src/locales/index.js';
 
 import { api } from '#lib/api.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';

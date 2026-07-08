@@ -3,7 +3,6 @@ import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSession
 import { useManufacturers, useManufacturerMutations, useTags, useTagMutations } from '#src/hooks/index.js';
 import { useUI } from '#lib/store/index.js';
 import { PromptDialog } from '#src/components/ui/PromptDialog.js';
-import { translations } from '#src/locales/index.js';
 import { CategorySelect } from './CategorySelect.js';
 import { PhotoTagSelector } from './PhotoTagSelector.js';
 import { ManufacturerSelect } from '#src/components/admin/ManufacturerSelect.js';

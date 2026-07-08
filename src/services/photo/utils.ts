@@ -6,7 +6,6 @@ import { api } from '#lib/api.js';
 import { supabase } from '#lib/supabase.js';
 import { Tag, Photo, Dimension } from '#src/types/index.js';
 import { safeArray } from '#lib/utils.js';
-import { translations, TranslationType } from '#src/locales/index.js';
 import { getSafeText } from '#src/features/ai/safeText.js';
 import { getTranslatedCategoryName } from '#src/services/category/utils.js';
 import { Category } from '#src/types/index.js';

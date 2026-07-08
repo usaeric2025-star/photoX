@@ -1,16 +1,17 @@
 import { Icon } from '#src/components/ui/Icon.js';
 import { Button } from '#src/components/ui/Button.js';
-import { translations } from '#src/locales/index.js';
+import { useTranslation } from '#src/hooks/index.js';
 
 interface SettingsHeaderProps {
-  appLang: string;
   hasChanges: boolean;
   isSaving?: boolean;
   onSave: () => void;
   onClose: () => void;
 }
 
-export function SettingsHeader({ appLang, hasChanges, isSaving, onSave, onClose }: SettingsHeaderProps) {
+export function SettingsHeader({ hasChanges, isSaving, onSave, onClose }: SettingsHeaderProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="px-6 py-4 flex items-center justify-between bg-white border-b border-slate-200 shrink-0 shadow-sm">
       <div className="flex items-center gap-3">
@@ -18,11 +19,11 @@ export function SettingsHeader({ appLang, hasChanges, isSaving, onSave, onClose 
           <Icon name="settings-2" size={18} className="stroke-[2.5]" />
         </div>
         <span className="font-black text-lg tracking-tight text-slate-800">
-          {appLang === 'zh' ? '系統設定' : 'System Settings'}
+          {t('systemSettings')}
         </span>
         {hasChanges && (
           <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full font-bold uppercase tracking-widest animate-pulse">
-            {appLang === 'zh' ? '有未儲存修改' : 'Unsaved Changes'}
+            {t('unsavedChanges')}
           </span>
         )}
       </div>
@@ -34,15 +35,15 @@ export function SettingsHeader({ appLang, hasChanges, isSaving, onSave, onClose 
            variant="primary"
            className="h-10 px-4 rounded-full shadow-sm bg-brand-gold hover:bg-brand-gold/90 border-0"
            leftIcon={!isSaving && <Icon name="save" size={16} />}
-           title={appLang === 'zh' ? '儲存設定' : 'Save Settings'}
+           title={t('saveSettings')}
         >
-            {appLang === 'zh' ? '儲存' : 'Save'}
+            {t('save')}
         </Button>
         
         <button 
           onClick={onClose}
           className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100 shadow-sm cursor-pointer"
-          title={appLang === 'zh' ? '关闭并返回管理模式' : 'Close and Return'}
+          title={t('closeReturn')}
         >
           <Icon name="x" size={20} />
         </button>

@@ -20,7 +20,6 @@ import {
 import { useSettingsLogic } from '#src/hooks/index.js';
 import { SettingsTabs } from './SettingsTabs.js';
 import { SettingsHeader } from './SettingsHeader.js';
-import { translations } from '#src/locales/index.js';
 import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
@@ -157,7 +156,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
       className="bg-brand-bg"
       header={
         <SettingsHeader 
-          appLang={appLang}
           hasChanges={hasChanges}
           isSaving={isSavingSettings}
           onSave={() => runSaveSettings({ ...settings })}

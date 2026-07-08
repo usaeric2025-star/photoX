@@ -1,7 +1,6 @@
 import { getTranslatedCategoryName } from "#src/services/category/utils.js";
 import { createTranslate } from '#src/locales/index.js';
 import React, { useRef } from "react";
-import { translations, LanguageCode } from '#src/locales/index.js';
 import { Category, Manufacturer } from '#src/types/index.js';
 import { useLongPress } from "#src/hooks/core/index.js";
 import { MenuDialog } from "#src/components/ui/MenuDialog.js";

@@ -4,7 +4,6 @@ import { useTags, useTagSorting } from '#src/hooks/tag/index.js';
 import { useFilterState, useTranslation } from '#src/hooks/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { useUI } from '#lib/store/index.js';
-import { translations } from '#src/locales/index.js';
 import type { FilterState } from './types.js';
 
 interface TagButtonProps {

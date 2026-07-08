@@ -1,5 +1,4 @@
 import React from 'react';
-import { translations } from '#src/locales/index.js';
 
 interface KeysStatus {
   openrouter: boolean;
@@ -50,7 +49,7 @@ export function AgnesConfigBlock({
            <p className="text-[8px] text-blue-900/40 font-bold uppercase tracking-widest">集成原生引擎 / Native Engine</p>
         </div>
         <div className="flex items-center gap-2">
-          {keysStatus.agnes && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+          {keysStatus.agnes && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">{t('active')}</div>}
           <button 
             onClick={() => {
               setIsEditingAgnes(!isEditingAgnes);

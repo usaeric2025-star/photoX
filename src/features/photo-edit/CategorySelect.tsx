@@ -1,9 +1,7 @@
 import { Field } from '@tanstack/react-form';
 import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext.js";
 import { FormSectionHeader } from '#src/components/admin/FormShared.js';
-import { useCategories } from '#src/hooks/index.js';
-import { useUI } from '#lib/store/index.js';
-import { translations, LanguageCode } from '#src/locales/index.js';
+import { useCategories, useTranslation } from '#src/hooks/index.js';
 import { getTranslatedCategoryName } from "#src/services/category/utils.js";
 
 /**
@@ -11,7 +9,7 @@ import { getTranslatedCategoryName } from "#src/services/category/utils.js";
  */
 export function CategorySelect() {
   const { form } = usePhotoEditSessionContext();
-  const appLang = useUI((s) => s.appLang);
+  const { appLang, uiTranslations } = useTranslation();
   const { categories = [] } = useCategories();
   
   return (
@@ -24,12 +22,11 @@ export function CategorySelect() {
               .filter((cat) => cat && cat.id)
               .map((cat) => {
                 const isSelected = String(field.state.value || "") === String(cat.id || "");
-                const dict = translations[appLang as LanguageCode] || translations.en;
                 const displayName = getTranslatedCategoryName(
                   cat.id || undefined,
                   categories,
                   appLang,
-                  dict,
+                  uiTranslations,
                 );
                 return (
                   <button

@@ -1,5 +1,4 @@
 import React from 'react';
-import { translations } from '#src/locales/index.js';
 
 interface KeysStatus {
   openrouter: boolean;
@@ -50,7 +49,7 @@ export function OpenRouterConfigBlock({
            <p className="text-[8px] text-brand-navy/40 font-bold uppercase tracking-widest">萬能引擎 / Multi-Model</p>
         </div>
         <div className="flex items-center gap-2">
-          {keysStatus.openrouter && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">已激活</div>}
+          {keysStatus.openrouter && <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">{t('active')}</div>}
           <button 
             onClick={() => {
               setIsEditingOpenRouter(!isEditingOpenRouter);

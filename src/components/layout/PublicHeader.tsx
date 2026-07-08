@@ -7,7 +7,6 @@ import { useUI, usePublicSettings, usePermission, UIStoreState, useTranslation }
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
-import { translations } from '#src/locales/index.js';
 import { storage } from '#src/services/storage/index.js';
 
 interface PublicHeaderProps {

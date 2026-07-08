@@ -5,7 +5,6 @@ import { useAuth, activeTaskCountSignal, useSignal } from '#lib/store/index.js';
 import { useUI, useSettings, useAdminBatchActions, usePermission, useTranslation } from '#src/hooks/index.js';
 import { useAppQuery } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
-import { translations, TranslationType } from '#src/locales/index.js';
 import { storage } from '#src/services/storage/index.js';
 import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { AdminHeaderLogo } from './AdminHeaderLogo.js';

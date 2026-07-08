@@ -16,8 +16,6 @@ import { uploadToR2 } from '#src/features/upload/services/r2Client.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { showToast } from '#lib/ui/toast.js';
 
-import { translations } from '#src/locales/index.js';
-
 interface UseSettingsLogicProps {
   user: User | null;
   settings: AppSettings;
@@ -27,7 +25,7 @@ interface UseSettingsLogicProps {
   setSettings: (s: AppSettings) => void;
 }
 
-import { useDebouncedCallback } from '#src/hooks/core/index.js';
+import { useTranslation, useDebouncedCallback } from '#src/hooks/core/index.js';
 import { useFormSubmit } from "#lib/forms/useFormSubmit.js";
 import * as v from 'valibot';
 
@@ -41,8 +39,7 @@ export const useSettingsLogic = ({
 }: UseSettingsLogicProps) => {
   
   const invalidatePhotos = useInvalidatePhotos();
-  const appLang = useUI(s => s.appLang);
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t, appLang } = useTranslation();
 
   const [testResult, setTestResult] = useState<{
     success?: boolean;
