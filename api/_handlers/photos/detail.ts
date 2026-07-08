@@ -5,8 +5,8 @@ import { inArray, eq } from 'drizzle-orm';
 import { PhotoIdsReqSchema, PhotoCheckHashReqSchema } from '../../../shared/apiContractSchema.js';
 import { errorResponse, successResponse } from '../../_lib/response.js';
 
-export const detailHandler = (app: Hono) => {
-  app.post('/by-ids', async (c) => {
+export const detailRoutes = new Hono()
+  .post('/by-ids', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(PhotoIdsReqSchema, body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
@@ -32,9 +32,8 @@ export const detailHandler = (app: Hono) => {
     });
 
     return successResponse(c, formatted);
-  });
-
-  app.post('/check-hash', async (c) => {
+  })
+  .post('/check-hash', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(PhotoCheckHashReqSchema, body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
@@ -47,6 +46,8 @@ export const detailHandler = (app: Hono) => {
         },
         where: eq(furnitureItems.imageHash, hash)
     });
-    return successResponse(c, data || null);
+    return successResponse(c, {
+        exists: !!data,
+        photo: data || null
+    });
   });
-};

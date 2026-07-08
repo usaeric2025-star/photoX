@@ -11,8 +11,8 @@ import { Hono, type Context } from 'hono';
 const countCache = new Map<string, number>();
 const countCacheTime = new Map<string, number>();
 
-export const listExtendedHandlers = (app: Hono) => {
-  app.post('/list-by-group', async (c: Context) => {
+export const listExtendedRoutes = new Hono()
+  .post('/list-by-group', async (c: Context) => {
     const body = await c.req.json();
     const check = v.safeParse(ListByGroupReqSchema, body);
     if (!check.success) throw new Error(check.issues[0].message);
@@ -74,9 +74,8 @@ export const listExtendedHandlers = (app: Hono) => {
     } catch (error: unknown) {
         throw errorFactory.wrap(error, 'photos.list-by-group', 'QUERY_FAILURE');
     }
-  });
-
-  app.post('/list-by-group-paginated', async (c: Context) => {
+  })
+  .post('/list-by-group-paginated', async (c: Context) => {
     const body = await c.req.json();
     const check = v.safeParse(ListByGroupReqSchema, body);
     if (!check.success) throw new Error(check.issues[0].message);
@@ -147,5 +146,3 @@ export const listExtendedHandlers = (app: Hono) => {
         throw errorFactory.wrap(error, 'photos.list-by-group-paginated', 'QUERY_FAILURE');
     }
   });
-
-};

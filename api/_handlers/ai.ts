@@ -27,9 +27,8 @@ interface HonoContextUser {
 
 import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
-export const ai = new Hono();
-
-ai.post("/test", async (c) => {
+export const ai = new Hono()
+  .post("/test", async (c) => {
     const body = await c.req.json();
     let { provider: providerName, apiKey, model } = body;
     
@@ -55,9 +54,8 @@ ai.post("/test", async (c) => {
     }
 
     return successResponse(c, data.text, { message: 'Connection successful' });
-});
-
-ai.post("/run", async (c) => {
+})
+.post("/run", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIRunReqSchema, body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
@@ -82,9 +80,8 @@ ai.post("/run", async (c) => {
     });
 
     return successResponse(c, data, { rawResult: rawText, usage: {} });
-});
-
-ai.post("/analyze", async (c) => {
+})
+.post("/analyze", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIAnalyzeV1ReqSchema, body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
@@ -180,9 +177,8 @@ ai.post("/analyze", async (c) => {
     }
 
     return successResponse(c, data, { rawResult: rawText });
-});
-
-ai.post("/translate", async (c) => {
+})
+.post("/translate", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AITranslateReqSchema, body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
@@ -206,10 +202,37 @@ ai.post("/translate", async (c) => {
     }
 
     return successResponse(c, data, { rawResult: rawText });
-});
+})
+.post("/analyze-base64", async (c) => {
+    const body = await c.req.json();
+    const check = v.safeParse(AIAnalyzeBase64ReqSchema, body);
+    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
+    const { base64Image, promptText, provider: providerName } = check.output;
+    const provider = await getAIProvider(providerName);
+    const modelConfig = (provider as BaseAIProvider).getConfig().model;
+    const model = modelConfig || 'google/gemini-2.5-flash-lite';
 
-ai.post("/analyze-photo-v2", async (c) => {
+    const messages = [{ 
+        role: 'user', 
+        content: [
+            { type: 'image_url', image_url: { url: base64Image } }, 
+            { type: 'text', text: promptText || 'Analyze this image' }
+        ]
+    }];
+
+    const { data, rawText } = await executeAITask({
+        task: 'analyze-base64',
+        provider,
+        model,
+        messages,
+        prompt: promptText || 'Analyze this image',
+        shouldNormalize: false
+    });
+
+    return successResponse(c, data, { rawResult: rawText });
+})
+.post("/analyze-photo-v2", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIAnalyzePhotoV2ReqSchema, body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
@@ -233,9 +256,8 @@ ai.post("/analyze-photo-v2", async (c) => {
     }
 
     return successResponse(c, data, { rawResult: rawText });
-});
-
-ai.post("/cluster-photos", async (c) => {
+})
+.post("/cluster-photos", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIClusterPhotosReqSchema, body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);

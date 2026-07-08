@@ -10,9 +10,8 @@ import { requireRealUser } from '../_lib/auth.js';
 import { errorResponse, successResponse } from '../_lib/response.js';
 
 const serverEnv = getServerEnv(process.env);
-export const storage = new Hono();
-
-storage.post("/upload-presign", async (c) => {
+export const storage = new Hono()
+  .post("/upload-presign", async (c) => {
     await requireRealUser(c);
     const { photoId, fileKey, contentType, imageHash, force } = await c.req.json();
     if (!photoId && !fileKey) return errorResponse(c, "photoId or fileKey required", 400);
@@ -70,9 +69,8 @@ storage.post("/upload-presign", async (c) => {
     const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
     
     return successResponse(c, { uploadUrl, publicUrl });
-});
-
-storage.post("/r2-delete", async (c) => {
+})
+.post("/r2-delete", async (c) => {
     await requireRealUser(c);
     const { fileKeys } = await c.req.json();
     if (!fileKeys || !Array.isArray(fileKeys)) {

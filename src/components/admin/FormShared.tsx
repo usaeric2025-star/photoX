@@ -3,9 +3,9 @@ import { createTranslate } from '#src/locales/index.js';
 import React, { useRef } from "react";
 import { translations, LanguageCode } from '#src/locales/index.js';
 import { Category, Manufacturer } from '#src/types/index.js';
-import { useLongPress } from "#src/hooks/core/useLongPress.js";
+import { useLongPress } from "#src/hooks/core/index.js";
 import { MenuDialog } from "#src/components/ui/MenuDialog.js";
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 
 interface SectionHeaderProps {

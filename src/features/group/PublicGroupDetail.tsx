@@ -5,7 +5,7 @@ import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { useFilters, useTranslation } from '#src/hooks/index.js';
 import { PublicGroupHeader } from './components/PublicGroupHeader.js';
-import { Button } from '#src/components/shared/Button.js';
+import { Button } from '#src/components/ui/Button.js';
 import { useUI } from '#lib/store/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';

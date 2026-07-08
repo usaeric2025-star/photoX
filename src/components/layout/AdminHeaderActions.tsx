@@ -13,7 +13,7 @@ interface AdminHeaderActionsProps {
   taskCount: number;
   handleAuthAction: () => void;
   theme: Theme;
-  t: (key: string, ...args: any[]) => any;
+  t: (key: string, ...args: unknown[]) => string;
 }
 
 export function AdminHeaderActions({ 

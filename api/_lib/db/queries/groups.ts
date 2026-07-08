@@ -25,14 +25,14 @@ export async function getGroupById(id: string) {
     });
 }
 
-export async function upsertGroup(cleanMapped: Record<string, any>) {
+export async function upsertGroup(cleanMapped: Partial<typeof groupsTable.$inferInsert> & { id: string }) {
     const { id, ...updatePayloadData } = cleanMapped;
 
     const insertPayload = {
         ...cleanMapped,
         createdAt: new Date(),
         updatedAt: new Date()
-    };
+    } as typeof groupsTable.$inferInsert;
 
     const updatePayload = {
         ...updatePayloadData,
@@ -40,10 +40,10 @@ export async function upsertGroup(cleanMapped: Record<string, any>) {
     };
 
     const [data] = await db.insert(groupsTable)
-        .values(insertPayload as any)
+        .values(insertPayload)
         .onConflictDoUpdate({
             target: groupsTable.id,
-            set: updatePayload as any
+            set: updatePayload
         })
         .returning();
     

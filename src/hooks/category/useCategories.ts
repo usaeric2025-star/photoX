@@ -3,7 +3,8 @@ import { useAppQuery, useAppMutation } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { STALE_TIMES } from '#lib/query/config.js';
-import { useInvalidatePhotos } from '#src/hooks/photo/useInvalidatePhotos.js';
+import { useInvalidatePhotos } from '#src/hooks/photo/usePhotos.js';
+import type { ApiResponse } from '#shared/apiContractSchema.js';
 
 export function useCategories(options?: { enabled?: boolean }) {
   const isEnabled = options?.enabled ?? true;
@@ -11,9 +12,9 @@ export function useCategories(options?: { enabled?: boolean }) {
     isEnabled ? queryKeys.categories.list() : null,
     async () => {
       const res = await api.categories.$get();
-      const json = await res.json();
-      if (json.success) return json.data as Category[];
-      throw new Error((json as any).error?.message || 'Failed to load categories');
+      const json = await res.json() as unknown as ApiResponse<Category[]>;
+      if (json.success && json.data) return json.data;
+      throw new Error(json.error || 'Failed to load categories');
     },
     {
       staleTime: STALE_TIMES.MEDIUM,
@@ -44,9 +45,9 @@ export function useCategoryMutations() {
           }
         }
       });
-      const json = await res.json();
-      if (json.success) return json.data;
-      throw new Error((json as any).error?.message || '分類創建失敗');
+      const json = await res.json() as unknown as ApiResponse<Category>;
+      if (json.success && json.data) return json.data;
+      throw new Error(json.error || '分類創建失敗');
     },
     invalidateKeys,
     errorContext: 'category-create',
@@ -63,9 +64,9 @@ export function useCategoryMutations() {
         param: { id: String(id) },
         json: { updates }
       });
-      const json = await res.json();
+      const json = await res.json() as ApiResponse<boolean>;
       if (json.success) return true;
-      throw new Error((json as any).error?.message || '分類更新失敗');
+      throw new Error(json.error || '分類更新失敗');
     },
     invalidateKeys,
     errorContext: 'category-edit',
@@ -81,9 +82,9 @@ export function useCategoryMutations() {
       const res = await api.categories[':id'].$delete({
         param: { id: String(id) }
       });
-      const json = await res.json();
+      const json = await res.json() as ApiResponse<boolean>;
       if (json.success) return true;
-      throw new Error((json as any).error?.message || '分類刪除失敗');
+      throw new Error(json.error || '分類刪除失敗');
     },
     invalidateKeys,
     errorContext: 'category-delete',

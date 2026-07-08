@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type InfiniteData, type QueryKey } from '@tanstack/react-query';
 import { photoKeys } from './index.js';
 import { Photo } from '#src/types/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -18,7 +18,7 @@ interface OptimisticPhotoMutationOptions<TVariables, TData> {
  * 專為照片設計的樂觀更新 Hook
  * 會同時更新照片列表 (Infinite Query) 與單張照片詳情
  */
-export function useOptimisticPhotoMutation<TVariables = any, TData = any>(
+export function useOptimisticPhotoMutation<TVariables = unknown, TData = unknown>(
   options: OptimisticPhotoMutationOptions<TVariables, TData>
 ) {
   const queryClient = useQueryClient();
@@ -34,14 +34,14 @@ export function useOptimisticPhotoMutation<TVariables = any, TData = any>(
       await queryClient.cancelQueries({ queryKey: photoKeys.all });
 
       // 2. 備份舊數據 (列表與詳情)
-      const previousLists = queryClient.getQueriesData<InfiniteData<any>>({ queryKey: photoKeys.lists() });
+      const previousLists = queryClient.getQueriesData<InfiniteData<unknown>>({ queryKey: photoKeys.lists() });
       const previousDetails = idArray.map(id => ({
         id,
         data: queryClient.getQueryData(photoKeys.detail(id))
       }));
 
       // 3. 執行樂觀更新 - 更新列表
-      queryClient.setQueriesData<InfiniteData<{ photos: Photo[], total: number }>>(
+      queryClient.setQueriesData<InfiniteData<{ data: Photo[], total: number }>>(
         { queryKey: photoKeys.lists() },
         (old) => {
           if (!old) return old;
@@ -49,7 +49,7 @@ export function useOptimisticPhotoMutation<TVariables = any, TData = any>(
             ...old,
             pages: old.pages.map(page => ({
               ...page,
-              photos: page.photos.map(p => idArray.includes(p.id) ? updater(p) : p).filter((p): p is Photo => p !== null)
+              data: page.data.map(p => idArray.includes(p.id) ? updater(p) : p).filter((p): p is Photo => p !== null)
             }))
           };
         }
@@ -57,7 +57,7 @@ export function useOptimisticPhotoMutation<TVariables = any, TData = any>(
 
       // 4. 執行樂觀更新 - 更新詳情
       idArray.forEach(id => {
-        queryClient.setQueryData(photoKeys.detail(id), (old: any) => {
+        queryClient.setQueryData(photoKeys.detail(id), (old: unknown) => {
           if (!old) return old;
           return updater(old as Photo);
         });
@@ -65,15 +65,16 @@ export function useOptimisticPhotoMutation<TVariables = any, TData = any>(
 
       return { previousLists, previousDetails };
     },
-    onError: (err, variables, context: any) => {
+    onError: (err, variables, context) => {
       // 錯誤回滾
-      if (context?.previousLists) {
-        context.previousLists.forEach(([key, data]: [any, any]) => {
+      const typedContext = context as { previousLists?: [QueryKey, unknown][], previousDetails?: { id: string, data: unknown }[] } | undefined;
+      if (typedContext?.previousLists) {
+        typedContext.previousLists.forEach(([key, data]) => {
           queryClient.setQueryData(key, data);
         });
       }
-      if (context?.previousDetails) {
-        context.previousDetails.forEach(({ id, data }: any) => {
+      if (typedContext?.previousDetails) {
+        typedContext.previousDetails.forEach(({ id, data }) => {
           queryClient.setQueryData(photoKeys.detail(id), data);
         });
       }

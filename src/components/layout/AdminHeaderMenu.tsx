@@ -12,7 +12,7 @@ interface AdminHeaderMenuProps {
   navigate: Navigation;
   isStaff: boolean;
   theme: Theme;
-  t: (key: string, ...args: any[]) => any;
+  t: (key: string, ...args: unknown[]) => string;
   lang: string;
 }
 

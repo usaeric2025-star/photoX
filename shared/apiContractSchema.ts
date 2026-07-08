@@ -29,7 +29,8 @@ export const AIRunReqSchema = v.object({
 export const AIAnalyzeBase64ReqSchema = v.object({
     base64Image: v.string(),
     customModel: v.optional(v.string()),
-    promptText: v.optional(v.string())
+    promptText: v.optional(v.string()),
+    provider: v.optional(v.string())
 });
 
 export const AITranslateReqSchema = v.object({
@@ -140,6 +141,8 @@ export const PhotoIdReqSchema = v.object({
 export const PhotoIdsReqSchema = v.object({
     ids: v.array(v.string())
 });
+
+export const PhotoBatchDeleteReqSchema = PhotoIdsReqSchema;
 
 export const PhotoCheckHashReqSchema = v.object({
     hash: v.string()

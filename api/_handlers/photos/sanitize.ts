@@ -3,8 +3,8 @@
  * Prevents SQL foreign key constraints and type mismatch errors by ensuring nullish values
  * (such as empty strings, "null", "undefined", or "uncategorized") are correctly mapped to null.
  */
-export function sanitizePhotoPayload(payload: Record<string, any>): Record<string, any> {
-    const sanitized: Record<string, any> = { ...payload };
+export function sanitizePhotoPayload(payload: Record<string, unknown>): Record<string, unknown> {
+    const sanitized: Record<string, unknown> = { ...payload };
 
     // Fields that should be strictly cast to integers or null
     const integerFields = ['categoryId', 'category_id'];
@@ -17,7 +17,7 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
 
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     // Process all potential nullish values
-    const isNullish = (val: any): boolean => {
+    const isNullish = (val: unknown): boolean => {
         if (val === null || val === undefined) return true;
         if (typeof val === 'string') {
             const trimmed = val.trim();
@@ -29,7 +29,7 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
         return false;
     };
 
-    const isUUIDish = (val: any): boolean => {
+    const isUUIDish = (val: unknown): boolean => {
         if (!val || typeof val !== 'string') return false;
         return uuidRegex.test(val.trim());
     };
@@ -104,7 +104,7 @@ export function sanitizePhotoPayload(payload: Record<string, any>): Record<strin
       'groupOrder', 'metadata', 'updatedAt', 'createdAt', 'nameSearchable'
     ]);
 
-    const filtered: Record<string, any> = {};
+    const filtered: Record<string, unknown> = {};
     for (const key of Object.keys(sanitized)) {
         if (VALID_KEYS.has(key)) {
             filtered[key] = sanitized[key];

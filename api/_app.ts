@@ -100,7 +100,7 @@ const routes = apiApp
   .route('/photos', photos)
   .route('/cron/refresh-view', cronRefreshView)
   .route('/system', system)
-  .route('/', storage);
+  .route('/storage', storage);
 
 export const app = new Hono().route('/api', routes);
 

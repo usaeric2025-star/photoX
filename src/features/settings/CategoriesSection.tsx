@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
-import { useClickOutside } from '#src/hooks/core/useClickOutside.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
+import { useClickOutside } from '#src/hooks/core/index.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
-import { useLongPress } from "#src/hooks/core/useLongPress.js";
+import { useLongPress } from "#src/hooks/core/index.js";
 import { Category } from '#src/types/index.js';
 import { useUI } from '#lib/store/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';

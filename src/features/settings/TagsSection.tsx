@@ -5,13 +5,13 @@ import { executeTask } from '#lib/task-queue/index.js';
 import React, { useState } from "react";
 import { Icon } from '#src/components/ui/Icon.js';
 import { Button } from '#src/components/ui/Button.js';
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
 import { Tag, AppSettings } from '#src/types/index.js';
 import { TagItem } from "./TagItem.js";
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 
 import { normalizeTagName } from "#lib/utils.js";
-import { triggerRefreshTagHotScores } from "#src/services/tag/commands.js";
+import { api } from "#lib/api.js";
 import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
@@ -90,7 +90,7 @@ export function TagsSection({
       type: "sync",
       silent: true,
       execute: async () => {
-        await triggerRefreshTagHotScores();
+        await api.tags['refresh-hot-scores'].$post();
         await queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
       }
     });

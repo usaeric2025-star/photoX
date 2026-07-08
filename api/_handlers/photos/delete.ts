@@ -5,39 +5,39 @@ import { eq, and, inArray } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { errorResponse, successResponse } from '../../_lib/response.js';
-import { PhotoIdReqSchema } from '../../../shared/apiContractSchema.js';
+import { PhotoBatchDeleteReqSchema } from '../../../shared/apiContractSchema.js';
 
-export const deleteHandler = (app: Hono) => {
-  app.post('/delete', async (c) => {
+export const deleteRoutes = new Hono()
+  .post('/delete', async (c) => {
     const body = await c.req.json();
-    const check = v.safeParse(PhotoIdReqSchema, body);
+    const check = v.safeParse(PhotoBatchDeleteReqSchema, body);
     if (!check.success) throw new Error(check.issues[0].message);
 
-    const { id, userId } = check.output;
+    const { ids } = check.output;
     try {
-        const photoData = await db.query.furnitureItems.findFirst({
-            columns: { groupId: true, imageUrl: true },
-            where: eq(furnitureItems.id, id)
-        });
+        const photosData = await db.select({ groupId: furnitureItems.groupId })
+            .from(furnitureItems)
+            .where(inArray(furnitureItems.id, ids));
         
-        // Pre-delete cleanup to avoid FK constraints (ai_audit_logs doesn't have cascade delete)
-        await db.delete(aiAuditLogs).where(eq(aiAuditLogs.photoId, id));
+        const groupIds = Array.from(new Set<string>(photosData.map(p => p.groupId).filter((id): id is string => typeof id === 'string')));
+        
+        // Pre-delete cleanup to avoid FK constraints
+        await db.delete(aiAuditLogs).where(inArray(aiAuditLogs.photoId, ids));
 
         await db.delete(furnitureItems).where(
-            eq(furnitureItems.id, id)
+            inArray(furnitureItems.id, ids)
         );
 
         // POST-DELETE: Reconcile and count
-        if (photoData?.groupId) {
-          await syncGroupCoversAndCount([photoData.groupId]);
+        if (groupIds.length > 0) {
+          await syncGroupCoversAndCount(groupIds);
         }
 
         await refreshPhotosView();
 
-        return successResponse(c, { photoData });
+        return successResponse(c, { ids });
     } catch (error: unknown) {
         const { errorFactory } = await import('../../_lib/error/factory.js');
         throw errorFactory.wrap(error, 'api./api/photos/delete', 'DB_ERROR');
     }
   });
-};

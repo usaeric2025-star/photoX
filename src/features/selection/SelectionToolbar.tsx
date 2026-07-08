@@ -3,7 +3,7 @@ import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelec
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
 import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '#lib/store/index.js';
 import { useAppRouter } from '#lib/router/index.js';
-import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
+import { useAIBatchAnalysis } from '#src/hooks/photo/usePhotoAI.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useMediaQuery } from '#src/hooks/index.js';
 import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '#src/hooks/group/index.js';

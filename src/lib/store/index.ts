@@ -26,24 +26,30 @@ export { updateForm, resetForm, incrementDialogCount, decrementDialogCount, setL
 export const useAppLang = () => useSignal(appLang);
 export const useDescLang = () => useSignal(descLang);
 
-function isShallowEqual(a: any, b: any): boolean {
+function isShallowEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+  
+  const objA = a as Record<string, unknown>;
+  const objB = b as Record<string, unknown>;
+
   if (Array.isArray(a) !== Array.isArray(b)) return false;
   
   if (Array.isArray(a)) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (!Object.is(a[i], b[i])) return false;
+    const arrA = a as unknown[];
+    const arrB = b as unknown[];
+    if (arrA.length !== arrB.length) return false;
+    for (let i = 0; i < arrA.length; i++) {
+      if (!Object.is(arrA[i], arrB[i])) return false;
     }
     return true;
   }
 
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
   if (keysA.length !== keysB.length) return false;
   for (const key of keysA) {
-    if (!Object.prototype.hasOwnProperty.call(b, key) || !Object.is(a[key], b[key])) return false;
+    if (!Object.prototype.hasOwnProperty.call(objB, key) || !Object.is(objA[key], objB[key])) return false;
   }
   return true;
 }
@@ -129,13 +135,13 @@ export function useUI<T = UIStoreState>(selector?: (state: UIStoreState) => T): 
 
   const subscribe = useCallback((onStoreChange: () => void) => {
     let isInitial = true;
-    let lastSelected: any = undefined;
+    let lastSelected: T | UIStoreState | undefined = undefined;
 
     const dispose = effect(() => {
       // Running getUIState inside effect automatically registers dependencies on all read signals
       const state = getUIState();
       const currentSelector = selectorRef.current;
-      const selected = currentSelector ? currentSelector(state) : state;
+      const selected = currentSelector ? currentSelector(state) : (state as unknown as T);
 
       if (isInitial) {
         lastSelected = selected;
@@ -196,12 +202,12 @@ export function useAuth<T = AuthState>(selector?: (state: AuthState) => T): T {
 
   const subscribe = useCallback((onStoreChange: () => void) => {
     let isInitial = true;
-    let lastSelected: any = undefined;
+    let lastSelected: T | AuthState | undefined = undefined;
 
     const dispose = effect(() => {
       const state = getAuthState();
       const currentSelector = selectorRef.current;
-      const selected = currentSelector ? currentSelector(state) : state;
+      const selected = currentSelector ? currentSelector(state) : (state as unknown as T);
 
       if (isInitial) {
         lastSelected = selected;

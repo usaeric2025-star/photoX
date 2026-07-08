@@ -10,7 +10,7 @@ interface DimensionItemProps {
   onUpdateLabel: (idx: number, prefix: string, content: string) => void;
   onUpdateUnit: (idx: number, unit: string) => void;
   isAnalyzing?: boolean;
-  t: (key: string, ...args: any[]) => string;
+  t: (key: string, ...args: unknown[]) => string;
 }
 
 export function DimensionItem({

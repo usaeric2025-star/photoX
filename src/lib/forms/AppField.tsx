@@ -17,7 +17,7 @@ export function AppField<TData, TName extends string>({ form, name, label, child
         <Field 
             name={name}
         >
-            {(field: any) => (
+            {(field) => (
                 <div className={cn("space-y-1.5", className)}>
                     {label && (
                         <label className="text-sm font-medium text-foreground/70">

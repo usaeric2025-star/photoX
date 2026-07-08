@@ -1,8 +1,7 @@
 import { queryClient } from "#lib/query/index.js";
 import { queryKeys } from "#lib/query/keys.js";
 import { Tag } from '#src/types/index.js';
-import { loadTagsFromCloud } from './queries.js';
-import { batchCreateTags } from './commands.js';
+import { api } from '#lib/api.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 /**
@@ -16,7 +15,25 @@ export async function resolveTagNamesToIds(
   if (!tagNames || tagNames.length === 0) return [];
 
   try {
-    const dbTags = existingTags && existingTags.length > 0 ? existingTags : (await loadTagsFromCloud());
+    let dbTags: Tag[] = [];
+    
+    if (existingTags && existingTags.length > 0) {
+      dbTags = existingTags;
+    } else {
+      // Fetch tags directly from API since queries.ts is being removed
+      const res = await api.tags.$get();
+      if (!res.ok) throw new Error(`Failed to fetch tags: ${res.statusText}`);
+      
+      const json = await res.json();
+      if (!json.success) throw new Error(`Failed to load tags: ${(json as any).error}`);
+      
+      dbTags = ((json.data as any[]) || []).map(t => ({
+        ...t,
+        name: (t.name || '').toUpperCase(),
+        id: Number(t.id) || 0
+      })) as unknown as Tag[];
+    }
+
     const tagIds: string[] = [];
     const missingNames: string[] = [];
 
@@ -30,6 +47,7 @@ export async function resolveTagNamesToIds(
         return String(n).toUpperCase().trim();
       })
       .filter(Boolean);
+    
     const uniqueNames = Array.from(new Set(normalizedTagNames));
 
     uniqueNames.forEach(name => {
@@ -47,15 +65,27 @@ export async function resolveTagNamesToIds(
 
     if (missingNames.length > 0) {
       try {
-        const createResult = await batchCreateTags(missingNames);
-        if (createResult) {
-          createResult.forEach((id: string) => tagIds.push(id));
+        // Batch create tags directly using API
+        const batchRes = await api.tags.batch.$post({
+          json: { 
+            tags: missingNames.map(name => ({ name: name.toUpperCase().trim() })) 
+          }
+        });
+
+        if (batchRes.ok) {
+          const batchJson = await batchRes.json();
+          if (batchJson.success && Array.isArray(batchJson.data)) {
+            batchJson.data.forEach((t: any) => {
+              if (t.id) tagIds.push(String(t.id));
+            });
+          }
         }
         
         // Invalidate tags cache so the UI shows the newly created tags
-        
         queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
-      } catch (e) {}
+      } catch (e) {
+        console.error('Batch create tags failed in resolveTagNamesToIds:', e);
+      }
     }
 
     return tagIds;

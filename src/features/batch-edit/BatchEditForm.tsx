@@ -99,7 +99,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                     <label className="text-sm font-bold">{appLang === 'zh' ? `${t('tags')} / TAGS (ADD)` : `${t('tags').toUpperCase()} (ADD)`}</label>
                     <select 
                       multiple
-                      value={state.value || []} 
+                      value={(state.value as string[]) || []} 
                       onChange={(e) => {
                           const options = Array.from(e.target.selectedOptions, option => option.value);
                           handleChange(options);

@@ -50,7 +50,7 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
     name: "自动清理重复照片",
     execute: async () => {
       const res = await api.admin.maintenance.storage.deduplicate.$post();
-      const data = await res.json() as Record<string, any>;
+      const data = await res.json() as { success: boolean; count?: number; [key: string]: unknown };
       return { message: `修复完成，已移除 ${data.count || 0} 条重复记录`, ...data };
     }
   },
@@ -58,7 +58,7 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
     name: "找回云端孤兒照片",
     preview: async () => {
       const res = await api.admin.maintenance.storage.audit.$get();
-      const data = await res.json() as AuditResponse;
+      const data = (await res.json()) as unknown as AuditResponse;
       if (!data.success) throw new Error("审计失败");
       return { 
         affectedCount: data.data.orphans.count, 
@@ -70,7 +70,7 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
     execute: async (onProgress) => {
       // 1. 先进行一次审计获取要恢复的 Key
       const auditRes = await api.admin.maintenance.storage.audit.$get();
-      const auditData = await auditRes.json() as AuditResponse;
+      const auditData = (await auditRes.json()) as unknown as AuditResponse;
       if (!auditData.success) throw new Error("审计失败");
       
       const orphans = auditData.data.orphans.samples || [];
@@ -142,7 +142,7 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
     name: "清理資料庫殘餘記錄",
     preview: async () => {
       const res = await api.admin.maintenance.storage.audit.$get();
-      const data = await res.json() as AuditResponse;
+      const data = (await res.json()) as unknown as AuditResponse;
       if (!data.success) throw new Error("审计失败");
       return { 
         affectedCount: data.data.ghosts.count, 
@@ -152,7 +152,7 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
     },
     execute: async () => {
       const res = await api.admin.maintenance.storage['clean-ghosts'].$post();
-      const data = await res.json() as Record<string, any>;
+      const data = await res.json() as { success: boolean; count?: number; error?: string; [key: string]: unknown };
       if (!data.success) throw new Error(data.error || "清理失敗");
       return { message: `修復完成，已移除 ${data.count || 0} 條無效的資料庫記錄` };
     }
@@ -178,7 +178,7 @@ export const ISSUE_ACTIONS: Record<string, IssueAction> = {
     name: "修复数据库约束与合组一致性",
     execute: async () => {
       const res = await api.groups['repair-integrity'].$post();
-      const data = await res.json() as Record<string, any>;
+      const data = await res.json() as { success: boolean; data?: { dissolved?: number; synced?: number }; error?: string; [key: string]: unknown };
       if (!data.success) throw new Error(String(data.error || '修复失败'));
       return { message: `修复完成：解散了 ${data.data?.dissolved || 0} 个无效合组，同步了 ${data.data?.synced || 0} 个合组。`, ...data };
     }

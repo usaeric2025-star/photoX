@@ -61,7 +61,7 @@ export function DataFallback({
     return (
       <div className="p-4 flex flex-col justify-center items-center h-full min-h-[50vh] text-center bg-surface-mute/20 rounded-xl">
         <div className="w-16 h-16 bg-surface-soft rounded-full flex items-center justify-center mb-4">
-          <Icon name={emptyIcon as any} size={32} className="text-text-mute" />
+          <Icon name={emptyIcon} size={32} className="text-text-mute" />
         </div>
         <div className="text-xl font-semibold text-text-base mb-2">
           {emptyTitle || 'No Data'}

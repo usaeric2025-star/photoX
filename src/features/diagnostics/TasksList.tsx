@@ -2,7 +2,7 @@ import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useGlobalTasks } from '#src/hooks/admin/useGlobalTasks.js';
 import { UnifiedTask } from '#src/types/index.js';
-import { Button } from '#src/components/shared/Button.js';
+import { Button } from '#src/components/ui/Button.js';
 import { Badge } from '#src/components/shared/Badge.js';
 import { Progress } from '#src/components/shared/Progress.js';
 import { EmptyState } from '#src/components/ui/EmptyState.js';

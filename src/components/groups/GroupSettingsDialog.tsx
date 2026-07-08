@@ -4,7 +4,7 @@ import { ProductGroup, Dimension } from '#src/types/index.js';
 import { useAdminMode, useTranslation } from '#src/hooks/index.js';
 import { Input } from "#src/components/shared/Input.js";
 import { useConfirm } from '#src/context/ConfirmContext.js';
-import { Button } from "#src/components/shared/Button.js";
+import { Button } from "#src/components/ui/Button.js";
 import { Icon } from '#src/components/ui/Icon.js';
 import { TranslationType } from '#src/locales/index.js';
 import { useForm } from '@tanstack/react-form';
@@ -17,7 +17,7 @@ interface GroupSettingsDialogProps {
   onUngroup?: (groupId: string) => Promise<void> | void;
   update?: (updates: Partial<ProductGroup>) => Promise<void>;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
-  t: (key: string, ...args: any[]) => string;
+  t: (key: string, ...args: unknown[]) => string;
 }
 
 interface GroupSettingsHeaderProps {
@@ -25,7 +25,7 @@ interface GroupSettingsHeaderProps {
   activeGroupId: string | null;
   onUngroup?: (groupId: string) => Promise<void> | void;
   setShowGroupSettings: (show: boolean) => void;
-  t: (key: string, ...args: any[]) => string;
+  t: (key: string, ...args: unknown[]) => string;
 }
 
 function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings, t }: GroupSettingsHeaderProps) {
@@ -61,7 +61,7 @@ function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroup
 interface GroupSettingsContentProps {
   groupData: ProductGroup | null;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
-  t: (key: string, ...args: any[]) => string;
+  t: (key: string, ...args: unknown[]) => string;
   setShowGroupSettings: (show: boolean) => void;
 }
 

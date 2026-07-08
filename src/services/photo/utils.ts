@@ -197,11 +197,11 @@ export const runHealthCheck = async (
   const repairCount = groupRepair.dissolved + groupRepair.synced + groupRepair.deleted;
 
   // 3. Storage Audit
-  const auditResp = await api.storage.audit.$get();
+  const auditResp = await (api.admin.maintenance as any).storage.audit.$get();
   if (auditResp.ok) {
     const auditData = await auditResp.json();
-    if (auditData.success && auditData.data?.orphans > 0) {
-      await onAuditFound(auditData.data.orphans);
+    if (auditData.success && auditData.data?.orphans?.count > 0) {
+      await onAuditFound(auditData.data.orphans.count);
     }
   }
 

@@ -1,4 +1,4 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
+import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';
 import { getServerEnv } from '../../../shared/envSchema.js';
@@ -6,11 +6,11 @@ import { getServerEnv } from '../../../shared/envSchema.js';
 // Reuse the postgres client and drizzle db across invocations in serverless/development
 const globalForDb = globalThis as unknown as {
   postgresClient: postgres.Sql | undefined;
-  drizzleDb: any | undefined;
+  drizzleDb: PostgresJsDatabase<typeof schema> | undefined;
 };
 
 // Lazy initialization function
-export function getDb() {
+export function getDb(): PostgresJsDatabase<typeof schema> {
   if (globalForDb.drizzleDb) {
     return globalForDb.drizzleDb;
   }
@@ -99,7 +99,7 @@ if (typeof process !== 'undefined') {
 }
 
 // Proxied db export for completely transparent lazy initialization
-export const db = new Proxy({} as any, {
+export const db = new Proxy({} as PostgresJsDatabase<typeof schema>, {
   get(target, prop, receiver) {
     // Return base property if it's a Symbol (e.g. inspected by Node console or promise check)
     if (typeof prop === 'symbol') {

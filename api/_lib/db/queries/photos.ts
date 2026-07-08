@@ -158,7 +158,7 @@ export async function getPhotosList(params: PhotoListParams) {
     const primaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.createdAt) : desc(furnitureItems.createdAt);
     const secondaryOrder = sortOrder === 'oldest' ? asc(furnitureItems.id) : desc(furnitureItems.id);
 
-    const orderByList: any[] = [hiddenOrder];
+    const orderByList: SQL[] = [hiddenOrder];
     if (groupId) {
         orderByList.push(desc(furnitureItems.isGroupCover));
     }
@@ -183,7 +183,7 @@ export async function getPhotosList(params: PhotoListParams) {
     
     // Fetch tags in bulk
     const photoIds = dbData.map(d => d.items.id);
-    const tagsByPhoto = new Map<string, any[]>();
+    const tagsByPhoto = new Map<string, { tagId: number | null; tags: { id: number | null; name: string | null } }[]>();
     
     if (photoIds.length > 0) {
         try {
@@ -230,8 +230,8 @@ export async function getPhotosList(params: PhotoListParams) {
             item.categoryNameMs = d.category?.nameMs || null;
             
             const pTags = tagsByPhoto.get(d.items.id) || [];
-            item.tags = pTags.map((pt: any) => pt.tags.name);
-            item.tagIds = pTags.map((pt: any) => pt.tags.id);
+            item.tags = pTags.map(pt => pt.tags.name);
+            item.tagIds = pTags.map(pt => pt.tags.id);
             
             return item;
         } catch (e) {

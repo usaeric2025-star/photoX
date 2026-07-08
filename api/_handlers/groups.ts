@@ -101,7 +101,7 @@ export const groups = new Hono()
         cleanUpdates.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
-    const data = await upsertGroup(cleanUpdates);
+    const data = await upsertGroup(cleanUpdates as { id: string });
 
     await refreshPhotosView();
 

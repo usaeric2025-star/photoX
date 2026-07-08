@@ -1,5 +1,5 @@
 import { usePhotoMutations } from '#src/hooks/photo/usePhotos.js';
-import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
+import { useAIBatchAnalysis } from '#src/hooks/photo/usePhotoAI.js';
 
 /**
  * useAdminMaintenance

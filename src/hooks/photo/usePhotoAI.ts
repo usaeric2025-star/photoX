@@ -3,31 +3,56 @@ import { useCallback } from 'react';
 import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext.js";
 import { ErrorFactory } from '#lib/error/index.js';
 import { useAppQuery, queryClient } from '#lib/query/index.js';
-import { executeTask } from '#lib/task-queue/index.js';
+import { STALE_TIMES } from '#lib/query/config.js';
+import { executeTask, createTask } from '#lib/task-queue/index.js';
 import { useAdminMaintenance } from '../admin/useAdminMaintenance.js';
 import { useSettings } from '../settings/useSettings.js';
 import { useCategories } from '../category/useCategories.js';
 import { useTags } from '../tag/useTags.js';
-import { useFilters } from '../ui/useFilters.js';
-import { Tag, Photo } from '#src/types/index.js';
+import { useFilters } from '../ui/index.js';
+import { Tag, Photo, Category, PhotoAIResult } from '#src/types/index.js';
+import { ApiResponse } from '#shared/apiContractSchema.js';
 import { analyzePhoto } from '#src/features/ai/commands.js';
 import { useUI, useAuth } from '#lib/store/index.js';
 import { showToast } from '#lib/ui/toast.js';
-
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
-
-// Added static imports to fix Ineffective Dynamic Import warnings
 import { resolveTagNamesToIds } from '#src/services/tag/completion.js';
-import { loadTagsFromCloud } from '#src/services/tag/queries.js';
 import { queryKeys } from '#lib/query/keys.js';
+import { api } from '#lib/api.js';
+import { usePermission } from '#src/hooks/core/auth/usePermission.js';
+import { useTranslation } from '../core/index.js';
+import { runBatchAnalysis } from '#src/features/ai/orchestration.js';
+import { usePhotos, useInvalidatePhotos } from './usePhotos.js';
+
+
+/**
+ * ============================================================================
+ * PHOTOX AI ORCHESTRATION & STATE MANAGEMENT (AI 狀態與生命週期管理)
+ * ============================================================================
+ * 
+ * 📌 [未來擴充 / 增加 AI 功能之最高指導原則]
+ * 1. 數據契約化：
+ *    - 如果要增加新的 AI 功能（例如：自動標籤翻譯、木材質感分析、風格分類、估價建議）：
+ *      - 第一步：去 `src/features/ai/types.ts` 擴充 `NormalizedPhotoAIOutput` 輸出契約。
+ *      - 第二步：在 `src/features/ai/commands.ts` 或服務層中增加該特徵的解析適配。
+ * 2. 避免頻繁修改本 Hook：
+ *    - 本 Hook (`usePhotoAI`) 的職責「僅限於」 React 元件生命週期與 UI 表單的回填 (Form binding)、
+ *      任務隊列狀態 (`executeTask`) 以及 React Query 緩存刷新的調度。
+ *    - **嚴禁**在此 Hook 內部撰寫繁雜的非結構化 JSON 轉換邏輯。若 API 回傳變動，請在 Adapter 層處理。
+ * 
+ * 📌 [如何新增一個 AI 屬性或欄位？]
+ * 1. 在 `src/types/photo.ts` 確保對應的 Photo 實體屬性存在。
+ * 2. 修改 `src/features/ai/types.ts` 的 `NormalizedPhotoAIOutput` 加入新屬性。
+ * 3. 在 `src/features/ai/commands.ts` 中，更新 `analyzePhoto` 的回傳物件（即完成 Adapter 對應）。
+ * 4. 修改下方 `updates` 的回寫區塊，將資料寫入 `form.setFieldValue` 以及自動 Save 的 Payload。
+ * ============================================================================
+ */
 
 const AIAnalysisSchema = v.object({
   imageUrl: v.string(),
 });
-
-import { useInvalidatePhotos } from './useInvalidatePhotos.js';
 
 /**
  * Hook to handle AI Analysis and backfilling for Photo Editing
@@ -50,28 +75,27 @@ export function usePhotoEditAI() {
     mutationFn: async ({ imageUrl }: { imageUrl: string }) => {
       if (!editPhotoId) throw new Error('Missing editPhotoId');
       
-      
       const result = await executeTask({
-        label: appLang === 'zh' ? "AI 识别" : "AI Identification",
+        label: appLang === 'zh' ? "AI 識別" : "AI Identification",
         type: 'ai-analyze',
         userId: user?.id,
         execute: async (signal, onProgress) => {
-          onProgress(0, appLang === 'zh' ? '正在启动 AI 识别模块...' : 'Starting AI module...');
-          onProgress(0.1, appLang === 'zh' ? '正在准备分析照片...' : 'Preparing photo files...');
+          onProgress(0, appLang === 'zh' ? '正在啟動 AI 識別模塊...' : 'Starting AI module...');
+          onProgress(0.1, appLang === 'zh' ? '正在準備分析照片...' : 'Preparing photo files...');
           
-          onProgress(0.3, appLang === 'zh' ? '正在由 AI 智能识别各项属性 (约需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
+          onProgress(0.3, appLang === 'zh' ? '正在由 AI 智能識別各項屬性 (約需 2-5 秒)...' : 'Analyzing attributes with AI (approx 2-5s)...');
           const resp = await analyzePhoto(editPhotoId);
           
-          onProgress(0.7, appLang === 'zh' ? '正在解析模型识别结果并写入表單...' : 'Parsing AI attributes and injecting...');
+          onProgress(0.7, appLang === 'zh' ? '正在解析模型識別結果並寫入表單...' : 'Parsing AI attributes and injecting...');
           
           if (!resp) {
-            throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能识别', String(editPhotoId));
+            throw ErrorFactory.wrap(new Error('AI analysis failed (no result)'), 'AI智能識別', String(editPhotoId));
           }
 
           let result = (Array.isArray(resp) && resp.length > 0) ? resp[0] : resp;
           
           if (!result || typeof result !== 'object') {
-            throw ErrorFactory.wrap(new Error('Invalid AI format'), 'AI智能识别结果解析', String(editPhotoId));
+            throw ErrorFactory.wrap(new Error('Invalid AI format'), 'AI智能識別結果解析', String(editPhotoId));
           }
 
           const updates: Record<string, unknown> = {};
@@ -79,21 +103,20 @@ export function usePhotoEditAI() {
           if (result.name) {
             if (typeof result.name === 'object' && result.name !== null) {
               const n = result.name as Record<string, string>;
-              // 優先使用英文名稱，因為用戶要求名稱用英文
               updates.name = n.en || n.zh || n.ms || String(result.name);
             } else {
               updates.name = String(result.name);
             }
           }
 
-          // --- Strict Group Matching and Assignment Support ---
           if (result.groupId !== undefined && result.groupId !== null || result.group_id !== undefined && result.group_id !== null) {
             const rawGroup = result.groupId || result.group_id;
             let targetGroupId: string | null = null;
             if (typeof rawGroup === 'string' && rawGroup.trim().length > 0 && rawGroup !== 'null' && rawGroup !== 'undefined') {
               targetGroupId = rawGroup.trim();
             } else if (typeof rawGroup === 'object' && rawGroup !== null) {
-              targetGroupId = String(rawGroup.id || rawGroup.groupId || rawGroup.group_id || '');
+              const gObj = rawGroup as Record<string, unknown>;
+              targetGroupId = String(gObj.id || gObj.groupId || gObj.group_id || '');
             }
             if (targetGroupId && targetGroupId !== 'undefined' && targetGroupId !== 'null') {
               updates.groupId = targetGroupId;
@@ -104,13 +127,11 @@ export function usePhotoEditAI() {
             const rawCatId = String(result.category_id || result.categoryId || '');
             const rawCatName = String(result.category_name || result.categoryName || '');
             
-            // Try ID match first
             let matchedId: string | null = null;
-            const currentCats = queryClient.getQueryData<any[]>(queryKeys.categories.list()) || categories;
-          if (rawCatId && currentCats.find(c => String(c.id) === rawCatId)) {
+            const currentCats = (queryClient.getQueryData<Category[]>(queryKeys.categories.list()) || categories) as Category[];
+            if (rawCatId && currentCats.find(c => String(c.id) === rawCatId)) {
                 matchedId = rawCatId;
             } 
-            // Fallback to name match
             else if (rawCatName) {
                 const found = currentCats.find(c => 
                     c.name.toLowerCase() === rawCatName.toLowerCase() ||
@@ -129,7 +150,6 @@ export function usePhotoEditAI() {
             updates.itemCode = String(result.itemCode || result.item_code);
           }
 
-          // --- Strict Tag Matching (Full format-compatible) with auto-creation ---
           const sourceTags: (string | { id?: string; tag_id?: string; tagId?: string; name?: string })[] = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
           const sourceTagIds: (string | { id?: string; tag_id?: string; tagId?: string; name?: string })[] = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
 
@@ -142,7 +162,8 @@ export function usePhotoEditAI() {
 
           const parsedTagIds: string[] = sourceTagIds.map((t) => {
               if (t && typeof t === 'object') {
-                  return String(t.id ?? t.tagId ?? t.tag_id ?? t.name ?? '');
+                  const tObj = t as Record<string, unknown>;
+                  return String(tObj.id ?? tObj.tagId ?? tObj.tag_id ?? tObj.name ?? '');
               }
               return String(t);
           }).filter(Boolean);
@@ -162,7 +183,6 @@ export function usePhotoEditAI() {
           const uniqueRawNames = Array.from(new Set(unresolvedNames));
           const finalResolvedIds = [...resolvedIds];
 
-          // Prevent tags that perfectly match the chosen category name
           let filteredRawNames = [...uniqueRawNames];
           let finalFilteredResolvedIds = [...finalResolvedIds];
 
@@ -178,8 +198,6 @@ export function usePhotoEditAI() {
                   ].filter(Boolean);
                   
                   filteredRawNames = filteredRawNames.filter(n => !catNames.includes(n.toLowerCase()));
-                  
-                  // Also filter out resolved tags that have the same name
                   finalFilteredResolvedIds = finalFilteredResolvedIds.filter(id => {
                     const tag = allTags.find(t => String(t.id) === id);
                     if (!tag) return true;
@@ -201,13 +219,13 @@ export function usePhotoEditAI() {
 
               if (finalTagIds.length > 0) {
                   const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3);
-                  
-                  // Centralized Invalidation
                   invalidateTags();
                   
-                  const latestTags = await loadTagsFromCloud().catch(() => allTags);
+                  const latestTags = await api.tags.$get()
+                    .then(r => r.json())
+                    .then(j => j.success ? (j.data as unknown as Tag[]) : allTags)
+                    .catch(() => allTags);
 
-                  // Optimistically set the cache for tags so they display IMMEDIATELY
                   queryClient.setQueryData(queryKeys.tags.list(), (old: Tag[] | undefined) => {
                     const oldTags = Array.isArray(old) ? old : [];
                     const existingMap = new Map(oldTags.map((t: Tag) => [String(t.id), t]));
@@ -215,7 +233,6 @@ export function usePhotoEditAI() {
                     return Array.from(existingMap.values());
                   });
 
-                  // FIX: Map resolved IDs back to full Tag objects
                   updates.tags = uniqueIds.map(id => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
               } else {
                   updates.tags = [];
@@ -230,30 +247,32 @@ export function usePhotoEditAI() {
 
           if (result.description) {
             if (typeof result.description === 'object' && result.description !== null) {
+              const dObj = result.description as Record<string, string>;
               updates.description = {
-                zh: result.description.zh || '',
-                en: result.description.en || '',
-                ms: result.description.ms || ''
+                zh: dObj.zh || '',
+                en: dObj.en || '',
+                ms: dObj.ms || ''
               };
             } else {
               updates.description = { zh: String(result.description), en: '', ms: '' };
             }
           }
           if (Array.isArray(result.dimensions)) {
-            updates.dimensions = result.dimensions.map((d: Record<string, unknown>) => ({
-              label: String(d.label || 'Dimension'),
-              unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
-              length: Number(d.length) || 0,
-              width: Number(d.width) || 0,
-              height: Number(d.height) || 0,
-              isAiEstimated: !!(d.isAiEstimated || d.is_ai_estimated),
-              isAi: true
-            }));
+            updates.dimensions = result.dimensions.map((d: unknown) => {
+              const dim = d as Record<string, unknown>;
+              return {
+                label: String(dim.label || 'Dimension'),
+                unit: (dim.unit === 'inch' || dim.unit === 'mm') ? dim.unit : 'cm',
+                length: Number(dim.length) || 0,
+                width: Number(dim.width) || 0,
+                height: Number(dim.height) || 0,
+                isAiEstimated: !!(dim.isAiEstimated || dim.is_ai_estimated),
+                isAi: true
+              };
+            });
           }
-          // Centralized Invalidation for AI Result
           invalidateDetail(String(editPhotoId));
 
-          // Include AI Raw Result in metadata for persistence
           if (result.raw_result) {
             updates.metadata = { ai_raw: result.raw_result };
           }
@@ -265,8 +284,6 @@ export function usePhotoEditAI() {
           if (editPhotoId) {
             try {
               await updatePhoto({ id: editPhotoId, updates });
-              
-              // Synchronously update the cache for the photo detail query
               const detailKey = queryKeys.photos.detail(editPhotoId);
               
               queryClient.setQueryData(detailKey, (oldPhoto: Photo | undefined) => {
@@ -294,19 +311,15 @@ export function usePhotoEditAI() {
                 };
               });
             } catch (saveError: unknown) {
-              logger.warn('AI识别结果自动保存失败(但不影響回填):', saveError);
+              logger.warn('AI識別結果自動保存失敗(但不影響回填):', saveError);
             }
           }
         
-          // Standard invalidation per architecture rules
           invalidateList();
-          
           return result;
         }
       });
       return result;
-    },
-    onSuccess: () => {
     },
     onError: (err: unknown) => {
       ErrorFactory.handle(err, { context: 'AI Analysis' });
@@ -316,29 +329,26 @@ export function usePhotoEditAI() {
     errorMessage: appLang === 'zh' ? 'AI 識別失敗' : 'AI Analysis failed'
   });
 
-
   const onAnalyze = useCallback(async (previewSrc?: string, imageUrl?: string) => {
     const url = previewSrc || imageUrl;
     if (!url) return false;
     return await handleAiAnalyze({ imageUrl: url });
   }, [handleAiAnalyze]);
 
-  const handleReExtract = useCallback(async (rawResult: any) => {
-      console.log('handleReExtract called for', editPhotoId);
+  const handleReExtract = useCallback(async (rawResult: unknown) => {
       if (!editPhotoId) {
           showToast.error(appLang === 'zh' ? '未找到照片 ID' : 'Photo ID not found');
           return;
       }
       
-      const result = (Array.isArray(rawResult) && rawResult.length > 0) ? rawResult[0] : rawResult;
+      const result = (Array.isArray(rawResult) && rawResult.length > 0) ? rawResult[0] : (rawResult as Record<string, unknown>);
       if (!result || typeof result !== 'object') {
-          showToast.error(appLang === 'zh' ? '原始数据格式无效' : 'Invalid raw data format');
+          showToast.error(appLang === 'zh' ? '原始數據格式無效' : 'Invalid raw data format');
           return;
       }
 
-      const updates: Record<string, any> = {};
+      const updates: Record<string, unknown> = {};
       
-      // Basic Info
       if (result.name) {
           if (typeof result.name === 'object' && result.name !== null) {
               const n = result.name as Record<string, string>;
@@ -348,13 +358,12 @@ export function usePhotoEditAI() {
           }
       }
 
-      // Category
       if (result.category_id || result.categoryId || result.category_name || result.categoryName) {
           const rawCatId = String(result.category_id || result.categoryId || '');
           const rawCatName = String(result.category_name || result.categoryName || '');
           
           let matchedId: string | null = null;
-          const currentCats = queryClient.getQueryData<any[]>(queryKeys.categories.list()) || categories;
+          const currentCats = (queryClient.getQueryData<Category[]>(queryKeys.categories.list()) || categories) as Category[];
           if (rawCatId && currentCats.find(c => String(c.id) === rawCatId)) {
               matchedId = rawCatId;
           } else if (rawCatName) {
@@ -368,35 +377,38 @@ export function usePhotoEditAI() {
           if (matchedId) updates.categoryId = String(matchedId);
       }
 
-      // Tags
-      const sourceTags = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
+      const sourceTags = (Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : [])) as unknown[];
       if (sourceTags.length > 0) {
-          const rawNames = sourceTags.map((t: any) => typeof t === 'object' ? (t.name || t.id || '') : String(t)).filter(Boolean);
+          const rawNames = sourceTags.map((t: unknown) => {
+              if (t && typeof t === 'object') {
+                  const tagObj = t as Record<string, unknown>;
+                  return String(tagObj.name || tagObj.id || '');
+              }
+              return String(t);
+          }).filter(Boolean);
           const resolved = await resolveTagNamesToIds(rawNames, allTags);
           if (resolved.length > 0) {
              updates.tags = resolved.slice(0, 5).map(id => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
           }
       }
 
-      // Description
       if (result.description) {
           if (typeof result.description === 'object' && result.description !== null) {
+              const dObj = result.description as Record<string, string>;
               updates.description = {
-                  zh: result.description.zh || '',
-                  en: result.description.en || '',
-                  ms: result.description.ms || ''
+                  zh: dObj.zh || '',
+                  en: dObj.en || '',
+                  ms: dObj.ms || ''
               };
           } else {
               updates.description = { zh: String(result.description), en: '', ms: '' };
           }
       }
 
-      // Apply to form
       Object.entries(updates).forEach(([key, value]) => {
           form.setFieldValue(key as keyof PhotoEditFormData, value as never);
       });
 
-      // Save
       try {
           await updatePhoto({ id: editPhotoId, updates });
           invalidateDetail(editPhotoId);
@@ -409,4 +421,81 @@ export function usePhotoEditAI() {
   }, [editPhotoId, categories, allTags, form, updatePhoto, invalidateDetail, invalidateList, appLang]);
 
   return { handleAiAnalyze: onAnalyze, handleReExtract, isAnalyzing };
+}
+
+/**
+ * 获取照片对应的 AI 识别原始源代碼與解析後的 JSON 數據。
+ */
+export function usePhotoAIResult(photoId: string, options?: { enabled?: boolean }) {
+  const { isStaff } = usePermission();
+  const isEnabled = isStaff && (options?.enabled !== false);
+
+  return useAppQuery<PhotoAIResult | null>(
+    (photoId && isEnabled) ? ['photos', 'ai-result', photoId] : null,
+    async (): Promise<PhotoAIResult | null> => {
+      try {
+        const resp = await api.admin["photo-ai-result"][":photoId"].$get({
+          param: { photoId }
+        });
+        
+        if (!resp.ok) {
+           const text = await resp.text();
+           throw new Error(`[HTTP ${resp.status}] ${text.substring(0, 50)}`);
+        }
+
+        const data = await resp.json() as ApiResponse<PhotoAIResult>;
+        if (!data.success || !data.data) {
+          throw new Error(data.error || 'AI Analysis Failed');
+        }
+        return data.data;
+      } catch (err: unknown) {
+        throw ErrorFactory.wrap(err, 'Network Error', photoId);
+      }
+    },
+    { 
+      staleTime: STALE_TIMES.PHOTO_LIST,
+      enabled: isEnabled
+    }
+  );
+}
+
+/**
+ * Handle Batch AI Analysis
+ */
+export function useAIBatchAnalysis() {
+  const user = useAuth(s => s.user);
+  const { invalidateAll } = useInvalidatePhotos();
+  const { uiTranslations: t } = useTranslation();
+
+  const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[]) => {
+    if (!targetPhotos || targetPhotos.length === 0) {
+      ErrorFactory.handle(t.selectPhotoFirst, { context: t.batchAi });
+      return;
+    }
+    
+    showToast.info(t.aiAnalyzing);
+    const taskTitle = t.aiBatchTask(targetPhotos.length);
+
+    createTask<{ successCount: number; groupSuccess: boolean }>({
+        label: taskTitle,
+        type: 'ai-analyze',
+        userId: user?.id,
+        meta: { photoCount: targetPhotos.length },
+        execute: async (signal, onProgress) => {
+            const { successCount, groupSuccess } = await runBatchAnalysis({
+                targetPhotos,
+                onProgress
+            });
+
+            invalidateAll();
+            return { successCount, groupSuccess };
+        },
+        onComplete: (result) => {
+            showToast.success(t.aiAnalyzeSuccess(result.successCount));
+        }
+    });
+
+  }, [invalidateAll, t, user?.id]);
+
+  return { handleBatchAiAnalyze };
 }

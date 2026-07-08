@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '#lib/store/index.js';
 import { usePublicSettings } from '#src/hooks/index.js';
-import { useLocalStorage } from '#src/hooks/core/useLocalStorage.js';
+import { useLocalStorage } from '#src/hooks/core/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 

@@ -22,7 +22,7 @@ interface OpenRouterConfigBlockProps {
   isSaving: 'openrouter' | 'agnes' | null;
   isTesting: 'openrouter' | 'agnes' | null;
   appLang: string;
-  t: (key: string, ...args: any[]) => string;
+  t: (key: string, ...args: unknown[]) => string;
 }
 
 export function OpenRouterConfigBlock({

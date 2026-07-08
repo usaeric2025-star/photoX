@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useUI } from '#lib/store/index.js';
-import { useAIBatchAnalysis } from '#src/hooks/photo/useAIBatchAnalysis.js';
+import { useAIBatchAnalysis } from '#src/hooks/photo/usePhotoAI.js';
 import { logger } from '#lib/logger.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSelectedIds } from '../../services/selection/selectionService.js';
@@ -22,28 +22,28 @@ export function useAdminBatchActions() {
       // Attempt to retrieve from query client cache to prevent errors when header photos list is not loaded yet
       try {
         const cachedQueries = queryClient.getQueriesData({ queryKey: queryKeys.photos.all });
-        const foundPhotos = new Map<string, any>();
+        const foundPhotos = new Map<string, Record<string, unknown>>();
         for (const [_, data] of cachedQueries) {
           if (!data) continue;
-          if (typeof data === 'object' && 'pages' in data && Array.isArray((data as any).pages)) {
-            for (const page of (data as any).pages) {
-              const items = page.items || page.data || [];
+          const typedData = data as Record<string, unknown>;
+          if (typeof data === 'object' && 'pages' in typedData && Array.isArray(typedData.pages)) {
+            for (const page of typedData.pages as Record<string, unknown>[]) {
+              const items = (page.items || page.data || []) as Record<string, unknown>[];
               if (Array.isArray(items)) {
                 for (const item of items) {
-                  if (item && item.id) foundPhotos.set(item.id, item);
+                  if (item && typeof item.id === 'string') foundPhotos.set(item.id, item);
                 }
               }
             }
           } else if (Array.isArray(data)) {
-            for (const item of data) {
-              if (item && item.id) foundPhotos.set(item.id, item);
+            for (const item of data as Record<string, unknown>[]) {
+              if (item && typeof item.id === 'string') foundPhotos.set(item.id, item);
             }
-          } else if (typeof data === 'object' && 'id' in data) {
-            const item = data as any;
-            foundPhotos.set(item.id, item);
+          } else if (typeof data === 'object' && 'id' in typedData) {
+            if (typeof typedData.id === 'string') foundPhotos.set(typedData.id, typedData);
           }
         }
-        photosToProcess = Array.from(foundPhotos.values());
+        photosToProcess = Array.from(foundPhotos.values()) as unknown as { id: string; name?: string; description?: string; imageUrl?: string; thumbnailUrl?: string; groupId?: string | null }[];
       } catch (err) {
         logger.error('Failed to retrieve photos from query client cache:', err);
       }

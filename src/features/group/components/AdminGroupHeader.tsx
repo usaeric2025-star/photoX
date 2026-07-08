@@ -9,7 +9,7 @@ import { FormProvider, useFormField } from '#lib/forms/useFormField.js';
 import * as v from 'valibot';
 import { Input } from '#src/components/shared/Input.js';
 import { showToast } from '#lib/ui/toast.js';
-import { useTranslation } from '#src/hooks/core/useTranslation.js';
+import { useTranslation } from '#src/hooks/core/index.js';
 import { TranslationType } from '#src/locales/index.js';
 
 const GroupTitleSchema = v.object({
@@ -22,7 +22,7 @@ interface TitleInputProps {
   onBlur: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   disabled: boolean;
-  t: (key: string, ...args: any[]) => string;
+  t: (key: string, ...args: unknown[]) => string;
 }
 
 function TitleInput({ value, onChange, onBlur, onKeyDown, disabled, t }: TitleInputProps) {
@@ -132,7 +132,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
                 onChange={setEditTitleValue}
                 onBlur={handleSaveTitle}
                 onKeyDown={handleKeyDown}
-                t={t as any}
+                t={t}
               />
             </FormProvider>
           ) : (

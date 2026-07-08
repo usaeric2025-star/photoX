@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
-import { useTranslation } from '#src/hooks/core/useTranslation.js';
+import { useTranslation } from '#src/hooks/core/index.js';
 import { useCategoryMutations } from '../category/index.js';
 import { useTagMutations } from '../tag/index.js';
 import { useManufacturerMutations } from '../manufacturer/index.js';

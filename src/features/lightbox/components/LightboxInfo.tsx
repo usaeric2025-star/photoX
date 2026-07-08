@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
 import { Icon } from '#src/components/ui/Icon.js';
-import { usePhotoAIResult } from '#src/hooks/photo/usePhotoAIResult.js';
+import { usePhotoAIResult } from '#src/hooks/photo/usePhotoAI.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 import { Photo } from '#src/types/photo.js';
 import { getLocalizedDisplay } from '#src/utils/display.js';
@@ -66,7 +66,7 @@ export function LightboxInfo({
                   </div>
                   <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
                     {(['zh', 'en', 'ms'] as const).map(l => {
-                      const hasText = !!(descriptionObj && (typeof descriptionObj === 'object') && (descriptionObj as any)[l]);
+                      const hasText = !!(descriptionObj && (typeof descriptionObj === 'object') && (descriptionObj as Record<string, string>)[l]);
                       // If it's the current language, or it has text, or it's zh (which might be the fallback string)
                       const isAvailable = hasText || (l === 'zh' && typeof descriptionObj === 'string') || lang === l;
                       

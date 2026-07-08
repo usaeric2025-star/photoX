@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'lite-sleek';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
 import { Photo } from '#src/types/photo.js';
-import { useLightboxInteractions } from '#src/hooks/ui/useLightboxInteractions.js';
+import { useLightboxInteractions } from '#src/hooks/ui/index.js';
 import { useLightbox } from '#lib/lightbox/index.js';
 
 export function LightboxStage() {

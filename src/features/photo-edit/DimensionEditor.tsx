@@ -10,7 +10,7 @@ interface DimensionEditorProps {
   showAiButton?: boolean;
   isAnalyzing?: boolean;
   onAiAnalyze?: () => void;
-  t: (key: string, ...args: any[]) => string;
+  t: (key: string, ...args: unknown[]) => string;
 }
 
 import { DimensionItem } from './components/DimensionItem.js';

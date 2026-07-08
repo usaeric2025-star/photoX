@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 import { TagEditor } from "./TagEditorContent.js";
 import { MAX_TAGS_PER_PHOTO } from "#src/constants/limits.js";

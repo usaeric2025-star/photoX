@@ -4,7 +4,7 @@ import { AppErrorBoundary } from './components/layout/AppErrorBoundary.js';
 import { ConfirmProvider } from './context/ConfirmContext.js';
 import { GridProvider } from './context/GridContext.js';
 import { RouterOrchestrator } from './components/RouterOrchestrator.js';
-import { useAppInit } from './hooks/core/useAppInit.js';
+import { useAppInit } from './hooks/core/index.js';
 import { LoadingScreen } from './components/ui/LoadingScreen.js';
 import { DialogContainer } from './components/layout/DialogContainer.js';
 import { Toaster } from 'sonner';

@@ -3,15 +3,16 @@ import { useAppQuery, useAppMutation } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { api } from '#lib/api.js';
+import type { ApiResponse } from '#shared/apiContractSchema.js';
 
 export function useManufacturers() {
   const { data, isLoading, error } = useAppQuery<Manufacturer[]>(
     queryKeys.manufacturers.list(),
     async () => {
       const res = await api.manufacturers.$get();
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || 'Failed to load manufacturers');
-      return json.data as Manufacturer[];
+      const json = await res.json() as unknown as ApiResponse<Manufacturer[]>;
+      if (!json.success || !json.data) throw new Error(json.error || 'Failed to load manufacturers');
+      return json.data;
     },
     {
       staleTime: STALE_TIMES.LONG,
@@ -39,8 +40,8 @@ export function useManufacturerMutations() {
           manufacturerData: { name }
         }
       });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || '廠商創建失敗');
+      const json = await res.json() as unknown as ApiResponse<Manufacturer>;
+      if (!json.success || !json.data) throw new Error(json.error || '廠商創建失敗');
       return json.data;
     },
     invalidateKeys,
@@ -54,7 +55,7 @@ export function useManufacturerMutations() {
         param: { id },
         json: { updates }
       });
-      const json = await res.json();
+      const json = await res.json() as ApiResponse<boolean>;
       if (!json.success) throw new Error(json.error || '廠商更新失敗');
       return true;
     },
@@ -68,7 +69,7 @@ export function useManufacturerMutations() {
       const res = await api.manufacturers[':id'].$delete({
         param: { id }
       });
-      const json = await res.json();
+      const json = await res.json() as ApiResponse<boolean>;
       if (!json.success) throw new Error(json.error || '廠商刪除失敗');
       return true;
     },

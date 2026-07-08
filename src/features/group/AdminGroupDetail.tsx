@@ -11,7 +11,7 @@ import { GroupSettingsDialog } from '#src/components/groups/GroupSettingsDialog.
 import { useGroupEditState } from '#src/hooks/index.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
 import { AdminGroupHeader } from './components/AdminGroupHeader.js';
-import { Button } from '#src/components/shared/Button.js';
+import { Button } from '#src/components/ui/Button.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';

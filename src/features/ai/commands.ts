@@ -1,5 +1,6 @@
 import { api } from '#lib/api.js';
 import { Photo } from '#src/types/index.js';
+import { PhotoAIAdapterRegistry } from './types.js';
 
 import { supabase } from '#lib/supabase.js';
 import { DB_CONFIG } from '#src/constants/config.js';
@@ -75,8 +76,8 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
       if (!resp.ok) {
         let errorMsg = 'AI 服务响应异常';
         try {
-          const errorData = await resp.json();
-          errorMsg = errorData.error || errorMsg;
+          const errorData = await resp.json() as { error?: { message?: string } | string };
+          errorMsg = (typeof errorData.error === 'object' ? errorData.error?.message : errorData.error) || errorMsg;
         } catch (je) {
           const text = await resp.text();
           errorMsg = `[HTTP ${resp.status}] ${text.substring(0, 100)}`;
@@ -91,47 +92,27 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
          parsed = parsed[0] || {};
        }
        
-       const rawTags = (parsed.tag_names || parsed.new_tags || parsed.tags || []);
-       let sanitizedTagNames = Array.isArray(rawTags)
-         ? rawTags.map((t: unknown) => {
-             if (!t) return '';
-             if (typeof t === 'object') return String((t as Record<string, unknown>).name || (t as Record<string, unknown>).zh || (t as Record<string, unknown>).en || '');
-             return String(t);
-           }).filter(Boolean)
-         : [];
+       // 📌 使用業界標準 Adapter 正規化資料
+       const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
+       const normalized = adapter.normalize(parsed, (data as any).raw_result || JSON.stringify(parsed));
 
-       const tagCount = sanitizedTagNames.length;
-       if (tagCount > 3) {
-         sanitizedTagNames = sanitizedTagNames.slice(0, 3);
+       // 限制最大標籤數為 3 顆，維持 UI 寬度一致性
+       if (normalized.tagNames.length > 3) {
+         normalized.tagNames = normalized.tagNames.slice(0, 3);
        }
 
-       const safeTrim = (val: unknown): unknown => {
-          if (!val) return '';
-          if (typeof val === 'string') return val.trim();
-          if (typeof val === 'object') {
-            const res: Record<string, unknown> = {};
-            for (const k in val) {
-              if (Object.prototype.hasOwnProperty.call(val, k)) {
-                 res[k] = safeTrim((val as Record<string, unknown>)[k]);
-              }
-            }
-            return res;
-          }
-          return val;
-       };
-
-        return {
-           name: safeTrim(parsed.name),
-           description: safeTrim(parsed.description),
-          category_id: parsed.category_id || null,
-          group_id: parsed.group_id || null,
-          tagNames: sanitizedTagNames,
-          tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
-          dimensions: Array.isArray(parsed.dimensions) ? parsed.dimensions : [],
-          raw_result: data.raw_result || JSON.stringify(data.data)
+       return {
+         name: normalized.name,
+         description: normalized.description.zh, // 保持與既有單一描述欄位系統的相容性
+         category_id: normalized.categoryId,
+         group_id: normalized.groupId,
+         tagNames: normalized.tagNames,
+         tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
+         dimensions: normalized.dimensions,
+         raw_result: normalized.rawResult
        };
      } else {
-       let errorMsg = data.error || 'AI 分析失败';
+       let errorMsg = (data as { error?: string }).error || 'AI 分析失敗';
        if (typeof errorMsg === 'string' && errorMsg.startsWith('{')) {
           try {
              const parsed = JSON.parse(errorMsg);

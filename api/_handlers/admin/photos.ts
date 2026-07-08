@@ -5,18 +5,8 @@ import { eq, desc, inArray, sql, like } from "drizzle-orm";
 import { errorResponse } from '../../_lib/response.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 
-export const adminPhotos = new Hono();
-
-adminPhotos.post("/refresh-view", async (c) => {
-    try {
-        await refreshPhotosView();
-        return c.json({ success: true, message: "Materialized view refreshed successfully" });
-    } catch (err: unknown) {
-        return errorResponse(c, err instanceof Error ? err.message : "Failed to refresh view", 500);
-    }
-});
-
-adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
+export const adminPhotos = new Hono()
+.get("/photo-ai-result/:photoId", async (c) => {
     const { photoId } = c.req.param();
     if (!photoId) return errorResponse(c, "photoId is required", 400);
 
@@ -139,9 +129,8 @@ adminPhotos.get("/photo-ai-result/:photoId", async (c) => {
     }
 
     return c.json({ success: true, data: null });
-});
-
-adminPhotos.post("/photo/update", async (c) => {
+})
+.post("/photo/update", async (c) => {
     const { id, updates } = await c.req.json();
     if (!id) return errorResponse(c, "id is required", 400);
 
@@ -181,9 +170,8 @@ adminPhotos.post("/photo/update", async (c) => {
 
     await refreshPhotosView();
     return c.json({ success: true });
-});
-
-adminPhotos.post("/delete-photos", async (c) => {
+})
+.post("/delete-photos", async (c) => {
     const { ids } = await c.req.json();
     if (!ids || !Array.isArray(ids)) {
         return errorResponse(c, "ids array required", 400);
@@ -248,18 +236,5 @@ adminPhotos.post("/delete-photos", async (c) => {
     }
 
     return c.json({ success: true, count: ids.length });
-});
-
-adminPhotos.get("/error-events", async (c) => {
-    const data = await db.select()
-        .from(systemLogs)
-        .orderBy(desc(systemLogs.createdAt), desc(systemLogs.id))
-        .limit(300);
-    return c.json({ success: true, data });
-});
-
-adminPhotos.post("/error-events-clear", async (c) => {
-    const result = await db.delete(systemLogs).returning({ id: systemLogs.id });
-    return c.json({ success: true, count: result.length });
 });
 

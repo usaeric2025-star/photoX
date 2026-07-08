@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { db } from '../_lib/db/index.js';
 import * as schema from '../_lib/db/schema.js';
 import { eq } from 'drizzle-orm';
@@ -6,9 +6,7 @@ import { logger } from '../_lib/logger.js';
 import { errorResponse, successResponse } from '../_lib/response.js';
 import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
-export const publicSettings = new Hono();
-
-let settingsCache: any = null;
+let settingsCache: Record<string, unknown> | null = null;
 let settingsCacheTime = 0;
 
 export function clearSettingsCache() {
@@ -17,7 +15,7 @@ export function clearSettingsCache() {
     settingsCacheTime = 0;
 }
 
-const handler = async (c: any) => {
+const handler = async (c: Context) => {
     const requestId = crypto.randomUUID().slice(0, 8);
     const now = Date.now();
     
@@ -49,9 +47,9 @@ const handler = async (c: any) => {
         }).from(schema.secrets).where(eq(schema.secrets.key, 'access_passcode')).limit(1).execute();
 
         const [settingsResArray, siteNameResArray, passcodeResArray] = await Promise.all([
-            withTimeout(settingsPromise, TIMEOUTS.PUBLIC_META, 'Public Settings DB Fetch').catch((e: any) => []),
-            withTimeout(siteNamePromise, TIMEOUTS.PUBLIC_META, 'Public SiteName DB Fetch').catch((e: any) => []),
-            withTimeout(passcodePromise, TIMEOUTS.PUBLIC_META, 'Public Passcode DB Fetch').catch((e: any) => [])
+            withTimeout(settingsPromise, TIMEOUTS.PUBLIC_META, 'Public Settings DB Fetch').catch((e: unknown) => []),
+            withTimeout(siteNamePromise, TIMEOUTS.PUBLIC_META, 'Public SiteName DB Fetch').catch((e: unknown) => []),
+            withTimeout(passcodePromise, TIMEOUTS.PUBLIC_META, 'Public Passcode DB Fetch').catch((e: unknown) => [])
         ]);
         
         const settingsRes = settingsResArray[0] || null;
@@ -91,7 +89,8 @@ const handler = async (c: any) => {
     }
 };
 
-publicSettings.get("/", handler);
-publicSettings.get("", handler);
+export const publicSettings = new Hono()
+  .get("/", handler)
+  .get("", handler);
 
 

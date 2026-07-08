@@ -75,7 +75,7 @@ export const errorResponse = (c: Context, error: unknown, status: number = 500) 
 /**
  * 統一成功回應格式
  */
-export const successResponse = <T>(c: Context, data: T, extra: Record<string, any> = {}, status: number = 200) => {
+export const successResponse = <T>(c: Context, data: T, extra: Record<string, unknown> = {}, status: number = 200) => {
   const response = {
     success: true as const,
     data,

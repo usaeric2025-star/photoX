@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useLongPress } from '#src/hooks/core/useLongPress.js';
+import { useLongPress } from '#src/hooks/core/index.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { useAppRoute, useNavigation } from '#lib/router/index.js';
 import { PhotoListItem } from '#src/types/api.js';
@@ -111,7 +111,7 @@ export function usePhotoCard({
         } else {
           toggleSelect(photo.id);
         }
-        if ('vibrate' in navigator) (navigator as any).vibrate(50);
+        if ('vibrate' in navigator) navigator.vibrate(50);
       } else {
         patch({ showWhatsAppChoice: true, pendingPhotoId: photo.id });
       }

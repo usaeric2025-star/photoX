@@ -2,7 +2,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import React from "react";
 import { Icon } from '#src/components/ui/Icon.js';
 import { Button } from '#src/components/ui/Button.js';
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
 import { Manufacturer } from '#src/types/index.js';
 import { ManufacturerItem } from '#src/components/admin/ManufacturerItem.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";

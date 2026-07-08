@@ -13,7 +13,7 @@ import type { Task } from '#lib/task-queue/types.js';
 interface RemoteJob {
   id: string;
   status: string;
-  progress: number;
+  progress?: number;
   processed?: number;
   total?: number;
   message?: string;
@@ -44,7 +44,7 @@ export function useGlobalTasks() {
           return [];
         }
         if (!res.ok) return [];
-        const result = await res.json() as { success: boolean; data?: RemoteJob[] };
+        const result = await res.json() as unknown as { success: boolean; data?: RemoteJob[] };
         return (result && result.success && Array.isArray(result.data)) ? result.data : [];
       } catch (err) {
         logger.error('Failed to fetch maintenance jobs:', err);

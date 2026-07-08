@@ -1,14 +1,23 @@
 import { AppError, ErrorSeverity, ErrorCategory } from '../../../shared/AppError.js';
 import { ErrorCode } from '../../../shared/errorCodes.js';
 
+interface PostgresError {
+    message?: string;
+    detail?: string;
+    hint?: string;
+    where?: string;
+    code?: string;
+    cause?: unknown;
+}
+
 export const errorFactory = {
   wrap(err: unknown, operation: string, code: ErrorCode | string = ErrorCode.INTERNAL_ERROR): AppError {
-    const error = err as any;
+    const error = err as PostgresError | null;
     let message = error?.message || String(err);
-    const context: Record<string, any> = { operation };
+    const context: Record<string, unknown> = { operation };
     
     // Unwrap DrizzleQueryError or similar wrappers
-    const actualError = error?.cause || error;
+    const actualError = (error?.cause || error) as PostgresError | null;
 
     if (actualError && typeof actualError === 'object') {
         const dbDetail = actualError.detail || actualError.hint || actualError.where || '';

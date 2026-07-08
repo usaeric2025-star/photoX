@@ -13,10 +13,9 @@ import { streamSSE } from 'hono/streaming';
 import { Buffer } from 'buffer';
 
 const serverEnv = getServerEnv(process.env);
-export const adminMaintenance = new Hono();
-
+export const adminMaintenance = new Hono()
 // --- 0. View Refresh (CQRS) ---
-adminMaintenance.get("/jobs", async (c) => {
+.get("/jobs", async (c) => {
     try {
         const { desc } = await import('drizzle-orm');
         const data = await db.query.maintenanceJobs.findMany({
@@ -27,9 +26,8 @@ adminMaintenance.get("/jobs", async (c) => {
     } catch (e: unknown) {
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.post("/refresh-view", async (c) => {
+})
+.post("/refresh-view", async (c) => {
     try {
         await requireRealUser(c);
         await refreshPhotosView();
@@ -38,10 +36,9 @@ adminMaintenance.post("/refresh-view", async (c) => {
         logger.error('[Maintenance] View refresh failed', e);
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
+})
 // --- 1. Basic Cleanup ---
-adminMaintenance.post("/daily-cleanup", async (c) => {
+.post("/daily-cleanup", async (c) => {
     try {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -56,9 +53,8 @@ adminMaintenance.post("/daily-cleanup", async (c) => {
         logger.error('[Maintenance] Cleanup failed', e);
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.get("/stats", async (c) => {
+})
+.get("/stats", async (c) => {
     try {
         const [photoCount] = await db.select({ count: count() }).from(furnitureItems);
         const [hiddenCount] = await db.select({ count: count() }).from(furnitureItems).where(eq(furnitureItems.isHidden, true));
@@ -80,10 +76,9 @@ adminMaintenance.get("/stats", async (c) => {
         logger.error('[Maintenance] Stats failed', e);
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
+})
 // --- 2. Storage Audit & Repair ---
-adminMaintenance.get("/storage/audit", async (c) => {
+.get("/storage/audit", async (c) => {
     try {
         const audit = await runStorageAudit();
         return c.json({ 
@@ -99,9 +94,8 @@ adminMaintenance.get("/storage/audit", async (c) => {
         logger.error("Audit failed:", e);
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.get("/storage/audit-stream", async (c) => {
+})
+.get("/storage/audit-stream", async (c) => {
     try {
         await requireRealUser(c);
         return streamSSE(c, async (stream) => {
@@ -136,9 +130,8 @@ adminMaintenance.get("/storage/audit-stream", async (c) => {
         logger.error("Audit init failed:", e);
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.post("/storage/recover-orphans", async (c) => {
+})
+.post("/storage/recover-orphans", async (c) => {
     try {
         await requireRealUser(c);
         const { keys } = await c.req.json();
@@ -232,9 +225,8 @@ adminMaintenance.post("/storage/recover-orphans", async (c) => {
         logger.error("Recovery failed:", e);
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.post("/storage/deduplicate", async (c) => {
+})
+.post("/storage/deduplicate", async (c) => {
     try {
         await requireRealUser(c);
         const records = await db.select({
@@ -272,9 +264,8 @@ adminMaintenance.post("/storage/deduplicate", async (c) => {
         logger.error("Deduplication failed:", e);
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.post("/storage/clean-ghosts", async (c) => {
+})
+.post("/storage/clean-ghosts", async (c) => {
     try {
         await requireRealUser(c);
         const audit = await runStorageAudit();
@@ -290,10 +281,9 @@ adminMaintenance.post("/storage/clean-ghosts", async (c) => {
         logger.error("Ghost cleanup failed:", e);
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
+})
 // --- 3. Error Event Management ---
-adminMaintenance.post("/repair", async (c) => {
+.post("/repair", async (c) => {
     try {
         const { issueId } = await c.req.json();
         logger.info(`[Repair] Requested repair for issue: ${issueId}`);
@@ -302,18 +292,16 @@ adminMaintenance.post("/repair", async (c) => {
     } catch (e: unknown) {
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.get("/db-debug", async (c) => {
+})
+.get("/db-debug", async (c) => {
     try {
         const res = await db.execute(sql`SHOW statement_timeout`);
         return c.json({ success: true, data: res });
     } catch (e: unknown) {
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.get("/error-events", async (c) => {
+})
+.get("/error-events", async (c) => {
     try {
         const limit = parseInt(c.req.query('limit') || '100', 10);
         const { desc } = await import('drizzle-orm');
@@ -325,9 +313,8 @@ adminMaintenance.get("/error-events", async (c) => {
     } catch (e: unknown) {
         return c.json({ success: false, error: String(e) }, 500);
     }
-});
-
-adminMaintenance.post("/error-events-clear", async (c) => {
+})
+.post("/error-events-clear", async (c) => {
     try {
         await db.delete(systemLogs);
         return c.json({ success: true });

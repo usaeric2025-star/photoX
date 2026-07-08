@@ -16,11 +16,12 @@ import {
 } from '#src/services/group/commands.js';
 import { getGroupById } from '#src/services/group/queries.js';
 import { useSelectionActions } from '../../services/selection/selectionService.js';
-import { useInvalidatePhotos } from '../photo/useInvalidatePhotos.js';
-import { useTranslation } from '../core/useTranslation.js';
+import { usePhotos, useInvalidatePhotos } from '../photo/usePhotos.js';
+import { useTranslation } from '../core/index.js';
 import { showToast } from '#lib/ui/toast.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useAuth } from '#lib/store/index.js';
+import { useFilters } from '#src/features/filters/index.js';
 
 // --- Detail Hook ---
 
@@ -40,6 +41,58 @@ export function useGroupDetail(id: string | null, isAdmin = false) {
     group,
     isLoading,
     error
+  };
+}
+
+// --- List/Data Hook ---
+
+interface UseGroupDataOptions {
+  groupId: string | null;
+  isAdmin: boolean;
+}
+
+export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
+  const { search, category, tags, sort } = useFilters();
+  
+  const { 
+    group, 
+    isLoading: isGroupPending, 
+    error: groupError 
+  } = useGroupDetail(groupId, isAdmin);
+
+  const {
+    data,
+    isPending: isPhotosPending,
+    error: photosError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = usePhotos({
+    groupId: groupId || undefined,
+    mode: isAdmin ? 'admin' : 'public',
+    categoryId: category,
+    tagId: tags?.[0],
+    searchQuery: search,
+    sortOrder: sort,
+    onlyGroupsCover: false, // Ensure we see all photos in the group
+  });
+
+  const photos = data?.pages.flatMap(p => p.items) || [];
+  const totalCount = data?.pages[0]?.total || 0;
+
+  const loading = isGroupPending || isPhotosPending;
+  const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
+  const error = (groupError || photosError) ? (getErrorMessage(groupError || photosError)) : null;
+
+  return {
+    group,
+    photos,
+    totalCount,
+    loading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
   };
 }
 

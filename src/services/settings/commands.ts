@@ -59,7 +59,7 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         });
         
         if (!res.ok) {
-            const respBody = await res.json().catch(() => ({ error: 'Unknown server error' }));
+            const respBody = await res.json().catch(() => ({ error: 'Unknown server error' })) as any;
             throw ErrorFactory.wrap(new Error(`DB_ERROR: ${respBody.error || 'Unknown database error'}`), 'commands');
         }
         

@@ -6,7 +6,7 @@ import { useForm } from '@tanstack/react-form';
 import { useAppForm } from '#lib/forms/useAppForm.js';
 import { useCategories } from '../category/useCategories.js';
 import { useManufacturers } from '../manufacturer/useManufacturers.js';
-import { useTranslation } from '../core/useTranslation.js';
+import { useTranslation } from '../core/index.js';
 import { usePhoto, usePhotoMutations } from './usePhotos.js';
 import { PhotoEditSchema, type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { photoEditAdapter } from '#lib/forms/index.js';

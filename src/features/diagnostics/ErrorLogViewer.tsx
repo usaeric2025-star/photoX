@@ -4,9 +4,9 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { useAppQuery, useAppMutation, queryClient } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
-import { Button } from '#src/components/shared/Button.js';
+import { Button } from '#src/components/ui/Button.js';
 import * as v from 'valibot';
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
 import { formatters } from '#src/utils/formatters.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
 
@@ -112,9 +112,9 @@ export const ErrorLogViewer = () => {
     ['error_logs'],
     async () => {
         const res = await api.admin.maintenance['error-events'].$get();
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || '获取日志失败');
-        return json.data as LogEntry[];
+        const json = await res.json() as { success: boolean; data: LogEntry[]; error?: string };
+        if (!json.success) throw new Error(json.error || '獲取日誌失敗');
+        return json.data;
     }
   );
 
@@ -122,9 +122,9 @@ export const ErrorLogViewer = () => {
       schema: v.unknown(),
       mutationFn: async () => {
           const res = await api.admin.maintenance['error-events-clear'].$post();
-          const json = await res.json();
+          const json = await res.json() as { success: boolean; error?: string };
           if (!json.success) throw new Error(json.error || '清除日誌失敗');
-          return json as { success: boolean; count?: number };
+          return json;
       },
       onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['error_logs'] });

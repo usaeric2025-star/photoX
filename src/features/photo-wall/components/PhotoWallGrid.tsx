@@ -52,17 +52,41 @@ export function PhotoWallGrid({
     }
   }, []);
 
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || isLoading) return;
+    loadMore();
+  }, [loadMore, isLoadingMore, isLoading]);
+
+  // Defensive backup scroll listener to guarantee loading more items on scroll near bottom
+  useEffect(() => {
+    const parent = scrollParent || document.getElementById('photo-wall-scroll-container');
+    if (!parent) return;
+
+    const handleScroll = () => {
+      if (!hasMore || isLoadingMore || isLoading) return;
+      const { scrollHeight, scrollTop, clientHeight } = parent;
+      // Trigger when we are within 1200px of the bottom (safely prefetching)
+      if (scrollHeight - scrollTop - clientHeight < 1200) {
+        handleLoadMore();
+      }
+    };
+
+    parent.addEventListener('scroll', handleScroll, { passive: true });
+    // Also perform an initial check in case the initial items do not fill the height
+    const timer = setTimeout(handleScroll, 500);
+
+    return () => {
+      parent.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
+  }, [scrollParent, hasMore, isLoadingMore, isLoading, handleLoadMore]);
+
   // Create a new ref-like object whenever scrollParent resolves/changes
   // to force dream-masonry's hooks (useGrid, useInfiniteScroll) to re-run and bind listeners correctly
   const scrollContainer = useMemo(() => {
     if (!scrollParent) return null;
     return { current: scrollParent };
   }, [scrollParent]);
-
-  const handleLoadMore = useCallback(async () => {
-    if (isLoadingMore || isLoading) return;
-    loadMore();
-  }, [loadMore, isLoadingMore, isLoading]);
 
   const renderItem = useCallback((photo: PhotoListItem, index?: number) => (
     <div className="w-full h-full" data-photo-id={photo.id}>

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useTags } from '#src/hooks/tag/index.js';
+import { useTags, useTagSorting } from '#src/hooks/tag/index.js';
 import { useFilterState, useTranslation } from '#src/hooks/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
-import { useTagSorting } from '#src/hooks/photo/index.js';
 import { useUI } from '#lib/store/index.js';
 import { translations } from '#src/locales/index.js';
 import type { FilterState } from './types.js';

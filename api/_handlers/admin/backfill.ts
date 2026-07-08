@@ -1,8 +1,7 @@
 import { Hono } from 'hono';
 
-export const adminBackfill = new Hono();
-
-adminBackfill.post("/", async (c) => {
+export const adminBackfill = new Hono()
+  .post("/", async (c) => {
     try {
         // This is a complex route, would trigger background task logic.
         // For now, simple placeholder to preserve structure.

@@ -38,8 +38,9 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
   });
   
   if (!res.ok) {
-    const errBody = await res.json().catch(() => ({})) as { error?: string };
-    throw new Error(errBody?.error || 'Update failed');
+    const errBody = await res.json().catch(() => ({})) as any;
+    const msg = errBody?.error?.message || errBody?.error || 'Update failed';
+    throw new Error(msg);
   }
   const body = await res.json() as { data?: Record<string, unknown> };
   const rawData = body.data;
@@ -62,12 +63,12 @@ export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>)
   }, {} as Record<string, unknown>) as Partial<Photo>;
 
   const dbUpdates = mapToDb(updates);
-  const res = await api.photos['batch-update'].$post({
+  const res = await api.photos.batch.$post({
     json: { ids, updates: dbUpdates }
   });
   
   if (!res.ok) throw new Error('Batch update failed');
-  const { data: updatedIds } = await res.json();
+  const { data: updatedIds } = await res.json() as any;
   
   const updatedIdSet = new Set(updatedIds || []);
   const failedOnes = ids.filter(id => !updatedIdSet.has(id)).map(id => ({ id, reason: 'Not found or unchanged' }));
@@ -82,7 +83,7 @@ export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>)
 export async function deleteMany(ids: string[]): Promise<BatchActionResult> {
   if (!ids || ids.length === 0) return { successCount: 0, failureCount: 0, failedItems: [] };
 
-  const response = await api.admin['delete-photos'].$post({ json: { ids } });
+  const response = await api.admin.photos['delete-photos'].$post({ json: { ids } });
   const result = await response.json() as { success: boolean, error?: string };
   if (!response.ok || !result.success) throw new Error(result.error || 'Admin delete failed');
   

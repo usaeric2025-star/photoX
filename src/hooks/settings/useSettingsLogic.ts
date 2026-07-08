@@ -10,7 +10,7 @@ import {
   normalizeManufacturerName,
 } from "#lib/utils.js";
 import { api } from "#lib/api.js";
-import { useInvalidatePhotos } from '../photo/useInvalidatePhotos.js';
+import { useInvalidatePhotos } from '../photo/usePhotos.js';
 import { executeTask } from '#lib/task-queue/index.js';
 import { uploadToR2 } from '#src/features/upload/services/r2Client.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -27,7 +27,7 @@ interface UseSettingsLogicProps {
   setSettings: (s: AppSettings) => void;
 }
 
-import { useDebouncedCallback } from '#src/hooks/core/useDebouncedCallback.js';
+import { useDebouncedCallback } from '#src/hooks/core/index.js';
 import { useFormSubmit } from "#lib/forms/useFormSubmit.js";
 import * as v from 'valibot';
 

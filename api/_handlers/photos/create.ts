@@ -6,8 +6,8 @@ import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { ErrorFactory } from '../../../src/lib/error/ErrorFactory.js';
 import { sanitizePhotoPayload } from './sanitize.js';
 
-export const createHandler = (app: Hono) => {
-  app.post('/upsert', async (c) => {
+export const createRoutes = new Hono()
+  .post('/upsert', async (c) => {
     const { payload } = await c.req.json() as { payload: Record<string, unknown> };
 
     const crypto = await import('node:crypto');
@@ -51,18 +51,18 @@ export const createHandler = (app: Hono) => {
 
         // 3. Ensure Group Exists if groupId is provided
         if (mappedPayload.groupId) {
-            const groupRows = await db.select({ id: groups.id }).from(groups).where(eq(groups.id, mappedPayload.groupId)).limit(1);
+            const groupRows = await db.select({ id: groups.id }).from(groups).where(eq(groups.id, mappedPayload.groupId as string)).limit(1);
             if (groupRows.length === 0) {
                 // Fallback to null if group not found
                 mappedPayload.groupId = null;
             }
         }
         if (mappedPayload.categoryId) {
-            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedPayload.categoryId)).limit(1);
+            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedPayload.categoryId as number)).limit(1);
             if (catRows.length === 0) mappedPayload.categoryId = null;
         }
         if (mappedPayload.manufacturerId) {
-            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedPayload.manufacturerId)).limit(1);
+            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedPayload.manufacturerId as string)).limit(1);
             if (manRows.length === 0) mappedPayload.manufacturerId = null;
         }
 
@@ -123,10 +123,8 @@ export const createHandler = (app: Hono) => {
         const { errorFactory } = await import('../../_lib/error/factory.js');
         throw errorFactory.wrap(new Error(errorMessage), 'api./api/photos/upsert', 'DB_ERROR');
     }
-  });
-
-
-  app.post('/ai-result', async (c) => {
+  })
+  .post('/ai-result', async (c) => {
     const { payload } = await c.req.json() as { payload: Record<string, unknown> };
     try {
         const [data] = await db.insert(systemLogs).values({
@@ -149,4 +147,3 @@ export const createHandler = (app: Hono) => {
         throw errorFactory.wrap(error, 'api./api/photos/ai-result', 'DB_ERROR');
     }
   });
-};

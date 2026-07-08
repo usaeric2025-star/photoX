@@ -6,9 +6,8 @@ import { encrypt } from '../../_lib/encryption.js';
 import { errorResponse } from '../../_lib/response.js';
 import { clearSettingsCache } from '../public_settings.js';
 
-export const adminSettings = new Hono();
-
-adminSettings.get("/get", async (c) => {
+export const adminSettings = new Hono()
+  .get("/get", async (c) => {
     const [settingsRes] = await db.select().from(settingsTable).where(eq(settingsTable.id, 1)).limit(1);
     
     // Fetch secrets to merge legacy AI settings
@@ -31,9 +30,8 @@ adminSettings.get("/get", async (c) => {
     } : {};
 
     return c.json({ success: true, data });
-});
-
-adminSettings.get("/get-keys", async (c) => {
+})
+.get("/get-keys", async (c) => {
     const keysToFetch = ['openrouter', 'agnes', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'agnes_model'];
     const secretsRes = await db.select()
         .from(secretsTable)
@@ -73,9 +71,8 @@ adminSettings.get("/get-keys", async (c) => {
             agnes_model: config.agnes_model || ''
         }
     });
-});
-
-adminSettings.post("/save-key", async (c) => {
+})
+.post("/save-key", async (c) => {
     let { provider, apiKey } = await c.req.json();
     if (!provider || !apiKey) return errorResponse(c, "缺少必要參數", 400);
 
@@ -98,9 +95,8 @@ adminSettings.post("/save-key", async (c) => {
         success: true, 
         message: `密鑰已加密保存！` 
     });
-});
-
-adminSettings.post("/save-model", async (c) => {
+})
+.post("/save-model", async (c) => {
     try {
         const { provider, model } = await c.req.json();
         const key = `${provider}_model`;
@@ -122,9 +118,8 @@ adminSettings.post("/save-model", async (c) => {
         logger.error("Save model failed:", e);
         return c.json({ success: false, error: (e as Error).message }, 500);
     }
-});
-
-adminSettings.post("/save-provider", async (c) => {
+})
+.post("/save-provider", async (c) => {
     const { provider } = await c.req.json();
     if (!provider) {
         return errorResponse(c, "Missing provider", 400);
@@ -143,9 +138,8 @@ adminSettings.post("/save-provider", async (c) => {
     });
     
     return c.json({ success: true });
-});
-
-adminSettings.post("/save-settings", async (c) => {
+})
+.post("/save-settings", async (c) => {
     try {
         const { settingsPayload } = await c.req.json();
         
@@ -185,9 +179,8 @@ adminSettings.post("/save-settings", async (c) => {
     } catch (e: unknown) {
         return c.json({ success: false, error: (e as Error).message }, 500);
     }
-});
-
-adminSettings.post("/upsert-logo", async (c) => {
+})
+.post("/upsert-logo", async (c) => {
     try {
         const { url } = await c.req.json();
         await db.insert(settingsTable).values({ id: 1, logoUrl: url }).onConflictDoUpdate({

@@ -7,7 +7,7 @@ import { TagReqSchema } from '../../shared/apiContractSchema.js';
 import { errorResponse, successResponse } from '../_lib/response.js';
 import { logger } from '../_lib/logger.js';
 
-let tagsCache: any[] | null = null;
+let tagsCache: Record<string, unknown>[] | null = null;
 let tagsCacheTime = 0;
 
 function clearTagsCache() {
@@ -42,19 +42,19 @@ export const tags = new Hono()
   .put('/:id{[0-9]+}', sValidator('json', v.object({ updates: v.omit(TagReqSchema, ["id"]) })), async (c) => {
     const id = parseInt(c.req.param('id'));
     const { updates } = c.req.valid('json');
-    await db.update(tagsTable).set(updates as any).where(eq(tagsTable.id, id));
+    await db.update(tagsTable).set(updates as unknown as typeof tagsTable.$inferInsert).where(eq(tagsTable.id, id));
     clearTagsCache();
     return successResponse(c, null);
   })
   .post('/', sValidator('json', v.object({ tagData: TagReqSchema })), async (c) => {
     const { tagData } = c.req.valid('json');
-    const [data] = await db.insert(tagsTable).values(tagData as any).returning();
+    const [data] = await db.insert(tagsTable).values(tagData as unknown as typeof tagsTable.$inferInsert).returning();
     clearTagsCache();
     return successResponse(c, data);
   })
   .post('/batch', sValidator('json', v.object({ tags: v.array(TagReqSchema) })), async (c) => {
     const { tags: tagsData } = c.req.valid('json');
-    const data = await db.insert(tagsTable).values(tagsData as any).returning({ id: tagsTable.id, name: tagsTable.name });
+    const data = await db.insert(tagsTable).values(tagsData as unknown as (typeof tagsTable.$inferInsert)[]).returning({ id: tagsTable.id, name: tagsTable.name });
     clearTagsCache();
     return successResponse(c, data);
   })

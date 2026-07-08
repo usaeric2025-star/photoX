@@ -2,7 +2,7 @@ import * as Lucide from 'lucide-react';
 import { cn } from '#lib/utils.js';
 
 // Explicit references to icons to ensure bundler tree-shaking works perfectly
-const iconMap: Record<string, React.ComponentType<any>> = {
+const iconMap: Record<string, Lucide.LucideIcon> = {
   'home': Lucide.Home,
   'settings': Lucide.Settings,
   'settings-2': Lucide.Settings2,
@@ -117,7 +117,7 @@ export const Icon = ({
     // Fallback: Dynamically lookup in Lucide namespace (PascalCase conversion)
     const pascalName = normalizedName
       .replace(/(^\w|-\w)/g, (m) => m.replace('-', '').toUpperCase());
-    const FallbackComponent = (Lucide as any)[pascalName];
+    const FallbackComponent = (Lucide as unknown as Record<string, Lucide.LucideIcon>)[pascalName];
 
     if (!FallbackComponent) {
       console.warn(`[Icon] Icon "${name}" not found in explicit map or fallback (PascalCase: ${pascalName})`);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from "#src/components/shared/Button.js";
+import { Button } from "#src/components/ui/Button.js";
 import { Progress } from "#src/components/shared/Progress.js";
 import { Alert, AlertDescription } from "#src/components/shared/Alert.js";
 import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner.js";

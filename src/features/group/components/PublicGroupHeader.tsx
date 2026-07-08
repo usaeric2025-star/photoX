@@ -4,7 +4,7 @@ import { Group } from '#src/types/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { showToast } from '#lib/ui/toast.js';
-import { useTranslation } from '#src/hooks/core/useTranslation.js';
+import { useTranslation } from '#src/hooks/core/index.js';
 
 interface PublicGroupHeaderProps {
   group: Group;

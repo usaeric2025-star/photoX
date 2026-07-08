@@ -1,18 +1,17 @@
 import { analyzePhoto } from './commands.js';
 import { translateFields } from './translationService.js';
 import { updatePhoto } from '#src/services/photo/index.js';
-import { syncPhotoTags, loadTagsFromCloud, batchCreateTags } from '#src/services/tag/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands.js';
 import { resolveTagNamesToIds } from '#src/services/tag/completion.js';
 import { withTimeout } from '#lib/utils.js';
 import { logger } from '#lib/logger.js';
 import { mapAiToMultilingual } from './mapping.js';
+import { api } from '#lib/api.js';
 
 export * from './utils.js';
 import { hasExistingInfo } from './utils.js';
 import { supabase } from '#lib/supabase.js';
-import { api } from '#lib/api.js';
 
 import { Photo, Dimension, ProductGroup } from '#src/types/index.js';
 import { queryClient } from '#src/lib/query/index.js';
@@ -78,7 +77,9 @@ const analyzeAndSavePhoto = async (
           finalTagIds.forEach(id => {
               tagSources[id] = "ai";
           });
-          await syncPhotoTags(photo.id, finalTagIds, undefined, tagSources);
+          await api.tags['sync-photo-tags'].$post({
+              json: { photoId: photo.id, tagIds: finalTagIds, tagSources }
+          });
       }
     }
 

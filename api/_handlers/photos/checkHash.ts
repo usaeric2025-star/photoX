@@ -4,8 +4,8 @@ import { furnitureItems } from '../../_lib/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { errorResponse, successResponse } from '../../_lib/response.js';
 
-export const checkHashHandler = (app: Hono) => {
-  app.get('/check-hash', async (c) => {
+export const checkHashRoutes = new Hono()
+  .get('/check-hash', async (c) => {
     const hash = c.req.query('hash');
     if (!hash) {
       return errorResponse(c, '缺少 hash 參數', 400);
@@ -22,4 +22,3 @@ export const checkHashHandler = (app: Hono) => {
       photo: existing[0] || null,
     });
   });
-};

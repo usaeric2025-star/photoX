@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import { queryClient } from '#lib/query/index.js';
-import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
-import { loadTagsFromCloud } from '#src/services/tag/queries.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { AdminPageContent } from './AdminPageContent.js';
 import { useTranslation } from '#src/hooks/index.js';
+import { api } from '#lib/api.js';
 
 export default function AdminPage() {
   const { t, appLang } = useTranslation();
@@ -19,13 +18,23 @@ export default function AdminPage() {
     // Prefetch categories in the background
     queryClient.prefetchQuery({
       queryKey: queryKeys.categories.list(),
-      queryFn: () => loadCategoriesFromCloud(),
+      queryFn: async () => {
+        const res = await api.categories.$get();
+        const json = await res.json();
+        if (json.success) return json.data;
+        throw new Error('Prefetch categories failed');
+      },
     });
 
     // Prefetch tags in the background
     queryClient.prefetchQuery({
       queryKey: queryKeys.tags.list(),
-      queryFn: () => loadTagsFromCloud(),
+      queryFn: async () => {
+        const res = await api.tags.$get();
+        const json = await res.json();
+        if (json.success) return json.data;
+        throw new Error('Prefetch tags failed');
+      },
     });
   }, [appLang]);
 

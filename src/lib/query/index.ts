@@ -77,13 +77,13 @@ export function useAppQuery<TData = unknown, TError = Error>(
 export function useAppInfiniteQuery<TData = unknown, TError = Error, TPageParam = unknown>(
   key: QueryKey | null,
   fetcherFn: (pageParam: TPageParam) => Promise<TData>,
-  options: any
+  options: Omit<UseInfiniteQueryOptions<TData, TError, InfiniteData<TData>, QueryKey, TPageParam>, 'queryKey' | 'queryFn'>
 ) {
   const queryKey = key === null ? ['__null__'] : (Array.isArray(key) ? key : [key]);
   const enabled = key !== null && options?.enabled !== false;
 
   return useInfiniteQuery<TData, TError, InfiniteData<TData>, QueryKey, TPageParam>({
-    queryKey,
+    queryKey: queryKey as QueryKey,
     queryFn: async ({ pageParam }) => {
       try {
         return await fetcherFn(pageParam as TPageParam);
@@ -100,10 +100,10 @@ export function useAppInfiniteQuery<TData = unknown, TError = Error, TPageParam 
 /**
  * Standard mutation hook
  */
-export function useAppMutation<TData = any, TVariables = any, TContext = any>(
+export function useAppMutation<TData = unknown, TVariables = unknown, TContext = unknown>(
   options: {
     mutationFn: (variables: TVariables) => Promise<TData>;
-    invalidateKeys?: readonly (readonly any[])[];
+    invalidateKeys?: QueryKey[];
     successMessage?: string;
     errorContext?: string;
   } & Omit<UseMutationOptions<TData, Error, TVariables, TContext>, 'mutationFn'>
@@ -119,29 +119,29 @@ export function useAppMutation<TData = any, TVariables = any, TContext = any>(
     ...rest 
   } = options;
 
-  return useMutation({
+  return useMutation<TData, Error, TVariables, TContext>({
     mutationFn,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (...args) => {
       if (successMessage) {
         showToast.success(successMessage);
       }
       
       if (invalidateKeys) {
         invalidateKeys.forEach(key => {
-          queryClient.invalidateQueries({ queryKey: key as any });
+          queryClient.invalidateQueries({ queryKey: key });
         });
       }
 
       if (onSuccess) {
-        (onSuccess as any)(data, variables, context);
+        onSuccess(...args);
       }
     },
-    onError: (err, variables, context) => {
+    onError: (...args) => {
       if (errorContext) {
-        ErrorFactory.handle(err, { context: errorContext });
+        ErrorFactory.handle(args[0], { context: errorContext });
       }
       if (onError) {
-        (onError as any)(err, variables, context);
+        onError(...args);
       }
     },
     ...rest

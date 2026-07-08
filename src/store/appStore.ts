@@ -1,12 +1,11 @@
 import { signal } from '@preact/signals-react';
 import { initAuthListener, initAuth, authLoadingSignal } from './authStore.js';
-import { loadCategoriesFromCloud } from '#src/services/category/queries.js';
-import { loadTagsFromCloud } from '#src/services/tag/queries.js';
 import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { scheduler } from '#lib/task-queue/scheduler.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { withTimeout } from '#lib/utils.js';
+import { api } from '#lib/api.js';
 
 export interface AppStatusState {
   isLoading: boolean;
@@ -34,8 +33,8 @@ export const initializeApp = async () => {
 
     // 4. 背景並行啟動分類與標籤預加載 (DK-PATTERN: 前置緩存提高首屏響應速度)
     Promise.all([
-      loadCategoriesFromCloud().then(data => queryClient.setQueryData(queryKeys.categories.all, data)),
-      loadTagsFromCloud().then(data => queryClient.setQueryData(queryKeys.tags.all, data))
+      api.categories.$get().then(r => r.json()).then(j => j.success ? queryClient.setQueryData(queryKeys.categories.all, j.data) : null),
+      api.tags.$get().then(r => r.json()).then(j => j.success ? queryClient.setQueryData(queryKeys.tags.all, j.data) : null)
     ]).catch(e => ErrorFactory.handle(e, { context: '[appStore] Background prefetch failed' }));
     
     // 5. 標記初始化完成

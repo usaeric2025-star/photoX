@@ -128,7 +128,7 @@ const uploadImages = async (
       safeFileName = `upload_${timestamp}_${Math.random().toString(36).substring(7)}.${ext}`;
     }
 
-    const presignRes = await api['upload-presign'].$post({
+    const presignRes = await api.storage['upload-presign'].$post({
       json: { 
         photoId: photoId, 
         fileKey: safeFileName, 

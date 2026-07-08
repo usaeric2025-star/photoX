@@ -1,9 +1,9 @@
 import React, { useState, useRef } from "react";
 import { Icon } from '#src/components/ui/Icon.js';
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
-import { useClickOutside } from '#src/hooks/core/useClickOutside.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
+import { useClickOutside } from '#src/hooks/core/index.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
-import { useLongPress } from "#src/hooks/core/useLongPress.js";
+import { useLongPress } from "#src/hooks/core/index.js";
 import { normalizeManufacturerName } from "#lib/utils.js";
 import { useConfirm } from '#src/context/ConfirmContext.js';
 

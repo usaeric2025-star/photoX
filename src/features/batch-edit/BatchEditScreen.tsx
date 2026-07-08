@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { usePhotoMutations, useTranslation } from '#src/hooks/index.js';

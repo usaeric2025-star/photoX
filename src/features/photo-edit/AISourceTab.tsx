@@ -15,9 +15,9 @@ export function AISourceTab() {
   });
   const { data: aiResult, isPending, error } = usePhotoAIResult(photoId);
 
-  const onReExtract = async (raw: any) => {
+  const onReExtract = async (raw: unknown) => {
     try {
-      await handleReExtract(raw);
+      await handleReExtract(raw as Record<string, unknown>);
       showToast.success(appLang === 'zh' ? '二次提取成功' : 'Re-extraction successful');
     } catch (e) {
       ErrorFactory.handle(e, { context: '二次提取' });

@@ -8,8 +8,8 @@ import { errorResponse, successResponse } from '../../_lib/response.js';
 import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../../shared/apiContractSchema.js';
 import { sanitizePhotoPayload } from './sanitize.js';
 
-export const updateHandler = (app: Hono) => {
-  app.post('/batch-update', async (c) => {
+export const updateRoutes = new Hono()
+  .post('/batch', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(PhotoBatchUpdateReqSchema, body);
     if (!check.success) throw new Error(check.issues[0].message);
@@ -38,17 +38,17 @@ export const updateHandler = (app: Hono) => {
         const mappedUpdates = sanitizePhotoPayload(updates);
 
         if (mappedUpdates.groupId) {
-            const groupRows = await db.select({ id: groupsTable.id }).from(groupsTable).where(eq(groupsTable.id, mappedUpdates.groupId)).limit(1);
+            const groupRows = await db.select({ id: groupsTable.id }).from(groupsTable).where(eq(groupsTable.id, mappedUpdates.groupId as string)).limit(1);
             if (groupRows.length === 0) {
                 mappedUpdates.groupId = null;
             }
         }
         if (mappedUpdates.categoryId) {
-            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedUpdates.categoryId)).limit(1);
+            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedUpdates.categoryId as number)).limit(1);
             if (catRows.length === 0) mappedUpdates.categoryId = null;
         }
         if (mappedUpdates.manufacturerId) {
-            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedUpdates.manufacturerId)).limit(1);
+            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedUpdates.manufacturerId as string)).limit(1);
             if (manRows.length === 0) mappedUpdates.manufacturerId = null;
         }
 
@@ -94,9 +94,8 @@ export const updateHandler = (app: Hono) => {
         const { errorFactory } = await import('../../_lib/error/factory.js');
         throw errorFactory.wrap(error, 'api./api/photos/update-batch', 'DB_ERROR');
     }
-  });
-
-  app.post('/update', async (c) => {
+  })
+  .post('/update', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(PhotoUpdateReqSchema, body);
     if (!check.success) throw new Error(check.issues[0].message);
@@ -132,17 +131,17 @@ export const updateHandler = (app: Hono) => {
         mappedUpdates.updatedAt = new Date();
 
         if (mappedUpdates.groupId) {
-            const groupRows = await db.select({ id: groupsTable.id }).from(groupsTable).where(eq(groupsTable.id, mappedUpdates.groupId)).limit(1);
+            const groupRows = await db.select({ id: groupsTable.id }).from(groupsTable).where(eq(groupsTable.id, mappedUpdates.groupId as string)).limit(1);
             if (groupRows.length === 0) {
                 mappedUpdates.groupId = null;
             }
         }
         if (mappedUpdates.categoryId) {
-            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedUpdates.categoryId)).limit(1);
+            const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, mappedUpdates.categoryId as number)).limit(1);
             if (catRows.length === 0) mappedUpdates.categoryId = null;
         }
         if (mappedUpdates.manufacturerId) {
-            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedUpdates.manufacturerId)).limit(1);
+            const manRows = await db.select({ id: manufacturers.id }).from(manufacturers).where(eq(manufacturers.id, mappedUpdates.manufacturerId as string)).limit(1);
             if (manRows.length === 0) mappedUpdates.manufacturerId = null;
         }
 
@@ -159,12 +158,19 @@ export const updateHandler = (app: Hono) => {
             if (current?.groupId) {
                 await db.update(furnitureItems)
                     .set({ isGroupCover: false })
-                    .where(eq(furnitureItems.groupId, current.groupId));
+                    .where(eq(furnitureItems.groupId, (current?.groupId || '') as string));
                 
                 await db.update(groupsTable)
                     .set({ coverPhotoId: id })
                     .where(eq(groupsTable.id, current.groupId));
             }
+        }
+
+        if (Object.keys(mappedUpdates).length === 0 && (!updates.tags || !Array.isArray(updates.tags))) {
+            const currentData = await db.query.furnitureItems.findFirst({
+                where: eq(furnitureItems.id, id)
+            });
+            return successResponse(c, currentData);
         }
 
         let results;
@@ -215,4 +221,3 @@ export const updateHandler = (app: Hono) => {
         throw errorFactory.wrap(error, 'api./api/photos/update', 'DB_ERROR');
     }
   });
-};

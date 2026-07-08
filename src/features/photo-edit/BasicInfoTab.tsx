@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useDisclosure } from '#src/hooks/core/useDisclosure.js';
+import { useDisclosure } from '#src/hooks/core/index.js';
 import { useTranslation, useFilters, usePhoto } from '#src/hooks/index.js';
 import { Image } from '#src/components/ui/Image.js';
 import { getThumbnailUrl } from '#src/services/mappers/utils.js';
