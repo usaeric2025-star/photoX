@@ -9,6 +9,7 @@ import { STALE_TIMES } from '#lib/query/config.js';
 import { Photo } from '#src/types/index.js';
 import { useFilters } from '#src/features/filters/index.js';
 import { useIsMultiSelect, useSelectionActions } from '../../services/selection/selectionService.js';
+import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 
 interface UsePhotoCardInteractionProps {
   photo: PhotoListItem;
@@ -33,6 +34,8 @@ export function usePhotoCard({
   const longPressTriggered = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
   const { updateFilters } = useFilters();
+  const { can } = usePermission();
+  const canBatchEdit = can('photo:batch-edit');
   
   const isMultiSelectActual = useIsMultiSelect();
   const { toggleSelect, toggleMode } = useSelectionActions();
@@ -96,7 +99,7 @@ export function usePhotoCard({
   };
 
   const longPress = useLongPress<HTMLDivElement>({
-    delay: 600,
+    delay: 450,
     onLongPress: () => {
       longPressTriggered.current = true;
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
@@ -105,13 +108,15 @@ export function usePhotoCard({
       }, 300);
 
       if (isManagement) {
-        if (!isMultiSelect) {
-          toggleMode();
-          toggleSelect(photo.id);
-        } else {
-          toggleSelect(photo.id);
+        if (canBatchEdit) {
+          if (!isMultiSelect) {
+            toggleMode();
+            toggleSelect(photo.id);
+          } else {
+            toggleSelect(photo.id);
+          }
+          if ('vibrate' in navigator) navigator.vibrate(50);
         }
-        if ('vibrate' in navigator) navigator.vibrate(50);
       } else {
         patch({ showWhatsAppChoice: true, pendingPhotoId: photo.id });
       }

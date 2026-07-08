@@ -5,7 +5,7 @@ import { SortSchema } from '#lib/valibot/schemas/filters.js';
 import { PageSchema, LimitSchema } from '#lib/valibot/schemas/pagination.js';
 
 // Photo ID Parser
-export const parseAsPhotoId = parseWithValibot(v.string());
+export const parseAsPhotoId = parseWithValibot(v.string()).withDefault('');
 
 // Search Query Parser
 export const searchParser = parseAsString.withDefault('');
@@ -43,7 +43,7 @@ export const statusParser = parseAsString.withDefault('all');
 export const batchParser = parseAsBoolean.withDefault(false);
 
 // Modal Parser
-export const modalParser = parseAsString.withDefault('');
+export const modalParser = parseAsString.withDefault('none');
 
 // Page Parser (使用 Valibot)
 const pageParser = parseWithValibot(PageSchema).withDefault(1);

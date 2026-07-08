@@ -6,6 +6,7 @@ import { User, Theme, TranslationType } from '#src/types/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { useAppRouter } from '#lib/router/index.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
+import { usePermission } from '#src/hooks/index.js';
 
 interface AdminHeaderActionsProps {
   multiSelect: boolean;
@@ -35,25 +36,35 @@ export function AdminHeaderActions({
   lang
 }: AdminHeaderActionsProps) {
   const { navigate } = useAppRouter();
+  const { can } = usePermission();
+  const canBatchEdit = can('photo:batch-edit');
+  const canManageSystem = can('system:settings');
+  const canAccessDiagnostics = can('admin:dashboard:access');
   
   const menuItems = [
     { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: navigate.admin },
-    { id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: navigate.adminBatchEdit },
-    { id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: navigate.adminDiagnostics },
-    { id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: navigate.adminDiagnosticsLogs },
-    { id: 'divider1', divider: true },
-    { id: 'settings', icon: 'settings' as const, label: t('settings', '系統設置'), onClick: navigate.settings }
+    ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: navigate.adminBatchEdit }] : []),
+    ...(canAccessDiagnostics ? [
+      { id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: navigate.adminDiagnostics },
+      { id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: navigate.adminDiagnosticsLogs }
+    ] : []),
+    ...(canManageSystem ? [
+      { id: 'divider1', divider: true },
+      { id: 'settings', icon: 'settings' as const, label: t('settings', '系統設置'), onClick: navigate.settings }
+    ] : [])
   ];
 
   return (
     <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0">
-      <button
-        onClick={toggleMode}
-        className={cn("w-9 h-9", multiSelect ? theme.buttonActive : theme.button)}
-        title={multiSelect ? t('exitSelectMode') : t('selectModeToggle')}
-      >
-        <Icon name="check-square" size={18} />
-      </button>
+      {canBatchEdit && (
+        <button
+          onClick={toggleMode}
+          className={cn("w-9 h-9", multiSelect ? theme.buttonActive : theme.button)}
+          title={multiSelect ? t('exitSelectMode') : t('selectModeToggle')}
+        >
+          <Icon name="check-square" size={18} />
+        </button>
+      )}
 
       <button
         onClick={() => batchAiIdentify()}

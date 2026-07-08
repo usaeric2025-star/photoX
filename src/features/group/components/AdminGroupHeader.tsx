@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAppRouter } from '#lib/router/index.js';
 import { Group } from '#src/types/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
+import { useIsMultiSelect, useSelectionActions, usePermission } from '#src/hooks/index.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import { FormProvider, useFormField } from '#lib/forms/useFormField.js';
@@ -63,6 +63,8 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
   const { t } = useTranslation();
   const { toggleMode } = useSelectionActions();
   const isMultiSelect = useIsMultiSelect();
+  const { can } = usePermission();
+  const canBatchEdit = can('photo:batch-edit');
 
   // Create a dynamic schema to use translated error messages
   const dynamicSchema = v.object({
@@ -171,12 +173,14 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
           <Icon name="share" className="w-4 h-4" />
         </button>
 
-        <button 
-          onClick={toggleMode}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all font-medium ${isMultiSelect ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent'}`}
-        >
-          {isMultiSelect ? t('cancel') : t('selectAction')}
-        </button>
+        {canBatchEdit && (
+          <button 
+            onClick={toggleMode}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all font-medium ${isMultiSelect ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent'}`}
+          >
+            {isMultiSelect ? t('cancel') : t('selectAction')}
+          </button>
+        )}
         <button onClick={onEditSettings} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm transition-all font-medium">
           <Icon name="edit" className="w-4 h-4" />
           <span className="hidden sm:inline">{t('settings')}</span>

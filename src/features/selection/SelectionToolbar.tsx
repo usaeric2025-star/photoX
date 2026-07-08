@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect } from '#src/hooks/index.js';
+import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect, usePermission } from '#src/hooks/index.js';
 import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
 import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '#lib/store/index.js';
 import { useAppRouter } from '#lib/router/index.js';
@@ -65,7 +65,10 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const isSm = useMediaQuery('(min-width: 640px)');
   const isMd = useMediaQuery('(min-width: 768px)');
 
-  if (!isVisible) {
+  const { can } = usePermission();
+  const canBatchEdit = can('photo:batch-edit');
+
+  if (!canBatchEdit || !isVisible) {
     return null;
   }
 

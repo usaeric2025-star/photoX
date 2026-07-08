@@ -1,6 +1,7 @@
 import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
 import { Photo } from '#src/types/photo.js';
+import { usePermission } from '#src/hooks/index.js';
 
 interface LightboxHeaderProps {
   currentPhoto: Photo | { original: Photo };
@@ -26,6 +27,8 @@ export function LightboxHeader({
   const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
   const descriptionObj = photoData?.description;
   const hasDescription = !!descriptionObj;
+  const { can, role } = usePermission();
+  const canEdit = can('photo:edit');
   
   return (
     <div className="absolute top-0 inset-x-0 p-4 sm:p-6 flex items-start justify-between z-[150] pointer-events-none">
@@ -42,13 +45,13 @@ export function LightboxHeader({
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
-        {isAdmin && (
+        {canEdit && (
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(photoData); }}
             className="h-10 sm:h-11 px-4 sm:px-5 bg-blue-600/20 text-blue-400 active:bg-blue-600 active:text-white rounded-2xl text-[10px] font-black tracking-[0.2em] shadow-2xl  transition-all active:scale-95 flex items-center gap-2 border border-blue-500/20 uppercase"
           >
             <span>✏️</span>
-            <span className="hidden sm:inline">Admin</span>
+            <span className="hidden sm:inline">{role === 'admin' ? 'Admin' : 'Edit'}</span>
           </button>
         )}
 

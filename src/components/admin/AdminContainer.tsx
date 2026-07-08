@@ -1,5 +1,5 @@
 import { logger } from '#lib/logger.js';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { PhotoWall, usePhotoWall } from '#src/features/photo-wall/index.js';
 import { useTranslation, useFilters } from '#src/hooks/index.js';
 import { useGrid } from '#src/context/GridContext.js';
@@ -10,13 +10,9 @@ import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
 import { useUI } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 
-import { ScrollToTopButton } from '#src/components/ui/ScrollToTopButton.js';
-
 export function AdminContainer() {
   const filters = useFilters({ enableStatus: true });
   const isAggregated = filters.showGroupsCollapsed;
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const filtersObj = React.useMemo(() => ({
     categoryId: (filters.category && filters.category !== 'all' && filters.category !== '') ? filters.category : undefined,
@@ -40,18 +36,6 @@ export function AdminContainer() {
     }
   }, [total, patch]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollTop = e.currentTarget.scrollTop;
-    setShowScrollTop(scrollTop > 400);
-  };
-
-  const handleScrollToTop = () => {
-    scrollContainerRef.current?.scrollTo({
-      top: 0,
-      behavior: 'auto'
-    });
-  };
-  
   if (error) {
     return (
       <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative justify-center items-center p-8" id="main-admin-error-screen">
@@ -74,8 +58,6 @@ export function AdminContainer() {
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative animate-fade-in" id="main-admin-screen">
        <div 
          id="photo-wall-scroll-container"
-         ref={scrollContainerRef}
-         onScroll={handleScroll}
          className="flex-1 min-h-0 relative overflow-y-auto"
        >
           <PhotoWall 
@@ -83,8 +65,6 @@ export function AdminContainer() {
             filters={filtersObj}
           />
        </div>
-
-       <ScrollToTopButton show={showScrollTop} onClick={handleScrollToTop} />
     </div>
   );
 }

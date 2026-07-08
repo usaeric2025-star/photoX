@@ -17,23 +17,28 @@
 import { useState, useEffect, useTransition, useCallback } from 'react';
 import { useQueryState, parseAsArrayOf, parseAsString, parseAsBoolean } from 'nuqs';
 import { useUI } from '#lib/store/index.js';
+import { 
+  searchParser, categoryParser, tagsParser, sortParser, modalParser, 
+  parseAsPhotoId, batchParser, selectedIdsParser, showGroupsCollapsedParser, 
+  anchorParser, groupIdParser 
+} from '#lib/nuqs/parsers.js';
 
 // --- Filters Hook ---
 
 export type ModalType = 'edit' | 'delete' | 'add' | 'upload' | 'batch-edit' | 'settings' | 'ai-batch' | 'group-create' | 'group-detail' | 'group-edit' | 'category-edit' | 'tag-edit' | 'manufacturer-edit' | 'none';
 
 export function useFilters(options?: { enableStatus?: boolean }) {
-  const [search, setSearch] = useQueryState('q', parseAsString.withDefault(''));
-  const [category, setCategory] = useQueryState('c', parseAsString.withDefault(''));
-  const [tags, setTags] = useQueryState('t', parseAsArrayOf(parseAsString).withDefault([]));
-  const [sort, setSort] = useQueryState('s', parseAsString.withDefault('newest'));
-  const [modal, setModal] = useQueryState('m', parseAsString.withDefault('none') as any);
-  const [photoId, setPhotoId] = useQueryState('id', parseAsString.withDefault(''));
-  const [batch, setBatch] = useQueryState('batch', parseAsBoolean.withDefault(false));
-  const [selected, setSelected] = useQueryState('selected', parseAsArrayOf(parseAsString).withDefault([]));
-  const [showGroupsCollapsed, setShowGroupsCollapsed] = useQueryState('gc', parseAsBoolean.withDefault(true));
-  const [anchor, setAnchor] = useQueryState('anchor', parseAsBoolean.withDefault(false));
-  const [groupId, setGroupId] = useQueryState('g', parseAsString);
+  const [search, setSearch] = useQueryState('q', searchParser);
+  const [category, setCategory] = useQueryState('c', categoryParser);
+  const [tags, setTags] = useQueryState('t', tagsParser);
+  const [sort, setSort] = useQueryState('s', sortParser);
+  const [modal, setModal] = useQueryState('m', modalParser);
+  const [photoId, setPhotoId] = useQueryState('id', parseAsPhotoId);
+  const [batch, setBatch] = useQueryState('batch', batchParser);
+  const [selected, setSelected] = useQueryState('selected', selectedIdsParser);
+  const [showGroupsCollapsed, setShowGroupsCollapsed] = useQueryState('gc', showGroupsCollapsedParser);
+  const [anchor, setAnchor] = useQueryState('anchor', anchorParser);
+  const [groupId, setGroupId] = useQueryState('g', groupIdParser);
 
   const updateFilters = (updates: {
     search?: string;
@@ -48,7 +53,7 @@ export function useFilters(options?: { enableStatus?: boolean }) {
     if (updates.categoryId !== undefined) setCategory(updates.categoryId || null);
     if (updates.tags !== undefined) setTags(updates.tags?.length ? updates.tags : null);
     if (updates.tagIds !== undefined) setTags(updates.tagIds?.length ? updates.tagIds : null);
-    if (updates.sort !== undefined) setSort(updates.sort || null);
+    if (updates.sort !== undefined) setSort((updates.sort || null) as any);
   };
 
   const openModal = (type: ModalType, id?: string) => {

@@ -12,19 +12,19 @@ interface BatchEditFormProps {
 }
 
 const defaultForm: PhotoEditFormData = {
-  name: '',
-  description: { zh: '', en: '', ms: '' },
-  categoryId: null,
-  manufacturerId: null,
-  groupId: null,
-  isGroupCover: false,
-  price: null,
-  note: null,
-  manualCode: null,
-  modelNumber: null,
-  dimensions: [],
-  isHidden: false,
-  tags: []
+  name: undefined as any,
+  description: undefined,
+  categoryId: undefined,
+  manufacturerId: undefined,
+  groupId: undefined,
+  isGroupCover: undefined,
+  price: undefined,
+  note: undefined,
+  manualCode: undefined,
+  modelNumber: undefined,
+  dimensions: undefined,
+  isHidden: undefined,
+  tags: undefined
 };
 
 export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProps) {
@@ -78,9 +78,10 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                 <div className="space-y-2">
                     <label className="text-sm font-bold">{appLang === 'zh' ? `${t('category')} / CATEGORY` : t('category').toUpperCase()}</label>
                     <select 
-                      value={String(state.value || '')} 
+                      value={state.value === undefined || state.value === null ? '' : String(state.value)} 
                       onChange={(e) => {
-                          handleChange(e.target.value || null);
+                          const val = e.target.value;
+                          handleChange(val === '' ? undefined : val);
                       }}
                       className="w-full border p-2 rounded"
                     >
@@ -102,7 +103,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                       value={(state.value as string[]) || []} 
                       onChange={(e) => {
                           const options = Array.from(e.target.selectedOptions, option => option.value);
-                          handleChange(options);
+                          handleChange(options.length ? options : undefined);
                       }}
                       className="w-full border p-2 rounded min-h-[100px]"
                     >
@@ -120,9 +121,10 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                 <div className="space-y-2">
                     <label className="text-sm font-bold">{appLang === 'zh' ? `${t('manufacturer')} / MANUFACTURER` : t('manufacturer').toUpperCase()}</label>
                     <select 
-                      value={String(state.value || '')} 
+                      value={state.value === undefined || state.value === null ? '' : String(state.value)} 
                       onChange={(e) => {
-                          handleChange(e.target.value || null);
+                          const val = e.target.value;
+                          handleChange(val === '' ? undefined : val);
                       }}
                       className="w-full border p-2 rounded"
                     >

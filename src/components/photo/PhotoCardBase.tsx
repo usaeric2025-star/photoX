@@ -46,6 +46,10 @@ export const PhotoCardBase = ({
       data-selected={isSelected}
       data-multiselect={isMultiSelect}
       onClick={onClick}
+      onContextMenu={(e) => {
+        // Prevent default context menu so mobile long press works seamlessly
+        e.preventDefault();
+      }}
       style={{
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
