@@ -63,7 +63,12 @@ export function TagEditor({
   const selectedSet = new Set(selectedTagIds.map(String));
   const pinnedSet = new Set(pinnedIds.map(String));
 
-  // 1. Data Source & Deduplication
+  // 1. Selected Tags Summary (for quick view)
+  const selectedTags = React.useMemo(() => {
+    return allTags.filter(t => selectedSet.has(String(t.id)));
+  }, [allTags, selectedTagIds]);
+
+  // 2. Data Source & Deduplication
   let displayList: Tag[] = [];
   const term = deferredSearchTerm.trim();
   if (!term) {
@@ -78,26 +83,17 @@ export function TagEditor({
   // Deduplicate displayList by ID
   const uniqueDisplayList = Array.from(new Map(displayList.map(t => [String(t.id), t])).values());
 
-  // 2. Sort Logic - Use useMemo to avoid jumping items during interaction if search is not active
+  // 3. Sort Logic - Strictly stable (Pinned -> Alphabetical)
+  // We NO LONGER sort by selected at the top in the main list to prevent jumping
   const filteredTags = React.useMemo(() => {
     return [...uniqueDisplayList].sort((a, b) => {
-      const aId = String(a.id);
-      const bId = String(b.id);
-      
-      // Only sort by selection at the top if searching, otherwise keep order stable
-      if (term) {
-        const aSelected = selectedSet.has(aId);
-        const bSelected = selectedSet.has(bId);
-        if (aSelected !== bSelected) return aSelected ? -1 : 1;
-      }
-
-      const aPinned = pinnedSet.has(aId);
-      const bPinned = pinnedSet.has(bId);
+      const aPinned = pinnedSet.has(String(a.id));
+      const bPinned = pinnedSet.has(String(b.id));
       if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
-  }, [uniqueDisplayList, term, pinnedIds]); // Intentionally omit selectedSet from dependencies to keep it stable while toggling
+  }, [uniqueDisplayList, pinnedIds]);
 
   return (
     <div className="space-y-2">
@@ -119,6 +115,38 @@ export function TagEditor({
             + 新增
           </button>
         </div>
+      </div>
+
+      {/* Selected Tags Summary Section */}
+      {selectedTags.length > 0 && (
+        <div className="px-1 py-2">
+          <div className="flex items-center justify-between mb-1.5 px-1">
+            <span className="text-[9px] font-bold text-blue-500 uppercase tracking-wider">
+              已选择 / SELECTED ({selectedTags.length})
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-[6px] p-2 bg-blue-50/30 rounded-xl border border-blue-100/50 min-h-[40px]">
+            {selectedTags.map(tag => (
+              <button
+                key={`selected-${tag.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleTag(tag);
+                }}
+                className="group flex items-center gap-1.5 px-2 py-1 bg-white border border-blue-200 text-blue-600 rounded-lg text-[11px] font-medium hover:border-blue-300 hover:bg-blue-50 transition-all active:scale-95"
+              >
+                {tag.name}
+                <span className="text-[10px] opacity-40 group-hover:opacity-100">✕</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="px-1 pt-1">
+         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+           全部标签 / ALL TAGS
+         </span>
       </div>
       <div 
         className="pb-1 max-h-[220px] overflow-y-auto flex flex-wrap gap-[6px] content-start"
