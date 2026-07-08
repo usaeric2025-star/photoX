@@ -37,18 +37,10 @@ export function PhotoTagSelector({
     ),
   ) as string[];
 
-  const sortedTags = [...tags].sort((a, b) => {
-    const isASelected = cleanSelectedIds.includes(String(a.id));
-    const isBSelected = cleanSelectedIds.includes(String(b.id));
-
-    if (isASelected && !isBSelected) return -1;
-    if (!isASelected && isBSelected) return 1;
-
-    return a.name.localeCompare(b.name, undefined, { numeric: true });
-  });
-
   const handleToggleTag = (tag: Tag) => {
-    const strId = String(tag.id);
+    const strId = tag.id !== undefined && tag.id !== null ? String(tag.id) : '';
+    if (!strId) return;
+    
     if (cleanSelectedIds.includes(strId)) {
       onChange(cleanSelectedIds.filter((id) => id !== strId));
     } else {
@@ -60,7 +52,7 @@ export function PhotoTagSelector({
   return (
     <>
       <TagEditor
-        tags={sortedTags}
+        tags={tags}
         selectedTagIds={cleanSelectedIds}
         onToggleTag={handleToggleTag}
         onUpdateTag={updateTag}
@@ -83,7 +75,8 @@ export function PhotoTagSelector({
           const saved = await addTag(name.trim());
           if (saved) {
              const existing = tags.find(t => t.name.toUpperCase() === name.trim().toUpperCase());
-             onChange([...new Set([...cleanSelectedIds, String(existing?.id || saved)])]);
+             const finalId = existing?.id !== undefined && existing?.id !== null ? String(existing.id) : String(saved);
+             onChange([...new Set([...cleanSelectedIds, finalId])]);
           }
           return true;
         }}

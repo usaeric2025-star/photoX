@@ -63,7 +63,7 @@ export function TagEditor({
   const selectedSet = new Set(selectedTagIds.map(String));
   const pinnedSet = new Set(pinnedIds.map(String));
 
-  // 1. Data Source
+  // 1. Data Source & Deduplication
   let displayList: Tag[] = [];
   const term = deferredSearchTerm.trim();
   if (!term) {
@@ -75,21 +75,29 @@ export function TagEditor({
     displayList = [...displayList, ...missingSelected];
   }
 
-  // 2. Sort Logic
-  const filteredTags = [...displayList].sort((a, b) => {
-    const aId = String(a.id);
-    const bId = String(b.id);
-    
-    const aSelected = selectedSet.has(aId);
-    const bSelected = selectedSet.has(bId);
-    if (aSelected !== bSelected) return aSelected ? -1 : 1;
+  // Deduplicate displayList by ID
+  const uniqueDisplayList = Array.from(new Map(displayList.map(t => [String(t.id), t])).values());
 
-    const aPinned = pinnedSet.has(aId);
-    const bPinned = pinnedSet.has(bId);
-    if (aPinned !== bPinned) return aPinned ? -1 : 1;
+  // 2. Sort Logic - Use useMemo to avoid jumping items during interaction if search is not active
+  const filteredTags = React.useMemo(() => {
+    return [...uniqueDisplayList].sort((a, b) => {
+      const aId = String(a.id);
+      const bId = String(b.id);
+      
+      // Only sort by selection at the top if searching, otherwise keep order stable
+      if (term) {
+        const aSelected = selectedSet.has(aId);
+        const bSelected = selectedSet.has(bId);
+        if (aSelected !== bSelected) return aSelected ? -1 : 1;
+      }
 
-    return a.name.localeCompare(b.name, undefined, { numeric: true });
-  });
+      const aPinned = pinnedSet.has(aId);
+      const bPinned = pinnedSet.has(bId);
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
+
+      return a.name.localeCompare(b.name, undefined, { numeric: true });
+    });
+  }, [uniqueDisplayList, term, pinnedIds]); // Intentionally omit selectedSet from dependencies to keep it stable while toggling
 
   return (
     <div className="space-y-2">
@@ -116,7 +124,7 @@ export function TagEditor({
         className="pb-1 max-h-[220px] overflow-y-auto flex flex-wrap gap-[6px] content-start"
       >
         {filteredTags.slice(0, 150).map((tag: Tag) => {
-          const isSelected = selectedTagIds.map(String).includes(String(tag.id));
+          const isSelected = selectedSet.has(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = pinnedIds.includes(String(tag.id));
           const isDisabled = !isSelected && selectedTagIds.length >= MAX_TAGS_PER_PHOTO;

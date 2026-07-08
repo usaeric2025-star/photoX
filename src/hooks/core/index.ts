@@ -290,6 +290,7 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
   const isPressedRef = useRef(false);
   const elementRef = useRef<T | null>(null);
   const startCoordsRef = useRef<{ x: number; y: number } | null>(null);
+  const lastTouchTimeRef = useRef<number>(0);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -302,9 +303,21 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
     (e: React.MouseEvent | React.TouchEvent) => {
       if (disabled) return;
       
+      const isTouchEvent = 'touches' in e;
+      const now = Date.now();
+      
+      // Ignore mouse events that occur right after a touch event (simulated mouse events)
+      if (!isTouchEvent && now - lastTouchTimeRef.current < 500) {
+        return;
+      }
+      
+      if (isTouchEvent) {
+        lastTouchTimeRef.current = now;
+      }
+      
       let clientX = 0;
       let clientY = 0;
-      if ('touches' in e) {
+      if (isTouchEvent) {
         if (e.touches.length > 1) {
           clearTimer();
           isPressedRef.current = false;

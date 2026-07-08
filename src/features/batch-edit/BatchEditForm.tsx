@@ -105,10 +105,10 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
                           const options = Array.from(e.target.selectedOptions, option => option.value);
                           handleChange(options.length ? options : undefined);
                       }}
-                      className="w-full border p-2 rounded min-h-[100px]"
+                      className="w-full border p-2 rounded min-h-[100px] outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     >
                       {tags.map(tag => (
-                        <option key={tag.id} value={tag.name}>{tag.name}</option>
+                        <option key={tag.id} value={String(tag.id)}>{tag.name}</option>
                       ))}
                     </select>
                     <p className="text-xs text-slate-500">Select multiple tags to add to all selected photos. Existing tags will not be removed.</p>

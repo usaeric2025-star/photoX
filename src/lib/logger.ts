@@ -33,10 +33,10 @@ class Logger {
   }
 
   /**
-   * 性能追蹤工具
-   * @param label 標籤
-   * @param threshold 閾值（毫秒），超過此值將輸出警告
-   * @param fn 執行的函數
+   * 性能追踪工具
+   * @param label 标签
+   * @param threshold 阈值（毫秒），超过此值将输出警告
+   * @param fn 执行的函数
    */
   track<T>(label: string, threshold: number, fn: () => T): T {
     const start = performance.now();

@@ -10,7 +10,7 @@ import {
   type UIStoreState
 } from '#src/store/uiStore.js';
 
-// UI 狀態 (Signals)
+// UI 状态 (Signals)
 export {
   appLang, descLang, groupSettingsOpen, uploadAsGroup, formState, showPassPrompt, 
   isPhotoPickerOpen, photoPickerGroupId, isInitialDataLoading, focusedGroupPhotoId, 

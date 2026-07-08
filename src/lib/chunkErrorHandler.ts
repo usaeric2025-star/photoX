@@ -95,10 +95,10 @@ function showFallbackErrorPage() {
       </head>
       <body>
         <div class="container">
-          <h2>⚠️ 應用更新失敗 / App Update Failed</h2>
-          <p>嘗試多次自動恢復後仍無法載入最新版本。請點擊下方按鈕清除快取後重新進入。</p>
+          <h2>⚠️ 应用更新失败 / App Update Failed</h2>
+          <p>尝试多次自动恢复后仍无法载入最新版本。请点击下方按钮清除缓存后重新进入。</p>
           <p style="font-size: 14px; color: #666; margin-top: -10px;">Failed to load the latest version after multiple attempts. Please clear cache and reload.</p>
-          <button onclick="localStorage.clear(); sessionStorage.clear(); location.reload();">清除快取並重試 / Clear Cache & Retry</button>
+          <button onclick="localStorage.clear(); sessionStorage.clear(); location.reload();">清除缓存并重试 / Clear Cache & Retry</button>
         </div>
       </body>
     </html>
