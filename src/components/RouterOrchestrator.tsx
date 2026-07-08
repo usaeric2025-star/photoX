@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { ErrorBoundary } from "#src/components/shared/ErrorBoundary.js";
 import { motion, AnimatePresence } from "lite-sleek";
 import { Switch, Route, useLocation } from "wouter";
@@ -31,8 +31,15 @@ const AdminGroupDetailRoute = () => (
 );
 
 export function RouterOrchestrator() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const isAuthLoading = useAuth(s => s.isLoading);
+  
+  // Normalize trailing slash to avoid routing mismatch (e.g. /admin/ -> /admin)
+  useEffect(() => {
+    if (location !== '/' && location.endsWith('/')) {
+      setLocation(location.slice(0, -1), { replace: true });
+    }
+  }, [location, setLocation]);
   
   const getPageGroupKey = (pathname: string) => {
     if (pathname === '/' || pathname.startsWith('/photo/')) return 'public-home';

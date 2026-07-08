@@ -12,21 +12,24 @@ export function NotFoundPage() {
   const isTransition = React.useMemo(() => {
     if (!pathname) return false;
     
+    // Normalize path to strip trailing slash for matching (unless it's exactly "/")
+    const normPath = pathname !== '/' && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    
     // Public routes
-    if (pathname === '/') return true;
-    if (pathname.startsWith('/photo/')) return true;
-    if (pathname.startsWith('/group/')) return true;
+    if (normPath === '/') return true;
+    if (normPath.startsWith('/photo/')) return true;
+    if (normPath.startsWith('/group/')) return true;
 
     // Admin routes
-    if (pathname === '/admin') return true;
-    if (pathname === '/admin/batch-edit') return true;
-    if (pathname === '/admin/batch') return true;
-    if (pathname === '/admin/diagnostics') return true;
-    if (pathname === '/admin/diagnose') return true;
-    if (pathname === '/admin/tasks') return true;
-    if (pathname === '/admin/error-logs') return true;
-    if (pathname === '/settings' || pathname.startsWith('/settings/')) return true;
-    if (pathname.startsWith('/admin/group/')) return true;
+    if (normPath === '/admin') return true;
+    if (normPath === '/admin/batch-edit') return true;
+    if (normPath === '/admin/batch') return true;
+    if (normPath === '/admin/diagnostics') return true;
+    if (normPath === '/admin/diagnose') return true;
+    if (normPath === '/admin/tasks') return true;
+    if (normPath === '/admin/error-logs') return true;
+    if (normPath === '/settings' || normPath.startsWith('/settings/')) return true;
+    if (normPath.startsWith('/admin/group/')) return true;
 
     return false;
   }, [pathname]);

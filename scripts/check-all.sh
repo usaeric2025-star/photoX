@@ -2,10 +2,10 @@
 # scripts/check-all.sh
 
 echo "=== 1. TypeScript 類型檢查 (前端) ==="
-npx tsgo --noEmit || exit 1
+npx tsc --noEmit || exit 1
 
 echo "=== 2. TypeScript 類型檢查 (後端) ==="
-npx tsgo --noEmit -p tsconfig.api.json || exit 1
+npx tsc --noEmit -p tsconfig.api.json || exit 1
 
 echo "=== 3. Drizzle Schema 檢查 ==="
 npx drizzle-kit check || exit 1

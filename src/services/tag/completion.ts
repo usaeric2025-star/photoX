@@ -84,7 +84,7 @@ export async function resolveTagNamesToIds(
         // Invalidate tags cache so the UI shows the newly created tags
         queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
       } catch (e) {
-        console.error('Batch create tags failed in resolveTagNamesToIds:', e);
+        ErrorFactory.handle(e, { context: 'resolveTagNamesToIds-batch', silent: true });
       }
     }
 
