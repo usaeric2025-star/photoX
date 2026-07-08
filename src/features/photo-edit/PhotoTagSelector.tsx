@@ -74,6 +74,7 @@ export function PhotoTagSelector({
           if (!name.trim()) return false;
           const saved = await addTag(name.trim());
           if (saved) {
+             if (cleanSelectedIds.length >= MAX_TAGS_PER_PHOTO) return true; // Prevent adding to selection if limit reached
              const existing = tags.find(t => t.name.toUpperCase() === name.trim().toUpperCase());
              const finalId = existing?.id !== undefined && existing?.id !== null ? String(existing.id) : String(saved);
              onChange([...new Set([...cleanSelectedIds, finalId])]);

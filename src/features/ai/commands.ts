@@ -96,11 +96,6 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
        const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
        const normalized = adapter.normalize(parsed, (data as any).raw_result || JSON.stringify(parsed));
 
-       // 限制最大標籤數為 3 顆，維持 UI 寬度一致性
-       if (normalized.tagNames.length > 3) {
-         normalized.tagNames = normalized.tagNames.slice(0, 3);
-       }
-
        return {
          name: normalized.name,
          description: normalized.description.zh, // 保持與既有單一描述欄位系統的相容性

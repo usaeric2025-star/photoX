@@ -218,7 +218,7 @@ export function usePhotoEditAI() {
               }
 
               if (finalTagIds.length > 0) {
-                  const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3);
+                  const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3); // Limit to 3 for automatic selection
                   invalidateTags();
                   
                   const latestTags = await api.tags.$get()
@@ -233,7 +233,8 @@ export function usePhotoEditAI() {
                     return Array.from(existingMap.values());
                   });
 
-                  updates.tags = uniqueIds.map(id => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
+                  // Use latestTags instead of allTags to find the Tag objects for the form
+                  updates.tags = uniqueIds.map(id => latestTags.find(t => String(t.id) === String(id))).filter(Boolean);
               } else {
                   updates.tags = [];
               }
