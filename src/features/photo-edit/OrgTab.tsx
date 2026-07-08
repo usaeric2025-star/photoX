@@ -38,9 +38,9 @@ export function OrgTab() {
     <div className="m-0 p-4 space-y-8 animate-in fade-in slide-in-from-right-2 duration-300 pb-10">
       
       <AppField form={form} name="isHidden">
-        {({ value, onChange }) => (
-          <VisibilityToggle value={!!value} onChange={(val) => {
-            onChange(val);
+        {({ state, handleChange }) => (
+          <VisibilityToggle value={!!state.value} onChange={(val) => {
+            handleChange(val);
             showToast.success(val ? t('hidden') : t('visible'));
           }} />
         )}
@@ -52,10 +52,10 @@ export function OrgTab() {
       {/* 2. 标签 */}
       <section className="space-y-4">
         <AppField form={form} name="tags">
-          {({ value, onChange }) => (
+          {({ state, handleChange }) => (
             <PhotoTagSelector 
-              selectedTagIds={Array.isArray(value) ? (typeof value[0] === 'object' ? value.map(t => String((t as { id: string | number }).id)) : value as string[]) : []}
-              onChange={onChange}
+              selectedTagIds={Array.isArray(state.value) ? (typeof state.value[0] === 'object' ? (state.value as any[]).map(t => String(t.id)) : state.value as string[]) : []}
+              onChange={handleChange}
               tags={tags}
               addTag={async (name) => {
                 const result = await addTagMut(name);

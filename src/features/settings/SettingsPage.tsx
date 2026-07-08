@@ -22,6 +22,7 @@ import { SettingsTabs } from './SettingsTabs.js';
 import { SettingsHeader } from './SettingsHeader.js';
 import { translations } from '#src/locales/index.js';
 import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
+import { useTranslation } from '#src/hooks/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 
@@ -64,8 +65,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const tasks = useSignal(tasksSignal);
   const isMaintenanceRunning = Array.from(tasks.values()).some(t => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
   
-  const appLang = useUI(s => s.appLang);
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const { t, appLang } = useTranslation();
 
   const user = useAuth(s => s.user);
   const signIn = useAuth(s => s.signIn);

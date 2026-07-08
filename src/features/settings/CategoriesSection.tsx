@@ -40,7 +40,7 @@ function CategoryItem({
   });
 
   const longPress = useLongPress<HTMLDivElement>({
-    delay: 400,
+    delay: 800,
     onLongPress: () => {
       setActiveMenuId(cat.id);
     }

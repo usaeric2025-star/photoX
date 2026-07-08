@@ -26,7 +26,7 @@ export const TagButton = memo(function TagButton({
   onLongPress 
 }: TagButtonProps) {
   const handlers = useLongPress<HTMLButtonElement>({
-    delay: 500,
+    delay: 800,
     onLongPress: () => {
       onLongPress();
     },

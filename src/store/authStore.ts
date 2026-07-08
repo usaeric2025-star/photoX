@@ -18,6 +18,7 @@ export interface AuthState {
 }
 
 export const userSignal = signal<User | null>(null);
+export const tokenSignal = signal<string | null>(null);
 export const authLoadingSignal = signal<boolean>(true);
 
 export const setUser = (user: User | null) => {
@@ -33,22 +34,11 @@ export const initAuth = async () => {
   await safeAsync(async () => {
     const sessionPromise = supabase.auth.getSession().catch(e => ({ data: { session: null }, error: e }));
     
-    const { data } = await withTimeout(sessionPromise, 3000, 'Supabase Get Auth Session').catch(() => ({ data: { session: null } })) as { 
-      data: { 
-        session: { 
-          user: { 
-            id: string; 
-            email?: string; 
-            user_metadata: Record<string, unknown>;
-            email_confirmed_at?: string;
-          } 
-        } | null 
-      }; 
-      error?: unknown; 
-    };
+    const { data } = await withTimeout(sessionPromise, 3000, 'Supabase Get Auth Session').catch(() => ({ data: { session: null } })) as any;
     
     if (data.session?.user) {
       const u = data.session.user;
+      tokenSignal.value = data.session.access_token || null;
       const mapped: User = {
         id: u.id,
         email: u.email || null,
@@ -82,6 +72,7 @@ export const signOut = async () => {
   await safeAsync(async () => {
     await supabase.auth.signOut();
     userSignal.value = null;
+    tokenSignal.value = null;
     if (typeof window !== 'undefined') {
       storage.remove('ais_mock_auth_passcode');
       window.location.reload();
@@ -99,6 +90,7 @@ export const initAuthListener = () => {
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
     if (session?.user) {
       const u = session.user;
+      tokenSignal.value = session.access_token || null;
       const mapped: User = {
         id: u.id,
         email: u.email || null,
@@ -111,6 +103,7 @@ export const initAuthListener = () => {
       authLoadingSignal.value = false;
     } else {
       userSignal.value = null;
+      tokenSignal.value = null;
       authLoadingSignal.value = false;
     }
   });

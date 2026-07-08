@@ -36,8 +36,10 @@ export function RouterOrchestrator() {
   
   // Normalize trailing slash to avoid routing mismatch (e.g. /admin/ -> /admin)
   useEffect(() => {
-    if (location !== '/' && location.endsWith('/')) {
-      setLocation(location.slice(0, -1), { replace: true });
+    const pathname = window.location.pathname;
+    if (pathname !== '/' && pathname.endsWith('/')) {
+      const newPath = pathname.slice(0, -1);
+      setLocation(newPath + window.location.search, { replace: true });
     }
   }, [location, setLocation]);
   

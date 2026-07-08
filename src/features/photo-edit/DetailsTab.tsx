@@ -59,10 +59,10 @@ export function DetailsTab() {
       </div>
 
       <AppField form={form} name="dimensions">
-        {({ value, onChange }) => (
+        {({ state, handleChange }) => (
           <DimensionEditor 
-            dimensions={safeArray<Dimension>(value as Dimension[] | null | undefined)}
-            onChange={(newDims) => onChange(newDims)}
+            dimensions={safeArray<Dimension>(state.value as Dimension[] | null | undefined)}
+            onChange={(newDims) => handleChange(newDims)}
             showAiButton={true}
             isAnalyzing={isAnalyzing}
             onAiAnalyze={onAiAnalyze}

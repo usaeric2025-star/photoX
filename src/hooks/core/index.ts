@@ -280,7 +280,7 @@ interface UseLongPressOptions {
 }
 
 export function useLongPress<T extends HTMLElement = HTMLDivElement>({
-  delay = 500,
+  delay = 800,
   onLongPress,
   onClick,
   disabled = false,
@@ -351,8 +351,8 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
       const diffY = clientY - startCoordsRef.current.y;
       const distance = Math.sqrt(diffX * diffX + diffY * diffY);
       
-      // Cancel long press if user swiped/scrolled or dragged more than 15px (relaxed for better touch UX)
-      if (distance > 15) {
+      // Cancel long press if user swiped/scrolled or dragged more than 20px
+      if (distance > 20) {
         clearTimer();
         isPressedRef.current = false;
       }
