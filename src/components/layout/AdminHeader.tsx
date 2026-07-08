@@ -10,7 +10,6 @@ import { storage } from '#src/services/storage/index.js';
 import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { AdminHeaderLogo } from './AdminHeaderLogo.js';
 import { AdminHeaderActions } from './AdminHeaderActions.js';
-import { AdminHeaderMenu } from './AdminHeaderMenu.js';
 
 interface AdminHeaderProps {
   className?: string;
@@ -78,17 +77,9 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           handleAuthAction={() => navigate.home()}
           theme={theme}
           t={t}
-        />
-
-        <div className="h-6 w-[1px] bg-slate-200 mx-1 hidden sm:block" />
-
-        <AdminHeaderMenu 
           user={user}
           signOut={signOut}
-          navigate={navigate}
           isStaff={isStaff}
-          theme={theme}
-          t={t}
           lang={lang}
         />
       </div>

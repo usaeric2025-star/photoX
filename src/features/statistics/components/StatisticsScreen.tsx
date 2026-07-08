@@ -45,17 +45,24 @@ export function StatisticsScreen() {
     ['admin', 'stats'],
     async () => {
       const res = await api.admin.maintenance.stats.$get();
+      if (!res.ok) {
+        throw new Error(`獲取統計數據失敗 (HTTP ${res.status})`);
+      }
       const json = await res.json() as {
         success: boolean;
-        data: {
+        data?: {
           totalPhotos: number;
           hiddenPhotos: number;
           totalCategories: number;
           totalTags: number;
           totalGroups: number;
         };
+        error?: string;
       };
-      return json.success ? json.data : null;
+      if (!json.success || !json.data) {
+        throw new Error(json.error || '獲取統計數據失敗');
+      }
+      return json.data;
     }
   );
 

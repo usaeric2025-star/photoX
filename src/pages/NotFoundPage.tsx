@@ -6,16 +6,42 @@ import { useTranslation } from '#src/hooks/index.js';
 
 export function NotFoundPage() {
   const { t } = useTranslation();
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+
+  // Detect and bypass transition-induced false positive 404s
+  const isTransition = React.useMemo(() => {
+    if (!pathname) return false;
+    
+    // Public routes
+    if (pathname === '/') return true;
+    if (pathname.startsWith('/photo/')) return true;
+    if (pathname.startsWith('/group/')) return true;
+
+    // Admin routes
+    if (pathname === '/admin') return true;
+    if (pathname === '/admin/batch-edit') return true;
+    if (pathname === '/admin/batch') return true;
+    if (pathname === '/admin/diagnostics') return true;
+    if (pathname === '/admin/diagnose') return true;
+    if (pathname === '/admin/tasks') return true;
+    if (pathname === '/admin/error-logs') return true;
+    if (pathname === '/settings' || pathname.startsWith('/settings/')) return true;
+    if (pathname.startsWith('/admin/group/')) return true;
+
+    return false;
+  }, [pathname]);
 
   React.useEffect(() => {
-    // Only capture if not an intentional redirect/not found
-    const pathname = window.location.pathname;
+    if (isTransition) return;
     
-    // Log diagnostics
+    // Log diagnostics only for actual invalid pages
     ErrorFactory.capture(new Error(`404: ${pathname}`));
-  }, []);
+  }, [isTransition, pathname]);
 
-  const pathname = window.location.pathname;
+  if (isTransition) {
+    return null;
+  }
+
   
   // Decide what kind of 404 this is
   const config = React.useMemo(() => {

@@ -127,7 +127,7 @@ export class ErrorFactory {
     const opLocalized = operation;
     const resLocalized = resource ? ErrorFormatter.mapResourceToLocalized(resource) : '';
     const cleanUserMsg = resource ? `${opLocalized}${resLocalized}${this.t.saveFailed}` : `${opLocalized}${this.t.saveFailed}`;
-    const systemMsg = error instanceof Error ? error.message : String(error || this.t.unknown);
+    const systemMsg = error instanceof Error ? error.message : this.extractErrorMessage(error);
     return this.create(systemMsg, {
       category: ErrorCategory.RUNTIME,
       userMessage: cleanUserMsg,
@@ -182,7 +182,8 @@ export class ErrorFactory {
       return this.create(error.message, { originalError: error });
     }
     
-    return this.create(typeof error === 'string' ? error : '未知错误', { 
+    const systemMsg = typeof error === 'string' ? error : this.extractErrorMessage(error);
+    return this.create(systemMsg, { 
       context: { raw: error } 
     });
   }

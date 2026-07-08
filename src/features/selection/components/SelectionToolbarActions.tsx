@@ -58,9 +58,9 @@ export function SelectionToolbarActions({
       {!groupId && (
         <button
           onClick={onManualGroup}
-          disabled={selectedCount === 0 || isAnyPending}
+          disabled={selectedCount < 2 || isAnyPending}
           className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
-          title="手動將照片合併為一組"
+          title={selectedCount < 2 ? "請至少選取兩張照片以進行合組" : "手動將照片合併為一組"}
         >
           {isCombining ? (
             <LoadingSpinner size="xs" className="text-blue-600 shrink-0" />

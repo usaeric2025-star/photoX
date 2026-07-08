@@ -28,13 +28,14 @@ export function useSelectionActions() {
   const [selected, setSelected] = useQueryState('selected', { ...selectedIdsParser, history: 'replace', shallow: true });
 
   const toggleSelect = (id: string) => {
-    const selectedIds = selected || [];
-    const isSelected = selectedIds.includes(id);
-    const newIds = isSelected
-      ? selectedIds.filter((i) => i !== id)
-      : [...selectedIds, id];
-    
-    setSelected(newIds.length ? newIds : null);
+    setSelected((prev) => {
+      const selectedIds = prev || [];
+      const isSelected = selectedIds.includes(id);
+      const newIds = isSelected
+        ? selectedIds.filter((i) => i !== id)
+        : [...selectedIds, id];
+      return newIds.length ? newIds : null;
+    });
   };
 
   const clearSelection = () => {

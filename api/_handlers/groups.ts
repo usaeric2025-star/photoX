@@ -233,8 +233,13 @@ export const groups = new Hono()
           .where(inArray(furnitureItems.groupId, finalSourceGroupIds));
 
         try {
-            await db.execute(sql`SELECT merge_groups(${finalSourceGroupIds}, ${targetGroupId})`);
-        } catch (rpcErr) {}
+            await db.execute(sql`SELECT merge_groups(${finalSourceGroupIds}::uuid[], ${targetGroupId}::uuid)`);
+        } catch (rpcErr) {
+            console.error('[merge_groups rpc error]', rpcErr);
+            // Fallback: manually delete the empty source groups
+            await db.delete(groupsTable)
+                .where(inArray(groupsTable.id, finalSourceGroupIds));
+        }
       }
 
       const affectedGroupIds = [targetGroupId, ...(finalSourceGroupIds || [])];
@@ -265,7 +270,7 @@ export const groups = new Hono()
     }
 
     try {
-        await db.execute(sql`SELECT move_photos_to_group(${photoIds}, ${targetGroupId})`);
+        await db.execute(sql`SELECT move_photos_to_group(${photoIds}::uuid[], ${targetGroupId}::uuid)`);
     } catch (rpcErr) {
         // Fallback manual move
         await db.update(furnitureItems)
@@ -339,7 +344,7 @@ export const groups = new Hono()
         .where(eq(furnitureItems.groupId, groupId));
     
     try {
-        await db.execute(sql`SELECT dissolve_group(${groupId})`);
+        await db.execute(sql`SELECT dissolve_group(${groupId}::uuid)`);
     } catch (rpcErr) {
         await db.delete(groupsTable).where(eq(groupsTable.id, groupId));
     }
