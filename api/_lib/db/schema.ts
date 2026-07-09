@@ -77,6 +77,7 @@ export const furnitureItems = pgTable('furniture_items', {
     groupIdIdx: index('furniture_items_group_id_idx').on(t.groupId),
     categoryIdIdx: index('furniture_items_category_id_idx').on(t.categoryId),
     imageHashIdx: index('furniture_items_image_hash_idx').on(t.imageHash),
+    userIdIdx: index('furniture_items_user_id_idx').on(t.userId),
     isPinnedIdx: index('furniture_items_is_pinned_idx').on(t.isPinned),
     isHiddenIdx: index('furniture_items_is_hidden_idx').on(t.isHidden),
     createdAtIdx: index('furniture_items_created_at_idx').on(t.createdAt),
