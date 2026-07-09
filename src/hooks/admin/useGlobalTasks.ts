@@ -10,6 +10,7 @@ import { logger } from '#lib/logger.js';
 import { useAppRoute } from '#lib/router/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import type { Task } from '#lib/task-queue/types.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 interface RemoteJob {
   id: string;
@@ -40,14 +41,10 @@ export function useGlobalTasks() {
     isAdmin ? queryKeys.maintenance.jobs() : null,
     async () => {
       try {
-        const res = await api.admin.maintenance.jobs.$get();
-        if (res.status === 401) {
-          logger.warn('Unauthorized jobs fetch - likely session expired');
-          return [];
-        }
-        if (!res.ok) return [];
-        const result = await res.json() as unknown as { success: boolean; data?: RemoteJob[] };
-        return (result && result.success && Array.isArray(result.data)) ? result.data : [];
+        return await ErrorFactory.unwrap<RemoteJob[]>(
+          api.admin.maintenance.jobs.$get(),
+          'Failed to fetch maintenance jobs'
+        );
       } catch (err) {
         logger.error('Failed to fetch maintenance jobs:', err);
         return [];

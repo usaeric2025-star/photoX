@@ -1,3 +1,5 @@
+import { api } from '#lib/api.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { descLang } from '#lib/store/index.js';
 
 /**
@@ -57,4 +59,12 @@ export function translateDimensionLabelToEnglish(label: string): string {
     result = result.replace(regex, en);
   });
   return result;
+}
+
+export async function translateDimensionLabelWithAi(label: string): Promise<string> {
+  const result = await ErrorFactory.unwrap<{ data: any }>(
+    api.ai['translate'].$post({ json: { promptText: `Translate this to English. Input: "${label}"` } }),
+    'Translation failed'
+  );
+  return result.data as string || label;
 }

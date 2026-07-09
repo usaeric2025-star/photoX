@@ -1,5 +1,6 @@
 import { logger } from '#lib/logger.js';
 import { useCallback } from 'react';
+import { translateDimensionLabelToEnglish } from '#src/utils/display.js';
 import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext.js";
 import { ErrorFactory } from '#lib/error/index.js';
 import { useAppQuery, queryClient } from '#lib/query/index.js';
@@ -226,10 +227,10 @@ export function usePhotoEditAI() {
                   const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3); // Limit to 3 for automatic selection
                   invalidateTags();
                   
-                  const latestTags = await api.tags.$get()
-                    .then(r => r.json())
-                    .then(j => j.success ? (j.data as unknown as Tag[]) : allTags)
-                    .catch(() => allTags);
+                  const latestTags = await ErrorFactory.unwrap<{ data: Tag[] }>(
+                    api.tags.$get(),
+                    'Failed to fetch latest tags'
+                  ).then(j => j.data).catch(() => allTags);
 
                   queryClient.setQueryData(queryKeys.tags.list(), (old: Tag[] | undefined) => {
                     const oldTags = Array.isArray(old) ? old : [];
@@ -265,7 +266,7 @@ export function usePhotoEditAI() {
           if (Array.isArray(result.dimensions) && result.dimensions.length > 0) {
             updates.dimensions = result.dimensions.map((d: any) => {
               return {
-                label: String(d.label || t('dimensions')),
+                label: translateDimensionLabelToEnglish(String(d.label || t('dimensions'))),
                 unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
                 length: Number(d.length) || 0,
                 width: Number(d.width) || 0,

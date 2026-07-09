@@ -74,47 +74,46 @@ export function AISecuritySection({
 
   const fetchKeysStatus = useCallback(async () => {
     try {
-      const res = await api.admin.settings['get-keys'].$get();
-      if (res.ok) {
-        const data = await res.json() as { 
-          success: boolean; 
-          keysStatus: { 
-            openrouter: boolean; 
-            agnes: boolean; 
-            primaryProvider: string;
-            openrouter_model?: string;
-            agnes_model?: string;
-          };
-          currentModel?: string;
+      const data = await ErrorFactory.unwrap<{ 
+        success: boolean; 
+        keysStatus: { 
+          openrouter: boolean; 
+          agnes: boolean; 
+          primaryProvider: string;
+          openrouter_model?: string;
+          agnes_model?: string;
         };
-        if (data.success) {
-          setKeysStatus({
-            openrouter: data.keysStatus.openrouter,
-            agnes: data.keysStatus.agnes,
-            primaryProvider: data.keysStatus.primaryProvider,
-            openrouter_model: data.keysStatus.openrouter_model || '',
-            agnes_model: data.keysStatus.agnes_model || ''
-          });
-          setCurrentModel(data.currentModel || 'gemini-2.0-flash-exp');
-          setOpenrouterModel(data.keysStatus.openrouter_model || '');
-          setAgnesModel(data.keysStatus.agnes_model || '');
-          
-          // Initial populate only!
-          setLocalOpenRouterKey(prev => {
-            if (data.keysStatus.openrouter && (!prev)) {
-                return '••••••••••••••••';
-            }
-            return prev;
-          });
-          
-          setLocalAgnesKey(prev => {
-            if (data.keysStatus.agnes && !prev) {
-                return '••••••••••••••••';
-            }
-            return prev;
-          });
+        currentModel?: string;
+      }>(
+        api.admin.settings['get-keys'].$get(),
+        '獲取金鑰狀態失敗'
+      );
+
+      setKeysStatus({
+        openrouter: data.keysStatus.openrouter,
+        agnes: data.keysStatus.agnes,
+        primaryProvider: data.keysStatus.primaryProvider,
+        openrouter_model: data.keysStatus.openrouter_model || '',
+        agnes_model: data.keysStatus.agnes_model || ''
+      });
+      setCurrentModel(data.currentModel || 'gemini-2.0-flash-exp');
+      setOpenrouterModel(data.keysStatus.openrouter_model || '');
+      setAgnesModel(data.keysStatus.agnes_model || '');
+      
+      // Initial populate only!
+      setLocalOpenRouterKey(prev => {
+        if (data.keysStatus.openrouter && (!prev)) {
+            return '••••••••••••••••';
         }
-      }
+        return prev;
+      });
+      
+      setLocalAgnesKey(prev => {
+        if (data.keysStatus.agnes && !prev) {
+            return '••••••••••••••••';
+        }
+        return prev;
+      });
     } catch (e) {
       ErrorFactory.capture(e);
     }
@@ -127,14 +126,15 @@ export function AISecuritySection({
   const { submit: runTest, isLoading: isTestingProvider } = useFormSubmit<typeof TestConnectionSchema, boolean>({
     schema: TestConnectionSchema,
     mutationFn: async ({ provider, apiKey }) => {
-      const res = await api.ai.test.$post({
-        json: { 
-          provider,
-          apiKey: apiKey === "••••••••••••••••" ? "" : apiKey
-        }
-      });
-      const data = await res.json() as { success: boolean };
-      if (!data.success) throw data;
+      await ErrorFactory.unwrap<any>(
+        api.ai.test.$post({
+          json: { 
+            provider,
+            apiKey: apiKey === "••••••••••••••••" ? "" : apiKey
+          }
+        }),
+        '連通性測試失敗'
+      );
       return true;
     },
     successMessage: '[System AI] 測試連通性成功 / Connection successful',
@@ -152,11 +152,12 @@ export function AISecuritySection({
       if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
         return "noop";
       }
-      const res = await api.admin.settings['save-key'].$post({
-        json: { provider, apiKey }
-      });
-      const data = await res.json() as { success: boolean };
-      if (!res.ok || !data.success) throw data;
+      await ErrorFactory.unwrap<any>(
+        api.admin.settings['save-key'].$post({
+          json: { provider, apiKey }
+        }),
+        '保存金鑰失敗'
+      );
       return "success";
     },
     onSuccess: (result) => {
@@ -175,11 +176,12 @@ export function AISecuritySection({
   const { submit: runSaveProvider, isLoading: isSavingProvider } = useFormSubmit<typeof ProviderSaveSchema, boolean>({
     schema: ProviderSaveSchema,
     mutationFn: async ({ provider }) => {
-      const res = await api.admin.settings['save-provider'].$post({
-        json: { provider }
-      });
-      const data = await res.json() as { success: boolean };
-      if (!res.ok || !data.success) throw data;
+      await ErrorFactory.unwrap<any>(
+        api.admin.settings['save-provider'].$post({
+          json: { provider }
+        }),
+        '切換首選引擎失敗'
+      );
       return true;
     },
     onSuccess: () => {
@@ -196,11 +198,12 @@ export function AISecuritySection({
   const { submit: runSaveModel } = useFormSubmit<typeof ModelSaveSchema, boolean>({
     schema: ModelSaveSchema,
     mutationFn: async ({ provider, model }) => {
-      const res = await api.admin.settings['save-model'].$post({
-        json: { provider, model }
-      });
-      const data = await res.json() as { success: boolean };
-      if (!res.ok || !data.success) throw data;
+      await ErrorFactory.unwrap<any>(
+        api.admin.settings['save-model'].$post({
+          json: { provider, model }
+        }),
+        '保存自定義模型失敗'
+      );
       return true;
     },
     onSuccess: () => {

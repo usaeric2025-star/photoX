@@ -9,20 +9,14 @@ export async function fetchPublicSettings(): Promise<AppSettings> {
     
     const [settingsResponse] = await withTimeout(Promise.all([settingsPromise]), 10000, 'Initialize Settings & Auth APIs');
     
-    const settingsResult = await settingsResponse.json();
-    
-    if (!settingsResult.success) {
-      return {
-        app_name: 'photoX',
-        passcode_enabled: false,
-        manufacturers: [],
-        tags: []
-      } as AppSettings;
-    }
+    const settingsData = await ErrorFactory.unwrap<any>(
+      settingsResponse,
+      'Initialize Settings & Auth APIs failed'
+    );
     
     return { 
       app_name: 'photoX',
-      ...settingsResult.data
+      ...settingsData
     } as AppSettings;
   } catch (e) {
     ErrorFactory.handle(e, { context: 'fetchPublicSettings' });

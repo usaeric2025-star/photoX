@@ -21,13 +21,12 @@ export async function resolveTagNamesToIds(
       dbTags = existingTags;
     } else {
       // Fetch tags directly from API since queries.ts is being removed
-      const res = await api.tags.$get();
-      if (!res.ok) throw new Error(`Failed to fetch tags: ${res.statusText}`);
+      const tagsData = await ErrorFactory.unwrap<any[]>(
+        api.tags.$get(),
+        'Failed to fetch tags'
+      );
       
-      const json = await res.json();
-      if (!json.success) throw new Error(`Failed to load tags: ${(json as any).error}`);
-      
-      dbTags = ((json.data as any[]) || []).map(t => ({
+      dbTags = (tagsData || []).map(t => ({
         ...t,
         name: (t.name || '').toUpperCase(),
         id: Number(t.id) || 0
@@ -66,19 +65,19 @@ export async function resolveTagNamesToIds(
     if (missingNames.length > 0) {
       try {
         // Batch create tags directly using API
-        const batchRes = await api.tags.batch.$post({
-          json: { 
-            tags: missingNames.map(name => ({ name: name.toUpperCase().trim() })) 
-          }
-        });
+        const createdTags = await ErrorFactory.unwrap<any[]>(
+          api.tags.batch.$post({
+            json: { 
+              tags: missingNames.map(name => ({ name: name.toUpperCase().trim() })) 
+            }
+          }),
+          'Batch tag creation failed'
+        );
 
-        if (batchRes.ok) {
-          const batchJson = await batchRes.json();
-          if (batchJson.success && Array.isArray(batchJson.data)) {
-            batchJson.data.forEach((t: any) => {
-              if (t.id) tagIds.push(String(t.id));
-            });
-          }
+        if (Array.isArray(createdTags)) {
+          createdTags.forEach((t: any) => {
+            if (t.id) tagIds.push(String(t.id));
+          });
         }
         
         // Invalidate tags cache so the UI shows the newly created tags

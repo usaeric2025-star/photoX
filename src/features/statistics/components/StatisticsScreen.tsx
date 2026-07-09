@@ -45,25 +45,16 @@ export function StatisticsScreen() {
   }>(
     ['admin', 'stats'],
     async () => {
-      const res = await api.admin.maintenance.stats.$get();
-      if (!res.ok) {
-        throw new Error(`獲取統計數據失敗 (HTTP ${res.status})`);
-      }
-      const json = await res.json() as {
-        success: boolean;
-        data?: {
-          totalPhotos: number;
-          hiddenPhotos: number;
-          totalCategories: number;
-          totalTags: number;
-          totalGroups: number;
-        };
-        error?: string;
-      };
-      if (!json.success || !json.data) {
-        throw ErrorFactory.fromApiResponse(json, '獲取統計數據失敗');
-      }
-      return json.data;
+      return ErrorFactory.unwrap<{
+        totalPhotos: number;
+        hiddenPhotos: number;
+        totalCategories: number;
+        totalTags: number;
+        totalGroups: number;
+      }>(
+        api.admin.maintenance.stats.$get(),
+        '獲取統計數據失敗'
+      );
     }
   );
 

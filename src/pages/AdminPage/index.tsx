@@ -4,6 +4,7 @@ import { queryKeys } from '#lib/query/keys.js';
 import { AdminPageContent } from './AdminPageContent.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { api } from '#lib/api.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 export default function AdminPage() {
   const { t, appLang } = useTranslation();
@@ -19,10 +20,10 @@ export default function AdminPage() {
     queryClient.prefetchQuery({
       queryKey: queryKeys.categories.list(),
       queryFn: async () => {
-        const res = await api.categories.$get();
-        const json = await res.json();
-        if (json.success) return json.data;
-        throw new Error('Prefetch categories failed');
+        return ErrorFactory.unwrap<any[]>(
+          api.categories.$get(),
+          'Prefetch categories failed'
+        );
       },
     });
 
@@ -30,10 +31,10 @@ export default function AdminPage() {
     queryClient.prefetchQuery({
       queryKey: queryKeys.tags.list(),
       queryFn: async () => {
-        const res = await api.tags.$get();
-        const json = await res.json();
-        if (json.success) return json.data;
-        throw new Error('Prefetch tags failed');
+        return ErrorFactory.unwrap<any[]>(
+          api.tags.$get(),
+          'Prefetch tags failed'
+        );
       },
     });
   }, [appLang]);
