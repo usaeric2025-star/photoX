@@ -32,23 +32,4 @@ export const detailRoutes = new Hono()
     });
 
     return successResponse(c, formatted);
-  })
-  .post('/check-hash', async (c) => {
-    const body = await c.req.json();
-    const check = v.safeParse(PhotoCheckHashReqSchema, body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
-
-    const { hash } = check.output;
-    const data = await db.query.furnitureItems.findFirst({
-        columns: {
-            id: true,
-            imageUrl: true,
-            manualCode: true
-        },
-        where: eq(furnitureItems.imageHash, hash)
-    });
-    return successResponse(c, {
-        exists: !!data,
-        photo: data || null
-    });
   });

@@ -7,7 +7,9 @@ export function photosToLightboxSlides(photos: PhotoListItem[]): LightboxSlide[]
     id: photo.id,
     src: getPhotoThumb(photo.imageUrl, 'LG', photo.imageHash),
     title: photo.name,
-    description: photo.description || '',
+    description: (typeof photo.description === 'object' && photo.description !== null) 
+      ? (photo.description as any).zh || (photo.description as any).en || '' 
+      : (photo.description as string) || '',
     groupName: photo.groupName || undefined,
     original: photo,
     type: 'image',

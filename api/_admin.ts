@@ -8,6 +8,8 @@ const routes = new Hono()
   .route('/settings', adminSettings)
   .route('/maintenance', adminMaintenance)
   .route('/backfill', adminBackfill)
-  .route('/photos', adminPhotos);
+  .route('/photos', adminPhotos)
+  .route('/', adminPhotos)
+  .route('', adminPhotos);
 
 export default routes;

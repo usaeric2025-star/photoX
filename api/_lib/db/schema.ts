@@ -81,6 +81,10 @@ export const furnitureItems = pgTable('furniture_items', {
     isPinnedIdx: index('furniture_items_is_pinned_idx').on(t.isPinned),
     isHiddenIdx: index('furniture_items_is_hidden_idx').on(t.isHidden),
     createdAtIdx: index('furniture_items_created_at_idx').on(t.createdAt),
+    manufacturerIdIdx: index('furniture_items_manufacturer_id_idx').on(t.manufacturerId),
+    manualCodeIdx: index('furniture_items_manual_code_idx').on(t.manualCode),
+    modelNumberIdx: index('furniture_items_model_number_idx').on(t.modelNumber),
+    itemCodeIdx: index('furniture_items_item_code_idx').on(t.itemCode),
 }));
 
 /**
@@ -106,6 +110,8 @@ export const photoTags = pgTable('photo_tags', {
     tagId: integer('tag_id').references(() => tags.id, { onDelete: 'cascade' }),
 }, (t) => ({
     pk: primaryKey({ columns: [t.photoId, t.tagId] }),
+    tagIdIdx: index('photo_tags_tag_id_idx').on(t.tagId),
+    photoIdIdx: index('photo_tags_photo_id_idx').on(t.photoId),
 }));
 
 /**
