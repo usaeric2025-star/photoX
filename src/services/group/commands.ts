@@ -5,7 +5,6 @@ import { ProductGroup } from '#src/types/index.js';
 import * as v from 'valibot';
 import { GroupReqSchema } from '#shared/apiContractSchema.js';
 import { cleanTranslationPrefixes } from '#src/features/ai/safeText.js';
-import { ungroupPhotos, syncGroupMemberCount } from '#src/services/photo/utils.js';
 import { api } from '#lib/api.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
@@ -44,6 +43,21 @@ const mapToDb = (updates: Record<string, unknown>, userId?: string): Record<stri
 const getCurrentUserId = async (): Promise<string | undefined> => {
     const { data: { user } } = await supabase.auth.getUser();
     return user?.id;
+};
+
+export const ungroupPhotos = async (groupId: string): Promise<void> => {
+  const res = await api.groups.ungroup.$post({
+    json: { groupId }
+  });
+  if (!res.ok) throw ErrorFactory.fatal('Ungroup failed', { context: 'groupUtils' });
+};
+
+export const syncGroupMemberCount = async (groupId: string): Promise<void> => {
+  if (!groupId) return;
+  const res = await api.groups['sync-count'].$post({
+    json: { groupId }
+  });
+  if (!res.ok) throw ErrorFactory.fatal('Sync count failed', { context: 'groupUtils' });
 };
 
 export async function createGroup(data: Partial<ProductGroup> & { name: string | Record<string, string> }): Promise<ProductGroup> {
@@ -95,8 +109,6 @@ export async function deleteGroup(id: string): Promise<void> {
 
 // Action aliases for legacy or specific naming compliance
 // Removed aliases
-
-export { ungroupPhotos,  } from '#src/services/photo/utils.js';
 
 export const groupPhotos = async (
   photoIds: string[], 

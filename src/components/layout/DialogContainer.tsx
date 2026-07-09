@@ -1,4 +1,4 @@
-import { TaskBadge, TaskDrawer } from '#lib/task-queue/components/index.js';
+import { TaskDrawer } from '#lib/task-queue/components/index.js';
 import { PhotoLightbox } from '#src/features/lightbox/PhotoLightbox.js';
 import { PhotoEditDialog } from '#src/features/photo-edit/PhotoEditDialog.js';
 import { useEffect, useState } from 'react';
@@ -18,7 +18,6 @@ export function DialogContainer() {
     <>
       {isStaff && (
         <>
-          <TaskBadge />
           <TaskDrawer />
           <PhotoEditDialog />
         </>

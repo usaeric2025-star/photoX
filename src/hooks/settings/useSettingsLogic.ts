@@ -4,7 +4,6 @@ import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '#src/type
 import { DEFAULT_AI_MODEL } from '#src/config/ai.js';
 import { useUI } from '#lib/store/index.js';
 import { testAiConnection } from "#src/features/ai/commands.js";
-import { runHealthCheck } from "#src/services/photo/utils.js";
 import {
   normalizeTagName,
   normalizeManufacturerName,
@@ -12,7 +11,7 @@ import {
 import { api } from "#lib/api.js";
 import { useInvalidatePhotos } from '../photo/usePhotos.js';
 import { executeTask } from '#lib/task-queue/index.js';
-import { uploadToR2 } from '#src/features/upload/services/r2Client.js';
+import { uploadToR2 } from '#src/lib/upload/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { showToast } from '#lib/ui/toast.js';
 
@@ -111,7 +110,7 @@ export const useSettingsLogic = ({
       type: 'upload',
       execute: async () => {
         const fileKey = `settings/logo_${Date.now()}`;
-        const { imageUrl } = await uploadToR2('', fileKey, file, undefined);
+        const imageUrl = await uploadToR2(file, fileKey);
         setSettingField('logoUrl', imageUrl);
         return imageUrl;
       }

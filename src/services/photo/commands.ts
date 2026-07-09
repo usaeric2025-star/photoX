@@ -3,7 +3,7 @@ import { DB_CONFIG } from '#src/constants/config.js';
 import { Photo } from '#src/types/index.js';
 import { mapToDb, mapSupabasePhoto } from '#src/services/mappers/index.js';
 import { api } from '#lib/api.js';
-import { uploadWithRetry } from '#src/services/storage/index.js';
+import { uploadToR2 } from '#src/lib/upload/index.js';
 import * as v from 'valibot';
 import { PhotoSchema } from '#shared/apiContractSchema.js';
 
@@ -25,10 +25,13 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('NO_ACTIVE_SESSION');
 
-    const uploadRes = await uploadWithRetry(session.user.id, id, updates.uri, undefined, undefined, undefined, 3, true);
+    // Convert base64 to Blob if needed
+    const response = await fetch(updates.uri);
+    const blob = await response.blob();
+    const imageUrl = await uploadToR2(blob, id);
     
-    updates.image_url = uploadRes.imageUrl;
-    updates.updated_at = new Date().toISOString();
+    updates.imageUrl = imageUrl;
+    updates.updatedAt = new Date().toISOString();
     delete updates.uri;
   }
 

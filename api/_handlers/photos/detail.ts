@@ -41,6 +41,7 @@ export const detailRoutes = new Hono()
     const { hash } = check.output;
     const data = await db.query.furnitureItems.findFirst({
         columns: {
+            id: true,
             imageUrl: true,
             manualCode: true
         },

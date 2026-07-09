@@ -17,6 +17,9 @@ export default defineConfig(({mode}) => {
       bundledDev: true,
     },
     base: '/',
+    worker: {
+      format: 'es'
+    },
     plugins: [
       babel({
         include: /\.[jt]sx?$/,

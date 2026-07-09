@@ -69,8 +69,37 @@ export const storage = new Hono()
     const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
     
     return successResponse(c, { uploadUrl, publicUrl });
-})
-.post("/r2-delete", async (c) => {
+  })
+  .post("/rollback", async (c) => {
+    await requireRealUser(c);
+    const { imageUrl } = await c.req.json();
+    if (!imageUrl) return errorResponse(c, "imageUrl required", 400);
+
+    // Extract key from URL
+    // URL format: https://.../photox/public/filename.webp
+    const urlParts = imageUrl.split('/');
+    const key = urlParts.slice(urlParts.indexOf('public') + 1).join('/');
+    
+    if (!key) return errorResponse(c, "invalid imageUrl format", 400);
+
+    const s3Client = await getR2Client();
+    const bucketName = serverEnv.R2_BUCKET_NAME;
+    if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
+
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key: `photox/public/${key}`,
+      });
+      await s3Client.send(command);
+      logger.info(`[Rollback] Deleted orphan file: ${key}`);
+      return successResponse(c, { success: true });
+    } catch (err) {
+      logger.error(`[Rollback] Failed to delete orphan file ${key}:`, err);
+      return errorResponse(c, "rollback failed", 500);
+    }
+  })
+  .post("/r2-delete", async (c) => {
     await requireRealUser(c);
     const { fileKeys } = await c.req.json();
     if (!fileKeys || !Array.isArray(fileKeys)) {

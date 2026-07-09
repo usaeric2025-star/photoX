@@ -5,6 +5,7 @@ import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Progress } from '#src/components/shared/Progress.js';
 import { Task } from '#lib/task-queue/types.js';
+import { scheduler } from '#lib/task-queue/scheduler.js';
 
 function TaskItem({ task }: { task: Task }) {
   const { t } = useTranslation();
@@ -35,6 +36,9 @@ function TaskItem({ task }: { task: Task }) {
   const progressPercent = Math.min(100, Math.max(0, Math.round(progress * 100)));
 
   const message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
+  const results = (task.state.status === 'completed' || task.state.status === 'failed') ? (task.state as any).result : null;
+  const failedItems = Array.isArray(results) ? results.filter((r: any) => !r.success) : [];
+  const [showDetails, setShowDetails] = React.useState(false);
 
   return (
     <div className={cn(
@@ -65,7 +69,7 @@ function TaskItem({ task }: { task: Task }) {
             )}
           </div>
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 flex flex-col items-end gap-1.5">
           <span className={cn(
             "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full select-none", 
             task.state.status === 'completed' ? 'bg-green-100 text-green-700' :
@@ -75,8 +79,41 @@ function TaskItem({ task }: { task: Task }) {
           )}>
             {statusLabels[task.state.status as keyof typeof statusLabels] || task.state.status}
           </span>
+          {(task.state.status === 'processing' || task.state.status === 'queued') && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                scheduler.cancel(task.id);
+              }}
+              className="text-[10px] text-red-500 hover:text-red-600 hover:bg-red-50 font-bold px-2 py-0.5 rounded transition-all active:scale-95"
+            >
+              {t('cancel')}
+            </button>
+          )}
+          {failedItems.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-[9px] text-blue-500 hover:underline font-bold"
+            >
+              {showDetails ? '隱藏詳情' : `查看失敗 (${failedItems.length})`}
+            </button>
+          )}
         </div>
       </div>
+
+      {showDetails && failedItems.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-red-100/50 space-y-1 max-h-40 overflow-y-auto no-scrollbar">
+          {failedItems.map((item: any, idx: number) => (
+            <div key={idx} className="text-[9px] flex items-start gap-2 text-red-600 font-medium">
+              <span className="shrink-0">•</span>
+              <span className="truncate flex-1">{item.name}</span>
+              <span className="text-[8px] opacity-70 shrink-0">{item.error || '未知錯誤'}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {(task.state.status === 'processing' || task.state.status === 'queued') && (
         <div className="space-y-1.5">
