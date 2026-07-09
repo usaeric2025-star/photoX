@@ -7,7 +7,13 @@ import {
   AlertCircle, AlertTriangle, FileJson, FileText, PackageSearch, 
   HardDrive, Cpu, Terminal, Heart, Star, Sparkles, Ghost, Activity, 
   BarChart3, Link, Share2, Eye, EyeOff, FolderMinus, FolderPlus, 
-  MessageCircle, ShieldAlert, ShieldCheck, LucideIcon
+  MessageCircle, ShieldAlert, ShieldCheck, Camera, LayoutDashboard,
+  LogIn, LayoutGrid, LayoutList, Filter, SortAsc, SortDesc, ShoppingBag,
+  ShoppingCart, Hash, History, Type, Palette, Smartphone, Laptop, Tablet,
+  CheckSquare, ExternalLink, Factory, MoreVertical, Shield, ChevronLeft, 
+  ChevronRight, ChevronsLeft, ChevronsRight, ArrowLeftRight, Download, 
+  RotateCcw, Maximize, Minimize, Bell, Calendar, Mail, Phone, MapPin,
+  HeartOff, StarHalf, Play, Pause, Square, Circle, Triangle, LucideIcon
 } from 'lucide-react';
 import { cn } from '#lib/utils.js';
 
@@ -27,11 +33,16 @@ const iconMap: Record<string, LucideIcon> = {
   'check-circle-2': CheckCircle2,
   'chevron-down': ChevronDown,
   'chevron-up': ChevronUp,
+  'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
+  'chevrons-left': ChevronsLeft,
+  'chevrons-right': ChevronsRight,
   'arrow-left': ArrowLeft,
   'arrow-right': ArrowRight,
   'arrow-up': ArrowUp,
   'arrow-up-down': ArrowUpDown,
   'arrow-up-right': ArrowUpRight,
+  'arrow-left-right': ArrowLeftRight,
   'refresh-cw': RefreshCw,
   'loader-2': Loader2,
   'edit': Edit,
@@ -42,7 +53,9 @@ const iconMap: Record<string, LucideIcon> = {
   'upload': Upload,
   'lock': Lock,
   'log-out': LogOut,
+  'maximize': Maximize,
   'maximize-2': Maximize2,
+  'minimize': Minimize,
   'menu': Menu,
   'image': Image,
   'image-off': ImageOff,
@@ -77,6 +90,44 @@ const iconMap: Record<string, LucideIcon> = {
   'message-circle': MessageCircle,
   'shield-alert': ShieldAlert,
   'shield-check': ShieldCheck,
+  'camera': Camera,
+  'layout-dashboard': LayoutDashboard,
+  'log-in': LogIn,
+  'layout-grid': LayoutGrid,
+  'layout-list': LayoutList,
+  'filter': Filter,
+  'sort-asc': SortAsc,
+  'sort-desc': SortDesc,
+  'shopping-bag': ShoppingBag,
+  'shopping-cart': ShoppingCart,
+  'hash': Hash,
+  'history': History,
+  'type': Type,
+  'palette': Palette,
+  'smartphone': Smartphone,
+  'laptop': Laptop,
+  'tablet': Tablet,
+  'check-square': CheckSquare,
+  'check-square-2': CheckSquare,
+  'external-link': ExternalLink,
+  'factory': Factory,
+  'more-vertical': MoreVertical,
+  'shield': Shield,
+  'download': Download,
+  'rotate-ccw': RotateCcw,
+  'bell': Bell,
+  'calendar': Calendar,
+  'mail': Mail,
+  'phone': Phone,
+  'map-pin': MapPin,
+  'heart-off': HeartOff,
+  'star-half': StarHalf,
+  'play': Play,
+  'pause': Pause,
+  'square': Square,
+  'circle': Circle,
+  'triangle': Triangle,
+  'whatsapp': MessageCircle,
 };
 
 export type IconName = string;
@@ -102,7 +153,8 @@ export const Icon = ({
   style,
   onClick
 }: IconProps) => {
-  const normalizedName = name.toLowerCase().trim();
+  if (!name) return null;
+  const normalizedName = String(name).toLowerCase().trim();
 
   if (normalizedName === 'whatsapp') {
     return (

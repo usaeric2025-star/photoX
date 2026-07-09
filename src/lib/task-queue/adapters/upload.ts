@@ -81,16 +81,26 @@ export const executeBatchUpload = (
   let skippedCount = 0;
   let failedCount = 0;
 
+  // Initial progress for stage 2
+  onProgress(0.2, `正在準備上傳 (0/${total})...`);
+
   const uploadResults = await parallelMap(
     tasks,
     async (task) => {
       try {
+        // Move progress update to the beginning of task OR use a shared counter
+        // Let's keep it after processUpload but add a "starting" update if needed.
+        // Actually, let's update progress BEFORE processUpload to show "Processing X/Y"
+        const currentBatchIndex = processedCount + 1;
+        onProgress(0.2 + (processedCount / total) * 0.8, `上傳中 (${currentBatchIndex}/${total})...`);
+
         const result = await processUpload(task);
         processedCount++;
         
         if (result.duplicate) skippedCount++;
         else if (!result.success) failedCount++;
         
+        // Final update for this item
         onProgress(0.2 + (processedCount / total) * 0.8, `上傳中 (${processedCount}/${total})...`);
         return { ...result, name: task.file.name };
       } catch (err) {

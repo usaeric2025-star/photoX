@@ -56,15 +56,17 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   return (
     <header className={cn("h-14 shrink-0 border-b px-4 flex items-center justify-between font-sans transition-all duration-300 relative", theme.bg, className)}>
       <div className="flex items-center gap-4">
+        <AdminHeaderLogo 
+          logoUrl={logoUrl}
+          isAdmin={isAdmin}
+          isStaff={isStaff}
+          totalCount={totalCount}
+          theme={theme}
+        />
+        <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
         <h1 className="text-sm font-semibold text-slate-900 hidden sm:block">
           {t('adminPanelTitle')}
         </h1>
-        <div className={cn("flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 select-none shrink-0 cursor-default justify-center bg-slate-50 border-slate-100 text-slate-500 whitespace-nowrap")}>
-          <span className="uppercase tracking-wider text-[9px]">{t('totalStock')}</span>
-          <span className="text-slate-900 font-bold ml-1">
-            {totalCount.toLocaleString()}
-          </span>
-        </div>
       </div>
 
       <div className="flex items-center gap-2 flex-nowrap shrink-0">
