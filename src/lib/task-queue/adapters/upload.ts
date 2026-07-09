@@ -27,12 +27,10 @@ export const executeBatchUpload = (
     try {
       await api.groups.upsert.$post({
         json: {
-          payload: {
-            id: options.groupId,
-            name: 'GROUP',
-            status: 'confirmed',
-            userId: userId || '8ec53131-a589-4b50-beb4-6b5308541e1b'
-          }
+          id: options.groupId,
+          name: 'GROUP',
+          status: 'confirmed',
+          userId: userId || '8ec53131-a589-4b50-beb4-6b5308541e1b'
         }
       });
     } catch (err) {

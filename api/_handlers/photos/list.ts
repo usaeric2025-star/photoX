@@ -25,12 +25,11 @@ export const listRoutes = new Hono()
                 const descObj = normalizeI18n(d.description);
                 
                 const displayName = nameObj.zh || nameObj.en || nameObj.ms || 'Unnamed';
-                const displayDesc = descObj.zh || descObj.en || descObj.ms || '';
 
                 return {
                     id: d.id,
                     name: d.manualCode || displayName,
-                    description: displayDesc,
+                    description: descObj,
                     imageUrl: d.imageUrl || '',
                     thumbnailUrl: d.imageUrl || '',
                     imageHash: d.imageHash || null,
