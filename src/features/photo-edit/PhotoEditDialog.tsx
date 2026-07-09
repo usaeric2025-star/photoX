@@ -97,10 +97,10 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
             {appLang === 'zh' ? '检测到有未保存的修改。要进行何种操作？' : 'Detected unsaved changes. What would you like to do?'}
           </p>
           <div className="flex gap-2 justify-end">
-            <button onClick={handleDiscard} className="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+            <button onClick={handleDiscard} className="px-4 py-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100">
               {appLang === 'zh' ? '放弃修改' : 'Discard changes'}
             </button>
-            <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90">
+            <button onClick={handleSave} className="px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90">
               {appLang === 'zh' ? '保存并关闭' : 'Save and close'}
             </button>
           </div>

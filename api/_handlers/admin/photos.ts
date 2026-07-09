@@ -36,9 +36,13 @@ export const adminPhotos = new Hono()
         
         // Try various possible raw keys
         if (auditLog.rawOutput) {
-            rawResult = typeof auditLog.rawOutput === 'object' 
-                ? JSON.stringify(auditLog.rawOutput, null, 2)
-                : String(auditLog.rawOutput);
+            let ro = auditLog.rawOutput;
+            if (typeof ro === 'object' && ro !== null && 'raw_text' in ro) {
+                ro = (ro as Record<string, unknown>).raw_text;
+            }
+            rawResult = typeof ro === 'object' 
+                ? JSON.stringify(ro, null, 2)
+                : String(ro);
         }
         
         if (!rawResult && auditLog.cleanedOutput) {
@@ -96,7 +100,14 @@ export const adminPhotos = new Hono()
     if (logRecord && logRecord.metadata) {
         const metadata = logRecord.metadata as Record<string, unknown>;
         // Try all common keys for raw AI output
-        const rawOutput = metadata.raw_output || metadata.raw_result || metadata.rawText || metadata.text || metadata.ai_raw;
+        let rawOutput = metadata.raw_output || metadata.raw_result || metadata.rawText || metadata.text || metadata.ai_raw;
+        if (typeof rawOutput === 'object' && rawOutput !== null && 'raw_text' in rawOutput) {
+            rawOutput = (rawOutput as Record<string, unknown>).raw_text;
+        }
+        if (!rawOutput) {
+            rawOutput = metadata.parsed_data || metadata.cleaned_output || metadata.result;
+        }
+        
         const resultObj = {
             photoId: photoId,
             rawResult: typeof rawOutput === 'object' ? JSON.stringify(rawOutput, null, 2) : (rawOutput as string) || '',

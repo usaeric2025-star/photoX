@@ -49,7 +49,7 @@ export const TagButton = memo(function TagButton({
           pointerEvents: "auto",
         }}
         className={cn(
-          "px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border select-none flex items-center gap-1 w-auto shadow-sm min-h-[32px] cursor-pointer",
+          "px-2.5 py-1 rounded-xl text-[11px] font-medium transition-all border select-none flex items-center gap-1 w-auto shadow-sm min-h-[32px] cursor-pointer",
           isSelected
             ? "bg-blue-600 text-white border-blue-600 font-semibold"
             : "bg-slate-50 text-slate-700 border-slate-100 hover:border-slate-300 hover:bg-slate-100/80 active:bg-slate-200/50",

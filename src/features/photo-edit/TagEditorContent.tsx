@@ -1,6 +1,7 @@
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import React, { useState, useDeferredValue } from "react";
 import { cn } from "#lib/utils.js";
+import { Icon } from "#src/components/ui/Icon.js";
 import {
   useTagSorting,
   useSettings,
@@ -134,7 +135,7 @@ export function TagEditor({
                   e.stopPropagation();
                   onToggleTag(tag);
                 }}
-                className="group flex items-center gap-1.5 px-2 py-1 bg-white border border-blue-200 text-blue-600 rounded-lg text-[11px] font-medium hover:border-blue-300 hover:bg-blue-50 transition-all active:scale-95"
+                className="group flex items-center gap-1.5 px-2 py-1 bg-white border border-blue-200 text-blue-600 rounded-xl text-[11px] font-medium hover:border-blue-300 hover:bg-blue-50 transition-all active:scale-95"
               >
                 {tag.name}
                 <span className="text-[10px] opacity-40 group-hover:opacity-100">✕</span>

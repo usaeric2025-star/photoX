@@ -472,10 +472,10 @@ export function usePhotoAIResult(photoId: string, options?: { enabled?: boolean 
         }
 
         const data = await resp.json() as ApiResponse<PhotoAIResult>;
-        if (!data.success || !data.data) {
+        if (!data.success) {
           throw new Error(data.error || 'AI Analysis Failed');
         }
-        return data.data;
+        return data.data || null;
       } catch (err: unknown) {
         throw ErrorFactory.wrap(err, 'Network Error', photoId);
       }

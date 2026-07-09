@@ -43,7 +43,7 @@ export function AISourceTab() {
     );
   }
 
-  if (error || !aiResult || !aiResult.rawResult) {
+  if (error || !aiResult) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-slate-50 border border-slate-200 border-dashed rounded-3xl mt-4">
         <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 mb-4 border border-amber-100">
@@ -51,6 +51,7 @@ export function AISourceTab() {
         </div>
         <h3 className="font-sans font-semibold text-slate-800 text-base mb-1">
           {appLang === 'zh' ? '暂无 AI 识别原始记录' : 'No AI Analysis Log Found'}
+          {error ? ` - ${String(error)}` : ""}
         </h3>
         <p className="text-slate-500 text-xs max-w-sm font-sans mb-4">
           {appLang === 'zh' 
