@@ -475,7 +475,7 @@ export function usePhotoAIResult(photoId: string, options?: { enabled?: boolean 
     (photoId && isEnabled) ? ['photos', 'ai-result', photoId] : null,
     async (): Promise<PhotoAIResult | null> => {
       try {
-        const resp = await api.admin["photo-ai-result"][":photoId"].$get({
+        const resp = await api.admin.photos["photo-ai-result"][":photoId"].$get({
           param: { photoId }
         });
         

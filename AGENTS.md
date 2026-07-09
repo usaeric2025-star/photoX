@@ -84,6 +84,10 @@
 - **Server State (服务端状态 - `TanStack Query`)**：
   - 适用场景：所有向后端 Hono RPC 请求的数据（分类、照片列表、标签等）。
   - 核心原则：统一使用 `useAppQuery` 与 `useAppMutation` 管理，并通过 `useInvalidatePhotos` 统一调度缓存失效。
+  - **资料结构规范 (锁定)**: 
+    - `name` 字段必须始终为**纯字符串 (String)**，严禁改为多语对象。
+    - `description` 字段必须为**多语对象 (Object)**，包含 `zh`, `en`, `ms` 屬性。
+    - 所有 API 传输与数据库存储必须严格遵守此结构。
 
 ### 规则 3：Hook 整合与扁平化原则
 - 鼓励「就近整合」而非「跨模块过度拆分」。如果某个 Hook 仅在单一功能（如 `PhotoEditDialog`）内部使用，且不具备全局通用性，应将其移入该 Feature 的子目录（如 `src/features/photo-edit/hooks/`）或直接与组件放在一起，严禁随意塞入全局 `src/hooks/` 目录。

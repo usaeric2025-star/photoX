@@ -15,10 +15,12 @@ export async function checkDuplicate(hash: string): Promise<{ exists: boolean; e
       return { exists: false };
     }
 
-    const data = await res.json() as any;
+    const json = await res.json() as any;
+    const data = json.data || json;
+    
     return { 
-      exists: data.exists || data.isDuplicate || false, 
-      existingId: data.id || data.existingId 
+      exists: data.exists || false, 
+      existingId: data.photo?.id 
     };
   } catch (error) {
     logger.error('[Duplicate] Error during check', error);
