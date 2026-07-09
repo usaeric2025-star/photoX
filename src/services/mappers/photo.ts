@@ -36,7 +36,7 @@ export function mapSupabasePhoto(raw: any, allTags?: Tag[]): Photo {
       manualCode: String(raw.manual_code || raw.manualCode || ''),
       modelNumber: String(raw.model_number || raw.modelNumber || ''),
       imageHash,
-      name: typeof raw.name === 'object' ? (raw.name.zh || raw.name.en || '') : String(raw.name || ''),
+      name: raw.name || '',
       categoryId: (raw.category_id || raw.categoryId || null) as string | null,
       manufacturerId: (raw.manufacturer_id || raw.manufacturerId || null) as string | null,
       description: raw.description || raw.description_translations || null,

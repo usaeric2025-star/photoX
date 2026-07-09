@@ -88,13 +88,13 @@ export const executeBatchUpload = (
     tasks,
     async (task) => {
       try {
-        // Move progress update to the beginning of task OR use a shared counter
-        // Let's keep it after processUpload but add a "starting" update if needed.
-        // Actually, let's update progress BEFORE processUpload to show "Processing X/Y"
         const currentBatchIndex = processedCount + 1;
-        onProgress(0.2 + (processedCount / total) * 0.8, `上傳中 (${currentBatchIndex}/${total})...`);
+        const baseMsg = `(${currentBatchIndex}/${total})`;
+        
+        const result = await processUpload(task, (status) => {
+          onProgress(0.2 + (processedCount / total) * 0.8, `${status} ${baseMsg}`);
+        });
 
-        const result = await processUpload(task);
         processedCount++;
         
         if (result.duplicate) skippedCount++;

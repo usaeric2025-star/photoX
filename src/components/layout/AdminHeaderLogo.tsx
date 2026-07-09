@@ -16,15 +16,19 @@ interface AdminHeaderLogoProps {
 
 export function AdminHeaderLogo({ logoUrl, isAdmin, isStaff, totalCount, theme }: AdminHeaderLogoProps) {
   const { t, lang } = useTranslation();
+  const [imgError, setImgError] = React.useState(false);
+
+  const showDefaultLogo = !logoUrl || logoUrl.trim() === '' || imgError;
 
   return (
     <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap z-10">
-      {logoUrl && logoUrl.trim() !== '' ? (
+      {!showDefaultLogo ? (
         <img 
-          src={logoUrl} 
+          src={logoUrl!} 
           className="h-7 sm:h-9 w-auto object-contain shrink-0" 
           alt="Logo" 
           loading="lazy"
+          onError={() => setImgError(true)}
         />
       ) : (
         <div className="flex items-center gap-1 font-bold tracking-tighter">

@@ -92,10 +92,16 @@ export const PhotoListReqSchema = v.object({
     isHidden: v.optional(v.nullable(v.boolean()))
 });
 
+const TranslationSchema = v.object({
+    zh: v.string(),
+    en: v.optional(v.string()),
+    ms: v.optional(v.string())
+});
+
 export const PhotoListItemSchema = v.object({
     id: v.string(),
     name: v.string(),
-    description: v.optional(v.nullable(v.string())),
+    description: v.optional(v.nullable(v.union([v.string(), TranslationSchema]))),
     imageUrl: v.string(),
     thumbnailUrl: v.string(),
     imageHash: v.optional(v.nullable(v.string())),
@@ -208,12 +214,6 @@ export const GroupReqSchema = v.object({
     status: v.optional(v.union([v.literal('active'), v.literal('confirmed')]))
 });
 
-const TranslationSchema = v.object({
-    zh: v.string(),
-    en: v.optional(v.string()),
-    ms: v.optional(v.string())
-});
-
 const DimensionSchema = v.object({
     label: v.string(),
     unit: v.union([v.literal('cm'), v.literal('inch'), v.literal('mm')]),
@@ -236,7 +236,7 @@ const TagSchema = v.object({
 
 export const PhotoSchema = v.object({
     id: v.optional(v.string()),
-    name: TranslationSchema,
+    name: v.string(),
     categoryId: v.optional(v.nullable(v.string())),
     manufacturerId: v.optional(v.nullable(v.string())),
     tags: v.pipe(

@@ -96,9 +96,13 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
        const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
        const normalized = adapter.normalize(parsed, (data as any).raw_result || JSON.stringify(parsed));
 
+       // 清理名稱，移除 .jpg, .png 等後綴
+       let cleanName = normalized.name || '';
+       cleanName = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
+
        return {
-         name: normalized.name,
-         description: normalized.description.zh, // 保持與既有單一描述欄位系統的相容性
+         name: cleanName,
+         description: normalized.description, // 傳遞完整多語系物件 { zh, en, ms }
          category_id: normalized.categoryId,
          group_id: normalized.groupId,
          tagNames: normalized.tagNames,

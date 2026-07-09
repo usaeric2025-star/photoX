@@ -41,8 +41,8 @@ addEventListener('message', async (event: MessageEvent<MessageData>) => {
       quality,
     });
     
-    // 5. 如果压缩后反而更大，用原图
-    const finalBlob = blob.size < file.size ? blob : file;
+    // 5. 统一使用 WebP，除非转换失败
+    const finalBlob = blob || file;
     
     bitmap.close();
     

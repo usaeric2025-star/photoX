@@ -28,18 +28,16 @@ export const createRoutes = new Hono()
             throw new Error('image_url 不接受 base64，請先上傳檔案');
         }
 
-        // ✅ 強制限制標題長度
+        // ✅ 強制限制標題長度並清理後綴
         if (payload.name) {
-            let nameStr = '';
             if (typeof payload.name === 'string') {
-                nameStr = payload.name;
+                payload.name = payload.name.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
+                if ((payload.name as string).length > 200) throw new Error('標題超過 200 字上限');
             } else if (payload.name && typeof payload.name === 'object') {
-                const obj = payload.name as Record<string, unknown>;
-                nameStr = String(obj.zh || obj.en || obj.ms || "");
+                // 如果意外收到物件，取 zh 並清理
+                const obj = payload.name as Record<string, string>;
+                payload.name = (obj.zh || obj.en || obj.ms || "").replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
             }
-
-            if (nameStr.length > 200) throw new Error('標題超過 200 字上限');
-            payload.name = nameStr;
         }
 
         // Apply our sanitized logic to cleanse relations and avoid SQL constraints

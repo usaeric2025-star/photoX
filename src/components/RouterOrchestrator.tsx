@@ -57,7 +57,9 @@ export function RouterOrchestrator() {
   }
 
   // Admin 强制守卫 (简化路由匹配，避免 wouter 对子路由的 404)
-  if (location.startsWith('/admin') || location.startsWith('/settings') || location.startsWith('/diagnostics')) {
+  const isAdminPath = location.startsWith('/admin') || location.startsWith('/settings') || location.startsWith('/diagnostics');
+  
+  if (isAdminPath) {
     return (
       <AnimatePresence>
         <motion.div 

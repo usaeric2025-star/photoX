@@ -15,10 +15,11 @@ import { logger } from '#lib/logger.js';
  * 4. Database save (via Hono API)
  * 5. Rollback on failure
  */
-export async function processUpload(task: UploadTask): Promise<UploadResult> {
+export async function processUpload(task: UploadTask, onStatus?: (status: string) => void): Promise<UploadResult> {
   const { file, hash } = task;
 
   // 1. Duplicate Check (using original hash)
+  onStatus?.('正在排重...');
   const duplicate = await checkDuplicate(hash);
   if (duplicate.exists) {
     logger.info(`[Upload] Duplicate found for hash ${hash.substring(0, 8)}: ${duplicate.existingId}`);
@@ -26,10 +27,12 @@ export async function processUpload(task: UploadTask): Promise<UploadResult> {
   }
 
   // 2. Compression
+  onStatus?.('正在壓縮...');
   const compressed = await compressImage(file);
   const photoId = generateId();
   
   // 3. Storage (Upload to R2)
+  onStatus?.('正在上傳...');
   let imageUrl: string;
   try {
     imageUrl = await uploadToR2(compressed.blob, photoId, hash);
@@ -39,6 +42,7 @@ export async function processUpload(task: UploadTask): Promise<UploadResult> {
   }
 
   // 4. Database Save
+  onStatus?.('正在儲存...');
   try {
     const id = await savePhoto({
       id: photoId,
@@ -46,7 +50,7 @@ export async function processUpload(task: UploadTask): Promise<UploadResult> {
       imageHash: hash,
       width: compressed.width,
       height: compressed.height,
-      name: file.name,
+      name: file.name.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim(),
       groupId: task.groupId
     });
 

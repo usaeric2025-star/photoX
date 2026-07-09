@@ -210,8 +210,8 @@ export async function getPhotosList(params: PhotoListParams) {
     const results = dbData.map(d => {
         try {
             const item = { ...d.items } as Record<string, unknown>;
-            item.name = normalizeI18n(d.items.name).zh;
-            item.description = normalizeI18n(d.items.description).zh;
+            item.name = d.items.name;
+            item.description = d.items.description;
             let parsedGroupName = d.group?.name || null;
             if (typeof parsedGroupName === 'string' && parsedGroupName.startsWith('{')) {
                 try {

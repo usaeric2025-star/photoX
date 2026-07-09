@@ -22,8 +22,9 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
 
   try {
     // 1. 嘗試現代瀏覽器 API
-    if (typeof window !== 'undefined' && window.navigator && window.navigator.clipboard && window.isSecureContext) {
-      await window.navigator.clipboard.writeText(text);
+    const nav = navigator as any;
+    if (typeof window !== 'undefined' && nav && nav.clipboard && window.isSecureContext) {
+      await nav.clipboard.writeText(text);
       return true;
     }
     throw new Error('navigator.clipboard unavailable');

@@ -5,8 +5,8 @@ import { eq } from 'drizzle-orm';
 import { errorResponse, successResponse } from '../../_lib/response.js';
 
 export const checkHashRoutes = new Hono()
-  .get('/check-hash', async (c) => {
-    const hash = c.req.query('hash');
+  .post('/check-hash', async (c) => {
+    const { hash } = await c.req.json();
     if (!hash) {
       return errorResponse(c, '缺少 hash 參數', 400);
     }

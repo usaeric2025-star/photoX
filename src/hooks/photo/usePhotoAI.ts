@@ -104,12 +104,14 @@ export function usePhotoEditAI() {
           const updates: Record<string, unknown> = {};
           
           if (result.name) {
+            let cleanName = '';
             if (typeof result.name === 'object' && result.name !== null) {
               const n = result.name as Record<string, string>;
-              updates.name = n.en || n.zh || n.ms || String(result.name);
+              cleanName = n.zh || n.en || n.ms || String(result.name);
             } else {
-              updates.name = String(result.name);
+              cleanName = String(result.name);
             }
+            updates.name = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
           }
 
           if (result.groupId !== undefined && result.groupId !== null || result.group_id !== undefined && result.group_id !== null) {
@@ -251,26 +253,24 @@ export function usePhotoEditAI() {
 
           if (result.description) {
             if (typeof result.description === 'object' && result.description !== null) {
-              const dObj = result.description as Record<string, string>;
               updates.description = {
-                zh: dObj.zh || '',
-                en: dObj.en || '',
-                ms: dObj.ms || ''
+                zh: result.description.zh || '',
+                en: result.description.en || '',
+                ms: result.description.ms || ''
               };
             } else {
               updates.description = { zh: String(result.description), en: '', ms: '' };
             }
           }
-          if (Array.isArray(result.dimensions)) {
-            updates.dimensions = result.dimensions.map((d: unknown) => {
-              const dim = d as Record<string, unknown>;
+          if (Array.isArray(result.dimensions) && result.dimensions.length > 0) {
+            updates.dimensions = result.dimensions.map((d: any) => {
               return {
-                label: String(dim.label || t('dimensions')),
-                unit: (dim.unit === 'inch' || dim.unit === 'mm') ? dim.unit : 'cm',
-                length: Number(dim.length) || 0,
-                width: Number(dim.width) || 0,
-                height: Number(dim.height) || 0,
-                isAiEstimated: !!(dim.isAiEstimated || dim.is_ai_estimated),
+                label: String(d.label || t('dimensions')),
+                unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
+                length: Number(d.length) || 0,
+                width: Number(d.width) || 0,
+                height: Number(d.height) || 0,
+                isAiEstimated: true,
                 isAi: true
               };
             });
@@ -366,12 +366,14 @@ export function usePhotoEditAI() {
       const updates: Record<string, unknown> = {};
       
       if (result.name) {
+          let cleanName = '';
           if (typeof result.name === 'object' && result.name !== null) {
               const n = result.name as Record<string, string>;
-              updates.name = n.en || n.zh || n.ms || String(result.name);
+              cleanName = n.en || n.zh || n.ms || String(result.name);
           } else {
-              updates.name = String(result.name);
+              cleanName = String(result.name);
           }
+          updates.name = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
       }
 
       if (result.category_id || result.categoryId || result.category_name || result.categoryName) {
@@ -410,15 +412,26 @@ export function usePhotoEditAI() {
 
       if (result.description) {
           if (typeof result.description === 'object' && result.description !== null) {
-              const dObj = result.description as Record<string, string>;
               updates.description = {
-                  zh: dObj.zh || '',
-                  en: dObj.en || '',
-                  ms: dObj.ms || ''
+                  zh: result.description.zh || '',
+                  en: result.description.en || '',
+                  ms: result.description.ms || ''
               };
           } else {
               updates.description = { zh: String(result.description), en: '', ms: '' };
           }
+      }
+
+      if (Array.isArray(result.dimensions)) {
+        updates.dimensions = result.dimensions.map((d: any) => ({
+            label: String(d.label || t('dimensions')),
+            unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
+            length: Number(d.length) || 0,
+            width: Number(d.width) || 0,
+            height: Number(d.height) || 0,
+            isAiEstimated: !!(d.isAiEstimated || d.is_ai_estimated),
+            isAi: true
+        }));
       }
 
       Object.entries(updates).forEach(([key, value]) => {
