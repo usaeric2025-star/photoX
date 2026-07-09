@@ -43,12 +43,12 @@ export function getDb(): PostgresJsDatabase<typeof schema> {
   }
 
   // Ensure statement_timeout is set at the connection level
-  const finalConnectionString = appendDbParam(connectionString, 'options', '-c statement_timeout=50000');
+  const finalConnectionString = appendDbParam(connectionString, 'options', '-c statement_timeout=15000');
 
   const clientOptions: postgres.Options<{}> = {
     max: maxConnections,
     idle_timeout: isServerless ? 5 : 10, // Close idle connections quickly within 10 seconds to avoid connection leaks
-    connect_timeout: 45, // 45s to allow for cold start wake-up of database
+    connect_timeout: 10, // 10s to fail fast and let the client retry on transient connection failures
     prepare: false, // Required for PgBouncer/Supabase transaction pooling
     onnotice: () => {},
   };

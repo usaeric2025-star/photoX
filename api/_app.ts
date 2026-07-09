@@ -30,7 +30,20 @@ export const apiApp = new Hono();
 // ✅ 統一錯誤處理
 apiApp.onError((err, c) => {
     console.error('[API Error]', err);
-    if (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound')) {
+    
+    // 避免將資料庫連線失敗、找不到資料庫、或 timeout 等系統/資料庫層面錯誤誤判為 404 Not Found
+    const isDbOrNetworkError = 
+        err.message?.includes('relation') || 
+        err.message?.includes('column') || 
+        err.message?.includes('ENOTFOUND') || 
+        err.message?.includes('connect') || 
+        err.message?.includes('database') || 
+        err.message?.includes('timeout') || 
+        err.message?.includes('canceling') || 
+        err.message?.includes('PostgresError') ||
+        err.message?.includes('DrizzleQueryError');
+
+    if (!isDbOrNetworkError && (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound'))) {
         return errorResponse(c, err, 404);
     }
     if (err.message?.toLowerCase().includes('foreign key')) {
