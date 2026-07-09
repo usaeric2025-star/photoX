@@ -2,6 +2,7 @@ import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';
 import { getServerEnv } from '../../../shared/envSchema.js';
+import { logger } from '../logger.js';
 
 // Reuse the postgres client and drizzle db across invocations in serverless/development
 const globalForDb = globalThis as unknown as {
@@ -75,9 +76,9 @@ export async function closeDbConnection() {
       globalForDb.postgresClient = undefined;
       globalForDb.drizzleDb = undefined;
       await client.end({ timeout: 2 });
-      console.log('🔌 [DB] Database connection pool closed gracefully.');
+      logger.info('🔌 [DB] Database connection pool closed gracefully.');
     } catch (err) {
-      console.error('❌ [DB-ERROR] Error closing database connection pool:', err);
+      logger.error('❌ [DB-ERROR] Error closing database connection pool:', err);
     }
   }
 }
@@ -85,13 +86,13 @@ export async function closeDbConnection() {
 // Register termination listeners for clean container exits
 if (typeof process !== 'undefined') {
   process.on('SIGTERM', () => {
-    console.info('📥 [DB] Received SIGTERM signal. Initiating graceful shutdown...');
+    logger.info('📥 [DB] Received SIGTERM signal. Initiating graceful shutdown...');
     closeDbConnection().finally(() => {
       process.exit(0);
     });
   });
   process.on('SIGINT', () => {
-    console.info('📥 [DB] Received SIGINT signal. Initiating graceful shutdown...');
+    logger.info('📥 [DB] Received SIGINT signal. Initiating graceful shutdown...');
     closeDbConnection().finally(() => {
       process.exit(0);
     });

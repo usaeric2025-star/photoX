@@ -9,7 +9,7 @@ export async function fetchPublicSettings(): Promise<AppSettings> {
     
     const [settingsResponse] = await withTimeout(Promise.all([settingsPromise]), 10000, 'Initialize Settings & Auth APIs');
     
-    const settingsData = await ErrorFactory.unwrap<any>(
+    const settingsData = await ErrorFactory.unwrap<Partial<AppSettings>>(
       settingsResponse,
       'Initialize Settings & Auth APIs failed'
     );

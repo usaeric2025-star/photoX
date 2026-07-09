@@ -6,6 +6,7 @@ import { normalizeI18n } from '../../../shared/i18n.js';
 import { sValidator } from '@hono/standard-validator';
 import { PhotoListReqSchema, PhotoListItemSchema } from '../../../shared/apiContractSchema.js';
 import { getPhotosList, getGroupCounts } from '../../_lib/db/queries/photos.js';
+import { logger } from '../../_lib/logger.js';
 
 export const listRoutes = new Hono()
   .post('/list', sValidator('json', PhotoListReqSchema), async (c) => {
@@ -50,7 +51,7 @@ export const listRoutes = new Hono()
                         : null,
                 };
             } catch (e) {
-                console.error('Error formatting item', d.id, e);
+                logger.error('Error formatting item', { id: d.id, error: e });
                 return null;
             }
         }).filter((item): item is NonNullable<typeof item> => item !== null);

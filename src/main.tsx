@@ -119,7 +119,7 @@ async function init() {
 }
 
 init().catch(err => {
-  console.error("Critical error in main init()", err);
+  logger.error("Critical error in main init()", err);
   const el = document.getElementById("root");
   if (el) el.innerHTML = `<div style="padding: 20px; color: red;">Startup Error: ${err.message}</div>`;
 });

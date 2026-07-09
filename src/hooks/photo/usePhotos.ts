@@ -39,14 +39,12 @@ export function usePhotos(params: PhotoListFilters = {}) {
   const result = useAppInfiniteQuery<PhotoListResponse, Error, string | undefined>(
     photoKeys.list(fetchParams),
     async (pageParam) => {
-      const response = await api.photos.list.$post({ 
-        json: { ...fetchParams, cursor: pageParam as string | undefined } 
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      return await response.json() as PhotoListResponse;
+      return ErrorFactory.unwrap<PhotoListResponse>(
+        api.photos.list.$post({ 
+          json: { ...fetchParams, cursor: pageParam as string | undefined } 
+        }),
+        '獲取照片列表失敗'
+      );
     },
     {
       initialPageParam: undefined as string | undefined,

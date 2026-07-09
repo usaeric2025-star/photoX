@@ -4,6 +4,7 @@ import { inArray } from 'drizzle-orm';
 import { getAIProvider } from '../../_lib/ai/providerFactory.js';
 import { extractJSON } from '../../_lib/ai/utils.js';
 import { executeAITask } from '../../_lib/ai/executor.js';
+import { logger } from '../../_lib/logger.js';
 
 // 1. 輸出 Schema（與提示詞嚴格對應）
 export const GroupAnalysisSchema = v.object({
@@ -106,7 +107,7 @@ export async function processGroupAnalysis(photoIds: string[]) {
       }
       
       lastError = parsed.issues.map(i => `${i.path?.map((p: { key: unknown }) => String(p.key)).join('.')}: ${i.message}`).join('; ');
-      console.warn(`[AI] 格式錯誤，第 ${attempt + 1} 次重試`, lastError);
+      logger.warn(`[AI] 格式錯誤，第 ${attempt + 1} 次重試`, { lastError });
       
       // 重試時附帶錯誤反饋
       currentPrompt = `${prompt}\n\n⚠️ 上次輸出格式錯誤：${lastError}\n請務必修正後重新按 Schema 輸出純 JSON。`;

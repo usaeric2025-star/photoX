@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { successResponse, errorResponse } from '../_lib/response.js';
 import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
+import { logger } from '../_lib/logger.js';
 
 export const system = new Hono()
   .get('/health', async (c) => {
@@ -17,7 +18,7 @@ export const system = new Hono()
             timestamp: new Date().toISOString()
         });
     } catch (err) {
-        console.error('[Health] DB Ping or connection failed:', err);
+        logger.error('[Health] DB Ping or connection failed:', err);
         return c.json({ 
             success: false, 
             status: 'error', 
@@ -75,7 +76,7 @@ export const system = new Hono()
         
         return successResponse(c, { success: true });
     } catch (err) {
-        console.error('[log-error] Failed to insert client error log:', err);
+        logger.error('[log-error] Failed to insert client error log:', err);
         return errorResponse(c, err);
     }
   });

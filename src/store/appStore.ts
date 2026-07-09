@@ -6,6 +6,7 @@ import { scheduler } from '#lib/task-queue/scheduler.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { withTimeout } from '#lib/utils.js';
 import { api } from '#lib/api.js';
+import type { Category, Tag } from '#src/types/index.js';
 
 export interface AppStatusState {
   isLoading: boolean;
@@ -33,9 +34,9 @@ export const initializeApp = async () => {
 
     // 4. 背景並行啟動分類與標籤預加載 (DK-PATTERN: 前置緩存提高首屏響應速度)
     Promise.all([
-      ErrorFactory.unwrap<any[]>(api.categories.$get(), 'Prefetch categories failed')
+      ErrorFactory.unwrap<Category[]>(api.categories.$get(), 'Prefetch categories failed')
         .then(data => queryClient.setQueryData(queryKeys.categories.all, data)),
-      ErrorFactory.unwrap<any[]>(api.tags.$get(), 'Prefetch tags failed')
+      ErrorFactory.unwrap<Tag[]>(api.tags.$get(), 'Prefetch tags failed')
         .then(data => queryClient.setQueryData(queryKeys.tags.all, data))
     ]).catch(e => ErrorFactory.handle(e, { context: '[appStore] Background prefetch failed' }));
     

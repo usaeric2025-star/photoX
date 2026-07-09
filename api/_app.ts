@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getServerEnv } from '../shared/envSchema.js';
 import { errorResponse } from './_lib/response.js';
+import { logger } from './_lib/logger.js';
 import adminApp from './_admin.js';
 import { publicSettings } from './_handlers/public_settings.js';
 import { ai } from './_handlers/ai.js';
@@ -20,16 +21,16 @@ const serverEnv = getServerEnv(process.env);
 
 // --- Environment Validation ---
 if (!serverEnv.DATABASE_URL) {
-    console.error('❌ [CRITICAL] DATABASE_URL is missing or invalid in serverEnv!');
+    logger.error('❌ [CRITICAL] DATABASE_URL is missing or invalid in serverEnv!');
 } else {
-    console.log('✅ [INIT] DATABASE_URL validated, proceeding to route initialization.');
+    logger.info('✅ [INIT] DATABASE_URL validated, proceeding to route initialization.');
 }
 
 export const apiApp = new Hono();
 
 // ✅ 統一錯誤處理
 apiApp.onError((err, c) => {
-    console.error('[API Error]', err);
+    logger.error('[API Error]', err);
     
     // 避免將資料庫連線失敗、找不到資料庫、或 timeout 等系統/資料庫層面錯誤誤判為 404 Not Found
     const isDbOrNetworkError = 
@@ -57,7 +58,7 @@ apiApp.onError((err, c) => {
 // ✅ 統一 404 路由不存在處理，紀錄至錯誤日誌並回傳標準 JSON
 apiApp.notFound((c) => {
     const { method, path, url } = c.req;
-    console.warn(`[API 404] Route Not Found: [${method}] ${path} (Full URL: ${url})`);
+    logger.warn(`[API 404] Route Not Found: [${method}] ${path} (Full URL: ${url})`);
     const err = new Error(`API 路由不存在 (Route Not Found): [${method}] ${path}`);
     return errorResponse(c, err, 404);
 });
@@ -70,9 +71,9 @@ apiApp.use('*', async (c, next) => {
     await next();
     const ms = Date.now() - start;
     if (c.res.status === 404) {
-        console.warn(`[API ACCESS] ${c.req.method} ${c.req.path} - 404 Not Found (${ms}ms)`);
+        logger.warn(`[API ACCESS] ${c.req.method} ${c.req.path} - 404 Not Found (${ms}ms)`);
     } else if (c.res.status >= 400) {
-        console.error(`[API ACCESS] ${c.req.method} ${c.req.path} - ${c.res.status} (${ms}ms)`);
+        logger.error(`[API ACCESS] ${c.req.method} ${c.req.path} - ${c.res.status} (${ms}ms)`);
     } else {
         // 成功請求不輸出日誌，避免刷屏
     }
@@ -92,7 +93,7 @@ apiApp.get('/health', async (c) => {
             timestamp: new Date().toISOString()
         });
     } catch (err) {
-        console.error('[Health] Root DB Ping failed:', err);
+        logger.error('[Health] Root DB Ping failed:', err);
         return c.json({ 
             success: false, 
             status: 'error', 

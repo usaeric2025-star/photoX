@@ -425,7 +425,7 @@ export function usePhotoEditAI() {
 
       if (Array.isArray(result.dimensions)) {
         updates.dimensions = result.dimensions.map((d: any) => ({
-            label: String(d.label || t('dimensions')),
+            label: translateDimensionLabelToEnglish(String(d.label || t('dimensions'))),
             unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
             length: Number(d.length) || 0,
             width: Number(d.width) || 0,

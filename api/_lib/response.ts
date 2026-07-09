@@ -40,7 +40,7 @@ export const errorResponse = (c: Context, error: unknown, status: number = 500) 
         createdAt: new Date()
       });
     } catch (logErr) {
-      console.error('[log-error] Fatal exception in logger:', logErr);
+      logger.error('[log-error] Fatal exception in logger:', logErr);
     }
   };
 
@@ -56,7 +56,7 @@ export const errorResponse = (c: Context, error: unknown, status: number = 500) 
   if (hasWaitUntil) {
     c.executionCtx.waitUntil(logToDb());
   } else {
-    logToDb().catch(e => console.error('Failed to log to DB:', e));
+    logToDb().catch(e => logger.error('Failed to log to DB:', e));
   }
   
   // Safe message formatting (prevents leaking sensitive info)

@@ -21,7 +21,7 @@ export async function resolveTagNamesToIds(
       dbTags = existingTags;
     } else {
       // Fetch tags directly from API since queries.ts is being removed
-      const tagsData = await ErrorFactory.unwrap<any[]>(
+      const tagsData = await ErrorFactory.unwrap<Tag[]>(
         api.tags.$get(),
         'Failed to fetch tags'
       );
@@ -65,7 +65,7 @@ export async function resolveTagNamesToIds(
     if (missingNames.length > 0) {
       try {
         // Batch create tags directly using API
-        const createdTags = await ErrorFactory.unwrap<any[]>(
+        const createdTags = await ErrorFactory.unwrap<Tag[]>(
           api.tags.batch.$post({
             json: { 
               tags: missingNames.map(name => ({ name: name.toUpperCase().trim() })) 
@@ -75,7 +75,7 @@ export async function resolveTagNamesToIds(
         );
 
         if (Array.isArray(createdTags)) {
-          createdTags.forEach((t: any) => {
+          createdTags.forEach((t: Tag) => {
             if (t.id) tagIds.push(String(t.id));
           });
         }

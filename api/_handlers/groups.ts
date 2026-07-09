@@ -7,6 +7,7 @@ import { errorResponse, successResponse } from '../_lib/response.js';
 import { syncGroupCoversAndCount } from '../_lib/groups.js';
 import { refreshPhotosView } from '../_lib/db/actions.js';
 import { getAllGroups, getGroupById, upsertGroup, deleteGroup } from '../_lib/db/queries/groups.js';
+import { logger } from '../_lib/logger.js';
 
 export const groups = new Hono()
   .get('/', async (c) => {
@@ -235,7 +236,7 @@ export const groups = new Hono()
         try {
             await db.execute(sql`SELECT merge_groups(${finalSourceGroupIds}::uuid[], ${targetGroupId}::uuid)`);
         } catch (rpcErr) {
-            console.error('[merge_groups rpc error]', rpcErr);
+            logger.error('[merge_groups rpc error]', rpcErr);
             // Fallback: manually delete the empty source groups
             await db.delete(groupsTable)
                 .where(inArray(groupsTable.id, finalSourceGroupIds));

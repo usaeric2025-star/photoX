@@ -1,5 +1,6 @@
 import { api } from '#lib/api.js';
 import { logger } from '#lib/logger.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 const UPLOAD_RETRY_COUNT = 2;
 
@@ -21,15 +22,15 @@ export async function uploadToR2(file: Blob, photoId: string, imageHash?: string
         }
       });
 
-      if (!presignRes.ok) {
-        if (presignRes.status === 409) {
-          const data = await presignRes.json() as any;
-          return data.existingUrl; // Already exists, return existing URL
-        }
-        throw new Error(`Presign failed: ${presignRes.status}`);
+      if (presignRes.status === 409) {
+        const data = await presignRes.json() as any;
+        return data.existingUrl || data.data?.existingUrl; // Already exists, return existing URL
       }
       
-      const { data: { uploadUrl, publicUrl } } = await presignRes.json() as any;
+      const { uploadUrl, publicUrl } = await ErrorFactory.unwrap<{ uploadUrl: string, publicUrl: string }>(
+        presignRes,
+        '獲取上傳預簽名 URL 失敗'
+      );
 
       // 2. Perform PUT upload
       const uploadRes = await fetch(uploadUrl, {

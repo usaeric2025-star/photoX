@@ -74,7 +74,7 @@ const getFromR2 = async (key: string): Promise<string | null> => {
     if (!result.Body) return null;
     return await result.Body.transformToString();
   } catch (error) {
-    console.error(`Failed to get ${key} from R2:`, error);
+    logger.error(`Failed to get ${key} from R2:`, error);
     return null;
   }
 };
@@ -91,6 +91,6 @@ const deleteFromR2 = async (key: string): Promise<void> => {
       Key: key
     }));
   } catch (error) {
-    console.error(`Failed to delete ${key} from R2:`, error);
+    logger.error(`Failed to delete ${key} from R2:`, error);
   }
 };

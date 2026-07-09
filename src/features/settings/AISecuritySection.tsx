@@ -126,7 +126,7 @@ export function AISecuritySection({
   const { submit: runTest, isLoading: isTestingProvider } = useFormSubmit<typeof TestConnectionSchema, boolean>({
     schema: TestConnectionSchema,
     mutationFn: async ({ provider, apiKey }) => {
-      await ErrorFactory.unwrap<any>(
+      await ErrorFactory.unwrap<{ success: boolean }>(
         api.ai.test.$post({
           json: { 
             provider,
@@ -152,7 +152,7 @@ export function AISecuritySection({
       if (apiKey === "••••••••••••••••" || !apiKey.trim()) {
         return "noop";
       }
-      await ErrorFactory.unwrap<any>(
+      await ErrorFactory.unwrap<{ success: boolean }>(
         api.admin.settings['save-key'].$post({
           json: { provider, apiKey }
         }),
@@ -176,7 +176,7 @@ export function AISecuritySection({
   const { submit: runSaveProvider, isLoading: isSavingProvider } = useFormSubmit<typeof ProviderSaveSchema, boolean>({
     schema: ProviderSaveSchema,
     mutationFn: async ({ provider }) => {
-      await ErrorFactory.unwrap<any>(
+      await ErrorFactory.unwrap<{ success: boolean }>(
         api.admin.settings['save-provider'].$post({
           json: { provider }
         }),
@@ -198,7 +198,7 @@ export function AISecuritySection({
   const { submit: runSaveModel } = useFormSubmit<typeof ModelSaveSchema, boolean>({
     schema: ModelSaveSchema,
     mutationFn: async ({ provider, model }) => {
-      await ErrorFactory.unwrap<any>(
+      await ErrorFactory.unwrap<{ success: boolean }>(
         api.admin.settings['save-model'].$post({
           json: { provider, model }
         }),

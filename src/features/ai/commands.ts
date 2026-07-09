@@ -12,22 +12,17 @@ import { MAX_TAGS_PER_PHOTO } from '#src/constants/limits.js';
  */
 export const testAiConnection = async (apiKey: string, provider: string) => {
   try {
-    const res = await api.ai['analyze-base64'].$post({
+    await ErrorFactory.unwrap<{ success: boolean }>(
+      api.ai['analyze-base64'].$post({
         json: {
-            promptText: "TEST",
-            base64Image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAAAgAB35oT2AAAAABJRU5ErkJggg==",
-            provider
+          promptText: "TEST",
+          base64Image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAAAgAB35oT2AAAAABJRU5ErkJggg==",
+          provider
         }
-    });
-
-    if (!res.ok) {
-        return { success: false, error: 'Connection failed' };
-    }
-    const body: { success: boolean; error?: string } = await (res as unknown as Response).json();
-    if (body.success) {
-        return { success: true };
-    }
-    return { success: false, error: body.error || 'Failed' };
+      }),
+      'Connection failed'
+    );
+    return { success: true };
   } catch (err: unknown) {
     return { success: false, error: (err as Error).message };
   }
@@ -68,36 +63,26 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
 
 export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<unknown> => {
   try {
-      const resp = await api.ai.analyze.$post({ json: { photoId } });
-      if (!resp.ok) {
-        let errorMsg = 'AI 服务响应异常';
-        try {
-          const errorData = await resp.json() as { error?: { message?: string } | string };
-          errorMsg = (typeof errorData.error === 'object' ? errorData.error?.message : errorData.error) || errorMsg;
-        } catch (je) {
-          const text = await resp.text();
-          errorMsg = `[HTTP ${resp.status}] ${text.substring(0, 100)}`;
-        }
-        throw ErrorFactory.fatal(errorMsg, { context: 'analyzePhoto' });
-      }
-      
-      const data = await resp.json();
-     if (data.success) {
-       let parsed = data.data;
-       if (Array.isArray(parsed)) {
-         parsed = parsed[0] || {};
-       }
-       
-       // 📌 使用業界標準 Adapter 正規化資料
-       const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
-       const normalized = adapter.normalize(parsed, (data as any).raw_result || JSON.stringify(parsed));
+    const data = await ErrorFactory.unwrap<Record<string, any>>(
+      api.ai.analyze.$post({ json: { photoId } }),
+      'AI 服務響應異常'
+    );
+    
+    let parsed = data;
+    if (Array.isArray(parsed)) {
+      parsed = parsed[0] || {};
+    }
+    
+    // 📌 使用業界標準 Adapter 正規化資料
+    const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
+    const normalized = adapter.normalize(parsed, data.raw_result || JSON.stringify(parsed));
 
-       // 清理名稱，移除 .jpg, .png 等後綴
-       let cleanName = normalized.name || '';
-       cleanName = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
+    // 清理名稱，移除 .jpg, .png 等後綴
+    let cleanName = normalized.name || '';
+    cleanName = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
 
-       return {
-         name: cleanName,
+    return {
+      name: cleanName,
          description: normalized.description, // 傳遞完整多語系物件 { zh, en, ms }
          category_id: normalized.categoryId,
          group_id: normalized.groupId,
@@ -106,22 +91,6 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
          dimensions: normalized.dimensions,
          raw_result: normalized.rawResult
        };
-     } else {
-       let errorMsg = (data as { error?: string }).error || 'AI 分析失敗';
-       if (typeof errorMsg === 'string' && errorMsg.startsWith('{')) {
-          try {
-             const parsed = JSON.parse(errorMsg);
-             if (parsed.error && typeof parsed.error === 'object' && parsed.error.message) {
-                errorMsg = parsed.error.message;
-             } else if (typeof parsed.error === 'string') {
-                errorMsg = parsed.error;
-             }
-          } catch (e) {
-             // ignore
-          }
-       }
-       throw ErrorFactory.fatal(errorMsg, { context: 'analyzePhoto' });
-     }
   } catch (e) {
     if ((e as Error).name === 'AbortError') throw ErrorFactory.fatal('请求已取消', { context: 'analyzePhoto' });
     throw ErrorFactory.fatal((e as Error).message || 'AI 分析异常', { context: 'analyzePhoto' });
