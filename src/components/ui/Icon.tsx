@@ -1,72 +1,82 @@
-import * as Lucide from 'lucide-react';
+import { 
+  Home, Settings, Settings2, User, Users, Search, Plus, Minus, X, XCircle, 
+  Check, CheckCircle2, ChevronDown, ChevronUp, ArrowLeft, ArrowRight, 
+  ArrowUp, ArrowUpDown, ArrowUpRight, RefreshCw, Loader2, Edit, Pencil, 
+  Trash2, Copy, Save, Upload, Lock, LogOut, Maximize2, Menu, Image, 
+  ImageOff, ImagePlus, Clock, Globe, Grid3X3, Layers, Inbox, Info, 
+  AlertCircle, AlertTriangle, FileJson, FileText, PackageSearch, 
+  HardDrive, Cpu, Terminal, Heart, Star, Sparkles, Ghost, Activity, 
+  BarChart3, Link, Share2, Eye, EyeOff, FolderMinus, FolderPlus, 
+  MessageCircle, ShieldAlert, ShieldCheck, LucideIcon
+} from 'lucide-react';
 import { cn } from '#lib/utils.js';
 
 // Explicit references to icons to ensure bundler tree-shaking works perfectly
-const iconMap: Record<string, Lucide.LucideIcon> = {
-  'home': Lucide.Home,
-  'settings': Lucide.Settings,
-  'settings-2': Lucide.Settings2,
-  'user': Lucide.User,
-  'users': Lucide.Users,
-  'search': Lucide.Search,
-  'plus': Lucide.Plus,
-  'minus': Lucide.Minus,
-  'x': Lucide.X,
-  'x-circle': Lucide.XCircle,
-  'check': Lucide.Check,
-  'check-circle-2': Lucide.CheckCircle2,
-  'chevron-down': Lucide.ChevronDown,
-  'chevron-up': Lucide.ChevronUp,
-  'arrow-left': Lucide.ArrowLeft,
-  'arrow-right': Lucide.ArrowRight,
-  'arrow-up': Lucide.ArrowUp,
-  'arrow-up-down': Lucide.ArrowUpDown,
-  'arrow-up-right': Lucide.ArrowUpRight,
-  'refresh-cw': Lucide.RefreshCw,
-  'loader-2': Lucide.Loader2,
-  'edit': Lucide.Edit,
-  'pencil': Lucide.Pencil,
-  'trash-2': Lucide.Trash2,
-  'copy': Lucide.Copy,
-  'save': Lucide.Save,
-  'upload': Lucide.Upload,
-  'lock': Lucide.Lock,
-  'log-out': Lucide.LogOut,
-  'maximize-2': Lucide.Maximize2,
-  'menu': Lucide.Menu,
-  'image': Lucide.Image,
-  'image-off': Lucide.ImageOff,
-  'image-plus': Lucide.ImagePlus,
-  'clock': Lucide.Clock,
-  'globe': Lucide.Globe,
-  'grid-3x3': Lucide.Grid3X3,
-  'layers': Lucide.Layers,
-  'inbox': Lucide.Inbox,
-  'info': Lucide.Info,
-  'alert-circle': Lucide.AlertCircle,
-  'alert-triangle': Lucide.AlertTriangle,
-  'file-json': Lucide.FileJson,
-  'file-text': Lucide.FileText,
-  'package-search': Lucide.PackageSearch,
-  'hard-drive': Lucide.HardDrive,
-  'cpu': Lucide.Cpu,
-  'terminal': Lucide.Terminal,
-  'heart': Lucide.Heart,
-  'star': Lucide.Star,
-  'sparkles': Lucide.Sparkles,
-  'ghost': Lucide.Ghost,
-  'activity': Lucide.Activity,
-  'bar-chart-3': Lucide.BarChart3,
-  'link': Lucide.Link,
-  'share': Lucide.Share2,
-  'share-2': Lucide.Share2,
-  'eye': Lucide.Eye,
-  'eye-off': Lucide.EyeOff,
-  'folder-minus': Lucide.FolderMinus,
-  'folder-plus': Lucide.FolderPlus,
-  'message-circle': Lucide.MessageCircle,
-  'shield-alert': Lucide.ShieldAlert,
-  'shield-check': Lucide.ShieldCheck,
+const iconMap: Record<string, LucideIcon> = {
+  'home': Home,
+  'settings': Settings,
+  'settings-2': Settings2,
+  'user': User,
+  'users': Users,
+  'search': Search,
+  'plus': Plus,
+  'minus': Minus,
+  'x': X,
+  'x-circle': XCircle,
+  'check': Check,
+  'check-circle-2': CheckCircle2,
+  'chevron-down': ChevronDown,
+  'chevron-up': ChevronUp,
+  'arrow-left': ArrowLeft,
+  'arrow-right': ArrowRight,
+  'arrow-up': ArrowUp,
+  'arrow-up-down': ArrowUpDown,
+  'arrow-up-right': ArrowUpRight,
+  'refresh-cw': RefreshCw,
+  'loader-2': Loader2,
+  'edit': Edit,
+  'pencil': Pencil,
+  'trash-2': Trash2,
+  'copy': Copy,
+  'save': Save,
+  'upload': Upload,
+  'lock': Lock,
+  'log-out': LogOut,
+  'maximize-2': Maximize2,
+  'menu': Menu,
+  'image': Image,
+  'image-off': ImageOff,
+  'image-plus': ImagePlus,
+  'clock': Clock,
+  'globe': Globe,
+  'grid-3x3': Grid3X3,
+  'layers': Layers,
+  'inbox': Inbox,
+  'info': Info,
+  'alert-circle': AlertCircle,
+  'alert-triangle': AlertTriangle,
+  'file-json': FileJson,
+  'file-text': FileText,
+  'package-search': PackageSearch,
+  'hard-drive': HardDrive,
+  'cpu': Cpu,
+  'terminal': Terminal,
+  'heart': Heart,
+  'star': Star,
+  'sparkles': Sparkles,
+  'ghost': Ghost,
+  'activity': Activity,
+  'bar-chart-3': BarChart3,
+  'link': Link,
+  'share': Share2,
+  'share-2': Share2,
+  'eye': Eye,
+  'eye-off': EyeOff,
+  'folder-minus': FolderMinus,
+  'folder-plus': FolderPlus,
+  'message-circle': MessageCircle,
+  'shield-alert': ShieldAlert,
+  'shield-check': ShieldCheck,
 };
 
 export type IconName = string;
@@ -114,26 +124,8 @@ export const Icon = ({
   const LucideIconComponent = iconMap[normalizedName];
 
   if (!LucideIconComponent) {
-    // Fallback: Dynamically lookup in Lucide namespace (PascalCase conversion)
-    const pascalName = normalizedName
-      .replace(/(^\w|-\w)/g, (m) => m.replace('-', '').toUpperCase());
-    const FallbackComponent = (Lucide as unknown as Record<string, Lucide.LucideIcon>)[pascalName];
-
-    if (!FallbackComponent) {
-      console.warn(`[Icon] Icon "${name}" not found in explicit map or fallback (PascalCase: ${pascalName})`);
-      return <span className={cn("inline-block", className)} style={{ width: size, height: size, ...style }} />;
-    }
-
-    return (
-      <FallbackComponent
-        size={size}
-        className={cn(className, solid ? 'fill-current' : '')}
-        strokeWidth={strokeWidth}
-        fill={fill}
-        style={style}
-        onClick={onClick}
-      />
-    );
+    console.warn(`[Icon] Icon "${name}" not found in explicit map.`);
+    return <span className={cn("inline-block", className)} style={{ width: size, height: size, ...style }} />;
   }
 
   return (
