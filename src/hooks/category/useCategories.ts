@@ -6,17 +6,13 @@ import { STALE_TIMES } from '#lib/query/config.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/usePhotos.js';
 import type { ApiResponse } from '#shared/apiContractSchema.js';
 import { useTranslation } from '#src/hooks/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 export function useCategories(options?: { enabled?: boolean }) {
   const isEnabled = options?.enabled ?? true;
   const { data, isLoading, error, refetch } = useAppQuery<Category[]>(
     isEnabled ? queryKeys.categories.list() : null,
-    async () => {
-      const res = await api.categories.$get();
-      const json = await res.json() as unknown as ApiResponse<Category[]>;
-      if (json.success && json.data) return json.data;
-      throw new Error(json.error || 'Failed to load categories');
-    },
+    async () => ErrorFactory.unwrap<Category[]>(api.categories.$get(), 'Failed to load categories'),
     {
       staleTime: STALE_TIMES.MEDIUM,
     }
@@ -38,18 +34,18 @@ export function useCategoryMutations() {
   const create = useAppMutation({
     mutationFn: async (variables: string | Partial<Category>) => {
       const name = typeof variables === 'string' ? variables : (variables.name || '');
-      const res = await api.categories.$post({
-        json: {
-          categoryData: {
-            nameZh: name,
-            code: name.toLowerCase().replace(/\s+/g, '-'),
-            sortOrder: 0
+      return ErrorFactory.unwrap<Category>(
+        api.categories.$post({
+          json: {
+            categoryData: {
+              nameZh: name,
+              code: name.toLowerCase().replace(/\s+/g, '-'),
+              sortOrder: 0
+            }
           }
-        }
-      });
-      const json = await res.json() as unknown as ApiResponse<Category>;
-      if (json.success && json.data) return json.data;
-      throw new Error(json.error || t('categoryCreateFailed'));
+        }),
+        t('categoryCreateFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'category-create',
@@ -62,13 +58,13 @@ export function useCategoryMutations() {
 
   const edit = useAppMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<Category> }) => {
-      const res = await api.categories[':id'].$put({
-        param: { id: String(id) },
-        json: { updates }
-      });
-      const json = await res.json() as ApiResponse<boolean>;
-      if (json.success) return true;
-      throw new Error(json.error || t('categoryUpdateFailed'));
+      return ErrorFactory.unwrap<boolean>(
+        api.categories[':id'].$put({
+          param: { id: String(id) },
+          json: { updates }
+        }),
+        t('categoryUpdateFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'category-edit',
@@ -81,12 +77,12 @@ export function useCategoryMutations() {
 
   const remove = useAppMutation({
     mutationFn: async (id: number) => {
-      const res = await api.categories[':id'].$delete({
-        param: { id: String(id) }
-      });
-      const json = await res.json() as ApiResponse<boolean>;
-      if (json.success) return true;
-      throw new Error(json.error || t('categoryDeleteFailed'));
+      return ErrorFactory.unwrap<boolean>(
+        api.categories[':id'].$delete({
+          param: { id: String(id) }
+        }),
+        t('categoryDeleteFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'category-delete',

@@ -9,6 +9,7 @@ import * as v from 'valibot';
 import { useDisclosure } from '#src/hooks/core/index.js';
 import { formatters } from '#src/utils/formatters.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 type ErrorLevel = 'critical' | 'error' | 'warn' | 'medium' | 'low' | 'info';
 
@@ -110,22 +111,18 @@ Message: ${log.message || log.error_message || ''}${metadataStr}${stack ? `\nSta
 export const ErrorLogViewer = () => {
   const { data: logs = [] } = useAppQuery(
     ['error_logs'],
-    async () => {
-        const res = await api.admin.maintenance['error-events'].$get();
-        const json = await res.json() as { success: boolean; data: LogEntry[]; error?: string };
-        if (!json.success) throw new Error(json.error || '獲取日誌失敗');
-        return json.data;
-    }
+    async () => ErrorFactory.unwrap<LogEntry[]>(
+      api.admin.maintenance['error-events'].$get(),
+      '獲取日誌失敗'
+    )
   );
 
   const { submit: runClear, isLoading: isClearing } = useFormSubmit({
       schema: v.unknown(),
-      mutationFn: async () => {
-          const res = await api.admin.maintenance['error-events-clear'].$post();
-          const json = await res.json() as { success: boolean; error?: string };
-          if (!json.success) throw new Error(json.error || '清除日誌失敗');
-          return json;
-      },
+      mutationFn: async () => ErrorFactory.unwrap<unknown>(
+        api.admin.maintenance['error-events-clear'].$post(),
+        '清除日誌失敗'
+      ),
       onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['error_logs'] });
       },

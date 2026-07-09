@@ -1,6 +1,7 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useAppQuery } from '#lib/query/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { api } from '#lib/api.js';
 import { PhotoListItem } from '#src/types/api.js';
 
@@ -60,7 +61,7 @@ export function StatisticsScreen() {
         error?: string;
       };
       if (!json.success || !json.data) {
-        throw new Error(json.error || '獲取統計數據失敗');
+        throw ErrorFactory.fromApiResponse(json, '獲取統計數據失敗');
       }
       return json.data;
     }

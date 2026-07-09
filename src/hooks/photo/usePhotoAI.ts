@@ -475,20 +475,12 @@ export function usePhotoAIResult(photoId: string, options?: { enabled?: boolean 
     (photoId && isEnabled) ? ['photos', 'ai-result', photoId] : null,
     async (): Promise<PhotoAIResult | null> => {
       try {
-        const resp = await api.admin.photos["photo-ai-result"][":photoId"].$get({
-          param: { photoId }
-        });
-        
-        if (!resp.ok) {
-           const text = await resp.text();
-           throw new Error(`[HTTP ${resp.status}] ${text.substring(0, 50)}`);
-        }
-
-        const data = await resp.json() as ApiResponse<PhotoAIResult>;
-        if (!data.success) {
-          throw new Error(data.error || 'AI Analysis Failed');
-        }
-        return data.data || null;
+        return await ErrorFactory.unwrap<PhotoAIResult>(
+          api.admin.photos["photo-ai-result"][":photoId"].$get({
+            param: { photoId }
+          }),
+          'AI Analysis Failed'
+        ) || null;
       } catch (err: unknown) {
         throw ErrorFactory.wrap(err, 'Network Error', photoId);
       }

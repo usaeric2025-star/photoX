@@ -5,16 +5,12 @@ import { STALE_TIMES } from '#lib/query/config.js';
 import { api } from '#lib/api.js';
 import type { ApiResponse } from '#shared/apiContractSchema.js';
 import { useTranslation } from '#src/hooks/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 export function useManufacturers() {
   const { data, isLoading, error } = useAppQuery<Manufacturer[]>(
     queryKeys.manufacturers.list(),
-    async () => {
-      const res = await api.manufacturers.$get();
-      const json = await res.json() as unknown as ApiResponse<Manufacturer[]>;
-      if (!json.success || !json.data) throw new Error(json.error || 'Failed to load manufacturers');
-      return json.data;
-    },
+    async () => ErrorFactory.unwrap<Manufacturer[]>(api.manufacturers.$get(), 'Failed to load manufacturers'),
     {
       staleTime: STALE_TIMES.LONG,
     }
@@ -37,14 +33,14 @@ export function useManufacturerMutations() {
   const create = useAppMutation({
     mutationFn: async (variables: string | Partial<Manufacturer>) => {
       const name = typeof variables === 'string' ? variables : (variables.name || '');
-      const res = await api.manufacturers.$post({
-        json: {
-          manufacturerData: { name }
-        }
-      });
-      const json = await res.json() as unknown as ApiResponse<Manufacturer>;
-      if (!json.success || !json.data) throw new Error(json.error || t('mfrCreateFailed'));
-      return json.data;
+      return ErrorFactory.unwrap<Manufacturer>(
+        api.manufacturers.$post({
+          json: {
+            manufacturerData: { name }
+          }
+        }),
+        t('mfrCreateFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'manufacturer-create',
@@ -53,13 +49,13 @@ export function useManufacturerMutations() {
 
   const edit = useAppMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Manufacturer> }) => {
-      const res = await api.manufacturers[':id'].$put({
-        param: { id },
-        json: { updates }
-      });
-      const json = await res.json() as ApiResponse<boolean>;
-      if (!json.success) throw new Error(json.error || t('mfrUpdateFailed'));
-      return true;
+      return ErrorFactory.unwrap<boolean>(
+        api.manufacturers[':id'].$put({
+          param: { id },
+          json: { updates }
+        }),
+        t('mfrUpdateFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'manufacturer-edit',
@@ -68,12 +64,12 @@ export function useManufacturerMutations() {
 
   const remove = useAppMutation({
     mutationFn: async (id: string) => {
-      const res = await api.manufacturers[':id'].$delete({
-        param: { id }
-      });
-      const json = await res.json() as ApiResponse<boolean>;
-      if (!json.success) throw new Error(json.error || t('mfrDeleteFailed'));
-      return true;
+      return ErrorFactory.unwrap<boolean>(
+        api.manufacturers[':id'].$delete({
+          param: { id }
+        }),
+        t('mfrDeleteFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'manufacturer-delete',

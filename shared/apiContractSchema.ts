@@ -6,7 +6,7 @@ export type JsonObject = { [key: string]: JsonValue };
 export type ApiResponse<T = unknown> = {
     success: boolean;
     data?: T;
-    error?: string;
+    error?: string | { message: string; code?: string; traceId?: string };
     text?: string;
     usage?: JsonObject;
     rawResult?: string;

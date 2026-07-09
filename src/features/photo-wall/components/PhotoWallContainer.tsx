@@ -61,21 +61,22 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
 
     if (isAggregated) {
       try {
-        const res = await api.photos.list.$post({ 
-           json: { 
-             ...props.filters,
-             onlyGroupsCover: false,
-             limit: 1000,
-             isAdminMode: props.mode === 'admin'
-          } 
-         });
+        const result = await ErrorFactory.unwrap<{ data: PhotoListItem[] }>(
+          api.photos.list.$post({ 
+             json: { 
+               ...props.filters,
+               onlyGroupsCover: false,
+               limit: 1000,
+               isAdminMode: props.mode === 'admin'
+            } 
+          }),
+          'Failed to load aggregated photos'
+        );
         
-        if (res.ok) {
-          const result = await res.json();
-          const allPhotos = result.data;
-          expandedPhotosRef.current = allPhotos; // Update cache
-          
-          if (allPhotos && allPhotos.length > 0) {
+        const allPhotos = result.data;
+        expandedPhotosRef.current = allPhotos; // Update cache
+        
+        if (allPhotos && allPhotos.length > 0) {
             const expandedSlides = photosToLightboxSlides(allPhotos);
             
             let newIndex = allPhotos.findIndex((p: PhotoListItem) => p.id === photo.id);
@@ -96,7 +97,6 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
               }
               setLightboxData(expandedSlides, finalIndex);
             }
-          }
         }
       } catch (e) {
         ErrorFactory.handleError(e, 'Failed to background expand groups for lightbox');

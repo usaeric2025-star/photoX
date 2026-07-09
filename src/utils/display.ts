@@ -25,3 +25,36 @@ export const getLocalizedDisplay = (val: unknown, lang?: 'zh' | 'en' | 'ms'): st
   
   return String(val);
 };
+
+/**
+ * Translate Chinese words in dimension labels to English to enforce English fallback
+ */
+export function translateDimensionLabelToEnglish(label: string): string {
+  if (!label) return '';
+  const mapping: Record<string, string> = {
+    '整體': 'Overall',
+    '整体': 'Overall',
+    '座高': 'Seat Height',
+    '坐高': 'Seat Height',
+    '扶手': 'Armrest',
+    '靠背': 'Backrest',
+    '桌面': 'Table Top',
+    '抽屜': 'Drawer',
+    '抽屉': 'Drawer',
+    '櫃子': 'Cabinet',
+    '柜子': 'Cabinet',
+    '座深': 'Seat Depth',
+    '坐深': 'Seat Depth',
+    '座寬': 'Seat Width',
+    '坐寬': 'Seat Width',
+    '坐面': 'Seat',
+    '座面': 'Seat',
+  };
+  
+  let result = label;
+  Object.entries(mapping).forEach(([zh, en]) => {
+    const regex = new RegExp(zh, 'gi');
+    result = result.replace(regex, en);
+  });
+  return result;
+}

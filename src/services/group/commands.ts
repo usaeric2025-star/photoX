@@ -46,18 +46,22 @@ const getCurrentUserId = async (): Promise<string | undefined> => {
 };
 
 export const ungroupPhotos = async (groupId: string): Promise<void> => {
-  const res = await api.groups.ungroup.$post({
-    json: { groupId }
-  });
-  if (!res.ok) throw ErrorFactory.fatal('Ungroup failed', { context: 'groupUtils' });
+  await ErrorFactory.unwrap<void>(
+    api.groups.ungroup.$post({
+      json: { groupId }
+    }),
+    'Ungroup failed'
+  );
 };
 
 export const syncGroupMemberCount = async (groupId: string): Promise<void> => {
   if (!groupId) return;
-  const res = await api.groups['sync-count'].$post({
-    json: { groupId }
-  });
-  if (!res.ok) throw ErrorFactory.fatal('Sync count failed', { context: 'groupUtils' });
+  await ErrorFactory.unwrap<void>(
+    api.groups['sync-count'].$post({
+      json: { groupId }
+    }),
+    'Sync count failed'
+  );
 };
 
 export async function createGroup(data: Partial<ProductGroup> & { name: string | Record<string, string> }): Promise<ProductGroup> {
@@ -66,12 +70,12 @@ export async function createGroup(data: Partial<ProductGroup> & { name: string |
   const userId = await getCurrentUserId();
   const dbData = mapToDb(data as unknown as Record<string, unknown>, userId);
   
-  const res = await api.groups.$post({
+  return ErrorFactory.unwrap<ProductGroup>(
+    api.groups.$post({
       json: { groupData: dbData }
-  });
-  if (!res.ok) throw new Error('Create group failed');
-  const { data: resData } = (await res.json()) as { data: ProductGroup };
-  return resData;
+    }),
+    'Create group failed'
+  );
 }
 
 export async function updateGroup(id: string, updates: Partial<ProductGroup>): Promise<ProductGroup> {
@@ -80,31 +84,35 @@ export async function updateGroup(id: string, updates: Partial<ProductGroup>): P
   
   v.parse(v.partial(GroupReqSchema), { ...dbUpdates, id });
 
-  const res = await api.groups[':id'].$put({
+  return ErrorFactory.unwrap<ProductGroup>(
+    api.groups[':id'].$put({
       param: { id },
       json: { updates: dbUpdates }
-  });
-  if (!res.ok) throw new Error('Update group failed');
-  const { data: resData } = (await res.json()) as { data: ProductGroup };
-  return resData;
+    }),
+    'Update group failed'
+  );
 }
 
 export async function upsertGroup(group: Partial<ProductGroup> & { id: string }): Promise<void> {
   const userId = await getCurrentUserId();
   const dbUpdates = mapToDb(group as unknown as Record<string, unknown>, userId);
-  const res = await api.groups.upsert.$post({
+  await ErrorFactory.unwrap<void>(
+    api.groups.upsert.$post({
       json: dbUpdates
-  });
-  if (!res.ok) throw new Error('Upsert group failed');
+    }),
+    'Upsert group failed'
+  );
 }
 
 export async function deleteGroup(id: string): Promise<void> {
   await ungroupPhotos(id);
 
-  const res = await api.groups[':id'].$delete({
+  await ErrorFactory.unwrap<void>(
+    api.groups[':id'].$delete({
       param: { id }
-  });
-  if (!res.ok) throw new Error('Delete group failed');
+    }),
+    'Delete group failed'
+  );
 }
 
 // Action aliases for legacy or specific naming compliance
@@ -137,33 +145,17 @@ export const groupPhotos = async (
     status: 'active' as 'active' | 'confirmed',
   };
 
-  const groupPhotosRes = await api.groups['group-photos'].$post({
-    json: {
-      targetGroupId,
-      userId: userId,
-      photoIds,
-      groupData
-    }
-  });
-
-  if (!groupPhotosRes.ok) {
-    const errorText = await groupPhotosRes.text();
-    let msg = 'Group photos failed: ' + errorText;
-    let traceId: string | undefined;
-    try {
-      const parsed = JSON.parse(errorText);
-      if (parsed.error) {
-        if (typeof parsed.error === 'object') {
-          msg = parsed.error.message || parsed.error.summary || JSON.stringify(parsed.error);
-        } else {
-          msg = parsed.error;
-        }
+  await ErrorFactory.unwrap(
+    api.groups['group-photos'].$post({
+      json: {
+        targetGroupId,
+        userId: userId,
+        photoIds,
+        groupData
       }
-      if (parsed.traceId) traceId = parsed.traceId;
-    } catch (_) {}
-    
-    throw ErrorFactory.wrap(new Error(msg), '分组照片', traceId);
-  }
+    }),
+    '分组照片失败'
+  );
 
   return { newGroupId: targetGroupId };
 };
@@ -172,46 +164,29 @@ export const movePhotosToGroup = async (photoIds: string[], targetGroupId: strin
   if (targetGroupId === null) {
       return removePhotosFromGroup(photoIds, ''); // Fallback but better use the dedicated function
   }
-  const res = await api.groups['move-photos'].$post({
+  await ErrorFactory.unwrap<void>(
+    api.groups['move-photos'].$post({
       json: { photoIds, targetGroupId }
-  });
-  if (!res.ok) {
-    const errorText = await res.text();
-    let msg = 'Move photos failed: ' + errorText;
-    let traceId: string | undefined;
-    try {
-      const parsed = JSON.parse(errorText);
-      if (parsed.error) msg = 'Move photos failed: ' + parsed.error;
-      if (parsed.traceId) traceId = parsed.traceId;
-    } catch (_) {}
-    
-    const err = new Error(msg) as Error & { traceId?: string };
-    if (traceId) {
-      err.traceId = traceId;
-    }
-    throw err;
-  }
+    }),
+    'Move photos failed'
+  );
 };
 
 export const removePhotosFromGroup = async (photoIds: string[], groupId: string): Promise<void> => {
-  const res = await api.groups['remove-photos'].$post({
+  await ErrorFactory.unwrap<void>(
+    api.groups['remove-photos'].$post({
       json: { photoIds, groupId }
-  });
-  if (!res.ok) {
-     const errorText = await res.text();
-     let msg = 'Remove photos from group failed: ' + errorText;
-     try {
-       const parsed = JSON.parse(errorText);
-       if (parsed.error) msg = 'Remove photos from group failed: ' + parsed.error;
-     } catch (_) {}
-     throw new Error(msg);
-  }
+    }),
+    'Remove photos from group failed'
+  );
 };
 
 export const setPhotoAsGroupCover = async (photoId: string | null, groupId: string): Promise<void> => {
   if (!groupId) throw new Error('GroupId is required');
-  const res = await api.groups['set-cover'].$post({
+  await ErrorFactory.unwrap<void>(
+    api.groups['set-cover'].$post({
       json: { photoId, groupId }
-  });
-  if (!res.ok) throw new Error('Set photo cover failed');
+    }),
+    'Set photo cover failed'
+  );
 };

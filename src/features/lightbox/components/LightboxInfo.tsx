@@ -4,7 +4,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { usePhotoAIResult } from '#src/hooks/photo/usePhotoAI.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 import { Photo } from '#src/types/photo.js';
-import { getLocalizedDisplay } from '#src/utils/display.js';
+import { getLocalizedDisplay, translateDimensionLabelToEnglish } from '#src/utils/display.js';
 
 interface LightboxInfoProps {
   currentPhoto: Photo | { original: Photo };
@@ -36,6 +36,8 @@ export function LightboxInfo({
     enabled: showInfo && isStaff 
   });
 
+  const isAiIdentified = !!(photoData.metadata && (photoData.metadata as Record<string, unknown>).ai_raw) || !!photoData.isAnalyzing;
+
   return (
     <AnimatePresence>
       {showInfo && (
@@ -50,9 +52,19 @@ export function LightboxInfo({
             <div>
               <h3 className="text-white font-medium text-base sm:text-lg leading-snug mb-2">{title}</h3>
               <div className="flex flex-wrap gap-2 text-[10px] text-white/50">
-                  <span className="bg-white/5 px-2 py-0.5 rounded-full">{categoryName}</span>
+                  <span className="bg-white/5 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    {categoryName}
+                    {isAiIdentified && (
+                      <span className="text-[8px] font-bold text-purple-400">AI</span>
+                    )}
+                  </span>
                   {tags.map(tag => (
-                      <span key={tag.id} className="bg-white/5 px-2 py-0.5 rounded-full">#{tag.name}</span>
+                      <span key={tag.id} className="bg-white/5 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        #{tag.name}
+                        {isAiIdentified && (
+                          <span className="text-[8px] font-bold text-purple-400">AI</span>
+                        )}
+                      </span>
                   ))}
               </div>
             </div>
@@ -63,6 +75,11 @@ export function LightboxInfo({
                   <div className="flex items-center gap-2 text-white/40 text-[10px] font-black tracking-widest uppercase">
                     <Icon name="file-text" className="w-3 h-3" />
                     <span>Story</span>
+                    {isAiIdentified && (
+                      <span className="bg-purple-500/20 text-purple-300 px-1 py-0.2 rounded text-[8px] font-bold tracking-wider uppercase border border-purple-500/30">
+                        AI
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
                     {(['zh', 'en', 'ms'] as const).map(l => {
@@ -90,6 +107,47 @@ export function LightboxInfo({
                 </div>
                 <div className="text-sm text-white/80 leading-relaxed font-sans font-light">
                   {displayDescription}
+                </div>
+              </div>
+            )}
+
+            {/* Dimensions Section */}
+            {photoData.dimensions && photoData.dimensions.length > 0 && (
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <div className="flex items-center gap-2 text-white/40 text-[10px] font-black tracking-widest uppercase">
+                  <Icon name="ruler" className="w-3.5 h-3.5" />
+                  <span>Dimensions</span>
+                  {photoData.dimensions.some(d => d.isAi || d.isAiEstimated || isAiIdentified) && (
+                    <span className="bg-purple-500/20 text-purple-300 px-1 py-0.2 rounded text-[8px] font-bold tracking-wider uppercase border border-purple-500/30">
+                      AI
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {photoData.dimensions.map((dim, i) => {
+                    const rawLabel = dim.label || '';
+                    const label = translateDimensionLabelToEnglish(rawLabel);
+                    
+                    const h = dim.height ? `H${dim.height}` : '';
+                    const w = dim.width ? `W${dim.width}` : '';
+                    const l = dim.length ? `L${dim.length}` : '';
+                    const dimStr = [h, w, l].filter(Boolean).join(' x ');
+                    const isAi = !!(dim.isAi || dim.isAiEstimated || isAiIdentified);
+
+                    return (
+                      <div key={i} className="flex items-center justify-between text-xs bg-white/5 px-3 py-2 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-white/75 font-light">{label}</span>
+                          {isAi && (
+                            <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-purple-500/20 text-purple-300 rounded text-[8px] font-bold tracking-wider uppercase border border-purple-500/30">
+                              AI
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-white/95 font-mono font-medium">{dimStr} {dim.unit || 'cm'}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

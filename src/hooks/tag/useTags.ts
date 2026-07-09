@@ -6,17 +6,13 @@ import { api } from '#lib/api.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/usePhotos.js';
 import type { ApiResponse } from '#shared/apiContractSchema.js';
 import { useTranslation } from '#src/hooks/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 export function useTags(options?: { enabled?: boolean }) {
   const isEnabled = options?.enabled ?? true;
   const { data, isLoading, error, refetch } = useAppQuery<Tag[]>(
     isEnabled ? queryKeys.tags.list() : null,
-    async () => {
-      const res = await api.tags.$get();
-      const json = await res.json() as unknown as ApiResponse<Tag[]>;
-      if (json.success && json.data) return json.data;
-      throw new Error(json.error || 'Failed to load tags');
-    },
+    async () => ErrorFactory.unwrap<Tag[]>(api.tags.$get(), 'Failed to load tags'),
     {
       staleTime: STALE_TIMES.LONG,
     }
@@ -37,14 +33,10 @@ export const useTagSearch = (keyword: string) => {
   const { t } = useTranslation();
   return useAppQuery<Tag[]>(
     keyword.length >= 0 ? ['tags', 'search', keyword] : null,
-    async () => {
-      const resp = await api.tags.search.$get({ query: { keyword } });
-      const body = await resp.json() as unknown as ApiResponse<Tag[]>;
-      if (!body.success || !body.data) {
-        throw new Error(body.error || t('searchTagFailed'));
-      }
-      return body.data;
-    },
+    async () => ErrorFactory.unwrap<Tag[]>(
+      api.tags.search.$get({ query: { keyword } }),
+      t('searchTagFailed')
+    ),
     { staleTime: STALE_TIMES.SHORT }
   );
 };
@@ -57,17 +49,17 @@ export function useTagMutations() {
   const create = useAppMutation({
     mutationFn: async (variables: string | Partial<Tag>) => {
       const name = typeof variables === 'string' ? variables : (variables.name || '');
-      const res = await api.tags.$post({
-        json: {
-          tagData: {
-            name,
-            isPinned: false
+      return ErrorFactory.unwrap<Tag>(
+        api.tags.$post({
+          json: {
+            tagData: {
+              name,
+              isPinned: false
+            }
           }
-        }
-      });
-      const json = await res.json() as unknown as ApiResponse<Tag>;
-      if (json.success && json.data) return json.data;
-      throw new Error(json.error || t('tagCreateFailed'));
+        }),
+        t('tagCreateFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'tag-create',
@@ -80,13 +72,13 @@ export function useTagMutations() {
 
   const edit = useAppMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<Tag> }) => {
-      const res = await api.tags[':id'].$put({
-        param: { id: String(id) },
-        json: { updates }
-      });
-      const json = await res.json() as ApiResponse<boolean>;
-      if (json.success) return true;
-      throw new Error(json.error || t('tagUpdateFailed'));
+      return ErrorFactory.unwrap<boolean>(
+        api.tags[':id'].$put({
+          param: { id: String(id) },
+          json: { updates }
+        }),
+        t('tagUpdateFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'tag-edit',
@@ -99,12 +91,12 @@ export function useTagMutations() {
 
   const remove = useAppMutation({
     mutationFn: async (id: number) => {
-      const res = await api.tags[':id'].$delete({
-        param: { id: String(id) }
-      });
-      const json = await res.json() as ApiResponse<boolean>;
-      if (json.success) return true;
-      throw new Error(json.error || t('tagDeleteFailed'));
+      return ErrorFactory.unwrap<boolean>(
+        api.tags[':id'].$delete({
+          param: { id: String(id) }
+        }),
+        t('tagDeleteFailed')
+      );
     },
     invalidateKeys,
     errorContext: 'tag-delete',

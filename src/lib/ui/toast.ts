@@ -28,7 +28,8 @@ export const showToast = {
         code?: string;
         traceId?: string;
         timestamp?: string;
-        error?: { message?: string } | string;
+        error?: { message?: string; code?: string; traceId?: string } | string;
+        context?: Record<string, unknown>;
       }
       
       const err = messageOrError as AppErrorLike & Record<string, unknown>;
@@ -38,22 +39,51 @@ export const showToast = {
         if (!e) return '';
         if (typeof e === 'string') return e;
         const obj = e as Record<string, unknown>;
+        
+        let details = '';
+        
+        // Extract diagnostic details from context (e.g. upload failures list or field validations)
         if (obj.context && typeof obj.context === 'object') {
           const ctx = obj.context as Record<string, unknown>;
+          
+          if (Array.isArray(ctx.failures)) {
+            const failLines = ctx.failures
+              .map(f => `${f.name || '文件'}: ${f.error || '未知错误'}`)
+              .join(', ');
+            if (failLines) {
+              details += ` [详细失败原因: ${failLines}]`;
+            }
+          } else if (ctx.fields && typeof ctx.fields === 'object') {
+            details += ` [验证详情: ${JSON.stringify(ctx.fields)}]`;
+          }
+          
           if (ctx.original) {
-            return extractSystemMsg(ctx.original);
+            return extractSystemMsg(ctx.original) + details;
           }
         }
+        
         if (obj.cause) {
-          return extractSystemMsg(obj.cause);
+          return extractSystemMsg(obj.cause) + details;
         }
-        if (obj.message) return String(obj.message);
-        return JSON.stringify(e).substring(0, 500);
+        
+        if (obj.message) {
+          return String(obj.message) + details;
+        }
+        
+        return JSON.stringify(e).substring(0, 500) + details;
       };
 
       systemMessage = extractSystemMsg(err);
-      code = err.code || 'UNKNOWN_ERROR';
-      traceId = err.traceId || traceId;
+      
+      // Extract code and traceId from either flat or nested backend formats
+      if (err.error && typeof err.error === 'object') {
+        code = err.error.code || err.code || 'UNKNOWN_ERROR';
+        traceId = err.error.traceId || err.traceId || traceId;
+      } else {
+        code = err.code || 'UNKNOWN_ERROR';
+        traceId = err.traceId || traceId;
+      }
+      
       timestamp = err.timestamp || '';
     } else {
       userMessage = String(messageOrError || userMessage);

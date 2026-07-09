@@ -54,19 +54,16 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
 
         payload.updated_at = new Date().toISOString();
 
-        const res = await api.admin.settings['save-settings'].$post({
-            json: { settingsPayload: payload }
-        });
-        
-        if (!res.ok) {
-            const respBody = await res.json().catch(() => ({ error: 'Unknown server error' })) as any;
-            throw ErrorFactory.wrap(new Error(`DB_ERROR: ${respBody.error || 'Unknown database error'}`), 'commands');
-        }
+        await ErrorFactory.unwrap<unknown>(
+            api.admin.settings['save-settings'].$post({
+                json: { settingsPayload: payload }
+            }),
+            '保存设置失败'
+        );
         
         return true;
     } catch (err) {
-        ErrorFactory.handle(err, { context: 'saveSettings' });
-        throw ErrorFactory.wrap(err, 'saveSettings');
+        throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'saveSettings');
     }
 };
 
@@ -81,7 +78,6 @@ export const uploadLogo = async (file: File) => {
             .upload(fileName, file, { upsert: true });
 
         if (uploadError) {
-            ErrorFactory.handle(uploadError, { context: 'uploadLogo.upload' });
             throw ErrorFactory.wrap(uploadError, 'uploadLogo', fileName);
         }
 
@@ -90,17 +86,15 @@ export const uploadLogo = async (file: File) => {
             .getPublicUrl(fileName);
 
         // Upsert settings table with new logo_url
-        const res = await api.admin.settings['upsert-logo'].$post({
-            json: { url: publicUrl }
-        });
-
-        if (!res.ok) {
-            ErrorFactory.handle(new Error(await res.text()), { context: 'uploadLogo.upsert' });
-        }
+        await ErrorFactory.unwrap<unknown>(
+            api.admin.settings['upsert-logo'].$post({
+                json: { url: publicUrl }
+            }),
+            '更新Logo设置失败'
+        );
 
         return publicUrl;
     } catch (err: unknown) {
-        ErrorFactory.handle(err, { context: 'uploadLogo' });
         throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'uploadLogo');
     }
 };

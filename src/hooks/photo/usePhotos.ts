@@ -87,13 +87,13 @@ export const usePhoto = (photoId: string | null | undefined) => {
     photoId ? photoKeys.detail(photoId) : null,
     async () => {
       if (!photoId) return null;
-      const response = await api.photos['by-ids'].$post({
-        json: { ids: [photoId] }
-      });
-      const json = await response.json();
-      const result = json as unknown as ApiResponse<SupabasePhotoRaw[]>;
-      if (!result.success || !result.data) throw new Error(result.error || t('fetchPhotoFailed'));
-      const rawData = result.data[0];
+      const rawList = await ErrorFactory.unwrap<SupabasePhotoRaw[]>(
+        api.photos['by-ids'].$post({
+          json: { ids: [photoId] }
+        }),
+        t('fetchPhotoFailed')
+      );
+      const rawData = rawList[0];
       return rawData ? mapSupabasePhoto(rawData) : null;
     },
     {
@@ -108,10 +108,10 @@ export function usePhotoMutations() {
   const { t } = useTranslation();
   // 1. 通用更新 Mutation (支援樂觀更新)
   const updateMutation = useOptimisticPhotoMutation<{ id: string; updates: Partial<Photo> }>({
-    mutationFn: async ({ id, updates }) => {
-      const res = await api.photos.update.$post({ json: { id, updates } });
-      return await res.json();
-    },
+    mutationFn: async ({ id, updates }) => ErrorFactory.unwrap<Photo>(
+      api.photos.update.$post({ json: { id, updates } }),
+      'Failed to update photo'
+    ),
     onMutateOptimistic: ({ id, updates }) => ({
       ids: id,
       updater: (photo) => ({ ...photo, ...updates } as Photo)
@@ -123,8 +123,10 @@ export function usePhotoMutations() {
   const deleteMutation = useOptimisticPhotoMutation<string | string[]>({
     mutationFn: async (ids) => {
       const idArray = Array.isArray(ids) ? ids : [ids];
-      const res = await api.photos.delete.$post({ json: { ids: idArray } });
-      return await res.json();
+      return ErrorFactory.unwrap<boolean>(
+        api.photos.delete.$post({ json: { ids: idArray } }),
+        'Failed to delete photos'
+      );
     },
     onMutateOptimistic: (ids) => ({
       ids,
@@ -138,10 +140,10 @@ export function usePhotoMutations() {
 
   // 3. 批量更新 Mutation
   const batchEditMutation = useOptimisticPhotoMutation<{ ids: string[]; updates: Record<string, unknown> }>({
-    mutationFn: async ({ ids, updates }) => {
-      const res = await api.photos.batch.$post({ json: { ids, updates } });
-      return await res.json();
-    },
+    mutationFn: async ({ ids, updates }) => ErrorFactory.unwrap<boolean>(
+      api.photos.batch.$post({ json: { ids, updates } }),
+      'Failed to update photos in batch'
+    ),
     onMutateOptimistic: ({ ids, updates }) => ({
       ids,
       updater: (photo) => ({ ...photo, ...updates } as Photo)
@@ -154,10 +156,10 @@ export function usePhotoMutations() {
 
   // 4. 置頂 Mutation
   const togglePinMutation = useOptimisticPhotoMutation<{ id: string; isPinned: boolean }>({
-    mutationFn: async ({ id, isPinned }) => {
-      const res = await api.photos.update.$post({ json: { id, updates: { isPinned } } });
-      return await res.json();
-    },
+    mutationFn: async ({ id, isPinned }) => ErrorFactory.unwrap<Photo>(
+      api.photos.update.$post({ json: { id, updates: { isPinned } } }),
+      'Failed to pin photo'
+    ),
     onMutateOptimistic: ({ id, isPinned }) => ({
       ids: id,
       updater: (photo) => ({ ...photo, isPinned } as Photo)

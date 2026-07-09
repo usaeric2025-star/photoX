@@ -44,20 +44,104 @@ export class ErrorFactory {
     });
   }
 
-  static fromApiResponse(data: { code: string; message: string; traceId?: string }): AppError {
+  static fromApiResponse(
+    data: any,
+    fallbackMessage?: string
+  ): AppError {
+    if (!data) {
+      return this.create(fallbackMessage || 'API Error');
+    }
+
+    // Extract inner error payload or use flat structure
+    const err = data.error ?? data;
+    
+    if (typeof err === 'string') {
+      return this.create(err, { 
+        userMessage: err,
+        code: data.code || ErrorCode.UNKNOWN_ERROR,
+        traceId: data.traceId
+      });
+    }
+
+    const message = err.message || data.message || fallbackMessage || 'API Error';
+    const code = err.code || data.code || ErrorCode.UNKNOWN_ERROR;
+    const traceId = err.traceId || data.traceId || generateTraceId();
+
     const categoryMap: Record<string, ErrorCategory> = {
       UNAUTHORIZED: ErrorCategory.AUTH,
       FORBIDDEN: ErrorCategory.AUTH,
       VALIDATION_ERROR: ErrorCategory.VALIDATION,
       NETWORK_ERROR: ErrorCategory.NETWORK,
     };
-    const category = categoryMap[data.code] ?? ErrorCategory.BUSINESS;
-    return this.create(data.message, {
+    const codeStr = String(code);
+    const category = categoryMap[codeStr] ?? ErrorCategory.BUSINESS;
+
+    return this.create(message, {
       category,
-      userMessage: data.message,
-      traceId: data.traceId,
+      userMessage: message,
+      traceId,
+      code: code as ErrorCode,
       shouldReport: ![ErrorCategory.VALIDATION, ErrorCategory.BUSINESS].includes(category),
     });
+  }
+
+  /**
+   * Unwraps any Promise, Fetch Response, or API contract response object into standard data T,
+   * automatically handling non-ok HTTP statuses, un-parseable JSON, error objects, and trace IDs.
+   * Promotes extremely clean, reusable 1-line query and mutation hooks.
+   */
+  static async unwrap<T>(
+    promiseOrResponse: Promise<any> | any,
+    fallbackMessage: string
+  ): Promise<T> {
+    try {
+      const res = await promiseOrResponse;
+      
+      // Handle standard browser/node fetch Response object
+      if (res && typeof res === 'object' && 'json' in res && typeof res.json === 'function') {
+        if (!res.ok) {
+          let errorData: any = null;
+          try {
+            errorData = await res.json();
+          } catch {
+            throw this.create(`${res.status} ${res.statusText || 'HTTP Error'}`, {
+              code: ErrorCode.NETWORK_ERROR,
+              statusCode: res.status,
+              userMessage: fallbackMessage,
+            });
+          }
+          throw this.fromApiResponse(errorData, fallbackMessage);
+        }
+        
+        const json = await res.json();
+        if (json && typeof json === 'object') {
+          if (json.success === false) {
+            throw this.fromApiResponse(json, fallbackMessage);
+          }
+          if ('data' in json) {
+            return json.data as T;
+          }
+          return json as T;
+        }
+        return json as T;
+      }
+      
+      // Handle standard parsed API JSON response object
+      if (res && typeof res === 'object') {
+        if (res.success === false) {
+          throw this.fromApiResponse(res, fallbackMessage);
+        }
+        if ('data' in res) {
+          return res.data as T;
+        }
+      }
+      return res as T;
+    } catch (err) {
+      if (isAppError(err)) {
+        throw err;
+      }
+      throw this.fromUnknown(err, { fallbackMessage });
+    }
   }
 
   static network(originalError?: unknown): AppError {
@@ -162,14 +246,16 @@ export class ErrorFactory {
     ErrorCapture.clearLocalErrors();
   }
 
-  static fromUnknown(error: unknown, context?: Record<string, unknown>): AppError {
+  static fromUnknown(error: unknown, context?: Record<string, unknown> & { fallbackMessage?: string }): AppError {
     if (isAppError(error)) return error;
+    
+    const fallbackMessage = context?.fallbackMessage;
     
     if (error instanceof v.ValiError) {
       const msg = ErrorFormatter.formatValibotError(error);
       return this.create(msg, {
         category: ErrorCategory.VALIDATION,
-        userMessage: msg,
+        userMessage: fallbackMessage ? `${fallbackMessage}: ${msg}` : msg,
         context: { ...context, original: error },
         code: ErrorCode.VALIDATION_FAILED,
         severity: ErrorSeverity.WARNING,
@@ -179,12 +265,18 @@ export class ErrorFactory {
     }
 
     if (error instanceof Error) {
-      return this.create(error.message, { originalError: error });
+      return this.create(error.message, { 
+        originalError: error,
+        userMessage: fallbackMessage || error.message,
+        traceId: (error as any).traceId ?? (context?.traceId as string),
+        context
+      });
     }
     
     const systemMsg = typeof error === 'string' ? error : this.extractErrorMessage(error);
     return this.create(systemMsg, { 
-      context: { raw: error } 
+      userMessage: fallbackMessage || systemMsg,
+      context: { raw: error, ...context } 
     });
   }
   

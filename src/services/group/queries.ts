@@ -19,27 +19,25 @@ const mapGroup = (item: Record<string, unknown>): ProductGroup => ({
 });
 
 export const loadGroupsFromCloud = async (_userId: string, isAdmin: boolean = false): Promise<ProductGroup[]> => {
-  try {
-    const res = await api.groups.$get({
+  const data = await ErrorFactory.unwrap<Record<string, unknown>[]>(
+    api.groups.$get({
       query: { isAdminMode: isAdmin ? 'true' : 'false' }
-    });
-    if (!res.ok) throw new Error('Fetch groups failed');
-    const json = await res.json();
-    if (!json.success) return [];
-    return (json.data || []).map(mapGroup);
-  } catch (error: unknown) {
-    throw ErrorFactory.fatal(error instanceof Error ? error.message : String(error), { context: 'loadGroupsFromCloud' });
-  }
+    }),
+    'Fetch groups failed'
+  );
+  return (data || []).map(mapGroup);
 };
 
 export const getGroupById = async (id: string, _mode: 'public' | 'admin' = 'public'): Promise<ProductGroup | null> => {
   try {
-    const res = await api.groups[':id'].$get({ param: { id } });
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (!json.success || !json.data) return null;
-    return mapGroup(json.data);
-  } catch (error: unknown) {
-    throw ErrorFactory.fatal(error instanceof Error ? error.message : String(error), { context: 'getGroupById' });
+    const data = await ErrorFactory.unwrap<Record<string, unknown> | null>(
+      api.groups[':id'].$get({ param: { id } }),
+      'Get group by id failed'
+    );
+    return data ? mapGroup(data) : null;
+  } catch (error) {
+    // If it's a 404/not found, we can safely return null or let it throw depending on standard expectation, 
+    // but the original code returned null on non-ok statuses, so let's preserve that gracefully.
+    return null;
   }
 };

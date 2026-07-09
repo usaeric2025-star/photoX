@@ -5,6 +5,7 @@ import { queryKeys } from '#lib/query/keys.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { executeTask } from '#lib/task-queue/index.js';
 import { useTranslation } from '../core/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 /**
  * useDiagnostics
@@ -15,12 +16,7 @@ export function useDiagnostics() {
 
   const { data: auditResult, isFetching: isAuditing } = useAppQuery(
     null, // manually triggered
-    async () => {
-      const res = await api.admin.maintenance.storage.audit.$get();
-      const data = await res.json() as { success: boolean; data?: unknown; error?: string };
-      if (!data.success) throw new Error(data.error || labels.storageAuditFailed);
-      return data.data;
-    },
+    async () => ErrorFactory.unwrap<unknown>(api.admin.maintenance.storage.audit.$get(), labels.storageAuditFailed),
     { staleTime: STALE_TIMES.SHORT * 5 }
   );
 
@@ -30,11 +26,9 @@ export function useDiagnostics() {
       type: 'repair',
       execute: async (signal, onProgress) => {
         onProgress(0, labels.diagnosing);
-        const res = await api.admin.maintenance.storage.audit.$get();
-        const data = await res.json() as { success: boolean; data?: unknown; error?: string };
-        if (!data.success) throw new Error(data.error || labels.storageAuditFailed);
+        const data = await ErrorFactory.unwrap<unknown>(api.admin.maintenance.storage.audit.$get(), labels.storageAuditFailed);
         onProgress(1, labels.storageAuditComplete);
-        return data.data;
+        return data;
       }
     });
   };
@@ -47,13 +41,11 @@ export function useDiagnostics() {
           type: 'repair',
           execute: async (signal, onProgress) => {
             onProgress(0, labels.processing);
-            const res = await api.admin.maintenance.storage.deduplicate.$post();
-            const json = await res.json() as { success: boolean; error?: string };
-            if (!json.success) throw new Error(json.error || labels.mutationFailed);
+            const data = await ErrorFactory.unwrap<unknown>(api.admin.maintenance.storage.deduplicate.$post(), labels.mutationFailed);
             
             queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
             onProgress(1, t('deduplicateComplete', 0));
-            return json;
+            return data;
           }
         });
       }
@@ -75,9 +67,7 @@ export function useDiagnostics() {
         type: 'repair',
         execute: async (signal, onProgress) => {
           onProgress(0, labels.diagnosing);
-          const res = await api.admin.maintenance['daily-cleanup'].$post();
-          const data = await res.json() as { success: boolean; data?: unknown; error?: string };
-          if (!data.success) throw new Error(data.error || labels.mutationFailed);
+          const data = await ErrorFactory.unwrap<unknown>(api.admin.maintenance['daily-cleanup'].$post(), labels.mutationFailed);
           onProgress(1, labels.diagHealthy);
           return data;
         }
