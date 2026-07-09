@@ -187,7 +187,7 @@ export function DialogHeader({
         <button
           type="button"
           onClick={onClose}
-          className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full ml-1"
+          className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-xl ml-1"
         >
           <Icon name="x" size={20} />
         </button>

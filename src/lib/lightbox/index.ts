@@ -16,7 +16,8 @@ export function useLightbox() {
   
   const photoId = queryPhotoId || 
     (route.name === 'photo' || route.name === 'adminPhoto' ? (route.params as Record<string, string>).photoId : null);
-  const isOpen = !!(photoId && modal !== 'edit');
+  const isOpen = !!photoId;
+  const isEditing = modal === 'edit';
   
   const next = () => {
     if (slides.length <= 1) return;
@@ -54,6 +55,7 @@ export function useLightbox() {
 
   return {
     isOpen,
+    isEditing,
     slides,
     currentIndex,
     setLightboxData,

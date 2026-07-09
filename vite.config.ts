@@ -62,11 +62,15 @@ export default defineConfig(({mode}) => {
             if (id.includes('node_modules/@tanstack/react-query/')) {
               return 'vendor-query';
             }
-            // 4. UI 组件库（较少变化）
-            if (id.includes('node_modules/lucide-react/') || 
-                id.includes('node_modules/sonner/') || 
-                id.includes('node_modules/motion/')) {
-              return 'vendor-ui';
+            // 4. UI 组件库 (进一步拆分以减小体积)
+            if (id.includes('node_modules/lucide-react/')) {
+              return 'vendor-lucide';
+            }
+            if (id.includes('node_modules/motion/') || id.includes('node_modules/framer-motion/')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('node_modules/sonner/')) {
+              return 'vendor-ui-core';
             }
             // 5. 工具库（极少变化）
             if (id.includes('node_modules/dayjs/') || 

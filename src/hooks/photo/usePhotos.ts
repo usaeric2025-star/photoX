@@ -10,7 +10,7 @@ import { SupabasePhotoRaw } from '#src/types/supabase.js';
 import { useOptimisticPhotoMutation } from '#lib/query/optimistic.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useAuth, uploadAsGroup, useSignal, useUI, UIStoreState } from '#lib/store/index.js';
-import { useTranslation } from '#src/hooks/index.js';
+import { useTranslation } from '../core/index.js';
 import { hapticFeedback } from '#lib/ui/haptics.js';
 import { createTask } from '#lib/task-queue/index.js';
 import { executeBatchUpload } from '#lib/task-queue/adapters/upload.js';
@@ -272,6 +272,7 @@ export function usePhotoWall(filters?: Record<string, unknown>) {
  */
 export function usePhotoUpload() {
   const user = useAuth(s => s.user);
+  const { t } = useTranslation();
 
   const uploadFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -283,8 +284,6 @@ export function usePhotoUpload() {
       
       const isGroup = uploadAsGroup.value && fileArray.length > 1;
       const groupId = isGroup ? generateId() : undefined;
-
-      const { t } = useTranslation();
 
       createTask({
         label: t('uploadTaskLabel', fileArray.length),
@@ -302,7 +301,7 @@ export function usePhotoUpload() {
     } catch (error) {
       ErrorFactory.handle(error, { context: 'usePhotoUpload.execute' });
     }
-  }, [user?.id]);
+  }, [user?.id, t]);
 
   return { uploadFiles };
 }

@@ -9,14 +9,14 @@ import { getTranslatedCategoryName } from "#src/services/category/utils.js";
  */
 export function CategorySelect() {
   const { form } = usePhotoEditSessionContext();
-  const { appLang, uiTranslations } = useTranslation();
+  const { appLang, uiTranslations, t } = useTranslation();
   const { categories = [] } = useCategories();
   
   return (
     <Field form={form} name="categoryId">
       {(field) => (
         <section className="space-y-4">
-          <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
+          <FormSectionHeader title={t('category')} />
           <div className="grid grid-cols-4 gap-1.5 px-0.5">
             {categories
               .filter((cat) => cat && cat.id)

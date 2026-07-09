@@ -65,6 +65,9 @@ export function usePhotoEditAI() {
   const { t } = useTranslation();
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
   const { invalidateDetail, invalidateList, invalidateTags } = useInvalidatePhotos();
+  const invalidateAIResult = (id: string) => {
+    queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', id] });
+  };
 
   // Fetch reference data for matching
   const { categories = [] } = useCategories();
@@ -317,6 +320,18 @@ export function usePhotoEditAI() {
           }
         
           invalidateList();
+          if (editPhotoId) {
+            invalidateAIResult(String(editPhotoId));
+            // Manually update the query data to avoid waiting for the next fetch
+            if (result.raw_result) {
+              queryClient.setQueryData(['photos', 'ai-result', String(editPhotoId)], {
+                photoId: editPhotoId,
+                rawResult: result.raw_result,
+                processedResult: result,
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
           return result;
         }
       });
@@ -414,6 +429,18 @@ export function usePhotoEditAI() {
           await updatePhoto({ id: editPhotoId, updates });
           invalidateDetail(editPhotoId);
           invalidateList();
+          invalidateAIResult(editPhotoId);
+          
+          // Also update the source cache manually if possible
+          if (result.raw_result) {
+            queryClient.setQueryData(['photos', 'ai-result', editPhotoId], {
+              photoId: editPhotoId,
+              rawResult: result.raw_result,
+              processedResult: result,
+              createdAt: new Date().toISOString()
+            });
+          }
+          
           showToast.success(t('reExtractSuccess'));
       } catch (e) {
           ErrorFactory.handle(e, { context: 'AI Re-extraction' });

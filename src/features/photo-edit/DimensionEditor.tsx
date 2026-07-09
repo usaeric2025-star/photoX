@@ -74,25 +74,27 @@ export function DimensionEditor({
         </div>
         <div className="flex items-center gap-2">
           {showAiButton && (
-            <Button 
+            <button 
+              type="button"
               onClick={onAiAnalyze}
-              loading={isAnalyzing}
-              className={`min-h-[44px] min-w-[44px] text-[9px] font-black px-3 py-1 rounded-xl border transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}
-              leftIcon={!isAnalyzing && <Icon name="sparkles" size={16} />}
+              disabled={isAnalyzing}
+              className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-xl border transition-all shadow-sm ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}
               title={t('aiRecognize')}
             >
-              <span className="hidden sm:inline">{isAnalyzing ? '识别中...' : 'AI 识别'}</span>
-              <span className="sm:hidden">{isAnalyzing ? '...' : 'AI'}</span>
-            </Button>
+              {isAnalyzing ? (
+                <div className="w-4 h-4 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+              ) : (
+                <Icon name="sparkles" size={20} />
+              )}
+            </button>
           )}
           <button 
             onClick={onAddDimension}
             type="button"
-            className="min-h-[44px] px-3 sm:px-4 text-[9px] sm:text-xs font-black text-blue-600 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 transition-all active:scale-95 shadow-sm"
+            title={t('addSpec')}
           >
-            <span className="text-base sm:text-lg">+</span>
-            <span className="hidden sm:inline">{t('addSpec')}</span>
-            <span className="sm:hidden">+</span>
+            <Icon name="plus" size={20} />
           </button>
         </div>
       </div>

@@ -14,11 +14,11 @@ export function UploadButton({
 }: UploadButtonProps) {
   const { can } = usePermission();
   const { route } = useAppRouter();
-  const isManagement = typeof route?.name === 'string' && route?.name?.startsWith('admin');
+  const isManagementHome = route?.name === 'admin';
   const isMultiSelect = useIsMultiSelect();
   const isBatch = isMultiSelect;
 
-  if (!isManagement || !can('photo:edit') || !onAdd || isBatch) return null;
+  if (!isManagementHome || !can('photo:edit') || !onAdd || isBatch) return null;
 
   return (
     <button

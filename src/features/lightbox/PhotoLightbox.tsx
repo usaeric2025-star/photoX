@@ -27,6 +27,7 @@ interface PhotoLightboxProps {
 export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const { 
     isOpen: hookIsOpen, 
+    isEditing,
     slides: hookSlides, 
     currentIndex: hookIndex, 
     close: hookClose,
@@ -122,7 +123,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
+      if (!isOpen || isEditing) return;
       if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'ArrowLeft') handlePrev();
       if (e.key === 'Escape') onClose();
@@ -130,7 +131,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleNext, handlePrev, onClose]);
+  }, [isOpen, isEditing, handleNext, handlePrev, onClose]);
 
   const baseActivePhoto = useMemo(() => {
     if (effectivePhotos.length === 0) return null;
@@ -183,7 +184,12 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
      : (baseActivePhoto as Photo));
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col font-sans select-none">
+    <div 
+      className={cn(
+        "fixed inset-0 z-[100] flex flex-col font-sans select-none transition-opacity duration-300",
+        "opacity-100 pointer-events-auto"
+      )}
+    >
       {/* Dynamic Backdrop */}
       <motion.div 
         initial={{ opacity: 0 }} 

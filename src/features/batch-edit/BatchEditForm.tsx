@@ -56,7 +56,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
          <Field form={formObj.form} name="isHidden">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
-                    <label className="text-sm font-bold">{appLang === 'zh' ? `${t('visibility')} / VISIBILITY` : t('visibility').toUpperCase()}</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('visibility')}</label>
                     <select 
                       value={state.value === true ? 'true' : state.value === false ? 'false' : ''} 
                       onChange={(e) => {
@@ -76,7 +76,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
          <Field form={formObj.form} name="categoryId">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
-                    <label className="text-sm font-bold">{appLang === 'zh' ? `${t('category')} / CATEGORY` : t('category').toUpperCase()}</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('category')}</label>
                     <select 
                       value={state.value === undefined || state.value === null ? '' : String(state.value)} 
                       onChange={(e) => {
@@ -97,7 +97,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
          <Field form={formObj.form} name="tags">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
-                    <label className="text-sm font-bold">{appLang === 'zh' ? `${t('tags')} / TAGS (ADD)` : `${t('tags').toUpperCase()} (ADD)`}</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('tags')} (ADD)</label>
                     <select 
                       multiple
                       value={(state.value as string[]) || []} 
@@ -119,7 +119,7 @@ export function BatchEditForm({ formState, handleUpdateForm }: BatchEditFormProp
          <Field form={formObj.form} name="manufacturerId">
             {({ state, handleChange }) => (
                 <div className="space-y-2">
-                    <label className="text-sm font-bold">{appLang === 'zh' ? `${t('manufacturer')} / MANUFACTURER` : t('manufacturer').toUpperCase()}</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('manufacturer')}</label>
                     <select 
                       value={state.value === undefined || state.value === null ? '' : String(state.value)} 
                       onChange={(e) => {

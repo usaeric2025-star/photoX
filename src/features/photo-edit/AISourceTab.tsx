@@ -9,7 +9,7 @@ import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSession
 export function AISourceTab() {
   const { photoId } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
-  const { handleReExtract } = usePhotoEditAI();
+  const { handleReExtract, isAnalyzing } = usePhotoEditAI();
   const { copy, copied } = useCopyToClipboard({
     successMessage: appLang === 'zh' ? '已复制' : 'Copied'
   });
@@ -24,11 +24,21 @@ export function AISourceTab() {
     }
   };
 
-  if (isPending) {
+  if (isPending || isAnalyzing) {
     return (
-      <div className="space-y-4 animate-pulse pt-4">
-        <div className="h-8 bg-slate-200 rounded-xl w-1/4"></div>
-        <div className="h-64 bg-slate-200 rounded-2xl w-full"></div>
+      <div className="space-y-4 pt-4">
+        <div className="flex items-center gap-2 animate-pulse">
+            <div className="w-4 h-4 bg-slate-200 rounded-full" />
+            <div className="h-4 bg-slate-200 rounded-lg w-32" />
+        </div>
+        <div className="relative group rounded-2xl border border-slate-200 bg-slate-900 shadow-sm overflow-hidden h-[300px] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                <span className="text-slate-400 text-xs font-mono">
+                    {isAnalyzing ? (appLang === 'zh' ? 'AI 正在分析中...' : 'AI Analyzing...') : (appLang === 'zh' ? '载入原始數據...' : 'Loading raw data...')}
+                </span>
+            </div>
+        </div>
       </div>
     );
   }
@@ -40,12 +50,12 @@ export function AISourceTab() {
           <Icon name="info" className="w-6 h-6" />
         </div>
         <h3 className="font-sans font-semibold text-slate-800 text-base mb-1">
-          {appLang === 'zh' ? '暂无 AI 识别原始源代碼' : 'No Raw AI Source Found'}
+          {appLang === 'zh' ? '暂无 AI 识别原始记录' : 'No AI Analysis Log Found'}
         </h3>
         <p className="text-slate-500 text-xs max-w-sm font-sans mb-4">
           {appLang === 'zh' 
-            ? '尚未为此照片保存原始 LLM 识别输出。您可以在「细节 (DETAIL)」页签下运行「AI 属性智能识别」之后重新查看此处。' 
-            : 'No raw LLM output has been saved for this photo yet. Run "AI Intelligent Recognition" in the "DETAIL" tab to generate it.'}
+            ? '尚未为此照片保存原始 LLM 识别输出。您可以在「细节」页签下运行「AI 属性识别」后重新查看。' 
+            : 'No raw LLM output has been saved for this photo yet. Run "AI Analysis" in the DETAIL tab to generate it.'}
         </p>
       </div>
     );
@@ -94,29 +104,24 @@ export function AISourceTab() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => onReExtract(aiResult.rawResult)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 text-xs font-sans font-medium hover:bg-indigo-100 transition-all active:scale-95"
+            title={appLang === 'zh' ? '重新提取属性' : 'Re-extract Meta'}
+            className="flex items-center justify-center w-10 h-10 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm"
           >
-            <Icon name="refresh-cw" className="w-3.5 h-3.5" />
-            <span>{appLang === 'zh' ? '二次提取分类与标签' : 'Re-extract Meta'}</span>
+            <Icon name="refresh-cw" className="w-4 h-4" />
           </button>
           <button
             onClick={() => copy(formattedResult)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-sans font-medium transition-all ${
+            title={appLang === 'zh' ? '复制代码' : 'Copy Code'}
+            className={`flex items-center justify-center w-10 h-10 rounded-xl border transition-all ${
               copied
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
-                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 active:scale-95'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-inner'
+                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 active:scale-95 shadow-sm'
             }`}
           >
             {copied ? (
-              <>
-                <Icon name="check" className="w-3.5 h-3.5" />
-                <span>{appLang === 'zh' ? '已复制' : 'Copied'}</span>
-              </>
+              <Icon name="check" className="w-4 h-4" />
             ) : (
-              <>
-                <Icon name="copy" className="w-3.5 h-3.5" />
-                <span>{appLang === 'zh' ? '复制代码' : 'Copy Code'}</span>
-              </>
+              <Icon name="copy" className="w-4 h-4" />
             )}
           </button>
         </div>

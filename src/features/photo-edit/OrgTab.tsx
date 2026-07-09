@@ -76,14 +76,15 @@ export function OrgTab() {
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <Icon name="factory" size={12} className="text-slate-400" />
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('manufacturer').toUpperCase()} / MANUFACTURER</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('manufacturer')}</span>
           </div>
           <button 
             type="button"
             onClick={() => setAddMfrOpen(true)}
-            className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-tighter"
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 transition-all active:scale-95 shadow-sm"
+            title={t('newManufacturer')}
           >
-            + {t('newManufacturer')}
+            <Icon name="plus" size={16} />
           </button>
         </div>
         <ManufacturerSelect form={form} name="manufacturerId" manufacturers={manufacturers} />

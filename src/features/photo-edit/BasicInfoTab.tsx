@@ -34,7 +34,7 @@ export function BasicInfoTab() {
           <div className="space-y-3">
             <div className="space-y-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
               <div className="flex items-center px-0.5 border-b border-slate-200/60 pb-1 mb-2">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">产品名称 / NAME</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('productName')}</span>
               </div>
               
               <Field form={form} name="name">
@@ -45,7 +45,7 @@ export function BasicInfoTab() {
                     maxLength={200}
                     value={(state.value as string) || ''}
                     onChange={(e) => handleChange(e.target.value.toUpperCase())}
-                    className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-base sm:text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 min-w-0 transition-all" 
+                    className="w-full bg-white border border-slate-200 h-11 px-4 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 min-w-0 transition-all" 
                   />
                 )}
               </Field>
@@ -58,19 +58,19 @@ export function BasicInfoTab() {
         <div className="space-y-1.5 opacity-50 select-none">
           <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
             <Icon name="lock" size={8} className="text-slate-300" />
-            SYSTEM CODE
+            SYS CODE
           </h3>
-          <div className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate">
+          <div className="w-full bg-slate-50 border border-slate-100 h-11 px-4 rounded-xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate">
             {detailPhoto?.itemCode || t('systemCodeAuto')}
           </div>
         </div>
         <div className="space-y-1.5 opacity-50 select-none">
           <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
             <Icon name="lock" size={8} className="text-slate-300" />
-            DATABASE ID
+            DB ID
           </h3>
           <div 
-            className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-[10px] font-mono font-medium text-slate-400 cursor-help truncate" 
+            className="w-full bg-slate-50 border border-slate-100 h-11 px-4 rounded-xl text-[10px] font-mono font-medium text-slate-400 cursor-help truncate" 
             title={detailPhoto?.id || ''}
             onClick={async () => {
               if (detailPhoto?.id) {
@@ -92,7 +92,7 @@ export function BasicInfoTab() {
                 placeholder="CODE..."
                 value={(state.value as string) || ''}
                 onChange={(e) => handleChange(e.target.value)}
-                className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
+                className="w-full bg-white border border-slate-200 h-11 px-4 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
               />
             </div>
           )}
@@ -107,7 +107,7 @@ export function BasicInfoTab() {
                 placeholder="MODEL..." 
                 value={(state.value as string) || ''}
                 onChange={(e) => handleChange(e.target.value.replace(/\D/g, ''))}
-                className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
+                className="w-full bg-white border border-slate-200 h-11 px-4 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
               />
             </div>
           )}
@@ -122,7 +122,7 @@ export function BasicInfoTab() {
                 placeholder="PRICE..." 
                 value={(state.value as string) || ''}
                 onChange={(e) => handleChange(e.target.value.replace(/\D/g, ''))}
-                className="w-full bg-white border border-slate-200 px-4 py-3 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
+                className="w-full bg-white border border-slate-200 h-11 px-4 rounded-xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
               />
             </div>
           )}

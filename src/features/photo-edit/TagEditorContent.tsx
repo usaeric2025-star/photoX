@@ -110,9 +110,10 @@ export function TagEditor({
           <button
             type="button"
             onClick={onQuickAdd}
-            className="h-8 text-[11px] font-bold text-blue-600 bg-blue-50/70 hover:bg-blue-100 hover:text-blue-700 px-3 rounded-lg border border-blue-100 active:bg-blue-200 transition-colors cursor-pointer shrink-0"
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-blue-50/70 text-blue-600 border border-blue-100 hover:bg-blue-100 hover:text-blue-700 active:bg-blue-200 transition-colors cursor-pointer shrink-0 shadow-sm"
+            title="新增标签 / Add Tag"
           >
-            + 新增
+            <Icon name="plus" size={16} />
           </button>
         </div>
       </div>
