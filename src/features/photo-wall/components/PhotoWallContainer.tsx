@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { photoWallStore } from '../signal.js';
 import { PhotoWallGrid } from './PhotoWallGrid.js';
 import { usePhotoWall } from '#src/hooks/index.js';
+import { PhotoListResponse } from '#src/hooks/photo/usePhotos.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -61,7 +62,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
 
     if (isAggregated) {
       try {
-        const result = await ErrorFactory.unwrap<{ data: PhotoListItem[] }>(
+        const result = await ErrorFactory.unwrap<PhotoListResponse>(
           api.photos.list.$post({ 
              json: { 
                ...props.filters,
@@ -73,7 +74,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
           'Failed to load aggregated photos'
         );
         
-        const allPhotos = result.data;
+        const allPhotos = result.items;
         expandedPhotosRef.current = allPhotos; // Update cache
         
         if (allPhotos && allPhotos.length > 0) {

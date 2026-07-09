@@ -53,7 +53,10 @@ export const ai = new Hono()
         return errorResponse(c, errorMsg, 500);
     }
 
-    return successResponse(c, data.text, { message: 'Connection successful' });
+    return successResponse(c, { 
+        text: data.text, 
+        message: 'Connection successful' 
+    });
 })
 .post("/run", async (c) => {
     const body = await c.req.json();
@@ -79,7 +82,11 @@ export const ai = new Hono()
         shouldNormalize: false
     });
 
-    return successResponse(c, data, { rawResult: rawText, usage: {} });
+    return successResponse(c, { 
+        ...(typeof data === 'object' && data !== null ? data : { result: data }), 
+        raw_result: rawText, 
+        usage: {} 
+    });
 })
 .post("/analyze", async (c) => {
     const body = await c.req.json();
@@ -176,7 +183,10 @@ export const ai = new Hono()
         return errorResponse(c, (data as { _error?: string })._error || 'AI analysis failed', 500);
     }
 
-    return successResponse(c, data, { rawResult: rawText });
+    return successResponse(c, {
+        ...(typeof data === 'object' && data !== null ? data : { result: data }),
+        raw_result: rawText
+    });
 })
 .post("/translate", async (c) => {
     const body = await c.req.json();
@@ -201,7 +211,10 @@ export const ai = new Hono()
         return errorResponse(c, (data as { _error?: string })._error || 'AI translation failed', 500);
     }
 
-    return successResponse(c, data, { rawResult: rawText });
+    return successResponse(c, {
+        ...(typeof data === 'object' && data !== null ? data : { result: data }),
+        raw_result: rawText
+    });
 })
 .post("/analyze-base64", async (c) => {
     const body = await c.req.json();
@@ -230,7 +243,10 @@ export const ai = new Hono()
         shouldNormalize: false
     });
 
-    return successResponse(c, data, { rawResult: rawText });
+    return successResponse(c, {
+        ...(typeof data === 'object' && data !== null ? data : { result: data }),
+        raw_result: rawText
+    });
 })
 .post("/analyze-photo-v2", async (c) => {
     const body = await c.req.json();
@@ -255,7 +271,10 @@ export const ai = new Hono()
         return errorResponse(c, (data as { _error?: string })._error || 'AI refine photo failed', 500);
     }
 
-    return successResponse(c, data, { rawResult: rawText });
+    return successResponse(c, {
+        ...(typeof data === 'object' && data !== null ? data : { result: data }),
+        raw_result: rawText
+    });
 })
 .post("/cluster-photos", async (c) => {
     const body = await c.req.json();

@@ -62,9 +62,9 @@ export function translateDimensionLabelToEnglish(label: string): string {
 }
 
 export async function translateDimensionLabelWithAi(label: string): Promise<string> {
-  const result = await ErrorFactory.unwrap<{ data: any }>(
+  const result = await ErrorFactory.unwrap<any>(
     api.ai['translate'].$post({ json: { promptText: `Translate this to English. Input: "${label}"` } }),
     'Translation failed'
   );
-  return result.data as string || label;
+  return result as string || label;
 }

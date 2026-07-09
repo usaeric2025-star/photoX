@@ -44,13 +44,13 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
   const tagNames = (photo.tags || []).map(t => t.name).join(',');
   const photoDetail = `- 名称: ${nameStr}\n- 现有分类: ${photo.category}\n- 现有标签: ${tagNames || '无'}\n- 描述: ${descStr || '无'}`;
   
-  const resData = await ErrorFactory.unwrap<{ data: Record<string, unknown> | string }>(
+  const resData = await ErrorFactory.unwrap<Record<string, unknown> | string>(
     api.ai['analyze-photo-v2'].$post({
       json: { photoDetail, photoId: photo.id }
     }),
     'AI 单张识别分析失败'
   );
-  let parsed = resData.data;
+  let parsed = resData;
   if (typeof parsed === 'string') {
     try {
       parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());

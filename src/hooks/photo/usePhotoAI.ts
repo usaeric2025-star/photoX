@@ -227,10 +227,10 @@ export function usePhotoEditAI() {
                   const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3); // Limit to 3 for automatic selection
                   invalidateTags();
                   
-                  const latestTags = await ErrorFactory.unwrap<{ data: Tag[] }>(
+                  const latestTags = await ErrorFactory.unwrap<Tag[]>(
                     api.tags.$get(),
                     'Failed to fetch latest tags'
-                  ).then(j => j.data).catch(() => allTags);
+                  ).catch(() => allTags);
 
                   queryClient.setQueryData(queryKeys.tags.list(), (old: Tag[] | undefined) => {
                     const oldTags = Array.isArray(old) ? old : [];

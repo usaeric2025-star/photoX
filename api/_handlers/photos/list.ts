@@ -60,13 +60,14 @@ export const listRoutes = new Hono()
             ? (typeof nextCursor === 'string' ? nextCursor : (nextCursor as unknown as Date).toISOString())
             : null;
         
-        return successResponse(c, v.parse(v.array(PhotoListItemSchema), formatted), {
+        return successResponse(c, {
+          items: formatted,
           nextCursor: finalNextCursor,
           total
         });
       }
 
-      return successResponse(c, [], { nextCursor: null, total: 0 });
+      return successResponse(c, { items: [], nextCursor: null, total: 0 });
     } catch (error: unknown) {
       throw errorFactory.wrap(error, 'photos.list', 'QUERY_FAILURE');
     }

@@ -7,20 +7,20 @@ export const translateFields = async (
   description: string
 ): Promise<TranslationResult> => {
   const [nameData, descData] = await Promise.all([
-    ErrorFactory.unwrap<{ data: any }>(
+    ErrorFactory.unwrap<any>(
       api.ai['translate'].$post({ json: { promptText: `Translate this to EN and MS, return JSON format { "en": "...", "ms": "..." }. Input: "${name}"` } }),
       'Name translation failed'
     ),
-    ErrorFactory.unwrap<{ data: any }>(
+    ErrorFactory.unwrap<any>(
       api.ai['translate'].$post({ json: { promptText: `Translate this to EN and MS, return JSON format { "en": "...", "ms": "..." }. Input: "${description}"` } }),
       'Description translation failed'
     )
   ]);
     
   const translateRes = (text: string, data: any) => {
-      const content = (data?.data && typeof data.data === 'object' && 'content' in data.data)
-          ? data.data.content
-          : data?.data;
+      const content = (data && typeof data === 'object' && 'content' in data)
+          ? data.content
+          : data;
       const fallback = "{}";
       const contentStrOrObj = content || fallback;
       let parsed: { en?: string; ms?: string } = { en: text, ms: text };

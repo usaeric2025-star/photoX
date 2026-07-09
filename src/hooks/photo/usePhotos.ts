@@ -24,9 +24,8 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 export type PhotoListFilters = Record<string, unknown>;
 
-type PhotoListResponse = {
-  success: boolean;
-  data: PhotoListItem[];
+export type PhotoListResponse = {
+  items: PhotoListItem[];
   nextCursor: string | null;
   total: number;
 };
@@ -60,7 +59,7 @@ export function usePhotos(params: PhotoListFilters = {}) {
       return { pages: [] };
     }
     return {
-      pages: data.pages.map((p) => ({ items: p.data, total: p.total }))
+      pages: data.pages.map((p) => ({ items: p.items, total: p.total }))
     };
   }, [data]);
 
@@ -121,7 +120,7 @@ export function usePhotoMutations() {
   const deleteMutation = useOptimisticPhotoMutation<string | string[]>({
     mutationFn: async (ids) => {
       const idArray = Array.isArray(ids) ? ids : [ids];
-      return ErrorFactory.unwrap<boolean>(
+      return ErrorFactory.unwrap<{ ids: string[] }>(
         api.photos.delete.$post({ json: { ids: idArray } }),
         'Failed to delete photos'
       );
@@ -138,7 +137,7 @@ export function usePhotoMutations() {
 
   // 3. 批量更新 Mutation
   const batchEditMutation = useOptimisticPhotoMutation<{ ids: string[]; updates: Record<string, unknown> }>({
-    mutationFn: async ({ ids, updates }) => ErrorFactory.unwrap<boolean>(
+    mutationFn: async ({ ids, updates }) => ErrorFactory.unwrap<string[]>(
       api.photos.batch.$post({ json: { ids, updates } }),
       'Failed to update photos in batch'
     ),
