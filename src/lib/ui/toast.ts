@@ -38,6 +38,15 @@ export const showToast = {
         if (!e) return '';
         if (typeof e === 'string') return e;
         const obj = e as Record<string, unknown>;
+        if (obj.context && typeof obj.context === 'object') {
+          const ctx = obj.context as Record<string, unknown>;
+          if (ctx.original) {
+            return extractSystemMsg(ctx.original);
+          }
+        }
+        if (obj.cause) {
+          return extractSystemMsg(obj.cause);
+        }
         if (obj.message) return String(obj.message);
         return JSON.stringify(e).substring(0, 500);
       };
