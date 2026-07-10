@@ -22,6 +22,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { storage } from '#lib/storage.js';
 import { logger } from '#lib/logger.js';
 import { useAdminMode } from './auth/useAdminMode.js';
+import { usePermission } from './auth/usePermission.js';
 import { initializeApp, appLoadingSignal, appErrorSignal } from '#src/store/appStore.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 
@@ -190,7 +191,9 @@ export function useDisclosure(initialState = false) {
 // --- Is Management Hook ---
 
 export function useIsManagement() {
-  return useAdminMode();
+  const isAdminMode = useAdminMode();
+  const { can } = usePermission();
+  return isAdminMode && (can('photo:edit') || can('photo:delete') || can('photo:batch-edit'));
 }
 
 // --- Local Storage Hook ---

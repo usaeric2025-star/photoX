@@ -39,8 +39,6 @@ export function usePermission() {
   return {
     role,
     can,
-    // Legacy flags for backward compatibility during migration
-    isStaff: role === 'staff' || role === 'admin',
     userId: user?.id
   };
 }

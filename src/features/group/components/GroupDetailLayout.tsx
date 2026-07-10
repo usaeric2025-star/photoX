@@ -8,7 +8,7 @@ import { PhotoListItem } from '#src/types/api.js';
 
 interface GroupDetailLayoutProps {
   loading: boolean;
-  error: Error | null;
+  error: Error | string | null;
   group?: Group;
   photos: PhotoListItem[];
   hasNextPage: boolean;

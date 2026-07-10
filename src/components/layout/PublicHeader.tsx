@@ -21,7 +21,8 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const isLoading = useAuth(s => s.isLoading);
   const signOut = useAuth(s => s.signOut);
   const { data: settings } = usePublicSettings();
-  const { isStaff, can } = usePermission();
+  const { can, role } = usePermission();
+  const isStaff = role === 'admin' || role === 'staff';
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';

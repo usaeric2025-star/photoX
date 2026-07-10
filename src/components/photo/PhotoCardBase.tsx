@@ -1,7 +1,7 @@
 import React, { Ref } from 'react';
 import { cn } from '#lib/utils.js';
 import { PhotoListItem } from '#src/types/api.js';
-import { useIsManagement } from '#src/hooks/index.js';
+import { useIsManagement, usePermission } from '#src/hooks/index.js';
 import { Image } from '#src/components/ui/Image.js';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { getLocalizedDisplay } from '#src/utils/display.js';

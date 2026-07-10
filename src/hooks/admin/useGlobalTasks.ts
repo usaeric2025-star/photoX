@@ -10,6 +10,7 @@ import { useAppRoute } from '#lib/router/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import type { Task } from '#lib/task-queue/types.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { usePermission } from '../core/auth/usePermission.js';
 
 interface RemoteJob {
   id: string;

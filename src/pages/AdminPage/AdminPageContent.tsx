@@ -103,6 +103,8 @@ export function AdminPageContent() {
                 <Route path="/admin/batch" component={AdminBatchEditRoute} />
                 <Route path="/admin/diagnostics" component={AdminDiagRoute} />
                 <Route path="/admin/diagnose" component={AdminDiagRoute} />
+                <Route path="/diagnostics" component={AdminDiagRoute} />
+                <Route path="/diagnostics/:any*" component={AdminDiagRoute} />
                 <Route path="/admin/tasks" component={AdminSettingsRoute} />
                 <Route path="/admin/settings" component={AdminSettingsRoute} />
                 <Route path="/admin/error-logs" component={AdminSettingsRoute} />
@@ -115,6 +117,9 @@ export function AdminPageContent() {
                 <Route path="/admin/categories" component={AdminGallery} />
                 <Route path="/admin/manufacturer" component={AdminGallery} />
                 <Route path="/admin" component={AdminGallery} />
+                <Route path="/admin/:any*" component={AdminGallery} />
+                <Route path="/settings/:any*" component={AdminSettingsRoute} />
+                <Route path="/diagnostics/:any*" component={AdminDiagRoute} />
                 
                 <Route component={NotFoundPage} />
               </Switch>

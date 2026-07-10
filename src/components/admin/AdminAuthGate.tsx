@@ -6,6 +6,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 
 import { RequirePermission } from '#src/components/auth/RequirePermission.js';
+import { AdminModeProvider } from '#src/hooks/core/auth/useAdminMode.js';
 
 const LoginScreen = lazy(() => import('./LoginScreen.js').then(m => ({ default: m.LoginScreen })));
 
@@ -74,7 +75,9 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
         </div>
       }
     >
-      {children}
+      <AdminModeProvider value={true}>
+        {children}
+      </AdminModeProvider>
     </RequirePermission>
   );
 }

@@ -49,7 +49,7 @@ export function LightboxHeader({
             className="h-10 sm:h-11 px-4 sm:px-5 bg-blue-600/20 text-blue-400 active:bg-blue-600 active:text-white rounded-2xl text-[10px] font-black tracking-[0.2em] shadow-2xl  transition-all active:scale-95 flex items-center gap-2 border border-blue-500/20 uppercase"
           >
             <span>✏️</span>
-            <span className="hidden sm:inline">{role === 'admin' ? 'Admin' : 'Edit'}</span>
+            <span className="hidden sm:inline">Edit</span>
           </button>
         )}
 
