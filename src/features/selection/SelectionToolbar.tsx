@@ -50,7 +50,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
 
   // ✅ 使用計算後的 Selector
   const activeTasks = useSignal(activeTaskCountSignal);
-  const isAnyPending = deletePhoto.isPending || batchUpdate.isPending || activeTasks > 0 || combineMutation.isPending || removeMutation.isPending;
+  const isAnyPending = deletePhoto.isPending || batchUpdate.isPending || combineMutation.isPending || removeMutation.isPending;
 
   const isVisible = isMultiSelect || selectedCount > 0;
 

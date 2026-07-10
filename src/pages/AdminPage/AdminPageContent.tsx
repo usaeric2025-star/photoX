@@ -100,23 +100,40 @@ export function AdminPageContent() {
             <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
               <Switch>
                 <Route path="/admin/batch-edit" component={AdminBatchEditRoute} />
+                <Route path="/admin/batch-edit/" component={AdminBatchEditRoute} />
                 <Route path="/admin/batch" component={AdminBatchEditRoute} />
+                <Route path="/admin/batch/" component={AdminBatchEditRoute} />
                 <Route path="/admin/diagnostics" component={AdminDiagRoute} />
+                <Route path="/admin/diagnostics/" component={AdminDiagRoute} />
                 <Route path="/admin/diagnose" component={AdminDiagRoute} />
+                <Route path="/admin/diagnose/" component={AdminDiagRoute} />
                 <Route path="/diagnostics" component={AdminDiagRoute} />
+                <Route path="/diagnostics/" component={AdminDiagRoute} />
                 <Route path="/diagnostics/:any*" component={AdminDiagRoute} />
                 <Route path="/admin/tasks" component={AdminSettingsRoute} />
+                <Route path="/admin/tasks/" component={AdminSettingsRoute} />
                 <Route path="/admin/settings" component={AdminSettingsRoute} />
+                <Route path="/admin/settings/" component={AdminSettingsRoute} />
                 <Route path="/admin/error-logs" component={AdminSettingsRoute} />
+                <Route path="/admin/error-logs/" component={AdminSettingsRoute} />
                 <Route path="/admin/system" component={AdminSettingsRoute} />
+                <Route path="/admin/system/" component={AdminSettingsRoute} />
                 <Route path="/settings" component={AdminSettingsRoute} />
+                <Route path="/settings/" component={AdminSettingsRoute} />
                 <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
+                <Route path="/admin/group/:id/" component={AdminGroupDetailRoute} />
                 <Route path="/admin/groups" component={AdminGallery} />
+                <Route path="/admin/groups/" component={AdminGallery} />
                 <Route path="/admin/photos" component={AdminGallery} />
+                <Route path="/admin/photos/" component={AdminGallery} />
                 <Route path="/admin/tags" component={AdminGallery} />
+                <Route path="/admin/tags/" component={AdminGallery} />
                 <Route path="/admin/categories" component={AdminGallery} />
+                <Route path="/admin/categories/" component={AdminGallery} />
                 <Route path="/admin/manufacturer" component={AdminGallery} />
+                <Route path="/admin/manufacturer/" component={AdminGallery} />
                 <Route path="/admin" component={AdminGallery} />
+                <Route path="/admin/" component={AdminGallery} />
                 
                 <Route>
                   <NotFoundPage isTransitionAllowed={false} />
