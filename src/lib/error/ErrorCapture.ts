@@ -37,7 +37,9 @@ export class ErrorCapture {
 
     // Send error diagnostics asynchronously to the backend system_logs database
     if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
-      const is404 = appError.message.toLowerCase().includes('404');
+      const is404 = appError.message.toLowerCase().includes('404') || 
+                    appError.code === ErrorCode.NOT_FOUND || 
+                    appError.statusCode === 404;
       const payload = {
         message: is404 ? `[Client 404] Page Not Found: ${window.location.pathname}` : `[Client Error] ${appError.message}`,
         level: 'error',
@@ -66,10 +68,24 @@ export class ErrorCapture {
   }
 
   private static wrapUnknown(error: unknown): AppError {
-    // This is a minimal fallback, the main factory handles conversion
+    if (isAppError(error)) return error;
+    
+    let message = 'Unknown Error';
+    let cause: Error | undefined = undefined;
+    
+    if (error instanceof Error) {
+      message = error.message;
+      cause = error;
+    } else if (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
+      message = (error as any).message;
+    } else if (typeof error === 'string') {
+      message = error;
+    }
+    
     return new AppError({
       code: ErrorCode.UNKNOWN_ERROR,
-      message: typeof error === 'string' ? error : 'Unknown Error',
+      message,
+      cause,
       context: { raw: error }
     });
   }

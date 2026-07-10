@@ -117,11 +117,10 @@ export function AdminPageContent() {
                 <Route path="/admin/categories" component={AdminGallery} />
                 <Route path="/admin/manufacturer" component={AdminGallery} />
                 <Route path="/admin" component={AdminGallery} />
-                <Route path="/admin/:any*" component={AdminGallery} />
-                <Route path="/settings/:any*" component={AdminSettingsRoute} />
-                <Route path="/diagnostics/:any*" component={AdminDiagRoute} />
                 
-                <Route component={NotFoundPage} />
+                <Route>
+                  <NotFoundPage isTransitionAllowed={false} />
+                </Route>
               </Switch>
             </Suspense>
           </ErrorBoundary>

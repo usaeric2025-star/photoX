@@ -235,7 +235,8 @@ export class ErrorFactory {
   }
 
   static capture(error: Error | AppError | unknown) {
-    ErrorCapture.capture(error);
+    const appError = isAppError(error) ? error : this.fromUnknown(error);
+    ErrorCapture.capture(appError);
   }
 
   static getLocalErrors(): Record<string, unknown>[] {

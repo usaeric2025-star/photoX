@@ -4,12 +4,19 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { ErrorFactory } from '#lib/error/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 
-export function NotFoundPage() {
+interface NotFoundPageProps {
+  isTransitionAllowed?: boolean;
+  params?: Record<string, string | undefined>;
+  [key: string]: any;
+}
+
+export function NotFoundPage({ isTransitionAllowed = true }: NotFoundPageProps) {
   const { t } = useTranslation();
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
 
   // Detect and bypass transition-induced false positive 404s
   const isTransition = React.useMemo(() => {
+    if (!isTransitionAllowed) return false;
     if (!pathname) return false;
     
     // Normalize path to strip trailing slash for matching (unless it's exactly "/")
