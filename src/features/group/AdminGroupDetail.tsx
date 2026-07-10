@@ -86,6 +86,35 @@ export function AdminGroupDetailPage() {
     }
   };
 
+  // Redirect to admin if group not found after loading finishes
+  useEffect(() => {
+    if (!loading && !group) {
+      const timer = setTimeout(() => {
+        navigate.admin();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, group, navigate]);
+
+  if (!loading && !group) {
+    return (
+      <GroupDetailLayout
+        loading={loading}
+        error={error}
+        group={undefined}
+        photos={[]}
+        hasNextPage={false}
+        isFetchingNextPage={false}
+        fetchNextPage={() => {}}
+        emptyTitle="分组不存在或已合并"
+        emptyMessage="该分组可能已被删除、解散或合并至其他分组。正在跳转回管理页面..."
+        onRetry={() => navigate.admin()}
+        bottomPadding={isMultiSelect}
+        header={<div className="p-4 text-center text-slate-500 font-semibold bg-white border-b">分组不存在</div>}
+      />
+    );
+  }
+
   return (
     <GroupDetailLayout
       loading={loading}

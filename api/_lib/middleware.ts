@@ -19,7 +19,13 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
       // 為頻繁讀取的靜態型錄路由與列表加上 Cache-Control (Vercel Edge 緩存與防護 504)
       if (c.req.method === 'GET') {
         const path = c.req.path;
-        if (path.startsWith('/api/tags') || 
+        const isAdminMode = c.req.query('isAdminMode') === 'true';
+        const referer = c.req.header('referer') || '';
+        const isAdminPath = referer.includes('/admin') || path.startsWith('/api/admin') || isAdminMode;
+
+        if (isAdminPath) {
+          c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        } else if (path.startsWith('/api/tags') || 
             path.startsWith('/api/categories') || 
             path.startsWith('/api/manufacturers') || 
             path.startsWith('/api/groups')) {
@@ -33,8 +39,15 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
         const path = c.req.path;
         // 針對 POST 的查詢 API 也能加 Edge 緩存，Vercel 支援帶有 Vercel-CDN-Cache-Control 的 POST 查詢緩存
         if (path.endsWith('/list') || path.endsWith('/list-by-group') || path.endsWith('/list-by-group-paginated')) {
-            c.header('Cache-Control', 'public, s-maxage=5, stale-while-revalidate=30');
-            c.header('Vercel-CDN-Cache-Control', 'max-age=15, stale-while-revalidate=30');
+            const referer = c.req.header('referer') || '';
+            const isAdminPath = referer.includes('/admin') || path.startsWith('/api/admin');
+            
+            if (isAdminPath) {
+                c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            } else {
+                c.header('Cache-Control', 'public, s-maxage=5, stale-while-revalidate=30');
+                c.header('Vercel-CDN-Cache-Control', 'max-age=15, stale-while-revalidate=30');
+            }
         }
       }
       
