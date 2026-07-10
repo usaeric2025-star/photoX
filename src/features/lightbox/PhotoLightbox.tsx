@@ -43,7 +43,6 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const isOpen = props.isOpen ?? hookIsOpen;
   const onClose = props.onClose || hookClose;
   const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
-  const { isAdmin } = usePermission();
   const currentDescLang = useUI(s => s.descLang);
   const patch = useUI(s => s.patch);
   
@@ -207,7 +206,6 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
           currentIndex={currentIndex}
           totalPhotos={effectivePhotos.length}
           showInfo={showInfo}
-          isAdmin={isAdmin}
           onToggleInfo={() => setShowInfo(!showInfo)}
           onEdit={onEdit}
           onClose={onClose}

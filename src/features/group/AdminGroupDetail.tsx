@@ -6,19 +6,12 @@ import { Photo } from '#src/types/index.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { useFilters, useTranslation } from '#src/hooks/index.js';
 import { useIsMultiSelect } from '#src/hooks/index.js';
-import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
 import { GroupSettingsDialog } from '#src/components/groups/GroupSettingsDialog.js';
 import { useGroupEditState } from '#src/hooks/index.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
 import { AdminGroupHeader } from './components/AdminGroupHeader.js';
-import { Button } from '#src/components/ui/Button.js';
-import { Icon } from '#src/components/ui/Icon.js';
-import { toast } from 'sonner';
-import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
-import { PhotoWallGrid } from '#src/features/photo-wall/components/PhotoWallGrid.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
-import { DataFallback } from '#src/components/ui/DataFallback.js';
-import { PhotoGridSkeleton } from '#src/components/photo/PhotoSkeleton.js';
+import { GroupDetailLayout } from './components/GroupDetailLayout.js';
 
 export function AdminGroupDetailPage() {
   const { params, navigate } = useAppRouter();
@@ -38,12 +31,12 @@ export function AdminGroupDetailPage() {
     hasNextPage,
     isFetchingNextPage 
   } = useGroupData({ groupId, isAdmin: true });
-  const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
 
+  const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
   const { t } = useTranslation();
   const { anchor, setAnchor } = useFilters();
-
   const { open: openLightbox } = useLightbox();
+
   const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
 
   const handlePhotoClick = useCallback((photo: PhotoListItem) => {
@@ -67,7 +60,7 @@ export function AdminGroupDetailPage() {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.classList.add('ring-4', 'ring-primary', 'scale-95');
-          setTimeout(() => {
+          setTimeout(() => { 
              element.classList.remove('ring-4', 'ring-primary', 'scale-95');
              setAnchor(false);
           }, 2000);
@@ -79,8 +72,6 @@ export function AdminGroupDetailPage() {
 
   const [showAdminTools, setShowAdminTools] = useState(false);
   const isMultiSelect = useIsMultiSelect();
-
-  const adminActions = useAdminMaintenance();
   
   const { groupData, handleUpdateGroupData } = useGroupEditState(
     groupId,
@@ -95,63 +86,44 @@ export function AdminGroupDetailPage() {
     }
   };
 
-  const loadingSkeleton = (
-    <div className="p-1 sm:p-2 lg:p-4 w-full h-full bg-slate-50">
-      <PhotoGridSkeleton count={24} />
-    </div>
-  );
-
   return (
-    <DataFallback
+    <GroupDetailLayout
       loading={loading}
       error={error}
-      isEmpty={!loading && !error && !group}
-      emptyTitle="分組不存在或已合併"
-      emptyMessage="該分組可能已被刪除、解散或合併至其他分組。正在跳轉回管理頁面..."
+      group={group}
+      photos={photos}
+      hasNextPage={!!hasNextPage}
+      isFetchingNextPage={!!isFetchingNextPage}
+      fetchNextPage={fetchNextPage || (() => {})}
+      emptyTitle="分组不存在或已合并"
+      emptyMessage="该分组可能已被删除、解散或合并至其他分组。正在跳转回管理页面..."
       onRetry={() => navigate.admin()}
-      loadingSkeleton={loadingSkeleton}
-    >
-      {group && (
-        <div className="bg-slate-50 group-detail-admin flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
-      <div className="flex-shrink-0 bg-white border-b border-slate-100 shadow-sm">
+      bottomPadding={isMultiSelect}
+      header={
         <AdminGroupHeader 
-          group={group} 
+          group={group!} 
           photoCount={totalCount} 
           onEditSettings={() => setShowAdminTools(true)}
           onUpdateTitle={handleUpdateTitle}
         />
-      </div>
-      <div className={`flex-1 bg-slate-50 transition-all duration-300 ${isMultiSelect ? 'pb-16' : ''} overflow-y-auto p-1 sm:p-2 relative`}>
-        <ErrorBoundary>
-          <PhotoWallGrid 
-          photos={photos} 
-          hasMore={!!hasNextPage} 
-          isLoading={loading}
-          isLoadingMore={!!isFetchingNextPage} 
-          loadMore={fetchNextPage || (() => {})} 
-          hideGroupBadge={true}
-          isGroupDetail={true}
-        />
-        </ErrorBoundary>
-      </div>
-
-      {showAdminTools && (
-        <GroupSettingsDialog
-          showGroupSettings={showAdminTools}
-          setShowGroupSettings={setShowAdminTools}
-          activeGroupId={groupId || null}
-          groupData={groupData}
-          handleUpdateGroupData={handleUpdateGroupData}
-          onUngroup={async (id) => {
-            await dissolve.mutateAsync(id);
-            navigate.admin();
-          }}
-          update={async (updates) => { if (groupId) await update.mutateAsync({ id: groupId, updates }); }}
-          t={t}
-        />
-      )}
-    </div>
-      )}
-    </DataFallback>
+      }
+      floatingActions={
+        showAdminTools ? (
+          <GroupSettingsDialog
+            showGroupSettings={showAdminTools}
+            setShowGroupSettings={setShowAdminTools}
+            activeGroupId={groupId || null}
+            groupData={groupData}
+            handleUpdateGroupData={handleUpdateGroupData}
+            onUngroup={async (id) => {
+              await dissolve.mutateAsync(id);
+              navigate.admin();
+            }}
+            update={async (updates) => { if (groupId) await update.mutateAsync({ id: groupId, updates }); }}
+            t={t}
+          />
+        ) : null
+      }
+    />
   );
 }

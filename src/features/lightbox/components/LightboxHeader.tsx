@@ -8,7 +8,6 @@ interface LightboxHeaderProps {
   currentIndex: number;
   totalPhotos: number;
   showInfo: boolean;
-  isAdmin: boolean;
   onToggleInfo: () => void;
   onEdit: (photoData: Photo) => void;
   onClose: () => void;
@@ -19,7 +18,6 @@ export function LightboxHeader({
   currentIndex,
   totalPhotos,
   showInfo,
-  isAdmin,
   onToggleInfo,
   onEdit,
   onClose

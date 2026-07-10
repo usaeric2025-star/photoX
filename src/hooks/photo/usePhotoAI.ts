@@ -469,8 +469,8 @@ export function usePhotoEditAI() {
  * 获取照片对应的 AI 识别原始源代碼與解析後的 JSON 數據。
  */
 export function usePhotoAIResult(photoId: string, options?: { enabled?: boolean }) {
-  const { isStaff } = usePermission();
-  const isEnabled = isStaff && (options?.enabled !== false);
+  const { can } = usePermission();
+  const isEnabled = can('photo:ai-analyze') && (options?.enabled !== false);
 
   return useAppQuery<PhotoAIResult | null>(
     (photoId && isEnabled) ? ['photos', 'ai-result', photoId] : null,

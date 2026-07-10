@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { NativeDialog } from "#src/components/ui/NativeDialog.js";
 import { ProductGroup, Dimension } from '#src/types/index.js';
-import { useAdminMode, useTranslation } from '#src/hooks/index.js';
+import { useTranslation } from '#src/hooks/index.js';
 import { Input } from "#src/components/shared/Input.js";
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { Button } from "#src/components/ui/Button.js";
@@ -152,11 +152,8 @@ function GroupSettingsContent({ groupData, handleUpdateGroupData, t, setShowGrou
 }
 
 export function GroupSettingsDialog(props: GroupSettingsDialogProps) {
-  const isAdminMode = useAdminMode();
-
   const childProps = {
-    ...props,
-    isAdminMode
+    ...props
   };
 
   const headerProps = {

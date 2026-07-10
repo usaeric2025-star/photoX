@@ -40,12 +40,7 @@ export function usePermission() {
     role,
     can,
     // Legacy flags for backward compatibility during migration
-    isAdmin: role === 'admin',
     isStaff: role === 'staff' || role === 'admin',
-    canEdit: permissions.includes('photo:edit'),
-    canDelete: permissions.includes('photo:delete'),
-    canBatchEdit: permissions.includes('photo:batch-edit'),
-    canManageSystem: permissions.includes('system:settings'),
     userId: user?.id
   };
 }

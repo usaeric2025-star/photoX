@@ -8,13 +8,12 @@ import { Theme } from '#src/types/index.js';
 
 interface AdminHeaderLogoProps {
   logoUrl?: string | null;
-  isAdmin: boolean;
-  isStaff: boolean;
+  role: 'admin' | 'staff' | 'public';
   totalCount: number;
   theme: Theme;
 }
 
-export function AdminHeaderLogo({ logoUrl, isAdmin, isStaff, totalCount, theme }: AdminHeaderLogoProps) {
+export function AdminHeaderLogo({ logoUrl, role, totalCount, theme }: AdminHeaderLogoProps) {
   const { t, lang } = useTranslation();
   const [imgError, setImgError] = React.useState(false);
 
@@ -38,11 +37,11 @@ export function AdminHeaderLogo({ logoUrl, isAdmin, isStaff, totalCount, theme }
           <span className={cn("text-sm sm:text-lg font-black tracking-tighter", theme.logoText)}>
             PHOT<span>O</span>X
           </span>
-          {isAdmin ? (
+          {role === 'admin' ? (
             <span className="text-[8px] sm:text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
               Admin
             </span>
-          ) : isStaff ? (
+          ) : role === 'staff' ? (
             <span className="text-[8px] sm:text-[9px] font-black bg-amber-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
               Staff
             </span>

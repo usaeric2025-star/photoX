@@ -5,6 +5,8 @@ import { useLocalStorage } from '#src/hooks/core/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 
+import { RequirePermission } from '#src/components/auth/RequirePermission.js';
+
 const LoginScreen = lazy(() => import('./LoginScreen.js').then(m => ({ default: m.LoginScreen })));
 
 interface AdminAuthGateProps {
@@ -57,20 +59,22 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
     );
   }
 
-  // Not authenticated
-  if (!user && !isStaffMode) {
-    return (
-      <div className="h-screen w-full bg-slate-50">
-        <Suspense fallback={
-          <div className="flex h-screen w-full items-center justify-center">
-            <LoadingSpinner size="lg" />
-          </div>
-        }>
-          <LoginScreen signIn={signIn} />
-        </Suspense>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <RequirePermission
+      permission="staff:workspace:access"
+      fallback={
+        <div className="h-screen w-full bg-slate-50">
+          <Suspense fallback={
+            <div className="flex h-screen w-full items-center justify-center">
+              <LoadingSpinner size="lg" />
+            </div>
+          }>
+            <LoginScreen signIn={signIn} />
+          </Suspense>
+        </div>
+      }
+    >
+      {children}
+    </RequirePermission>
+  );
 }

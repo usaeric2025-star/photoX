@@ -18,7 +18,6 @@ interface AdminHeaderActionsProps {
   t: (key: string, ...args: unknown[]) => string;
   user: User | null;
   signOut: () => void;
-  isStaff: boolean;
   lang: string;
 }
 
@@ -32,11 +31,10 @@ export function AdminHeaderActions({
   t = (key: string) => key,
   user,
   signOut,
-  isStaff,
   lang
 }: AdminHeaderActionsProps) {
   const { navigate } = useAppRouter();
-  const { can } = usePermission();
+  const { can, role } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
   const canManageSystem = can('system:settings');
   const canAccessDiagnostics = can('admin:dashboard:access');
@@ -99,7 +97,7 @@ export function AdminHeaderActions({
         }
       >
         <div className="flex flex-col min-w-[220px] p-1 gap-1">
-          {isStaff ? (
+          {(role === 'staff' || role === 'admin') ? (
             <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
               <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px] shrink-0">
                 {user?.photoUrl && user.photoUrl.trim() !== '' ? (
@@ -142,7 +140,7 @@ export function AdminHeaderActions({
             <LanguageSwitcher mode="segmented" />
           </div>
 
-          {isStaff && (
+          {(role === 'staff' || role === 'admin') && (
             <>
               <div className="h-px bg-slate-100 my-1 mx-2" />
               <button

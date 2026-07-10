@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { UnifiedTask, TaskStatus } from '#src/types/index.js';
 import { api } from '#lib/api.js';
 import { useAppQuery, queryClient } from '#lib/query/index.js';
-import { useAdminMode } from '#src/hooks/core/auth/useAdminMode.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { logger } from '#lib/logger.js';
 import { useAppRoute } from '#lib/router/index.js';
@@ -27,9 +26,9 @@ interface RemoteJob {
  */
 export function useGlobalTasks() {
   const { t } = useTranslation();
-  const isAdminPath = useAdminMode();
+  const { can } = usePermission();
+  const canManageSystem = can('system:settings');
   const user = useAuth(s => s.user);
-  const isAdmin = isAdminPath && !!user;
   const route = useAppRoute();
   const routeName = route?.name;
   
@@ -38,7 +37,7 @@ export function useGlobalTasks() {
 
   // 2. Backend Jobs (Durable, polled)
   const { data: remoteJobs = [], isPending: isPendingJobs, refetch: refetchJobs } = useAppQuery<RemoteJob[]>(
-    isAdmin ? queryKeys.maintenance.jobs() : null,
+    canManageSystem ? queryKeys.maintenance.jobs() : null,
     async () => {
       try {
         return await ErrorFactory.unwrap<RemoteJob[]>(
@@ -55,7 +54,7 @@ export function useGlobalTasks() {
       staleTime: STALE_TIMES.FAST,
       refetchInterval: (query: { state: { data: unknown } }) => {
         const rJobs = query.state.data;
-        if (!isAdmin) return false;
+        if (!canManageSystem) return false;
         if (typeof document !== 'undefined' && document.hidden) return false;
         const hasRunning = Array.isArray(rJobs) && (rJobs as { status?: string }[]).some(job => job && job.status === 'processing');
         const pathname = typeof window !== 'undefined' ? window.location.pathname : '';

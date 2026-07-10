@@ -31,9 +31,9 @@ export function LightboxInfo({
   const categoryName = photoData.categoryName || '无分类';
   const tags = photoData.tags || [];
 
-  const { isStaff } = usePermission();
+  const { can } = usePermission();
   const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id, { 
-    enabled: showInfo && isStaff 
+    enabled: showInfo && can('photo:view-internal-info') 
   });
 
   const isAiIdentified = !!(photoData.metadata && (photoData.metadata as Record<string, unknown>).ai_raw) || !!photoData.isAnalyzing;

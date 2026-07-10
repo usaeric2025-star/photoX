@@ -21,7 +21,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const isLoading = useAuth(s => s.isLoading);
   const signOut = useAuth(s => s.signOut);
   const { data: settings } = usePublicSettings();
-  const { role, isStaff, isAdmin: isGlobalAdmin } = usePermission();
+  const { isStaff, can } = usePermission();
   const patch = useUI((s: UIStoreState) => s.patch);
   const { navigate, route } = useAppRouter();
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -157,8 +157,10 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                 items.push({ id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => navigate.home() });
                 if (isStaff) {
                   items.push({ id: 'admin', icon: 'layout-dashboard' as const, label: t('viewModeAdmin', '管理後台'), onClick: () => navigate.admin() });
-                  if (isGlobalAdmin) {
+                  if (can('photo:batch-edit')) {
                     items.push({ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => navigate.adminBatchEdit() });
+                  }
+                  if (can('system:settings')) {
                     items.push({ id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: () => navigate.adminDiagnostics() });
                     items.push({ id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: () => navigate.adminDiagnosticsLogs() });
                     items.push({ id: 'divider1', divider: true });

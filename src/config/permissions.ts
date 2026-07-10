@@ -1,9 +1,5 @@
 import { User } from '#src/types/index.js';
 
-/**
- * Capability identifiers for the PhotoX ecosystem.
- * Follows the pattern 'scope:action' or 'scope:sub-scope:action'.
- */
 export type Capability =
   | 'photo:view-hidden'
   | 'photo:view-internal-info'
@@ -17,12 +13,11 @@ export type Capability =
   | 'tag:manage'
   | 'manufacturer:manage'
   | 'system:settings'
-  | 'staff:workspace:access' // Access to the staff dashboard
-  | 'admin:dashboard:access'; // Access to the full admin console
+  | 'group:view'
+  | 'group:manage'
+  | 'staff:workspace:access' 
+  | 'admin:dashboard:access'; 
 
-/**
- * Permission Map defining which capabilities are enabled for each mode.
- */
 export const ROLE_PERMISSIONS: Record<string, Capability[]> = {
   admin: [
     'photo:view-hidden',
@@ -37,6 +32,8 @@ export const ROLE_PERMISSIONS: Record<string, Capability[]> = {
     'tag:manage',
     'manufacturer:manage',
     'system:settings',
+    'group:view',
+    'group:manage',
     'staff:workspace:access',
     'admin:dashboard:access',
   ],
@@ -48,14 +45,14 @@ export const ROLE_PERMISSIONS: Record<string, Capability[]> = {
     'photo:ai-analyze',
     'photo:manage-groups',
     'photo:toggle-pinned',
+    'group:view',
     'staff:workspace:access',
   ],
-  public: [],
+  public: [
+    'group:view',
+  ],
 };
 
-/**
- * Utility to determine mode from context
- */
 export const getEffectiveRole = (user: User | null, isStaffMode: boolean): 'admin' | 'staff' | 'public' => {
   if (user) return 'admin';
   if (isStaffMode) return 'staff';

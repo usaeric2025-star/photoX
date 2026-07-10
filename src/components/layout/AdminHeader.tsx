@@ -19,7 +19,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const user = useAuth(s => s.user);
   const signOut = useAuth(s => s.signOut);
   const { settings } = useSettings();
-  const { role, isAdmin, isStaff } = usePermission();
+  const { role } = usePermission();
   const { navigate } = useAppRouter();
 
   const { t, lang } = useTranslation();
@@ -58,8 +58,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
       <div className="flex items-center gap-4">
         <AdminHeaderLogo 
           logoUrl={logoUrl}
-          isAdmin={isAdmin}
-          isStaff={isStaff}
+          role={role}
           totalCount={totalCount}
           theme={theme}
         />
@@ -80,7 +79,6 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           t={t}
           user={user}
           signOut={signOut}
-          isStaff={isStaff}
           lang={lang}
         />
       </div>

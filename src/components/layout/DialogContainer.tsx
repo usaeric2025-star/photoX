@@ -6,7 +6,8 @@ import { usePermission } from '#src/hooks/index.js';
 
 export function DialogContainer() {
   const [mounted, setMounted] = useState(false);
-  const { isStaff } = usePermission();
+  const { can } = usePermission();
+  const canAccessStaffWorkspace = can('staff:workspace:access');
   
   useEffect(() => {
     setMounted(true);
@@ -16,7 +17,7 @@ export function DialogContainer() {
 
   return (
     <>
-      {isStaff && (
+      {canAccessStaffWorkspace && (
         <>
           <TaskDrawer />
           <PhotoEditDialog />
