@@ -123,51 +123,71 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
   };
 
   return (
-    <div className="glass-header !p-4">
-      <div className="flex-1 min-w-0 pr-4">
-        <div className="flex items-center gap-2 mb-1">
-          {isEditingTitle ? (
-            <FormProvider fieldErrors={fieldErrors} clearFieldError={clearFieldError}>
-              <TitleInput
+    <div className="glass-header !p-3 sm:!p-4 flex items-center justify-between w-full">
+      {/* Left side: Back button & Title/Info section */}
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+        <button 
+          onClick={() => navigate.admin()}
+          className="p-1.5 -ml-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
+          title={t('backToHome')}
+        >
+          <Icon name="arrow-left" className="w-5 h-5" />
+        </button>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {isEditingTitle ? (
+              <input
+                type="text"
+                autoFocus
                 disabled={isUpdating}
                 value={editTitleValue}
-                onChange={setEditTitleValue}
+                onChange={(e) => setEditTitleValue(e.target.value)}
                 onBlur={handleSaveTitle}
                 onKeyDown={handleKeyDown}
-                t={t}
+                className="text-base sm:text-lg font-bold text-slate-900 bg-slate-100 border-none outline-none ring-2 ring-indigo-500/80 rounded px-2 py-0.5 max-w-[150px] sm:max-w-xs transition-all"
+                placeholder={t('titlePlaceholder')}
               />
-            </FormProvider>
-          ) : (
-            <h1 
-              className="text-xl font-bold text-slate-900 truncate cursor-pointer hover:underline decoration-slate-300 underline-offset-4"
-              onClick={() => setIsEditingTitle(true)}
-              title={t('clickToEditTitle')}
+            ) : (
+              <h1 
+                className="text-base sm:text-lg font-bold text-slate-900 truncate cursor-pointer hover:underline decoration-slate-300 underline-offset-4"
+                onClick={() => {
+                  setEditTitleValue(group.name);
+                  setIsEditingTitle(true);
+                }}
+                title={t('clickToEditTitle')}
+              >
+                {group.name || t('clickToAddTitle')}
+              </h1>
+            )}
+            
+            <button 
+              onClick={handleCopyId}
+              className="flex items-center gap-1 p-1 text-slate-400 hover:text-slate-700 transition-colors shrink-0 rounded hover:bg-slate-100 group"
+              title={t('copyGroupId')}
             >
-              {group.name || t('clickToAddTitle')}
-            </h1>
-          )}
+              <span className="text-xs font-mono tracking-wider opacity-60">{group.id.substring(0, 4)}</span>
+              {copied ? (
+                <Icon name="check" className="w-3 h-3 text-emerald-500" />
+              ) : (
+                <Icon name="copy" className="w-3 h-3 transition-transform group-active:scale-90" />
+              )}
+            </button>
+          </div>
           
-          <button 
-            onClick={handleCopyId}
-            className="flex items-center gap-1.5 p-1 px-2 text-slate-400 hover:text-slate-700 transition-colors shrink-0 rounded hover:bg-slate-100 group"
-            title={t('copyGroupId')}
-          >
-            <span className="text-xs font-mono tracking-wider">{group.id.substring(0, 4)}</span>
-            {copied ? <Icon name="check" className="w-3 h-3 text-emerald-500" /> : <Icon name="copy" className="w-3 h-3 transition-transform group-active:scale-90" />}
-          </button>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold whitespace-nowrap border border-indigo-100">
-            {photoCount > 0 ? t('photoCountNum', photoCount) : t('noPhotosText')}
-          </span>
+          <div className="flex items-center shrink-0">
+            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] sm:text-xs font-semibold whitespace-nowrap border border-indigo-100">
+              {photoCount > 0 ? t('photoCountNum', photoCount) : t('noPhotosText')}
+            </span>
+          </div>
         </div>
       </div>
       
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Right side: Action buttons */}
+      <div className="flex items-center gap-1.5 shrink-0 pl-2">
         <button 
           onClick={handleShare}
-          className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
+          className="p-1.5 sm:p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
           title={t('copyShareLink')}
         >
           <Icon name="share" className="w-4 h-4" />
@@ -176,22 +196,23 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
         {canBatchEdit && (
           <button 
             onClick={toggleMode}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all font-medium ${isMultiSelect ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent'}`}
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs transition-all font-semibold ${
+              isMultiSelect 
+                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' 
+                : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/50'
+            }`}
           >
-            {isMultiSelect ? t('cancel') : t('selectAction')}
+            <Icon name={isMultiSelect ? "x" : "check-square"} className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline">{isMultiSelect ? t('cancel') : t('selectAction')}</span>
           </button>
         )}
-        <button onClick={onEditSettings} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm transition-all font-medium">
-          <Icon name="edit" className="w-4 h-4" />
-          <span className="hidden sm:inline">{t('settings')}</span>
-        </button>
-        
+
         <button 
-          onClick={() => navigate.admin()}
-          className="p-2 -mr-2 text-slate-500 hover:text-slate-800 transition-colors ml-1"
-          title={t('backToHome')}
+          onClick={onEditSettings} 
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/50 rounded-lg text-xs transition-all font-semibold"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <Icon name="settings" className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">{t('settings')}</span>
         </button>
       </div>
     </div>
