@@ -41,7 +41,7 @@ function AdminGallery() {
       <AdminHeader className="border-b bg-white shadow-none" />
       <div className="flex-1 relative overflow-hidden flex flex-col">
         <FilterBar mode="admin" className="bg-white border-b shadow-none z-10" />
-        <div className="flex-1 relative animate-fade-in translate-z-0 overflow-hidden">
+        <div className="flex-1 relative animate-fade-in translate-z-0 overflow-hidden flex flex-col">
           <AdminContainer />
         </div>
         <div className="absolute bottom-8 right-8 z-[9999]">
@@ -94,7 +94,7 @@ export function AdminPageContent() {
   
   return (
     <AdminAuthGate>
-      <div className="flex h-screen bg-slate-50 overflow-hidden w-full relative">
+      <div className="flex h-full bg-slate-50 overflow-hidden w-full relative">
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
           <ErrorBoundary>
             <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>

@@ -24,6 +24,7 @@ export function AdminContainer() {
   }), [filters.category, filters.tags, filters.search, filters.sort, isAggregated]);
 
   const { photos, total, isLoading, error, refresh } = usePhotoWall(filtersObj);
+  console.log('AdminContainer Render:', { isLoading, total, photoCount: photos.length, error });
   
   const { uiTranslations: labels } = useTranslation();
   const { columns } = useGrid();
@@ -48,14 +49,14 @@ export function AdminContainer() {
 
   if (photos.length === 0 && !isLoading) {
     return (
-      <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" id="main-admin-screen">
+      <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden relative" id="main-admin-screen">
         <AdminEmptyState labels={labels} />
       </div>
     );
   }
   
   return (
-    <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative animate-fade-in" id="main-admin-screen">
+    <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden relative animate-fade-in" id="main-admin-screen">
        <div 
          id="photo-wall-scroll-container"
          className="flex-1 min-h-0 relative overflow-y-auto"
