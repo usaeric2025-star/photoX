@@ -23,10 +23,6 @@ export const DB_CONFIG = {
   BUCKET_NAME: 'furniture_images',
 };
 
-export const IMAGE_COMPRESS = {
-  MAX_WIDTH: 1200,
-  QUALITY: 0.7,
-};
 
 const CACHE_CONFIG = {
   STALE_TIME_5M: 1000 * 60 * 5,

@@ -130,7 +130,7 @@ const iconMap: Record<string, LucideIcon> = {
   'whatsapp': MessageCircle,
 };
 
-export type IconName = string;
+type IconName = string;
 
 interface IconProps {
   name: IconName;

@@ -18,7 +18,7 @@ const mapGroup = (item: Record<string, unknown>): ProductGroup => ({
   metadata: (item.metadata || {}) as Record<string, unknown>,
 });
 
-export const loadGroupsFromCloud = async (_userId: string, isAdmin: boolean = false): Promise<ProductGroup[]> => {
+const loadGroupsFromCloud = async (_userId: string, isAdmin: boolean = false): Promise<ProductGroup[]> => {
   const data = await ErrorFactory.unwrap<Record<string, unknown>[]>(
     api.groups.$get({
       query: { isAdminMode: isAdmin ? 'true' : 'false' }

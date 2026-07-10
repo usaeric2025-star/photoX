@@ -54,7 +54,7 @@ export const ungroupPhotos = async (groupId: string): Promise<void> => {
   );
 };
 
-export const syncGroupMemberCount = async (groupId: string): Promise<void> => {
+const syncGroupMemberCount = async (groupId: string): Promise<void> => {
   if (!groupId) return;
   await ErrorFactory.unwrap<void>(
     api.groups['sync-count'].$post({

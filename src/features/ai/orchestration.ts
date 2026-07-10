@@ -1,9 +1,9 @@
 import { analyzePhoto } from './commands.js';
 import { translateFields } from './translationService.js';
-import { updatePhoto } from '#src/services/photo/index.js';
+import { updatePhoto } from '#src/hooks/photo/commands.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { analyzeSinglePhotoDetail as analyzeSinglePhoto } from './commands.js';
-import { resolveTagNamesToIds } from '#src/services/tag/completion.js';
+import { resolveTagNamesToIds } from './tagCompletion.js';
 import { withTimeout } from '#lib/utils.js';
 import { logger } from '#lib/logger.js';
 import { mapAiToMultilingual } from './mapping.js';

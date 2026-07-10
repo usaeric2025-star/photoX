@@ -80,7 +80,7 @@ export async function processGroupAnalysis(photoIds: string[]) {
   const prompt = buildPrompt(photoIds.length, photoListText);
 
   const provider = await getAIProvider();
-  const model = (provider as unknown as { config: { model: string } }).config.model;
+  const model = provider.getConfig().model || (provider as any).defaultModel;
 
 // 封裝重試邏輯
   const callAIWithValidation = async (currentPrompt: string): Promise<v.InferOutput<typeof GroupAnalysisSchema>> => {

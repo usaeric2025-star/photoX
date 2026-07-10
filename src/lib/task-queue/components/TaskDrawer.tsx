@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSignal, isTaskDrawerOpen, useTranslation } from '#src/hooks/index.js';
-import { tasksSignal, clearAll, addTask } from '#src/services/task/taskService.js';
+import { tasksSignal, clearAll, addTask } from '#src/lib/task-queue/taskStore.js';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Progress } from '#src/components/shared/Progress.js';

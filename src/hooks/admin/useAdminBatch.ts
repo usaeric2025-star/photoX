@@ -3,7 +3,7 @@ import { useUI } from '#lib/store/index.js';
 import { useAIBatchAnalysis } from '#src/hooks/photo/usePhotoAI.js';
 import { logger } from '#lib/logger.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { useSelectedIds } from '../../services/selection/selectionService.js';
+import { useSelectedIds } from '../../hooks/selection/useSelection.js';
 import { useQueryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { useTranslation } from '#src/hooks/index.js';

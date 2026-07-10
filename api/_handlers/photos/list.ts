@@ -47,7 +47,7 @@ export const listRoutes = new Hono()
                     isCover: !!d.isGroupCover || (d.groupCoverPhotoId === d.id),
                     isGroupCover: !!d.isGroupCover || (d.groupCoverPhotoId === d.id),
                     createdAt: d.createdAt 
-                        ? (typeof d.createdAt === 'string' ? d.createdAt : (d.createdAt as unknown as Date).toISOString()) 
+                        ? (d.createdAt instanceof Date ? d.createdAt.toISOString() : String(d.createdAt)) 
                         : null,
                 };
             } catch (e) {
@@ -57,7 +57,7 @@ export const listRoutes = new Hono()
         }).filter((item): item is NonNullable<typeof item> => item !== null);
 
         const finalNextCursor = nextCursor 
-            ? (typeof nextCursor === 'string' ? nextCursor : (nextCursor as unknown as Date).toISOString())
+            ? (nextCursor instanceof Date ? nextCursor.toISOString() : String(nextCursor))
             : null;
         
         return successResponse(c, {
@@ -67,7 +67,7 @@ export const listRoutes = new Hono()
         });
       }
 
-      return successResponse(c, { items: [], nextCursor: null, total: 0 });
+      return successResponse(c, { items: [], nextCursor: null, total: total || 0 });
     } catch (error: unknown) {
       throw errorFactory.wrap(error, 'photos.list', 'QUERY_FAILURE');
     }

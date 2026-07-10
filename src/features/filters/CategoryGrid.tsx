@@ -1,7 +1,7 @@
 import { useCategories } from '#src/hooks/category/index.js';
 import { useFilterState } from '#src/hooks/index.js';
 import { useTranslation } from '#src/hooks/index.js';
-import { getTranslatedCategoryName } from '#src/services/category/utils.js';
+import { getTranslatedCategoryName } from '#src/utils/category.js';
 import { logger } from '#lib/logger.js';
 import type { FilterState } from './types.js';
 

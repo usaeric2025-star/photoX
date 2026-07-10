@@ -1,4 +1,4 @@
-import { getTranslatedCategoryName } from "#src/services/category/utils.js";
+import { getTranslatedCategoryName } from "#src/utils/category.js";
 import { createTranslate } from '#src/locales/index.js';
 import React, { useRef } from "react";
 import { Category, Manufacturer } from '#src/types/index.js';

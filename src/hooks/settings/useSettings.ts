@@ -1,14 +1,14 @@
 import { AppSettings } from '#src/types/index.js';
 import React from 'react';
 import { useAppQuery, useAppMutation, queryClient } from '#lib/query/index.js';
-import { fetchPublicSettings } from '#src/services/settings/queries.js';
-import { saveSettings, uploadLogo } from '#src/services/settings/commands.js';
+import { fetchPublicSettings } from './queries.js';
+import { saveSettings, uploadLogo } from './commands.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { queryKeys } from '#lib/query/keys.js';
 
 const SETTINGS_KEY = ['settings', 'public'];
 
-export const useSettingsMutations = () => {
+const useSettingsMutations = () => {
   const updateMutation = useAppMutation({
     mutationFn: saveSettings,
     onSuccess: () => {

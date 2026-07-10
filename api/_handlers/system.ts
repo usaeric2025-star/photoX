@@ -19,11 +19,7 @@ export const system = new Hono()
         });
     } catch (err) {
         logger.error('[Health] DB Ping or connection failed:', err);
-        return c.json({ 
-            success: false, 
-            status: 'error', 
-            error: err instanceof Error ? err.message : String(err)
-        }, 503);
+        return errorResponse(c, err, 503);
     }
   })
   .get('/download', async (c) => {

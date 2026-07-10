@@ -9,8 +9,8 @@ interface TaskServiceState {
 }
 
 export const tasksSignal = signal<Map<string, Task>>(new Map());
-export const globalTaskStatusSignal = signal<TaskServiceState['status']>('idle');
-export const globalTaskProgressSignal = signal<number>(0);
+const globalTaskStatusSignal = signal<TaskServiceState['status']>('idle');
+const globalTaskProgressSignal = signal<number>(0);
 
 export const activeTaskCountSignal = computed(() => {
   let count = 0;
@@ -30,7 +30,7 @@ export const setGlobalTaskProgress = (progress: number) => {
   globalTaskProgressSignal.value = progress;
 };
 
-export const taskActions = {
+const taskActions = {
   addTask: (task: Task) => {
     const newTasks = new Map(tasksSignal.value);
     newTasks.set(task.id, task);

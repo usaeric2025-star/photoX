@@ -65,8 +65,7 @@ export function useAppQuery<TData = unknown, TError = Error>(
       try {
         return await fetcherFn(...queryKey);
       } catch (error) {
-        ErrorFactory.handle(error, { context: `useAppQuery: ${queryKey.join('-')}` });
-        throw error;
+                throw error;
       }
     },
     ...options,
@@ -88,8 +87,7 @@ export function useAppInfiniteQuery<TData = unknown, TError = Error, TPageParam 
       try {
         return await fetcherFn(pageParam as TPageParam);
       } catch (error) {
-        ErrorFactory.handle(error, { context: `useAppInfiniteQuery: ${queryKey.join('-')}` });
-        throw error;
+                throw error;
       }
     },
     ...options,
@@ -138,8 +136,7 @@ export function useAppMutation<TData = unknown, TVariables = unknown, TContext =
     },
     onError: (...args) => {
       if (errorContext) {
-        ErrorFactory.handle(args[0], { context: errorContext });
-      }
+              }
       if (onError) {
         onError(...args);
       }
@@ -157,7 +154,7 @@ export const photoKeys = {
   detail: (id: string) => [...photoKeys.details(), id] as const,
 };
 
-export const groupKeys = {
+const groupKeys = {
   all: ['groups'] as const,
   lists: () => [...groupKeys.all, 'list'] as const,
   list: (filters: Record<string, unknown>) => [...groupKeys.lists(), filters] as const,

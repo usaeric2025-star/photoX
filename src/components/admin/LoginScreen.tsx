@@ -3,7 +3,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { usePublicSettings, useTranslation } from '#src/hooks/index.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
 import { AppLink } from '#src/components/router/AppLink.js';
-import { storage } from '#src/services/storage/index.js';
+import { storage } from '#lib/storage.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { Button } from '#src/components/ui/Button.js';

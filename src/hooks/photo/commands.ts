@@ -1,7 +1,7 @@
 import { supabase } from '#lib/supabase.js';
 import { DB_CONFIG } from '#src/constants/config.js';
 import { Photo } from '#src/types/index.js';
-import { mapToDb, mapSupabasePhoto } from '#src/services/mappers/index.js';
+import { mapToDb, mapSupabasePhoto } from '#src/utils/mappers/index.js';
 import { api } from '#lib/api.js';
 import { uploadToR2 } from '#src/lib/upload/index.js';
 import * as v from 'valibot';
@@ -47,13 +47,13 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
   return rawData ? mapSupabasePhoto(rawData as unknown as Record<string, unknown> & { id: string, name: string, image_url: string, created_at: string }) : null;
 }
 
-export type BatchActionResult = {
+type BatchActionResult = {
   successCount: number;
   failureCount: number;
   failedItems: { id: string; reason: string }[];
 } & Record<string, unknown>;
 
-export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>): Promise<BatchActionResult> {
+async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>): Promise<BatchActionResult> {
   if (!ids || ids.length === 0) return { successCount: 0, failureCount: 0, failedItems: [] };
 
   const updates = Object.keys(initialUpdates).reduce((acc: Record<string, unknown>, key) => {
@@ -80,7 +80,7 @@ export async function batchUpdate(ids: string[], initialUpdates: Partial<Photo>)
   };
 }
 
-export async function deleteMany(ids: string[]): Promise<BatchActionResult> {
+async function deleteMany(ids: string[]): Promise<BatchActionResult> {
   if (!ids || ids.length === 0) return { successCount: 0, failureCount: 0, failedItems: [] };
 
   await ErrorFactory.unwrap<unknown>(

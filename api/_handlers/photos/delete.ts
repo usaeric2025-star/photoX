@@ -5,12 +5,13 @@ import { eq, and, inArray } from 'drizzle-orm';
 import { syncGroupCoversAndCount } from '../../_lib/groups.js';
 import { refreshPhotosView } from '../../_lib/db/actions.js';
 import { errorResponse, successResponse } from '../../_lib/response.js';
-import { PhotoBatchDeleteReqSchema } from '../../../shared/apiContractSchema.js';
+import { PhotoIdsReqSchema } from '../../../shared/apiContractSchema.js';
+import { errorFactory } from '../../_lib/error/factory.js';
 
 export const deleteRoutes = new Hono()
   .post('/delete', async (c) => {
     const body = await c.req.json();
-    const check = v.safeParse(PhotoBatchDeleteReqSchema, body);
+    const check = v.safeParse(PhotoIdsReqSchema, body);
     if (!check.success) throw new Error(check.issues[0].message);
 
     const { ids } = check.output;
@@ -37,7 +38,6 @@ export const deleteRoutes = new Hono()
 
         return successResponse(c, { ids });
     } catch (error: unknown) {
-        const { errorFactory } = await import('../../_lib/error/factory.js');
-        throw errorFactory.wrap(error, 'api./api/photos/delete', 'DB_ERROR');
+        throw errorFactory.wrap(error, 'api.photos.delete', 'DB_ERROR');
     }
   });

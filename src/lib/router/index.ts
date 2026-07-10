@@ -42,4 +42,4 @@ export function useNavigation() {
     };
 }
 
-export type Navigation = ReturnType<typeof useNavigation>;
+type Navigation = ReturnType<typeof useNavigation>;

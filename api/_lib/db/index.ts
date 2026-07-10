@@ -11,7 +11,7 @@ const globalForDb = globalThis as unknown as {
 };
 
 // Lazy initialization function
-export function getDb(): PostgresJsDatabase<typeof schema> {
+function getDb(): PostgresJsDatabase<typeof schema> {
   if (globalForDb.drizzleDb) {
     return globalForDb.drizzleDb;
   }
@@ -62,14 +62,15 @@ export function getDb(): PostgresJsDatabase<typeof schema> {
   }
 
   globalForDb.drizzleDb = drizzle(globalForDb.postgresClient, {
-    schema: { ...schema }
+    schema: { ...schema },
+    casing: 'snake_case'
   });
 
   return globalForDb.drizzleDb;
 }
 
 // Graceful shutdown function to close Postgres connection pool in serverless/container environments
-export async function closeDbConnection() {
+async function closeDbConnection() {
   if (globalForDb.postgresClient) {
     try {
       const client = globalForDb.postgresClient;

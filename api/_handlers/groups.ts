@@ -27,20 +27,19 @@ export const groups = new Hono()
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { groupData } = check.output;
-    const b = body as Record<string, unknown>;
-    const inputUserId = (b.userId as string) || (b.user_id as string) || '8ec53131-a589-4b50-beb4-6b5308541e1b';
+    const inputUserId = (body.userId as string) || (body.user_id as string) || '8ec53131-a589-4b50-beb4-6b5308541e1b';
     
     // Manual mapping to Drizzle schema
     const insertData = {
         ...groupData,
-        name: "GROUP",
+        name: groupData.name || "GROUP",
         status: (groupData.status as "active" | "confirmed" | "rejected") || 'active',
         userId: inputUserId,
         createdAt: new Date(),
         updatedAt: new Date()
     };
 
-    const [data] = await db.insert(groupsTable).values([insertData as unknown as typeof groupsTable.$inferInsert]).returning();
+    const [data] = await db.insert(groupsTable).values(insertData).returning();
     return successResponse(c, data);
   })
   .put('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', async (c) => {
@@ -61,7 +60,7 @@ export const groups = new Hono()
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { updates } = check.output;
-    const updatesObj = { ...updates } as Record<string, unknown>;
+    const updatesObj: any = { ...updates };
 
     // Normalize name to string
     if (updatesObj.name && typeof updatesObj.name === 'object') {
@@ -82,14 +81,24 @@ export const groups = new Hono()
     return successResponse(c, data);
   })
   .post('/upsert', async (c) => {
-    const dbUpdates = await c.req.json() as Record<string, unknown>;
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({
+        id: v.string(),
+        name: v.optional(v.string()),
+        description: v.optional(v.nullable(v.union([v.string(), v.record(v.string(), v.unknown())]))),
+        status: v.optional(v.string()),
+        userId: v.optional(v.string()),
+        coverPhotoId: v.optional(v.nullable(v.string()))
+    }), body);
+    
+    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
-    // Filter out client-side createdAt and updatedAt to let backend handle dates
-    const cleanUpdates: Record<string, unknown> = {};
-    for (const [key, val] of Object.entries(dbUpdates)) {
-        if (key !== 'createdAt' && key !== 'updatedAt') {
-            cleanUpdates[key] = val;
-        }
+    const input = check.output;
+    const cleanUpdates: any = { ...input };
+    
+    // Normalize description
+    if (cleanUpdates.description && typeof cleanUpdates.description === 'object') {
+        cleanUpdates.description = JSON.stringify(cleanUpdates.description);
     }
 
     // Ensure status gets a fallback
@@ -102,7 +111,7 @@ export const groups = new Hono()
         cleanUpdates.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
-    const data = await upsertGroup(cleanUpdates as { id: string });
+    const data = await upsertGroup(cleanUpdates);
 
     await refreshPhotosView();
 
@@ -134,10 +143,10 @@ export const groups = new Hono()
           sourceGroupIds: rawSourceGroupIds
       } = check.output;
 
-      const photoIds = rawPhotoIds ? (Array.isArray(rawPhotoIds) ? rawPhotoIds : [rawPhotoIds]) : [];
-      const sourceGroupIds = rawSourceGroupIds ? (Array.isArray(rawSourceGroupIds) ? rawSourceGroupIds : [rawSourceGroupIds]) : [];
+      const photoIds = Array.isArray(rawPhotoIds) ? rawPhotoIds : (rawPhotoIds ? [rawPhotoIds] : []);
+      const sourceGroupIds = Array.isArray(rawSourceGroupIds) ? rawSourceGroupIds : (rawSourceGroupIds ? [rawSourceGroupIds] : []);
       
-      const mergedGroupData = { ...(groupData as Record<string, unknown>), id: targetGroupId };
+      const mergedGroupData: any = { ...groupData, id: targetGroupId };
       
       let finalSourceGroupIds: string[] = [];
       let ungroupedValidIds: string[] = [];
@@ -170,34 +179,29 @@ export const groups = new Hono()
       });
 
       if (!existingGroup) {
-        const { id: _, ...groupDataWithoutId } = mergedGroupData;
         let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
         if (!finalUserId) {
            finalUserId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
         }
 
         let finalName = "GROUP";
-        if ((groupDataWithoutId as Record<string, unknown>).name) {
-            const rawName = (groupDataWithoutId as Record<string, unknown>).name;
-            if (typeof rawName === 'string') {
-                finalName = rawName;
-            } else if (rawName && typeof rawName === 'object') {
-                const n = rawName as Record<string, unknown>;
-                finalName = String(n.en || n.zh || n.ms || '');
-            }
+        const rawName = mergedGroupData.name;
+        if (typeof rawName === 'string') {
+            finalName = rawName;
+        } else if (rawName && typeof rawName === 'object') {
+            const n = rawName as Record<string, unknown>;
+            finalName = String(n.en || n.zh || n.ms || '');
         }
 
         let finalDesc: string | null = null;
-        if ((groupDataWithoutId as Record<string, unknown>).description !== undefined) {
-            const rawDesc = (groupDataWithoutId as Record<string, unknown>).description;
-            if (typeof rawDesc === 'string') {
-                finalDesc = rawDesc;
-            } else if (rawDesc && typeof rawDesc === 'object') {
-                finalDesc = JSON.stringify(rawDesc);
-            }
+        const rawDesc = mergedGroupData.description;
+        if (typeof rawDesc === 'string') {
+            finalDesc = rawDesc;
+        } else if (rawDesc && typeof rawDesc === 'object') {
+            finalDesc = JSON.stringify(rawDesc);
         }
 
-        const groupDataToInsert = {
+        const groupDataToInsert: typeof groupsTable.$inferInsert = {
             id: targetGroupId,
             userId: finalUserId,
             createdAt: new Date(),
@@ -205,17 +209,16 @@ export const groups = new Hono()
             status: 'active',
             name: finalName,
             description: finalDesc,
-            coverPhotoId: ((groupDataWithoutId as Record<string, unknown>).coverPhotoId as string) || null,
+            coverPhotoId: (mergedGroupData.coverPhotoId as string) || null,
         };
 
-        await db.insert(groupsTable).values([groupDataToInsert as unknown as typeof groupsTable.$inferInsert]);
+        await db.insert(groupsTable).values([groupDataToInsert]);
       } else {
-        const { id: _, ...groupDataWithoutId } = mergedGroupData;
-        const updatePayload: Record<string, unknown> = { updatedAt: new Date() };
-        if ((groupDataWithoutId as Record<string, unknown>).name) updatePayload.name = (groupDataWithoutId as Record<string, unknown>).name;
-        if ((groupDataWithoutId as Record<string, unknown>).description !== undefined) updatePayload.description = (groupDataWithoutId as Record<string, unknown>).description;
-        if ((groupDataWithoutId as Record<string, unknown>).status) updatePayload.status = (groupDataWithoutId as Record<string, unknown>).status;
-        if ((groupDataWithoutId as Record<string, unknown>).coverPhotoId !== undefined) updatePayload.coverPhotoId = (groupDataWithoutId as Record<string, unknown>).coverPhotoId;
+        const updatePayload: Partial<typeof groupsTable.$inferInsert> = { updatedAt: new Date() };
+        if (mergedGroupData.name) updatePayload.name = mergedGroupData.name;
+        if (mergedGroupData.description !== undefined) updatePayload.description = mergedGroupData.description;
+        if (mergedGroupData.status) updatePayload.status = mergedGroupData.status;
+        if (mergedGroupData.coverPhotoId !== undefined) updatePayload.coverPhotoId = mergedGroupData.coverPhotoId;
 
         await db.update(groupsTable)
             .set(updatePayload)

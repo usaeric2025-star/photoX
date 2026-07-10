@@ -42,19 +42,19 @@ export const tags = new Hono()
   .put('/:id{[0-9]+}', sValidator('json', v.object({ updates: v.omit(TagReqSchema, ["id"]) })), async (c) => {
     const id = parseInt(c.req.param('id'));
     const { updates } = c.req.valid('json');
-    await db.update(tagsTable).set(updates as unknown as typeof tagsTable.$inferInsert).where(eq(tagsTable.id, id));
+    await db.update(tagsTable).set(updates).where(eq(tagsTable.id, id));
     clearTagsCache();
     return successResponse(c, null);
   })
   .post('/', sValidator('json', v.object({ tagData: TagReqSchema })), async (c) => {
     const { tagData } = c.req.valid('json');
-    const [data] = await db.insert(tagsTable).values(tagData as unknown as typeof tagsTable.$inferInsert).returning();
+    const [data] = await db.insert(tagsTable).values(tagData).returning();
     clearTagsCache();
     return successResponse(c, data);
   })
   .post('/batch', sValidator('json', v.object({ tags: v.array(TagReqSchema) })), async (c) => {
     const { tags: tagsData } = c.req.valid('json');
-    const data = await db.insert(tagsTable).values(tagsData as unknown as (typeof tagsTable.$inferInsert)[]).returning({ id: tagsTable.id, name: tagsTable.name });
+    const data = await db.insert(tagsTable).values(tagsData).returning({ id: tagsTable.id, name: tagsTable.name });
     clearTagsCache();
     return successResponse(c, data);
   })
@@ -67,7 +67,7 @@ export const tags = new Hono()
   .post('/refresh-hot-scores', async (c) => {
     await db.execute(sql`SELECT refresh_tag_hot_scores()`);
     clearTagsCache();
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/remove-from-photo', async (c) => {
     const body = await c.req.json();
@@ -76,7 +76,7 @@ export const tags = new Hono()
 
     const { photoId, tagId } = check.output;
     await db.delete(photoTags).where(and(eq(photoTags.photoId, photoId), eq(photoTags.tagId, tagId)));
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/sync-photo-tags', async (c) => {
     const body = await c.req.json();
@@ -132,7 +132,7 @@ export const tags = new Hono()
     if (limitedTagIds.length > 0) {
       await db.insert(photoTags).values(limitedTagIds.map(tagId => ({ photoId, tagId })));
     }
-    return c.json({ success: true });
+    return successResponse(c, null);
   })
   .post('/sync-batch-photo-tags', async (c) => {
     const body = await c.req.json();
@@ -180,5 +180,5 @@ export const tags = new Hono()
       const associations = photoIds.flatMap(photoId => limitedTagIds.map(tagId => ({ photoId, tagId })));
       await db.insert(photoTags).values(associations);
     }
-    return c.json({ success: true });
+    return successResponse(c, null);
   });

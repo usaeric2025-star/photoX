@@ -1,5 +1,5 @@
 import { Photo, Tag } from '#src/types/index.js';
-import { generateItemCode, validateDimension } from '#src/services/photo/utils.js';
+import { generateItemCode, validateDimension } from '#src/utils/photo.js';
 import { getThumbnailUrl, normalizeStoredUrl } from './utils.js';
 
 /**

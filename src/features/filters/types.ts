@@ -1,5 +1,5 @@
-export type SortOrder = 'newest' | 'oldest';
-export type ColumnCount = 2 | 3 | 5;
+type SortOrder = 'newest' | 'oldest';
+type ColumnCount = 2 | 3 | 5;
 
 export interface FilterState {
   search: string;

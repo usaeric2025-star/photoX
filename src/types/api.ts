@@ -12,7 +12,7 @@ import type {
 
 export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 
-export interface PaginatedResponse<T> {
+interface PaginatedResponse<T> {
   data: T[];
   total: number;
   nextCursor?: string | null;
@@ -20,7 +20,7 @@ export interface PaginatedResponse<T> {
 
 export type PhotoListItem = ApiPhotoListItem;
 
-export interface FilterOptions {
+interface FilterOptions {
   q?: string;
   category?: string;
   groupId?: string;
@@ -30,7 +30,7 @@ export interface FilterOptions {
   batch?: string;
 }
 
-export interface GroupFilterOptions {
+interface GroupFilterOptions {
   q?: string;
   sort?: string;
   userId?: string;

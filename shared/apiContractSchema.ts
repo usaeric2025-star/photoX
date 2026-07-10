@@ -122,13 +122,6 @@ export const PhotoListItemSchema = v.object({
 
 export type PhotoListItem = v.InferOutput<typeof PhotoListItemSchema>;
 
-export const PhotoListResSchema = v.object({
-    success: v.boolean(),
-    data: v.array(PhotoListItemSchema),
-    nextCursor: v.nullable(v.string()),
-    total: v.number()
-});
-
 export const PhotoBatchUpdateReqSchema = v.object({
     ids: v.array(v.string()),
     updates: v.record(v.string(), v.unknown())
@@ -139,16 +132,10 @@ export const PhotoUpdateReqSchema = v.object({
     updates: v.record(v.string(), v.unknown())
 });
 
-export const PhotoIdReqSchema = v.object({
-    id: v.string(),
-    userId: v.optional(v.string())
-});
-
 export const PhotoIdsReqSchema = v.object({
     ids: v.array(v.string())
 });
 
-export const PhotoBatchDeleteReqSchema = PhotoIdsReqSchema;
 
 export const PhotoCheckHashReqSchema = v.object({
     hash: v.string()
@@ -187,7 +174,7 @@ const CategoryListItemSchema = v.object({
 });
 
 export const CategoryReqSchema = v.object({
-    id: v.optional(v.union([v.string(), v.number()])),
+    id: v.optional(v.number()),
     code: v.string(),
     nameZh: v.string(),
     nameEn: v.optional(v.string()),

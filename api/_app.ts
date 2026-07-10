@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getServerEnv } from '../shared/envSchema.js';
-import { errorResponse } from './_lib/response.js';
+import { errorResponse, successResponse } from './_lib/response.js';
 import { logger } from './_lib/logger.js';
-import adminApp from './_admin.js';
+import { adminApp } from './_admin.js';
 import { publicSettings } from './_handlers/public_settings.js';
 import { ai } from './_handlers/ai.js';
 import { tags } from './_handlers/tags.js';
@@ -26,7 +26,7 @@ if (!serverEnv.DATABASE_URL) {
     logger.info('✅ [INIT] DATABASE_URL validated, proceeding to route initialization.');
 }
 
-export const apiApp = new Hono();
+const apiApp = new Hono();
 
 // ✅ 統一錯誤處理
 apiApp.onError((err, c) => {
@@ -88,17 +88,13 @@ apiApp.get('/health', async (c) => {
         const { db } = await import('./_lib/db/index.js');
         const { sql } = await import('drizzle-orm');
         await db.execute(sql`SELECT 1`);
-        return c.json({ 
+        return successResponse(c, { 
             status: 'ok', 
             timestamp: new Date().toISOString()
         });
     } catch (err) {
         logger.error('[Health] Root DB Ping failed:', err);
-        return c.json({ 
-            success: false, 
-            status: 'error', 
-            error: err instanceof Error ? err.message : String(err)
-        }, 503);
+        return errorResponse(c, err, 503);
     }
 });
 

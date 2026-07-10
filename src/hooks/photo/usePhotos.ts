@@ -5,7 +5,7 @@ import { api } from '#lib/api.js';
 import { PhotoListItem, ApiResponse } from '#shared/apiContractSchema.js';
 import { Photo } from '#src/types/index.js';
 import { STALE_TIMES } from '#lib/query/config.js';
-import { mapSupabasePhoto } from '#src/services/mappers/photo.js';
+import { mapSupabasePhoto } from '#src/utils/mappers/photo.js';
 import { SupabasePhotoRaw } from '#src/types/supabase.js';
 import { useOptimisticPhotoMutation } from '#lib/query/optimistic.js';
 import { showToast } from '#lib/ui/toast.js';
@@ -16,7 +16,7 @@ import { createTask } from '#lib/task-queue/index.js';
 import { executeBatchUpload } from '#lib/task-queue/adapters/upload.js';
 import { generateId } from '#lib/id.js';
 import { logger } from '#lib/logger.js';
-import { useSelectionActions, batchEditingIdsSignal } from '../../services/selection/selectionService.js';
+import { useSelectionActions, batchEditingIdsSignal } from '../../hooks/selection/useSelection.js';
 import { useAppRouter } from '#lib/router/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 

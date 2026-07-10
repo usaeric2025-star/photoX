@@ -4,12 +4,8 @@ import { adminSettings } from './_handlers/admin/settings.js';
 import { adminMaintenance } from './_handlers/admin/maintenance.js';
 import { adminBackfill } from './_handlers/admin/backfill.js';
 
-const routes = new Hono()
+export const adminApp = new Hono()
   .route('/settings', adminSettings)
   .route('/maintenance', adminMaintenance)
   .route('/backfill', adminBackfill)
-  .route('/photos', adminPhotos)
-  .route('/', adminPhotos)
-  .route('', adminPhotos);
-
-export default routes;
+  .route('/photos', adminPhotos);

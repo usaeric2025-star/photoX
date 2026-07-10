@@ -326,7 +326,7 @@ export const ai = new Hono()
             status: 'confirmed',
             userId: finalUserId,
             createdAt: new Date()
-        } as unknown as typeof groupsTable.$inferInsert]).returning();
+        }]).returning();
 
         await db.update(furnitureItems)
             .set({ groupId: groupId })

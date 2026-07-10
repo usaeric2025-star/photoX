@@ -10,7 +10,7 @@ import { useTranslation } from '../core/index.js';
 import { usePhoto, usePhotoMutations } from './usePhotos.js';
 import { PhotoEditSchema, type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { photoEditAdapter } from '#lib/forms/index.js';
-import { generateItemCode } from '#src/services/photo/utils.js';
+import { generateItemCode } from '#src/utils/photo.js';
 import { toSingleString, toMultiObject } from '#lib/forms/utils.js';
 import { Photo, Tag } from '#src/types/index.js';
 

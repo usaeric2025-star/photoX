@@ -1,10 +1,14 @@
+import { furnitureItems } from '../../_lib/db/index.js';
+
+type SanitizedPhoto = typeof furnitureItems.$inferInsert;
+
 /**
  * Sanitizes and normalizes a photo/furniture item payload before database insertion or update.
  * Prevents SQL foreign key constraints and type mismatch errors by ensuring nullish values
  * (such as empty strings, "null", "undefined", or "uncategorized") are correctly mapped to null.
  */
-export function sanitizePhotoPayload(payload: Record<string, unknown>): Record<string, unknown> {
-    const sanitized: Record<string, unknown> = { ...payload };
+export function sanitizePhotoPayload(payload: Record<string, unknown>): Partial<SanitizedPhoto> {
+    const sanitized: Record<string, any> = { ...payload };
 
     // Fields that should be strictly cast to integers or null
     const integerFields = ['categoryId', 'category_id'];
@@ -111,5 +115,31 @@ export function sanitizePhotoPayload(payload: Record<string, unknown>): Record<s
         }
     }
 
-    return filtered;
+    // 5. Enforce AGENTS_md rules for description (Object) and name (String)
+    if (filtered.name !== undefined) {
+        if (typeof filtered.name === 'object' && filtered.name !== null) {
+            const obj = filtered.name as Record<string, any>;
+            filtered.name = String(obj.zh || obj.en || obj.ms || '');
+        } else {
+            filtered.name = filtered.name ? String(filtered.name) : '';
+        }
+    }
+
+    if (filtered.description !== undefined) {
+        if (typeof filtered.description === 'string') {
+            filtered.description = { zh: filtered.description, en: '', ms: '' };
+        } else if (typeof filtered.description !== 'object' || filtered.description === null) {
+            filtered.description = { zh: '', en: '', ms: '' };
+        } else {
+            // Ensure zh, en, ms exist
+            const desc = filtered.description as Record<string, any>;
+            filtered.description = {
+                zh: String(desc.zh || ''),
+                en: String(desc.en || ''),
+                ms: String(desc.ms || '')
+            };
+        }
+    }
+
+    return filtered as Partial<SanitizedPhoto>;
 }

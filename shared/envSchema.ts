@@ -9,22 +9,6 @@ const envLogger = {
 };
 
 /**
- * [ENV-SCHEMA-DEFINED] Client-side Environment Schema
- * Represents variables available via import('meta').env
- */
-const clientEnvSchema = v.object({
-  "VITE_SUPABASE_URL": v.pipe(v.string(), v.url(), v.minLength(1)),
-  "VITE_SUPABASE_ANON_KEY": v.pipe(v.string(), v.minLength(1)),
-  "VITE_SENTRY_DSN": v.optional(v.string()),
-  "VITE_WHATSAPP_NUMBER": v.optional(v.string()),
-  "VITE_IMAGE_WORKER_URL": v.optional(v.string()),
-  "VITE_R2_BASE_URL": v.optional(v.string()),
-  "MODE": v.optional(v.string()),
-  "DEV": v.optional(v.boolean()),
-  "PROD": v.optional(v.boolean())
-});
-
-/**
  * [ENV-SCHEMA-DEFINED] Server-side Environment Schema
  * Represents variables available via process.env
  */
@@ -59,26 +43,7 @@ const serverEnvSchema = v.object({
   SENTRY_DSN: v.optional(v.string())
 });
 
-export type ClientEnv = v.InferOutput<typeof clientEnvSchema>;
 export type ServerEnv = v.InferOutput<typeof serverEnvSchema>;
-
-/**
- * Validates and returns client environment
- */
-export function getClientEnv(importMetaEnv: any): ClientEnv {
-  try {
-    const result = v.safeParse(clientEnvSchema, importMetaEnv);
-    if (!result.success) {
-      const summary = result.issues[0].message;
-      envLogger.warn("⚠️ [ENV-CLIENT] Validation mismatch:", summary);
-      return importMetaEnv as ClientEnv;
-    }
-    return result.output as ClientEnv;
-  } catch (e) {
-    envLogger.error("[ClientEnv] Validation error:", e);
-    return importMetaEnv as ClientEnv;
-  }
-}
 
 const aiDebugHints: Record<string, string> = {
   "AGNES_API_KEY": "Agnes AI API Key for photo analysis.",

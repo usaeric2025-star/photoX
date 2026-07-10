@@ -25,12 +25,7 @@ export const storage = new Hono()
         
         if (existing) {
             if (existing.imageUrl && (existing.imageUrl.startsWith('http') || existing.imageUrl.startsWith('https'))) {
-                return c.json({ 
-                    success: false,
-                    error: "照片已存在",
-                    duplicateId: existing.id,
-                    existingUrl: existing.imageUrl 
-                }, 409);
+                return errorResponse(c, "照片已存在", 409);
             }
             
             return successResponse(c, { 

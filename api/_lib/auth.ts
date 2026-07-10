@@ -1,4 +1,5 @@
 import { logger } from './logger.js';
+import { errorResponse } from './response.js';
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv } from "../../shared/envSchema.js";
 import { Context, Next } from 'hono';
@@ -80,6 +81,6 @@ async function adminAuthMiddleware(c: Context, next: Next) {
     } catch (e: unknown) {
         const error = e as Error;
         logger.error(`[Auth Error] ${c.req.path}: ${error.message}`);
-        return c.json({ success: false, error: error.message }, 401);
+        return errorResponse(c, error, 401);
     }
 }

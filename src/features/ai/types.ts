@@ -18,7 +18,7 @@ import { Dimension } from '#src/types/index.js';
  * 1. 統一的 AI 照片識別輸出契約 (Normalized AI Analysis Contract)
  * 這是全系統通用的最終強型態 AI 回傳結構。
  */
-export interface NormalizedPhotoAIOutput {
+interface NormalizedPhotoAIOutput {
   /** 商品/家具名稱 (單一主文字，通常為中文) */
   name: string;
   
@@ -68,7 +68,7 @@ const safeTrim = (val: unknown): string => {
 /**
  * 3. 預設 Gemini 服務適配器 (Default Gemini Photo AI Adapter)
  */
-export class GeminiPhotoAIAdapter implements IPhotoAIAgentAdapter {
+class GeminiPhotoAIAdapter implements IPhotoAIAgentAdapter {
   normalize(raw: any, rawText?: string): NormalizedPhotoAIOutput {
     if (!raw) {
       throw new Error('Adapter Error: Input raw data is empty');
@@ -182,7 +182,7 @@ export class PhotoAIAdapterRegistry {
 /**
  * 5. 既有系統相容型態 (Legacy Compat Types)
  */
-export interface AIAnalysisResult {
+interface AIAnalysisResult {
   name: string;
   description: string;
   category_id: string | null;
@@ -195,7 +195,7 @@ export interface TranslationResult {
   description: { zh: string; en: string; ms: string };
 }
 
-export interface ProcessedPhotoData {
+interface ProcessedPhotoData {
   name: { zh: string; en: string; ms: string };
   description: { zh: string; en: string; ms: string };
   category_id: string | null;

@@ -2,7 +2,7 @@ import { logger } from './logger.js';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getServerEnv } from "../../shared/envSchema.js";
 
-export function getStorageEnv() {
+function getStorageEnv() {
   return getServerEnv(process.env);
 }
 

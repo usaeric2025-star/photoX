@@ -19,7 +19,7 @@ import { translations as allTranslations, TranslationType } from '#src/locales/i
 import { showToast } from '#lib/ui/toast.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { storage } from '#src/services/storage/index.js';
+import { storage } from '#lib/storage.js';
 import { logger } from '#lib/logger.js';
 import { useAdminMode } from './auth/useAdminMode.js';
 import { initializeApp, appLoadingSignal, appErrorSignal } from '#src/store/appStore.js';

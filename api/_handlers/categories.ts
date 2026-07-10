@@ -75,7 +75,7 @@ export const categories = new Hono()
     const { categoryData } = c.req.valid('json');
     const [data] = await db
         .insert(categoriesTable)
-        .values([categoryData as unknown as typeof categoriesTable.$inferInsert])
+        .values([categoryData])
         .returning();
     
     categoriesCache = null;
@@ -87,7 +87,7 @@ export const categories = new Hono()
     
     await db
         .update(categoriesTable)
-        .set(updates as unknown as typeof categoriesTable.$inferInsert)
+        .set(updates)
         .where(eq(categoriesTable.id, id));
     
     categoriesCache = null;

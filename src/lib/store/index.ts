@@ -10,17 +10,13 @@ import {
   type UIStoreState
 } from '#src/store/uiStore.js';
 
-// UI 状态 (Signals)
+// UI 状态 (Signals) (Only exporting used ones)
 export {
-  appLang, descLang, groupSettingsOpen, uploadAsGroup, formState, showPassPrompt, 
-  isPhotoPickerOpen, photoPickerGroupId, isInitialDataLoading, focusedGroupPhotoId, 
-  showWhatsAppChoice, uploadModeDialogOpen, isTaskDrawerOpen, isSidebarOpen, 
-  pendingPhotoId, pendingFiles, activeDialogCount, fatalError, totalCount,
-  lightboxSlides, lightboxCurrentIndex
+  appLang, descLang, uploadAsGroup, isTaskDrawerOpen, fatalError,
 };
 
 // UI Actions
-export { updateForm, resetForm, incrementDialogCount, decrementDialogCount, setLightboxData, setLightboxIndex, clearLightboxData, patch, setFatalError };
+export { setFatalError, incrementDialogCount, decrementDialogCount };
 
 // Export Signals hooks for compatibility
 export const useAppLang = () => useSignal(appLang);
@@ -32,7 +28,6 @@ function isShallowEqual(a: unknown, b: unknown): boolean {
   
   const objA = a as Record<string, unknown>;
   const objB = b as Record<string, unknown>;
-
   if (Array.isArray(a) !== Array.isArray(b)) return false;
   
   if (Array.isArray(a)) {
@@ -44,7 +39,6 @@ function isShallowEqual(a: unknown, b: unknown): boolean {
     }
     return true;
   }
-
   const keysA = Object.keys(objA);
   const keysB = Object.keys(objB);
   if (keysA.length !== keysB.length) return false;
@@ -117,18 +111,15 @@ export function useUI<T = UIStoreState>(selector?: (state: UIStoreState) => T): 
 
   const selectorRef = useRef(selector);
   selectorRef.current = selector;
-
   const lastSelectedStateRef = useRef<T | null>(null);
 
   const getSnapshot = useCallback(() => {
     const rawState = getUIState();
     const currentSelector = selectorRef.current;
     const selected = currentSelector ? currentSelector(rawState) : (rawState as unknown as T);
-
     if (lastSelectedStateRef.current !== null && isShallowEqual(lastSelectedStateRef.current, selected)) {
       return lastSelectedStateRef.current;
     }
-
     lastSelectedStateRef.current = selected;
     return selected;
   }, [getUIState]);
@@ -136,24 +127,19 @@ export function useUI<T = UIStoreState>(selector?: (state: UIStoreState) => T): 
   const subscribe = useCallback((onStoreChange: () => void) => {
     let isInitial = true;
     let lastSelected: T | UIStoreState | undefined = undefined;
-
     const dispose = effect(() => {
-      // Running getUIState inside effect automatically registers dependencies on all read signals
       const state = getUIState();
       const currentSelector = selectorRef.current;
       const selected = currentSelector ? currentSelector(state) : (state as unknown as T);
-
       if (isInitial) {
         lastSelected = selected;
         return;
       }
-
       if (!isShallowEqual(lastSelected, selected)) {
         lastSelected = selected;
         onStoreChange();
       }
     });
-
     isInitial = false;
     return dispose;
   }, [getUIState]);
@@ -163,11 +149,10 @@ export function useUI<T = UIStoreState>(selector?: (state: UIStoreState) => T): 
 
 // Auth and other stores
 import { userSignal, authLoadingSignal, initAuth, signIn, signOut, setUser, setLoading, type AuthState } from '#src/store/authStore.js';
-import { tasksSignal, activeTaskCountSignal } from '#src/services/task/taskService.js';
+import { tasksSignal, activeTaskCountSignal } from '#src/lib/task-queue/taskStore.js';
 
 // Re-exports
 export {
-  initAuth, signIn, signOut, setUser, setLoading,
   tasksSignal, activeTaskCountSignal,
 };
 
@@ -184,18 +169,15 @@ export function useAuth<T = AuthState>(selector?: (state: AuthState) => T): T {
 
   const selectorRef = useRef(selector);
   selectorRef.current = selector;
-
   const lastSelectedStateRef = useRef<T | null>(null);
 
   const getSnapshot = useCallback(() => {
     const rawState = getAuthState();
     const currentSelector = selectorRef.current;
     const selected = currentSelector ? currentSelector(rawState) : (rawState as unknown as T);
-
     if (lastSelectedStateRef.current !== null && isShallowEqual(lastSelectedStateRef.current, selected)) {
       return lastSelectedStateRef.current;
     }
-
     lastSelectedStateRef.current = selected;
     return selected;
   }, [getAuthState]);
@@ -203,28 +185,22 @@ export function useAuth<T = AuthState>(selector?: (state: AuthState) => T): T {
   const subscribe = useCallback((onStoreChange: () => void) => {
     let isInitial = true;
     let lastSelected: T | AuthState | undefined = undefined;
-
     const dispose = effect(() => {
       const state = getAuthState();
       const currentSelector = selectorRef.current;
       const selected = currentSelector ? currentSelector(state) : (state as unknown as T);
-
       if (isInitial) {
         lastSelected = selected;
         return;
       }
-
       if (!isShallowEqual(lastSelected, selected)) {
         lastSelected = selected;
         onStoreChange();
       }
     });
-
     isInitial = false;
     return dispose;
   }, [getAuthState]);
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
-
-// Direct state getters (Deprecated/Compatibility)

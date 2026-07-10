@@ -2,7 +2,7 @@ import { Task } from './types.js';
 import { taskTable } from './integrations/supabase.js';
 import { showToast } from '#lib/ui/toast.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/services/task/taskService.js';
+import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/lib/task-queue/taskStore.js';
 
 // ... (rest of code)
 

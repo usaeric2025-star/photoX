@@ -13,9 +13,9 @@ import {
   removePhotosFromGroup,
   ungroupPhotos,
   upsertGroup 
-} from '#src/services/group/commands.js';
-import { getGroupById } from '#src/services/group/queries.js';
-import { useSelectionActions } from '../../services/selection/selectionService.js';
+} from './commands.js';
+import { getGroupById } from './queries.js';
+import { useSelectionActions } from '../../hooks/selection/useSelection.js';
 import { usePhotos, useInvalidatePhotos } from '../photo/usePhotos.js';
 import { useTranslation } from '../core/index.js';
 import { showToast } from '#lib/ui/toast.js';
@@ -25,7 +25,7 @@ import { useFilters } from '#src/features/filters/index.js';
 
 // --- Detail Hook ---
 
-export function useGroupDetail(id: string | null, isAdmin = false) {
+function useGroupDetail(id: string | null, isAdmin = false) {
   const { data: group, isLoading, error } = useAppQuery(
     id ? queryKeys.groups.detail(id, isAdmin) : null,
     async () => {
@@ -110,7 +110,6 @@ export function useGroupMutations() {
       showToast.success(t('groupCreated'));
       invalidateList();
     },
-    onError: (err: Error) => ErrorFactory.handle(err, { context: 'group-create' })
   });
 
   const updateMutation = useAppMutation({
@@ -120,7 +119,6 @@ export function useGroupMutations() {
       showToast.success(t('groupUpdated'));
       invalidateList();
     },
-    onError: (err: Error) => ErrorFactory.handle(err, { context: 'group-update' })
   });
 
   const deleteMutation = useAppMutation({
@@ -129,7 +127,6 @@ export function useGroupMutations() {
       showToast.success(t('groupDeleted'));
       invalidateList();
     },
-    onError: (err: Error) => ErrorFactory.handle(err, { context: 'group-delete' })
   });
 
   const setCoverMutation = useAppMutation({
@@ -139,11 +136,7 @@ export function useGroupMutations() {
     onSuccess: () => {
       showToast.success(t('setCoverSuccess'));
       invalidateList();
-    },
-    onError: (err: Error) => {
-      ErrorFactory.handle(err, { context: 'group-set-cover' });
-      invalidateList();
-    }
+    },    onError: () => { invalidateList(); }
   });
 
   const movePhotosMutation = useAppMutation({
@@ -154,11 +147,7 @@ export function useGroupMutations() {
       showToast.success(t('addPhotosSuccess', variables.photoIds.length));
       clearSelection();
       invalidateList();
-    },
-    onError: (err: Error) => {
-      ErrorFactory.handle(err, { context: 'group-move-photos' });
-      invalidateList();
-    }
+    },    onError: () => { invalidateList(); }
   });
 
   const dissolveMutation = useAppMutation({
@@ -169,9 +158,6 @@ export function useGroupMutations() {
       showToast.success(t('groupDissolved'));
       invalidateList();
     },
-    onError: (err: Error) => {
-      ErrorFactory.handle(err, { context: 'group-dissolve' });
-    }
   });
 
   const combineMutation = useAppMutation({
@@ -183,11 +169,7 @@ export function useGroupMutations() {
       showToast.success(t('mergePhotosSuccess', count));
       clearSelection();
       invalidateList();
-    },
-    onError: (err: Error) => {
-      ErrorFactory.handle(err, { context: 'group-combine' });
-      invalidateList();
-    }
+    },    onError: () => { invalidateList(); }
   });
 
   return {
@@ -247,7 +229,6 @@ export const useGroupEditState = (
           }
         }
       } catch (err: unknown) {
-        ErrorFactory.handle(err, { context: 'group-update-state' });
         throw err;
       }
     },
@@ -294,7 +275,6 @@ export const useRemoveFromGroupMutation = () => {
           invalidateList();
           return res;
       }).catch(err => {
-          ErrorFactory.handle(err, { context: 'group-remove-photos' });
           invalidateList();
           throw err;
       });

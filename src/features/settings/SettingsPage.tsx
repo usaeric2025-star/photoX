@@ -27,7 +27,7 @@ import * as v from 'valibot';
 
 import { useSyncMutation } from '#src/hooks/index.js';
 import { useSignal } from '#lib/store/index.js';
-import { tasksSignal } from '#src/services/task/taskService.js';
+import { tasksSignal } from '#src/lib/task-queue/taskStore.js';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings.js').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings.js').then(m => ({ default: m.AISettings })));

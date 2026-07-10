@@ -1,4 +1,4 @@
-import { getThumbnailUrl as getRawThumbnailUrl } from '#src/services/mappers/utils.js';
+import { getThumbnailUrl as getRawThumbnailUrl } from '#src/utils/mappers/utils.js';
 
 export const THUMBNAIL_SIZES = {
   /** 網格 SM 變體 / 軌道 / 卡片縮圖 */

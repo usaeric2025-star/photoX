@@ -5,73 +5,73 @@ import { relations } from 'drizzle-orm';
  * Categories Table
  */
 export const categories = pgTable('categories', {
-    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
-    code: text('code').unique(),
-    nameZh: text('name_zh'),
-    nameEn: text('name_en'),
-    nameMs: text('name_ms'),
-    sortOrder: integer('sort_order').default(0),
-    isActive: boolean('is_active').default(true),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
+    id: integer().primaryKey().generatedByDefaultAsIdentity(),
+    code: text().unique(),
+    nameZh: text(),
+    nameEn: text(),
+    nameMs: text(),
+    sortOrder: integer().default(0),
+    isActive: boolean().default(true),
+    createdAt: timestamp().defaultNow(),
+    updatedAt: timestamp().defaultNow(),
 });
 
 /**
  * Manufacturers Table
  */
 export const manufacturers = pgTable('manufacturers', {
-    id: uuid('id').primaryKey(),
-    name: text('name'),
-    aliases: text('aliases').array(),
-    createdAt: timestamp('created_at').defaultNow(),
+    id: uuid().primaryKey(),
+    name: text(),
+    aliases: text().array(),
+    createdAt: timestamp().defaultNow(),
 });
 
 /**
  * Groups Table
  */
 export const groups = pgTable('groups', {
-    id: uuid('id').primaryKey(),
-    name: text('name'),
-    description: text('description'),
-    coverPhotoId: uuid('cover_photo_id'),
-    status: text('status'),
-    userId: uuid('user_id'),
-    isHidden: boolean('is_hidden').default(false),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
+    id: uuid().primaryKey(),
+    name: text(),
+    description: text(),
+    coverPhotoId: uuid(),
+    status: text(),
+    userId: uuid(),
+    isHidden: boolean().default(false),
+    createdAt: timestamp().defaultNow(),
+    updatedAt: timestamp().defaultNow(),
 });
 
 /**
  * Furniture Items (Primary Table)
  */
 export const furnitureItems = pgTable('furniture_items', {
-    id: uuid('id').primaryKey(),
-    userId: uuid('user_id'),
-    name: text('name'),
-    description: jsonb('description'),
-    categoryId: integer('category_id').references(() => categories.id, { onDelete: 'set null' }),
-    manufacturerId: uuid('manufacturer_id').references(() => manufacturers.id, { onDelete: 'set null' }),
-    groupId: uuid('group_id').references(() => groups.id, { onDelete: 'set null' }),
-    isGroupCover: boolean('is_group_cover').default(false),
-    isPinned: boolean('is_pinned').default(false),
-    imageUrl: text('image_url'),
-    imageHash: text('image_hash'),
-    price: text('price'),
-    note: text('note'),
-    type: text('type'),
-    isHidden: boolean('is_hidden').default(false),
-    itemCode: text('item_code'),
-    manualCode: text('manual_code'),
-    modelNumber: text('model_number'),
-    descriptionTranslations: jsonb('description_translations'),
-    isAnalyzing: boolean('is_analyzing').default(false),
-    subCategory: text('sub_category'),
-    dimensions: jsonb('dimensions'),
-    groupOrder: integer('group_order'),
-    metadata: jsonb('metadata'),
-    updatedAt: timestamp('updated_at').defaultNow(),
-    createdAt: timestamp('created_at').defaultNow(),
-    nameSearchable: text('name_searchable'),
+    id: uuid().primaryKey(),
+    userId: uuid(),
+    name: text(),
+    description: jsonb(),
+    categoryId: integer().references(() => categories.id, { onDelete: 'set null' }),
+    manufacturerId: uuid().references(() => manufacturers.id, { onDelete: 'set null' }),
+    groupId: uuid().references(() => groups.id, { onDelete: 'set null' }),
+    isGroupCover: boolean().default(false),
+    isPinned: boolean().default(false),
+    imageUrl: text(),
+    imageHash: text(),
+    price: text(),
+    note: text(),
+    type: text(),
+    isHidden: boolean().default(false),
+    itemCode: text(),
+    manualCode: text(),
+    modelNumber: text(),
+    descriptionTranslations: jsonb(),
+    isAnalyzing: boolean().default(false),
+    subCategory: text(),
+    dimensions: jsonb(),
+    groupOrder: integer(),
+    metadata: jsonb(),
+    updatedAt: timestamp().defaultNow(),
+    createdAt: timestamp().defaultNow(),
+    nameSearchable: text(),
 }, (t) => ({
     userIdCreatedAtIdx: index('furniture_items_user_id_created_at_idx').on(t.userId, t.createdAt),
     groupIdIdx: index('furniture_items_group_id_idx').on(t.groupId),
@@ -91,12 +91,12 @@ export const furnitureItems = pgTable('furniture_items', {
  * Tags Table
  */
 export const tags = pgTable('tags', {
-    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
-    name: text('name').unique(),
-    isPinned: boolean('is_pinned').default(false),
-    usageCount: integer('usage_count').default(0),
-    isHot: boolean('is_hot').default(false),
-    createdAt: timestamp('created_at').defaultNow(),
+    id: integer().primaryKey().generatedByDefaultAsIdentity(),
+    name: text().unique(),
+    isPinned: boolean().default(false),
+    usageCount: integer().default(0),
+    isHot: boolean().default(false),
+    createdAt: timestamp().defaultNow(),
 }, (t) => ({
     usageCountIdx: index('tags_usage_count_idx').on(t.usageCount),
     isPinnedIdx: index('tags_is_pinned_idx').on(t.isPinned),
@@ -106,8 +106,8 @@ export const tags = pgTable('tags', {
  * Junction table for Furniture Items and Tags
  */
 export const photoTags = pgTable('photo_tags', {
-    photoId: uuid('photo_id').references(() => furnitureItems.id, { onDelete: 'cascade' }),
-    tagId: integer('tag_id').references(() => tags.id, { onDelete: 'cascade' }),
+    photoId: uuid().references(() => furnitureItems.id, { onDelete: 'cascade' }),
+    tagId: integer().references(() => tags.id, { onDelete: 'cascade' }),
 }, (t) => ({
     pk: primaryKey({ columns: [t.photoId, t.tagId] }),
     tagIdIdx: index('photo_tags_tag_id_idx').on(t.tagId),
@@ -118,45 +118,45 @@ export const photoTags = pgTable('photo_tags', {
  * Secrets / Settings Table
  */
 export const secrets = pgTable('secrets', {
-    key: text('key').primaryKey(),
-    value: text('value'),
-    updatedAt: timestamp('updated_at').defaultNow(),
+    key: text().primaryKey(),
+    value: text(),
+    updatedAt: timestamp().defaultNow(),
 });
 
 /**
  * System Logs Table
  */
 export const systemLogs = pgTable('system_logs', {
-    id: integer('id').primaryKey().generatedByDefaultAsIdentity(), // Match bigint identity in DB
-    level: text('level'), 
-    operation: text('operation'),
-    message: text('message'),
-    resource: text('resource'),
-    traceId: text('trace_id'),
-    metadata: jsonb('metadata'),
-    errorMessage: text('error_message'),
-    stackTrace: text('stack_trace'),
-    componentStack: text('component_stack'),
-    url: text('url'),
-    userId: uuid('user_id'),
-    stack: text('stack'),
-    context: text('context'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    id: integer().primaryKey().generatedByDefaultAsIdentity(), // Match bigint identity in DB
+    level: text(), 
+    operation: text(),
+    message: text(),
+    resource: text(),
+    traceId: text(),
+    metadata: jsonb(),
+    errorMessage: text(),
+    stackTrace: text(),
+    componentStack: text(),
+    url: text(),
+    userId: uuid(),
+    stack: text(),
+    context: text(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow(),
 });
 
 /**
  * Tasks Table (Queue Management)
  */
 export const tasks = pgTable('tasks', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    label: text('label').notNull(),
-    type: text('type').notNull(),
-    status: text('status').notNull(),
-    meta: jsonb('meta'),
-    data: jsonb('data'),
-    userId: uuid('user_id'),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
+    id: uuid().primaryKey().defaultRandom(),
+    label: text().notNull(),
+    type: text().notNull(),
+    status: text().notNull(),
+    meta: jsonb(),
+    data: jsonb(),
+    userId: uuid(),
+    createdAt: timestamp().defaultNow(),
+    updatedAt: timestamp().defaultNow(),
 }, (t) => [
     index('idx_tasks_status').on(t.status),
     index('idx_tasks_created_at').on(t.createdAt),
@@ -167,50 +167,50 @@ export const tasks = pgTable('tasks', {
  * Maintenance Jobs Table
  */
 export const maintenanceJobs = pgTable('maintenance_jobs', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    status: text('status').default('pending'),
-    operation: text('operation'),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
+    id: uuid().primaryKey().defaultRandom(),
+    status: text().default('pending'),
+    operation: text(),
+    createdAt: timestamp().defaultNow(),
+    updatedAt: timestamp().defaultNow(),
 });
 
 /**
  * Settings Table (Legacy/Global Config)
  */
 export const settings = pgTable('settings', {
-    id: integer('id').primaryKey(),
-    logoUrl: text('logo_url'),
-    whatsapp1: text('whatsapp_1'),
-    whatsapp2: text('whatsapp_2'),
-    whatsapp1Name: text('whatsapp_1_name'),
-    whatsapp2Name: text('whatsapp_2_name'),
-    accessPasscode: text('access_passcode'),
-    passcodeEnabled: boolean('passcode_enabled'),
-    hotTagThreshold: integer('hot_tag_threshold'),
-    hotTagsCount: integer('hot_tags_count'),
-    openrouterModel: text('openrouter_model'),
-    agnesModel: text('agnes_model'),
-    updatedAt: timestamp('updated_at').defaultNow(),
-    createdAt: timestamp('created_at').defaultNow(),
+    id: integer().primaryKey(),
+    logoUrl: text(),
+    whatsapp1: text(),
+    whatsapp2: text(),
+    whatsapp1Name: text(),
+    whatsapp2Name: text(),
+    accessPasscode: text(),
+    passcodeEnabled: boolean(),
+    hotTagThreshold: integer(),
+    hotTagsCount: integer(),
+    openrouterModel: text(),
+    agnesModel: text(),
+    updatedAt: timestamp().defaultNow(),
+    createdAt: timestamp().defaultNow(),
 });
 
 /**
  * AI Audit Logs Table
  */
 export const aiAuditLogs = pgTable('ai_audit_logs', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    photoId: uuid('photo_id').references(() => furnitureItems.id),
-    model: text('model'),
-    promptVersion: text('prompt_version'),
-    cleanedOutput: jsonb('cleaned_output'),
-    rawOutput: jsonb('raw_output'),
-    latencyMs: integer('latency_ms'),
-    costEst: text('cost_est'),
-    tokenUsage: jsonb('token_usage'),
-    status: text('status'),
-    errorMessage: text('error_message'),
-    rawStoragePath: text('raw_storage_path'),
-    createdAt: timestamp('created_at').defaultNow(),
+    id: uuid().primaryKey().defaultRandom(),
+    photoId: uuid().references(() => furnitureItems.id),
+    model: text(),
+    promptVersion: text(),
+    cleanedOutput: jsonb(),
+    rawOutput: jsonb(),
+    latencyMs: integer(),
+    costEst: text(),
+    tokenUsage: jsonb(),
+    status: text(),
+    errorMessage: text(),
+    rawStoragePath: text(),
+    createdAt: timestamp().defaultNow(),
 }, (table) => ({
     photoIdIdx: index('ai_audit_logs_photo_id_idx').on(table.photoId),
     createdAtIdx: index('ai_audit_logs_created_at_idx').on(table.createdAt),
@@ -220,21 +220,21 @@ export const aiAuditLogs = pgTable('ai_audit_logs', {
  * Group Correction Logs Table
  */
 export const groupCorrectionLogs = pgTable('group_correction_logs', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    operation: text('operation'),
-    inputPhotoIds: jsonb('input_photo_ids'),
-    createdGroups: jsonb('created_groups'),
-    userId: text('user_id'),
-    createdAt: timestamp('created_at').defaultNow(),
+    id: uuid().primaryKey().defaultRandom(),
+    operation: text(),
+    inputPhotoIds: jsonb(),
+    createdGroups: jsonb(),
+    userId: text(),
+    createdAt: timestamp().defaultNow(),
 });
 
 /**
  * Users Table (Metadata for references)
  */
 export const users = pgTable('users', {
-    id: text('id').primaryKey(),
-    email: text('email'),
-    createdAt: timestamp('created_at').defaultNow(),
+    id: text().primaryKey(),
+    email: text(),
+    createdAt: timestamp().defaultNow(),
 });
 
 // --- Relations ---

@@ -141,7 +141,7 @@ export const listExtendedRoutes = new Hono()
             });
             return successResponse(c, { items: photosFormatted, total: Number(countRes.count) });
         }
-        return successResponse(c, { items: [], total: 0 });
+        return successResponse(c, { items: [], total: Number(countRes.count) || 0 });
     } catch (error: unknown) {
         throw errorFactory.wrap(error, 'photos.list-by-group-paginated', 'QUERY_FAILURE');
     }

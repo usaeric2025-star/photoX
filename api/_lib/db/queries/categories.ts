@@ -7,9 +7,3 @@ export async function getAllCategories() {
         .from(categoriesTable)
         .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.nameZh));
 }
-
-export async function getCategoryById(id: number) {
-    return await db.query.categories.findFirst({
-        where: eq(categoriesTable.id, id)
-    });
-}

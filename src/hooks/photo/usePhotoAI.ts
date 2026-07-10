@@ -19,7 +19,7 @@ import { showToast } from '#lib/ui/toast.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
-import { resolveTagNamesToIds } from '#src/services/tag/completion.js';
+import { resolveTagNamesToIds } from '#src/features/ai/tagCompletion.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { api } from '#lib/api.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';

@@ -4,7 +4,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { useDisclosure } from '#src/hooks/core/index.js';
 import { useTranslation, useFilters, usePhoto } from '#src/hooks/index.js';
 import { Image } from '#src/components/ui/Image.js';
-import { getThumbnailUrl } from '#src/services/mappers/utils.js';
+import { getThumbnailUrl } from '#src/utils/mappers/utils.js';
 import { showToast } from '#lib/ui/toast.js';
 import { NativeDialog } from '#src/components/ui/NativeDialog.js';
 import { Field } from '@tanstack/react-form';

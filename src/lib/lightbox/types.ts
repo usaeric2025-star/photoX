@@ -22,7 +22,7 @@ interface LightboxConfig {
   theme?: 'dark' | 'light';
 }
 
-export interface LightboxState {
+interface LightboxState {
   isOpen: boolean;
   slides: LightboxSlide[];
   currentIndex: number;

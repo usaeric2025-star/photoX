@@ -12,6 +12,9 @@ import { normalizeUrl } from '../../_lib/maintenance/storageUtils.js';
 import { streamSSE } from 'hono/streaming';
 import { Buffer } from 'buffer';
 
+import { errorResponse, successResponse } from '../../_lib/response.js';
+import { errorFactory } from '../../_lib/error/factory.js';
+
 const serverEnv = getServerEnv(process.env);
 export const adminMaintenance = new Hono()
 // --- 0. View Refresh (CQRS) ---
@@ -22,19 +25,18 @@ export const adminMaintenance = new Hono()
             orderBy: [desc(maintenanceJobs.createdAt)],
             limit: 50
         });
-        return c.json({ success: true, data });
+        return successResponse(c, data);
     } catch (e: unknown) {
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.get-jobs', 'DB_ERROR');
     }
 })
 .post("/refresh-view", async (c) => {
     try {
         await requireRealUser(c);
         await refreshPhotosView();
-        return c.json({ success: true, message: 'Materialized view v_photos_list refreshed' });
+        return successResponse(c, null, { message: 'Materialized view v_photos_list refreshed' });
     } catch (e: unknown) {
-        logger.error('[Maintenance] View refresh failed', e);
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.refresh-view', 'DB_ERROR');
     }
 })
 // --- 1. Basic Cleanup ---
@@ -48,10 +50,9 @@ export const adminMaintenance = new Hono()
         ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
         await db.delete(aiAuditLogs).where(lt(aiAuditLogs.createdAt, ninetyDaysAgo));
 
-        return c.json({ success: true, message: 'Daily cleanup executed' });
+        return successResponse(c, null, { message: 'Daily cleanup executed' });
     } catch (e: unknown) {
-        logger.error('[Maintenance] Cleanup failed', e);
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.daily-cleanup', 'DB_ERROR');
     }
 })
 .get("/stats", async (c) => {
@@ -62,37 +63,29 @@ export const adminMaintenance = new Hono()
         const [tagCount] = await db.select({ count: count() }).from(tagsTable);
         const [categoryCount] = await db.select({ count: count() }).from(categories);
 
-        return c.json({
-            success: true,
-            data: {
-                totalPhotos: Number(photoCount.count),
-                hiddenPhotos: Number(hiddenCount.count),
-                totalGroups: Number(groupCount.count),
-                totalTags: Number(tagCount.count),
-                totalCategories: Number(categoryCount.count)
-            }
+        return successResponse(c, {
+            totalPhotos: Number(photoCount.count),
+            hiddenPhotos: Number(hiddenCount.count),
+            totalGroups: Number(groupCount.count),
+            totalTags: Number(tagCount.count),
+            totalCategories: Number(categoryCount.count)
         });
     } catch (e: unknown) {
-        logger.error('[Maintenance] Stats failed', e);
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.stats', 'DB_ERROR');
     }
 })
 // --- 2. Storage Audit & Repair ---
 .get("/storage/audit", async (c) => {
     try {
         const audit = await runStorageAudit();
-        return c.json({ 
-            success: true, 
-            data: { 
-                healthyCount: audit.healthy.length,
-                ghosts: { count: audit.ghosts.length, samples: audit.ghosts.slice(0, 10) },
-                orphans: { count: audit.orphans.length, samples: audit.orphans.slice(0, 10) },
-                truncated: audit.truncated || false
-            } 
+        return successResponse(c, { 
+            healthyCount: audit.healthy.length,
+            ghosts: { count: audit.ghosts.length, samples: audit.ghosts.slice(0, 10) },
+            orphans: { count: audit.orphans.length, samples: audit.orphans.slice(0, 10) },
+            truncated: audit.truncated || false
         });
     } catch (e: unknown) {
-        logger.error("Audit failed:", e);
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.storage-audit', 'INTERNAL_ERROR');
     }
 })
 .get("/storage/audit-stream", async (c) => {
@@ -121,14 +114,14 @@ export const adminMaintenance = new Hono()
                 });
             } catch (err) {
                 logger.error("Audit stream failed:", err);
+                const appErr = errorFactory.wrap(err, 'admin.maintenance.storage-audit-stream', 'INTERNAL_ERROR');
                 await stream.writeSSE({
-                    data: JSON.stringify({ success: false, error: String(err) })
+                    data: JSON.stringify(errorFactory.fail(appErr))
                 });
             }
         });
     } catch (e: unknown) {
-        logger.error("Audit init failed:", e);
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.storage-audit-stream-init', 'AUTH_ERROR');
     }
 })
 .post("/storage/recover-orphans", async (c) => {
@@ -136,7 +129,7 @@ export const adminMaintenance = new Hono()
         await requireRealUser(c);
         const { keys } = await c.req.json();
         if (!keys || !Array.isArray(keys)) {
-            return c.json({ success: false, error: "keys array required" }, 400);
+            return errorResponse(c, "keys array required", 400);
         }
 
         const targetKeys = keys.slice(0, 50); // Limit to 50
@@ -189,15 +182,16 @@ export const adminMaintenance = new Hono()
         
                         // 3. Create DB record
                         const photoId = crypto.randomUUID();
-                        await db.insert(furnitureItems).values({
+                        const insertValues: typeof furnitureItems.$inferInsert = {
                             id: photoId,
                             userId: '8ec53131-a589-4b50-beb4-6b5308541e1b', // Default admin/staff user ID
                             imageUrl: publicUrl,
                             imageHash: hash,
-                            name: { zh: `找回的照片 (${key.split('/').pop()})` },
+                            name: "Recovered Photo",
                             createdAt: new Date(),
                             updatedAt: new Date()
-                        } as any);
+                        };
+                        await db.insert(furnitureItems).values(insertValues);
         
                         existingUrlsSet.add(normalized);
                         results.push({ key, status: 'recovered', id: photoId });
@@ -216,14 +210,14 @@ export const adminMaintenance = new Hono()
                 });
             } catch (err) {
                 logger.error("Recovery stream failed:", err);
+                const appErr = errorFactory.wrap(err, 'admin.maintenance.storage-recover-stream', 'INTERNAL_ERROR');
                 await stream.writeSSE({
-                    data: JSON.stringify({ success: false, error: String(err) })
+                    data: JSON.stringify(errorFactory.fail(appErr))
                 });
             }
         });
     } catch (e: unknown) {
-        logger.error("Recovery failed:", e);
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.storage-recover-init', 'AUTH_ERROR');
     }
 })
 .post("/storage/deduplicate", async (c) => {
@@ -259,10 +253,9 @@ export const adminMaintenance = new Hono()
             await refreshPhotosView();
         }
 
-        return c.json({ success: true, count: idsToRemove.length });
+        return successResponse(c, { count: idsToRemove.length });
     } catch (e: unknown) {
-        logger.error("Deduplication failed:", e);
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.storage-deduplicate', 'DB_ERROR');
     }
 })
 .post("/storage/clean-ghosts", async (c) => {
@@ -276,10 +269,9 @@ export const adminMaintenance = new Hono()
             await refreshPhotosView();
         }
 
-        return c.json({ success: true, count: ghostIds.length });
+        return successResponse(c, { count: ghostIds.length });
     } catch (e: unknown) {
-        logger.error("Ghost cleanup failed:", e);
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.storage-clean-ghosts', 'DB_ERROR');
     }
 })
 // --- 3. Error Event Management ---
@@ -288,17 +280,17 @@ export const adminMaintenance = new Hono()
         const { issueId } = await c.req.json();
         logger.info(`[Repair] Requested repair for issue: ${issueId}`);
         // Handle specific issue repairs here if needed
-        return c.json({ success: true, message: `Repair initiated for ${issueId}` });
+        return successResponse(c, null, { message: `Repair initiated for ${issueId}` });
     } catch (e: unknown) {
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.repair', 'INTERNAL_ERROR');
     }
 })
 .get("/db-debug", async (c) => {
     try {
         const res = await db.execute(sql`SHOW statement_timeout`);
-        return c.json({ success: true, data: res });
+        return successResponse(c, res);
     } catch (e: unknown) {
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.db-debug', 'DB_ERROR');
     }
 })
 .get("/error-events", async (c) => {
@@ -309,16 +301,16 @@ export const adminMaintenance = new Hono()
             orderBy: [desc(systemLogs.createdAt)],
             limit: limit
         });
-        return c.json({ success: true, data });
+        return successResponse(c, data);
     } catch (e: unknown) {
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.get-error-events', 'DB_ERROR');
     }
 })
 .post("/error-events-clear", async (c) => {
     try {
         await db.delete(systemLogs);
-        return c.json({ success: true });
+        return successResponse(c, null);
     } catch (e: unknown) {
-        return c.json({ success: false, error: String(e) }, 500);
+        throw errorFactory.wrap(e, 'admin.maintenance.clear-error-events', 'DB_ERROR');
     }
 });

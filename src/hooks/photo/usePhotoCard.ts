@@ -4,11 +4,11 @@ import { useUI, UIStoreState } from '#lib/store/index.js';
 import { useAppRoute, useNavigation } from '#lib/router/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { queryKeys } from '#lib/query/keys.js';
-import { getGroupById } from '#src/services/group/queries.js';
+import { getGroupById } from '#src/hooks/group/queries.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { Photo } from '#src/types/index.js';
 import { useFilters } from '#src/features/filters/index.js';
-import { useIsMultiSelect, useSelectionActions } from '../../services/selection/selectionService.js';
+import { useIsMultiSelect, useSelectionActions } from '../../hooks/selection/useSelection.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 
 interface UsePhotoCardInteractionProps {

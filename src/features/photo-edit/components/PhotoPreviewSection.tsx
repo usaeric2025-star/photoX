@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Image } from '#src/components/ui/Image.js';
-import { getThumbnailUrl } from '#src/services/mappers/utils.js';
+import { getThumbnailUrl } from '#src/utils/mappers/utils.js';
 
 interface PhotoPreviewSectionProps {
   previewSrc?: string;

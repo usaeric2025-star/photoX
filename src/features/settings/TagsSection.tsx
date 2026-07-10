@@ -1,6 +1,6 @@
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSignal } from '#lib/store/index.js';
-import { tasksSignal } from '#src/services/task/taskService.js';
+import { tasksSignal } from '#src/lib/task-queue/taskStore.js';
 import { executeTask } from '#lib/task-queue/index.js';
 import React, { useState } from "react";
 import { Icon } from '#src/components/ui/Icon.js';

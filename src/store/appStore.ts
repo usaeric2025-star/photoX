@@ -8,7 +8,7 @@ import { withTimeout } from '#lib/utils.js';
 import { api } from '#lib/api.js';
 import type { Category, Tag } from '#src/types/index.js';
 
-export interface AppStatusState {
+interface AppStatusState {
   isLoading: boolean;
   error: Error | null;
 }

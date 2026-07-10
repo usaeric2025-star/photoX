@@ -37,7 +37,7 @@ export const selectedIdsParser = parseAsJson<string[]>((value) => {
 export const sortParser = parseWithValibot(SortSchema).withDefault('newest');
 
 // Status Parser
-export const statusParser = parseAsString.withDefault('all');
+const statusParser = parseAsString.withDefault('all');
 
 // Batch Parser
 export const batchParser = parseAsBoolean.withDefault(false);
@@ -52,7 +52,7 @@ const pageParser = parseWithValibot(PageSchema).withDefault(1);
 export const groupIdParser = parseAsString.withDefault('');
 
 // View Parser (grid | list)
-export const viewParser = parseAsString.withDefault('grid');
+const viewParser = parseAsString.withDefault('grid');
 
 // Anchor Parser (for scrolling to photo)
 export const anchorParser = parseAsBoolean.withDefault(false);
@@ -61,4 +61,4 @@ export const anchorParser = parseAsBoolean.withDefault(false);
 export const showGroupsCollapsedParser = parseAsBoolean.withDefault(true);
 
 // Columns Parser
-export const columnsParser = parseAsInteger.withDefault(3);
+const columnsParser = parseAsInteger.withDefault(3);

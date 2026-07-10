@@ -1,13 +1,13 @@
 import * as v from 'valibot';
 import { TranslationType } from '#src/locales/index.js';
 
-export const TranslationSchema = v.object({
+const TranslationSchema = v.object({
   zh: v.string(),
   en: v.optional(v.string()),
   ms: v.optional(v.string())
 });
 
-export const DimensionSchema = v.object({
+const DimensionSchema = v.object({
   label: v.optional(v.nullable(v.string())),
   unit: v.optional(v.nullable(v.string())),
   length: v.optional(v.nullable(v.union([v.number(), v.string()]))),
@@ -18,7 +18,7 @@ export const DimensionSchema = v.object({
   isAiEstimated: v.optional(v.nullable(v.boolean())),
 });
 
-export const getPhotoEditSchema = (t: TranslationType) => v.object({
+const getPhotoEditSchema = (t: TranslationType) => v.object({
   name: v.pipe(v.string(), v.minLength(1, t.titleRequired), v.maxLength(100, t.titleTooLong)),
   description: v.optional(TranslationSchema),
   categoryId: v.optional(v.nullable(v.string())),

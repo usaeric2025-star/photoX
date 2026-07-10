@@ -3,7 +3,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { cn } from '#lib/utils.js';
 import { useTranslation, useIsManagement } from '#src/hooks/index.js';
-import { getDisplayGroupCode } from '#src/services/photo/utils.js';
+import { getDisplayGroupCode } from '#src/utils/photo.js';
 
 /**
  * Renders badges for photo status (pinned, hidden, group info)
