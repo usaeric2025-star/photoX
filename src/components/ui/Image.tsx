@@ -28,30 +28,40 @@ export function Image({
 }: ImageProps) {
     const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
     const [errorSrc, setErrorSrc] = useState<string | null>(null);
+    const [fallbackToLqip, setFallbackToLqip] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
-
-    const isLoaded = loadedSrc === src;
-    const hasError = errorSrc === src;
-
-    // Check if already loaded from cache immediately when rendering
-    const checkCache = () => {
-        if (imgRef.current?.complete && imgRef.current?.src === src && !isLoaded) {
-            setLoadedSrc(src);
-        }
-    };
-
-    // Use effect just to check cache after mount, but not to sync state
-    useEffect(() => {
-        checkCache();
-    }, [src]);
-
-    const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-        setLoadedSrc(src);
-        onLoad?.(e);
-    };
 
     // Skip LQIP rendering if lqipSrc is identical to src (e.g., when image worker is disabled)
     const lqipSrc = providedLqip && providedLqip !== src ? providedLqip : undefined;
+
+    const isLoaded = loadedSrc === src || (fallbackToLqip && loadedSrc === lqipSrc);
+    const hasError = errorSrc === src;
+
+    // Use effect to reset states and check cache when src changes
+    useEffect(() => {
+        setLoadedSrc(null);
+        setErrorSrc(null);
+        setFallbackToLqip(false);
+
+        if (imgRef.current?.complete && imgRef.current?.src === src) {
+            setLoadedSrc(src);
+        }
+    }, [src, lqipSrc]);
+
+    const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        setLoadedSrc(fallbackToLqip ? (lqipSrc || src) : src);
+        onLoad?.(e);
+    };
+
+    const handleError = () => {
+        if (lqipSrc && !fallbackToLqip) {
+            setFallbackToLqip(true);
+        } else {
+            setErrorSrc(src);
+        }
+    };
+
+    const displaySrc = fallbackToLqip ? (lqipSrc || src) : src;
 
     return (
         <div className={cn(
@@ -104,10 +114,10 @@ export function Image({
             {!hasError && (
                 <img
                     ref={imgRef}
-                    src={src}
+                    src={displaySrc}
                     alt={alt}
                     onLoad={handleLoad}
-                    onError={() => setErrorSrc(src)}
+                    onError={handleError}
                     className={cn(
                         "absolute inset-0 w-full h-full object-cover object-center z-20",
                         !disableFade && !priority && "transition-opacity duration-200 ease-out",

@@ -33,6 +33,7 @@ export function LightboxStage() {
   
   // Use standardized thumb helper
   const src = getPhotoThumb(key, 'LG', hash);
+  const lqipSrc = getPhotoThumb(key, 'MD', hash);
 
   return (
     <div 
@@ -68,6 +69,7 @@ export function LightboxStage() {
               <Image
                 src={src}
                 alt={title}
+                lqipSrc={lqipSrc}
                 priority={true}
                 containerClassName="bg-transparent"
                 className={`object-contain max-w-full max-h-full drop-shadow-2xl transition-all duration-300 select-none ${isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in'}`}
