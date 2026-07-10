@@ -237,8 +237,8 @@ export const groups = new Hono()
           .where(inArray(furnitureItems.groupId, finalSourceGroupIds));
 
         try {
-            const idsSql = sql.join(finalSourceGroupIds.map(id => sql`${id}::uuid`), sql`, `);
-            const rpcResult = await db.execute(sql`SELECT merge_groups(ARRAY[${idsSql}], ${targetGroupId}::uuid)`) as any[];
+            const idsArrayLiteral = '{' + finalSourceGroupIds.join(',') + '}';
+            const rpcResult = await db.execute(sql`SELECT merge_groups(${idsArrayLiteral}::uuid[], ${targetGroupId}::uuid)`) as any[];
             const mergeStatus = rpcResult?.[0]?.merge_groups;
             if (mergeStatus && mergeStatus.success === false) {
                 throw new Error(`Database Merge Procedure Failed: ${mergeStatus.error}`);
@@ -279,8 +279,8 @@ export const groups = new Hono()
     }
 
     try {
-        const idsSql = sql.join(photoIds.map(id => sql`${id}::uuid`), sql`, `);
-        await db.execute(sql`SELECT move_photos_to_group(ARRAY[${idsSql}], ${targetGroupId}::uuid)`);
+        const idsArrayLiteral = '{' + photoIds.join(',') + '}';
+        await db.execute(sql`SELECT move_photos_to_group(${idsArrayLiteral}::uuid[], ${targetGroupId}::uuid)`);
     } catch (rpcErr) {
         // Fallback manual move
         await db.update(furnitureItems)

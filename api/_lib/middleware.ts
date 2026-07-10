@@ -23,12 +23,15 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
         const referer = c.req.header('referer') || '';
         const isAdminPath = referer.includes('/admin') || path.startsWith('/api/admin') || isAdminMode;
 
+        const isListPath = 
+          path === '/api/tags' || path === '/api/tags/' ||
+          path === '/api/categories' || path === '/api/categories/' ||
+          path === '/api/manufacturers' || path === '/api/manufacturers/' ||
+          path === '/api/groups' || path === '/api/groups/';
+
         if (isAdminPath) {
           c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        } else if (path.startsWith('/api/tags') || 
-            path.startsWith('/api/categories') || 
-            path.startsWith('/api/manufacturers') || 
-            path.startsWith('/api/groups')) {
+        } else if (isListPath) {
           // CDN 快取 10 秒，在背景重新驗證 60 秒，減少資料庫壓力與冷啟動
           c.header('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
         } else if (path.startsWith('/api/public/settings') || path.startsWith('/api/system/health')) {
