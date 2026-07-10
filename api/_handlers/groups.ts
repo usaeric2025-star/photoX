@@ -237,7 +237,11 @@ export const groups = new Hono()
           .where(inArray(furnitureItems.groupId, finalSourceGroupIds));
 
         try {
-            await db.execute(sql`SELECT merge_groups(${finalSourceGroupIds}::uuid[], ${targetGroupId}::uuid)`);
+            const rpcResult = await db.execute(sql`SELECT merge_groups(${finalSourceGroupIds}::uuid[], ${targetGroupId}::uuid)`) as any[];
+            const mergeStatus = rpcResult?.[0]?.merge_groups;
+            if (mergeStatus && mergeStatus.success === false) {
+                throw new Error(`Database Merge Procedure Failed: ${mergeStatus.error}`);
+            }
         } catch (rpcErr) {
             logger.error('[merge_groups rpc error]', rpcErr);
             // Fallback: manually delete the empty source groups
@@ -348,7 +352,11 @@ export const groups = new Hono()
         .where(eq(furnitureItems.groupId, groupId));
     
     try {
-        await db.execute(sql`SELECT dissolve_group(${groupId}::uuid)`);
+        const rpcResult = await db.execute(sql`SELECT dissolve_group(${groupId}::uuid)`) as any[];
+        const dissolveStatus = rpcResult?.[0]?.dissolve_group;
+        if (dissolveStatus && dissolveStatus.success === false) {
+            throw new Error(`Database Dissolve Procedure Failed: ${dissolveStatus.error}`);
+        }
     } catch (rpcErr) {
         await db.delete(groupsTable).where(eq(groupsTable.id, groupId));
     }

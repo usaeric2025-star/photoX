@@ -20,16 +20,14 @@ export function NotFoundPage() {
     if (normPath.startsWith('/photo/')) return true;
     if (normPath.startsWith('/group/')) return true;
 
-    // Admin routes
-    if (normPath === '/admin') return true;
-    if (normPath === '/admin/batch-edit') return true;
-    if (normPath === '/admin/batch') return true;
-    if (normPath === '/admin/diagnostics') return true;
-    if (normPath === '/admin/diagnose') return true;
-    if (normPath === '/admin/tasks') return true;
-    if (normPath === '/admin/error-logs') return true;
-    if (normPath === '/settings' || normPath.startsWith('/settings/')) return true;
-    if (normPath.startsWith('/admin/group/')) return true;
+    // Admin, settings, or diagnostics routes (consistent with RouterOrchestrator)
+    if (
+      normPath.startsWith('/admin') || 
+      normPath.startsWith('/settings') || 
+      normPath.startsWith('/diagnostics')
+    ) {
+      return true;
+    }
 
     return false;
   }, [pathname]);

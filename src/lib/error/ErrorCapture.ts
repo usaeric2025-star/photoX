@@ -34,6 +34,35 @@ export class ErrorCapture {
     });
 
     this.saveToLocal(appError);
+
+    // Send error diagnostics asynchronously to the backend system_logs database
+    if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+      const is404 = appError.message.toLowerCase().includes('404');
+      const payload = {
+        message: is404 ? `[Client 404] Page Not Found: ${window.location.pathname}` : `[Client Error] ${appError.message}`,
+        level: 'error',
+        operation: is404 ? 'client.404' : 'client.error',
+        metadata: {
+          traceId: appError.traceId,
+          category: appError.category,
+          context: appError.context,
+          userMessage: appError.userMessage,
+          stack: (error as Error)?.stack || new Error().stack,
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          referrer: document.referrer
+        }
+      };
+
+      fetch('/api/system/log-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(e => {
+        // Silent catch to prevent infinite error logging loops
+        console.warn('Failed to report error to server:', e);
+      });
+    }
   }
 
   private static wrapUnknown(error: unknown): AppError {
