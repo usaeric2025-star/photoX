@@ -8,6 +8,10 @@ import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { api } from '#lib/api.js';
 import { useAppQuery } from '#lib/query/index.js';
+import { useUI } from '#lib/store/index.js';
+import { useTranslation } from '#src/hooks/index.js';
+import { AdminEmptyState } from '#src/pages/AdminPage/AdminEmptyState.js';
+import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
 
 interface PhotoWallContainerProps {
   mode?: 'admin' | 'public';
@@ -17,7 +21,9 @@ interface PhotoWallContainerProps {
 
 export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const { open: openLightbox, setLightboxData } = useLightbox();
-  const { photos, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.filters);
+  const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.filters);
+  const patch = useUI(s => s.patch);
+  const { uiTranslations: labels } = useTranslation();
 
   // Use refs to avoid recreating the onPhotoClick closure and triggering full-grid rerenders on scroll
   const photosRef = useRef(photos);
@@ -29,6 +35,13 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const isAggregated = !!props.filters?.onlyGroupsCover;
 
   const expandedPhotosRef = useRef<PhotoListItem[] | null>(null);
+
+  // Sync total count to global UI state
+  useEffect(() => {
+    if (total !== undefined) {
+      patch({ totalCount: total });
+    }
+  }, [total, patch]);
 
   const handlePhotoClickStable = useCallback(async (photo: PhotoListItem) => {
     if (onPhotoClickRef.current) {
@@ -115,9 +128,16 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   }, [mode, handlePhotoClickStable]);
 
   if (error) {
+    if (props.mode === 'admin') {
+      return (
+        <div className="flex flex-col h-full overflow-hidden relative justify-center items-center p-8 w-full">
+          <PhotoErrorDisplay error={error} onRetry={refresh} />
+        </div>
+      );
+    }
     ErrorFactory.handle(error, { context: 'photo-wall-load' });
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+      <div className="flex flex-col items-center justify-center py-20 text-center gap-4 w-full">
         <div className="text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 max-w-md">
           <p className="font-bold">加载失败</p>
           <p className="text-sm opacity-80 mt-1">{error.message}</p>
@@ -128,6 +148,21 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
         >
           重试
         </button>
+      </div>
+    );
+  }
+
+  if (photos.length === 0 && !isLoading) {
+    if (props.mode === 'admin') {
+      return (
+        <div className="flex-1 flex flex-col overflow-hidden relative w-full h-full">
+          <AdminEmptyState labels={labels} />
+        </div>
+      );
+    }
+    return (
+      <div className="text-center py-20 text-gray-500 w-full h-full flex flex-col justify-center items-center min-h-[400px]">
+        暂无照片
       </div>
     );
   }
