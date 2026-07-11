@@ -28,7 +28,7 @@ export function LightboxInfo({
   
   const title = getLocalizedDisplay(photoData.name || '照片', lang);
   const uuid = photoData.id || 'N/A';
-  const categoryName = photoData.categoryName || '无分类';
+  const categoryName = photoData.categoryDescription?.[lang] || photoData.categoryName || '无分类';
   const tags = photoData.tags || [];
 
   const { can } = usePermission();

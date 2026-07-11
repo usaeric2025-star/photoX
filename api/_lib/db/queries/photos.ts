@@ -210,7 +210,8 @@ export async function getPhotosList(params: PhotoListParams) {
             item.description = d.items.description;
             item.groupName = d.group?.name || null;
             item.groupCoverPhotoId = d.group?.coverPhotoId || null;
-            item.categoryName = d.category?.name || null;
+            item.categoryName = (d.category?.description as any)?.zh || d.category?.name || null;
+            item.categoryDescription = d.category?.description || null;
             
             const pTags = tagsByPhoto.get(d.items.id) || [];
             item.tags = pTags.map(pt => pt.tags.name);

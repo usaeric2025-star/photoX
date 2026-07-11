@@ -23,22 +23,30 @@ export const getTranslatedCategoryName = (
 
   const activeCatRecord = activeCat as unknown as Record<string, unknown>;
 
-  // 1. Try direct locale properties on the category object (e.g. activeCat.zh, activeCat.en, activeCat.ms)
-  if (lang && activeCatRecord[lang]) {
+  // 1. Try nested translations under description (Standard now)
+  if (activeCat.description && typeof activeCat.description === 'object') {
+    const desc = activeCat.description as Record<string, unknown>;
+    const val = desc[lang] || desc.zh || desc.en;
+    if (val && String(val).trim().length > 0) return String(val);
+  }
+
+  // 2. Try direct locale properties on the category object (Legacy support)
+  if (lang && activeCatRecord[lang] && String(activeCatRecord[lang]).trim().length > 0) {
     return String(activeCatRecord[lang]);
   }
 
-  // 2. Try nested translations under name_translations
+  // 3. Try nested translations under name_translations
   if (activeCatRecord.name_translations && typeof activeCatRecord.name_translations === 'object') {
     const trans = activeCatRecord.name_translations as Record<string, unknown>;
     const val = trans[lang] || trans.zh || trans.en;
-    if (val) return String(val);
+    if (val && String(val).trim().length > 0) return String(val);
   }
 
-  // 3. Fallback to name field
+  // 4. Fallback to name field
   if (activeCat.name) {
     const result = getSafeText(activeCat.name, lang);
-    if (result && typeof result === 'string') return result;
+    if (result && typeof result === 'string' && result.trim().length > 0) return result;
+    return activeCat.name;
   }
 
   // 4. Fallback search looking up properties (Legacy support)

@@ -10,9 +10,10 @@ interface PhotoCardProps {
   hideGroupBadge?: boolean;
   isGroupDetail?: boolean;
   priority?: boolean;
+  lang?: string;
 }
 
-export const PhotoCard = memo(function PhotoCard({ photo, hideGroupBadge, isGroupDetail, priority }: PhotoCardProps) {
+export const PhotoCard = memo(function PhotoCard({ photo, hideGroupBadge, isGroupDetail, priority, lang }: PhotoCardProps) {
   const mode = useSignal(photoWallModeSignal);
   const onPhotoClick = useSignal(onPhotoClickSignal);
 
@@ -31,6 +32,7 @@ export const PhotoCard = memo(function PhotoCard({ photo, hideGroupBadge, isGrou
         isGroupDetail={isGroupDetail} 
         showGroupsCollapsed={!isGroupDetail}
         priority={priority} 
+        lang={lang}
       />
     );
   }
@@ -42,6 +44,7 @@ export const PhotoCard = memo(function PhotoCard({ photo, hideGroupBadge, isGrou
       hideGroupBadge={hideGroupBadge} 
       showGroupsCollapsed={!isGroupDetail}
       priority={priority} 
+      lang={lang}
     />
   );
 });

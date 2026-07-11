@@ -62,6 +62,11 @@ export interface Photo {
       status?: 'confirmed' | 'rejected' | 'active';
   } | null;
   categoryName: string;
+  categoryDescription?: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  } | null;
   manufacturerName: string;
   [key: string]: unknown;
 }

@@ -3,7 +3,7 @@ import { Category, Tag } from '#src/types/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCardBase } from './PhotoCardBase.js';
 import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts.js';
-import { usePerformance } from '#src/hooks/index.js';
+import { usePerformance, useTranslation } from '#src/hooks/index.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
 import { useGrid } from '#src/context/GridContext.js';
 import { Icon } from '#src/components/ui/Icon.js';
@@ -18,6 +18,7 @@ interface PublicPhotoCardProps {
   sharedCategories?: Category[];
   sharedTags?: Tag[];
   priority?: boolean;
+  lang?: string;
 }
 
 export const PublicPhotoCard = memo(function PublicPhotoCard({
@@ -30,8 +31,11 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   sharedCategories,
   sharedTags,
   priority = false,
+  lang,
 }: PublicPhotoCardProps) {
   const { columns } = useGrid();
+  const { appLang: hookLang } = useTranslation();
+  const appLang = (lang as any) || hookLang;
   
   const { cardRef, handleClick, longPressHandlers } = usePhotoCard({
     photo,
@@ -46,7 +50,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   const isUnnamedGroup = !photo.groupName || photo.groupName === photo.groupId || photo.groupName === '[object Object]';
   const displayPhotoName = isGroupCard ? (isUnnamedGroup ? 'GROUP' : photo.groupName) : photo.name;
   const displayPhotoTags = isGroupCard ? undefined : photo.tags;
-  const displayCategoryName = isGroupCard ? (photo.categoryName || undefined) : undefined;
+  const displayCategoryName = photo.categoryDescription?.[appLang] || photo.categoryName || undefined;
 
   return (
     <PhotoCardBase
@@ -83,15 +87,4 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       />
     </PhotoCardBase>
   );
-}, (prev, next) => {
-  return prev.photo.id === next.photo.id && 
-         prev.photo.name === next.photo.name &&
-         prev.photo.imageUrl === next.photo.imageUrl &&
-         prev.photo.imageHash === next.photo.imageHash &&
-         prev.photo.createdAt === next.photo.createdAt &&
-         prev.photo.isPinned === next.photo.isPinned &&
-         prev.priority === next.priority &&
-         prev.showGroupsCollapsed === next.showGroupsCollapsed &&
-         prev.hideGroupBadge === next.hideGroupBadge &&
-         prev.hasSearchQuery === next.hasSearchQuery;
 });

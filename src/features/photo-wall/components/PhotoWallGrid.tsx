@@ -3,6 +3,7 @@ import { DreamMasonry } from 'dream-masonry';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCard } from './PhotoCard.js';
 import { useGrid } from '#src/context/GridContext.js';
+import { useTranslation } from '#src/hooks/index.js';
 import { PhotoSkeleton } from '#src/components/photo/PhotoSkeleton.js';
 
 interface PhotoWallGridProps {
@@ -27,6 +28,7 @@ export function PhotoWallGrid({
   isAggregated = false,
 }: PhotoWallGridProps) {
   const { columns } = useGrid();
+  const { appLang } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(() => {
     if (typeof document !== 'undefined') {
@@ -95,9 +97,10 @@ export function PhotoWallGrid({
         hideGroupBadge={hideGroupBadge} 
         isGroupDetail={isGroupDetail} 
         priority={typeof index === 'number' && index < 12}
+        lang={appLang}
       />
     </div>
-  ), [hideGroupBadge, isGroupDetail]);
+  ), [hideGroupBadge, isGroupDetail, appLang]);
 
   const renderLoader = useCallback(() => (
     <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>

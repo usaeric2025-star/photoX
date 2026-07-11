@@ -46,7 +46,7 @@ function CategoryItem({
     }
   });
 
-  const displayName = cat.name || '未命名分类';
+  const displayName = (cat.description as any)?.[appLang] || cat.name || '未命名分类';
 
   return (
       <div
@@ -185,7 +185,8 @@ export function CategoriesSection({
                 return await runUpdateCategory({ 
                   id: c.id, 
                   updates: { 
-                    name: c.name
+                    name: c.name,
+                    description: { ...((cat.description as any) || {}), [appLang]: c.name }
                   } 
                 });
               }}

@@ -22,10 +22,12 @@ export const listExtendedRoutes = new Hono()
         const query = db
             .select({
                 items: furnitureItems,
-                group: groupsTable
+                group: groupsTable,
+                category: categories
             })
             .from(furnitureItems)
             .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
+            .leftJoin(categories, eq(furnitureItems.categoryId, categories.id))
             .where(and(
                 eq(furnitureItems.groupId, groupId),
                 !isAdminMode ? or(eq(furnitureItems.isHidden, false), isNull(furnitureItems.isHidden)) : undefined
@@ -62,6 +64,8 @@ export const listExtendedRoutes = new Hono()
                 const item = { ...d.items } as Record<string, unknown>;
                 item.group = d.group ? { ...d.group, memberCount: counts.get(d.group.id) || 0 } : null;
                 item.photoTags = tagsByPhoto.get(d.items.id) || [];
+                item.categoryName = (d as any).category?.name || null;
+                item.categoryDescription = (d as any).category?.description || null;
                 if (item.createdAt) {
                     item.createdAt = typeof item.createdAt === 'string' ? item.createdAt : (item.createdAt as Date).toISOString();
                 }
@@ -96,10 +100,12 @@ export const listExtendedRoutes = new Hono()
         const data = await db
             .select({
                 items: furnitureItems,
-                group: groupsTable
+                group: groupsTable,
+                category: categories
             })
             .from(furnitureItems)
             .leftJoin(groupsTable, eq(furnitureItems.groupId, groupsTable.id))
+            .leftJoin(categories, eq(furnitureItems.categoryId, categories.id))
             .where(baseCondition)
             .orderBy(
                 desc(furnitureItems.isGroupCover),
@@ -133,6 +139,8 @@ export const listExtendedRoutes = new Hono()
                 const item = { ...d.items } as Record<string, unknown>;
                 item.group = d.group ? { ...d.group, memberCount: counts.get(d.group.id) || 0 } : null;
                 item.photoTags = tagsByPhoto.get(d.items.id) || [];
+                item.categoryName = (d as any).category?.name || null;
+                item.categoryDescription = (d as any).category?.description || null;
                 if (item.createdAt) {
                     item.createdAt = typeof item.createdAt === 'string' ? item.createdAt : (item.createdAt as Date).toISOString();
                 }

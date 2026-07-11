@@ -70,10 +70,19 @@ export const PhotoCardInfo = ({
   photoName?: string;
   categoryName?: string;
 }) => {
-  // REMOVED group-hover to improve PC grid scrolling performance
   if (hideDetails) return null;
 
-  return null; 
+  return (
+    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none">
+      <div className="flex flex-col gap-1">
+        {categoryName && (
+          <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest line-clamp-1">
+            {categoryName}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 };
 
 /**

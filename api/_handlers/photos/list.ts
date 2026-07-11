@@ -38,6 +38,7 @@ export const listRoutes = new Hono()
                     groupName: d.groupName || null,
                     categoryId: d.categoryId || null,
                     categoryName: d.categoryName || null,
+                    categoryDescription: (d as any).categoryDescription || null,
                     memberCount: d.groupId ? (counts.get(d.groupId as string) || 0) : 0,
                     tags: d.tags || [],
                     isPinned: !!d.isPinned,

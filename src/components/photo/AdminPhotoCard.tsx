@@ -62,6 +62,7 @@ interface AdminPhotoCardProps {
   canPinGlobal?: boolean;
   priority?: boolean;
   isGroupDetail?: boolean;
+  lang?: string;
 }
 
 export const AdminPhotoCard = memo(function AdminPhotoCard({
@@ -77,11 +78,14 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   canPinGlobal,
   priority = false,
   isGroupDetail = false,
+  lang,
 }: AdminPhotoCardProps) {
   const { columns } = useGrid();
   const isMultiSelect = useIsMultiSelect();
   const isPhotoSelected = useIsPhotoSelected(photo.id);
   const { can } = usePermission();
+  const { appLang: hookLang } = useTranslation();
+  const appLang = (lang as any) || hookLang;
   
   const { cardRef, handleClick, longPressHandlers } = usePhotoCard({
     photo,
@@ -98,7 +102,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   const isUnnamedGroup = !photo.groupName || photo.groupName === photo.groupId || photo.groupName === '[object Object]';
   const displayPhotoName = isGroupCard ? (isUnnamedGroup ? 'GROUP' : photo.groupName) : photo.name;
   const displayPhotoTags = isGroupCard ? undefined : photo.tags;
-  const displayCategoryName = isGroupCard ? (photo.categoryName || undefined) : undefined;
+  const displayCategoryName = photo.categoryDescription?.[appLang] || photo.categoryName || undefined;
 
   return (
     <PhotoCardBase
@@ -145,20 +149,4 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       />
     </PhotoCardBase>
   );
-}, (prev, next) => {
-  return prev.photo.id === next.photo.id && 
-         prev.photo.name === next.photo.name &&
-         prev.photo.imageUrl === next.photo.imageUrl &&
-         prev.photo.imageHash === next.photo.imageHash &&
-         prev.photo.isPinned === next.photo.isPinned &&
-         prev.photo.isGroupCover === next.photo.isGroupCover &&
-         prev.photo.memberCount === next.photo.memberCount &&
-         prev.photo.isHidden === next.photo.isHidden &&
-         prev.photo.groupName === next.photo.groupName &&
-         prev.priority === next.priority &&
-         prev.canPinGlobal === next.canPinGlobal &&
-         prev.showGroupsCollapsed === next.showGroupsCollapsed &&
-         prev.hideGroupBadge === next.hideGroupBadge &&
-         prev.isGroupDetail === next.isGroupDetail &&
-         prev.hasSearchQuery === next.hasSearchQuery;
 });

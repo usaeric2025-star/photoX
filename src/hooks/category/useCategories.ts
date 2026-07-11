@@ -38,7 +38,8 @@ export function useCategoryMutations() {
         api.categories.$post({
           json: {
             categoryData: {
-              nameZh: name,
+              name: name,
+              description: { zh: name, en: name, ms: name },
               code: name.toLowerCase().replace(/\s+/g, '-'),
               sortOrder: 0
             }
