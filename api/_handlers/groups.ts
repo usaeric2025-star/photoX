@@ -148,8 +148,7 @@ export const groups = new Hono()
       
       const mergedGroupData: any = { ...groupData, id: targetGroupId };
       
-      let finalSourceGroupIds: string[] = [];
-      let ungroupedValidIds: string[] = [];
+      let previousGroupIds: string[] = [];
       let dbUserId: string | null = null;
 
       if (photoIds.length > 0) {
@@ -164,14 +163,9 @@ export const groups = new Hono()
         if (sourcePhotos.length > 0) {
            dbUserId = sourcePhotos[0].userId;
         }
-        finalSourceGroupIds = Array.from(new Set([
-          ...sourceGroupIds,
-          ...sourcePhotos.map(p => p.groupId).filter((gid): gid is string => !!gid && gid !== targetGroupId)
-        ])) as string[];
-        ungroupedValidIds = photoIds.filter(pid => {
-          const p = sourcePhotos.find(x => x.id === pid);
-          return !p?.groupId;
-        });
+        previousGroupIds = Array.from(new Set(
+          sourcePhotos.map(p => p.groupId).filter((gid): gid is string => !!gid && gid !== targetGroupId)
+        )) as string[];
       }
 
       const existingGroup = await db.query.groups.findFirst({
@@ -225,19 +219,21 @@ export const groups = new Hono()
             .where(eq(groupsTable.id, targetGroupId));
       }
 
-      if (ungroupedValidIds && ungroupedValidIds.length > 0) {
+      // 1. Move only the explicitly selected photoIds to targetGroupId
+      if (photoIds.length > 0) {
         await db.update(furnitureItems)
           .set({ groupId: targetGroupId, isGroupCover: false })
-          .where(inArray(furnitureItems.id, ungroupedValidIds));
+          .where(inArray(furnitureItems.id, photoIds));
       }
 
-      if (finalSourceGroupIds && finalSourceGroupIds.length > 0) {
+      // 2. Only if explicit sourceGroupIds were passed for a whole-group merge action
+      if (sourceGroupIds && sourceGroupIds.length > 0) {
         await db.update(furnitureItems)
           .set({ groupId: targetGroupId, isGroupCover: false })
-          .where(inArray(furnitureItems.groupId, finalSourceGroupIds));
+          .where(inArray(furnitureItems.groupId, sourceGroupIds));
 
         try {
-            const idsArrayLiteral = '{' + finalSourceGroupIds.join(',') + '}';
+            const idsArrayLiteral = '{' + sourceGroupIds.join(',') + '}';
             const rpcResult = await db.execute(sql`SELECT merge_groups(${idsArrayLiteral}::uuid[], ${targetGroupId}::uuid)`) as any[];
             const mergeStatus = rpcResult?.[0]?.merge_groups;
             if (mergeStatus && mergeStatus.success === false) {
@@ -247,11 +243,17 @@ export const groups = new Hono()
             logger.error('[merge_groups rpc error]', rpcErr);
             // Fallback: manually delete the empty source groups
             await db.delete(groupsTable)
-                .where(inArray(groupsTable.id, finalSourceGroupIds));
+                .where(inArray(groupsTable.id, sourceGroupIds));
         }
       }
 
-      const affectedGroupIds = [targetGroupId, ...(finalSourceGroupIds || [])];
+      // Reconcile cover and counts for all affected groups (the target, any previous groups, and explicitly merged source groups)
+      const affectedGroupIds = Array.from(new Set([
+        targetGroupId,
+        ...(previousGroupIds || []),
+        ...(sourceGroupIds || [])
+      ]));
+
       await syncGroupCoversAndCount(affectedGroupIds);
       await refreshPhotosView();
 
