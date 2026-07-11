@@ -107,7 +107,11 @@ export interface Manufacturer {
 export interface ProductGroup {
   id: string;
   name: string;
-  description?: string | null;
+  description?: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  } | null;
   coverPhotoId?: string | null;
   isHidden?: boolean;
   userId: string;

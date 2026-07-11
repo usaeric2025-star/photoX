@@ -32,7 +32,7 @@ export const manufacturers = pgTable('manufacturers', {
 export const groups = pgTable('groups', {
     id: uuid().primaryKey(),
     name: text(),
-    description: text(),
+    description: jsonb(),
     coverPhotoId: uuid(),
     status: text(),
     userId: uuid(),

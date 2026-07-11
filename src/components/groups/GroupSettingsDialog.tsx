@@ -69,10 +69,17 @@ function GroupSettingsContent({ groupData, handleUpdateGroupData, t, setShowGrou
   const form = useForm({
     defaultValues: {
       name: groupData?.name || '',
-      description: groupData?.description || ''
+      descriptionZh: groupData?.description?.zh || ''
     },
     onSubmit: async ({ value }) => {
-      await handleUpdateGroupData(value);
+      await handleUpdateGroupData({
+        name: value.name,
+        description: { 
+          zh: value.descriptionZh,
+          en: groupData?.description?.en || '',
+          ms: groupData?.description?.ms || ''
+        }
+      });
       setShowGroupSettings(false);
     }
   });
@@ -81,7 +88,7 @@ function GroupSettingsContent({ groupData, handleUpdateGroupData, t, setShowGrou
     if (groupData) {
       form.reset({
         name: groupData.name || '',
-        description: groupData.description || ''
+        descriptionZh: groupData.description?.zh || ''
       });
     }
   }, [groupData, form]);
@@ -116,7 +123,7 @@ function GroupSettingsContent({ groupData, handleUpdateGroupData, t, setShowGrou
           )}
         />
         <form.Field
-          name="description"
+          name="descriptionZh"
           children={(field) => (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('groupDesc')}</label>

@@ -202,7 +202,7 @@ export const useGroupEditState = (
   const initialGroupData = queriedGroupData || (activeGroupId && !isGroupDataPending ? {
     id: activeGroupId,
     name: "GROUP",
-    description: "",
+    description: { zh: "" },
     coverPhotoId: null,
     userId: user?.id || "",
     createdAt: new Date().toISOString(),

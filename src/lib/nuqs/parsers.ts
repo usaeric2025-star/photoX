@@ -14,24 +14,14 @@ export const searchParser = parseAsString.withDefault('');
 export const categoryParser = parseAsString.withDefault('');
 
 // Tags Parser (Array of strings)
-export const tagsParser = parseAsJson<string[]>((value) => {
-  try {
-    const parsed = JSON.parse(value as string);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}).withDefault([]);
+export const tagsParser = parseAsJson<string[]>((value) => 
+  (Array.isArray(value) && value.every(v => typeof v === 'string')) ? value : []
+).withDefault([]);
 
 // Selected IDs Parser
-export const selectedIdsParser = parseAsJson<string[]>((value) => {
-  try {
-    const parsed = JSON.parse(value as string);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}).withDefault([]);
+export const selectedIdsParser = parseAsJson<string[]>((value) => 
+  (Array.isArray(value) && value.every(v => typeof v === 'string')) ? value : []
+).withDefault([]);
 
 // Sort Parser (使用 Valibot)
 export const sortParser = parseWithValibot(SortSchema).withDefault('newest');

@@ -68,11 +68,6 @@ export const groups = new Hono()
         updatesObj.name = String(n.en || n.zh || n.ms || '');
     }
 
-    // Normalize description to string
-    if (updatesObj.description && typeof updatesObj.description === 'object') {
-        updatesObj.description = JSON.stringify(updatesObj.description);
-    }
-
     const [data] = await db.update(groupsTable)
         .set({ ...updatesObj, updatedAt: new Date() })
         .where(eq(groupsTable.id, id))
@@ -96,11 +91,6 @@ export const groups = new Hono()
     const input = check.output;
     const cleanUpdates: any = { ...input };
     
-    // Normalize description
-    if (cleanUpdates.description && typeof cleanUpdates.description === 'object') {
-        cleanUpdates.description = JSON.stringify(cleanUpdates.description);
-    }
-
     // Ensure status gets a fallback
     if (!cleanUpdates.status) {
         cleanUpdates.status = 'active';
@@ -187,12 +177,16 @@ export const groups = new Hono()
             finalName = String(n.en || n.zh || n.ms || '');
         }
 
-        let finalDesc: string | null = null;
+        let finalDesc = null;
         const rawDesc = mergedGroupData.description;
-        if (typeof rawDesc === 'string') {
+        if (rawDesc && typeof rawDesc === 'object') {
             finalDesc = rawDesc;
-        } else if (rawDesc && typeof rawDesc === 'object') {
-            finalDesc = JSON.stringify(rawDesc);
+        } else if (typeof rawDesc === 'string') {
+            try {
+                finalDesc = JSON.parse(rawDesc);
+            } catch {
+                finalDesc = { zh: rawDesc };
+            }
         }
 
         const groupDataToInsert: typeof groupsTable.$inferInsert = {
@@ -233,8 +227,7 @@ export const groups = new Hono()
           .where(inArray(furnitureItems.groupId, sourceGroupIds));
 
         try {
-            const idsArrayLiteral = '{' + sourceGroupIds.join(',') + '}';
-            const rpcResult = await db.execute(sql`SELECT merge_groups(${idsArrayLiteral}::uuid[], ${targetGroupId}::uuid)`) as any[];
+            const rpcResult = await db.execute(sql`SELECT merge_groups(ARRAY[${sql.join(sourceGroupIds.map(id => sql`${id}::uuid`), sql`, `)}]::uuid[], ${targetGroupId}::uuid)`) as any[];
             const mergeStatus = rpcResult?.[0]?.merge_groups;
             if (mergeStatus && mergeStatus.success === false) {
                 throw new Error(`Database Merge Procedure Failed: ${mergeStatus.error}`);
@@ -281,8 +274,7 @@ export const groups = new Hono()
     }
 
     try {
-        const idsArrayLiteral = '{' + photoIds.join(',') + '}';
-        await db.execute(sql`SELECT move_photos_to_group(${idsArrayLiteral}::uuid[], ${targetGroupId}::uuid)`);
+        await db.execute(sql`SELECT move_photos_to_group(ARRAY[${sql.join(photoIds.map(id => sql`${id}::uuid`), sql`, `)}]::uuid[], ${targetGroupId}::uuid)`);
     } catch (rpcErr) {
         // Fallback manual move
         await db.update(furnitureItems)

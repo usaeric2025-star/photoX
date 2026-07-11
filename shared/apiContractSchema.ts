@@ -197,8 +197,9 @@ export const ManufacturerReqSchema = v.object({
 export const GroupReqSchema = v.object({
     id: v.string(),
     name: v.optional(v.string()),
-    coverPhotoId: v.optional(v.string()),
-    status: v.optional(v.union([v.literal('active'), v.literal('confirmed')]))
+    description: v.optional(v.nullable(TranslationSchema)),
+    coverPhotoId: v.optional(v.nullable(v.string())),
+    status: v.optional(v.union([v.literal('active'), v.literal('confirmed'), v.literal('rejected')]))
 });
 
 const DimensionSchema = v.object({

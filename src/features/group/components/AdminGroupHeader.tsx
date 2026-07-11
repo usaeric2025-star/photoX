@@ -134,8 +134,8 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
           <Icon name="arrow-left" className="w-5 h-5" />
         </button>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2 min-w-0">
             {isEditingTitle ? (
               <input
                 type="text"
@@ -145,12 +145,12 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
                 onChange={(e) => setEditTitleValue(e.target.value)}
                 onBlur={handleSaveTitle}
                 onKeyDown={handleKeyDown}
-                className="text-base sm:text-lg font-bold text-slate-900 bg-slate-100 border-none outline-none ring-2 ring-indigo-500/80 rounded px-2 py-0.5 max-w-[150px] sm:max-w-xs transition-all"
+                className="text-sm sm:text-base font-bold text-slate-900 bg-slate-50 border border-slate-200 outline-none ring-2 ring-indigo-500/20 rounded-md px-2 py-1 max-w-[150px] sm:max-w-xs transition-all"
                 placeholder={t('titlePlaceholder')}
               />
             ) : (
               <h1 
-                className="text-base sm:text-lg font-bold text-slate-900 truncate cursor-pointer hover:underline decoration-slate-300 underline-offset-4"
+                className="text-sm sm:text-base font-bold text-slate-900 truncate cursor-pointer hover:text-indigo-600 transition-colors"
                 onClick={() => {
                   setEditTitleValue(group.name);
                   setIsEditingTitle(true);
@@ -163,20 +163,20 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
             
             <button 
               onClick={handleCopyId}
-              className="flex items-center gap-1 p-1 text-slate-400 hover:text-slate-700 transition-colors shrink-0 rounded hover:bg-slate-100 group"
+              className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-slate-600 transition-colors shrink-0 rounded bg-slate-50 border border-slate-100 hover:bg-slate-100 active:scale-95"
               title={t('copyGroupId')}
             >
-              <span className="text-xs font-mono tracking-wider opacity-60">{group.id.substring(0, 4)}</span>
+              <span className="font-mono tracking-wider font-medium opacity-80">ID: {group.id.substring(0, 6)}</span>
               {copied ? (
-                <Icon name="check" className="w-3 h-3 text-emerald-500" />
+                <Icon name="check" className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
               ) : (
-                <Icon name="copy" className="w-3 h-3 transition-transform group-active:scale-90" />
+                <Icon name="copy" className="w-2.5 h-2.5 shrink-0" />
               )}
             </button>
           </div>
           
           <div className="flex items-center shrink-0">
-            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] sm:text-xs font-semibold whitespace-nowrap border border-indigo-100">
+            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 text-[10px] sm:text-xs font-semibold whitespace-nowrap border border-slate-200/50">
               {photoCount > 0 ? t('photoCountNum', photoCount) : t('noPhotosText')}
             </span>
           </div>
@@ -192,7 +192,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
         >
           <Icon name="share" className="w-4 h-4" />
         </button>
-
+ 
         {canBatchEdit && (
           <button 
             onClick={toggleMode}
@@ -203,7 +203,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
             }`}
           >
             <Icon name={isMultiSelect ? "x" : "check-square"} className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">{isMultiSelect ? t('cancel') : t('selectAction')}</span>
+            <span className="hidden sm:inline">{isMultiSelect ? t('cancel') : t('selectAction')}</span>
           </button>
         )}
 

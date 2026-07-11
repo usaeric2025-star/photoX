@@ -19,6 +19,8 @@ import {
 import { AI_PROMPTS } from './ai/prompts.js';
 import { logger } from '../_lib/logger.js';
 import { errorResponse, successResponse } from '../_lib/response.js';
+import { syncGroupCoversAndCount } from '../_lib/groups.js';
+import { refreshPhotosView } from '../_lib/db/actions.js';
 
 interface HonoContextUser {
     id: string;
@@ -343,6 +345,12 @@ export const ai = new Hono()
         userId: userId || null,
         createdAt: new Date()
     } as typeof groupCorrectionLogs.$inferInsert);
+
+    // Reconcile and synchronize covers/counts for the newly created groups
+    if (createdGroups.length > 0) {
+        await syncGroupCoversAndCount(createdGroups.map(g => g.id));
+    }
+    await refreshPhotosView();
 
     return successResponse(c, createdGroups);
 });

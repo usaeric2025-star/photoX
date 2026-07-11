@@ -31,9 +31,7 @@ const mapToDb = (updates: Record<string, unknown>, userId?: string): Record<stri
     if ('description' in dbUpdates) {
         const val = dbUpdates.description;
         if (typeof val === 'string') {
-            dbUpdates.description = val;
-        } else if (val && typeof val === 'object') {
-            dbUpdates.description = JSON.stringify(val);
+            dbUpdates.description = { zh: val };
         }
     }
 
@@ -141,7 +139,7 @@ export const groupPhotos = async (
   const groupData = {
     id: targetGroupId,
     name: finalName,
-    description: metadata?.description ? (typeof metadata.description === 'object' ? JSON.stringify(metadata.description) : metadata.description) : null,
+    description: metadata?.description || null,
     status: 'active' as 'active' | 'confirmed',
   };
 
