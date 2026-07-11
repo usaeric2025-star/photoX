@@ -7,9 +7,8 @@ import { relations } from 'drizzle-orm';
 export const categories = pgTable('categories', {
     id: integer().primaryKey().generatedByDefaultAsIdentity(),
     code: text().unique(),
-    nameZh: text(),
-    nameEn: text(),
-    nameMs: text(),
+    name: text(),
+    description: jsonb(),
     sortOrder: integer().default(0),
     isActive: boolean().default(true),
     createdAt: timestamp().defaultNow(),
@@ -22,6 +21,7 @@ export const categories = pgTable('categories', {
 export const manufacturers = pgTable('manufacturers', {
     id: uuid().primaryKey(),
     name: text(),
+    description: jsonb(),
     aliases: text().array(),
     createdAt: timestamp().defaultNow(),
 });
@@ -93,6 +93,7 @@ export const furnitureItems = pgTable('furniture_items', {
 export const tags = pgTable('tags', {
     id: integer().primaryKey().generatedByDefaultAsIdentity(),
     name: text().unique(),
+    description: jsonb(),
     isPinned: boolean().default(false),
     usageCount: integer().default(0),
     isHot: boolean().default(false),

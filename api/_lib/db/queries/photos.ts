@@ -78,11 +78,7 @@ export async function getPhotosList(params: PhotoListParams) {
             )`,
             sql`EXISTS (
                 SELECT 1 FROM ${categories} c
-                WHERE c.id = ${furnitureItems.categoryId} AND (
-                    c.name_zh ILIKE ${pattern} OR 
-                    c.name_en ILIKE ${pattern} OR 
-                    c.name_ms ILIKE ${pattern}
-                )
+                WHERE c.id = ${furnitureItems.categoryId} AND c.name ILIKE ${pattern}
             )`
         ));
     }
@@ -212,22 +208,9 @@ export async function getPhotosList(params: PhotoListParams) {
             const item = { ...d.items } as Record<string, unknown>;
             item.name = d.items.name;
             item.description = d.items.description;
-            let parsedGroupName = d.group?.name || null;
-            if (typeof parsedGroupName === 'string' && parsedGroupName.startsWith('{')) {
-                try {
-                    const parsed = JSON.parse(parsedGroupName);
-                    if (parsed && typeof parsed.zh === 'string') {
-                        parsedGroupName = parsed.zh;
-                    }
-                } catch (e) {
-                    // Ignore JSON parse errors
-                }
-            }
-            item.groupName = parsedGroupName;
+            item.groupName = d.group?.name || null;
             item.groupCoverPhotoId = d.group?.coverPhotoId || null;
-            item.categoryNameZh = d.category?.nameZh || null;
-            item.categoryNameEn = d.category?.nameEn || null;
-            item.categoryNameMs = d.category?.nameMs || null;
+            item.categoryName = d.category?.name || null;
             
             const pTags = tagsByPhoto.get(d.items.id) || [];
             item.tags = pTags.map(pt => pt.tags.name);

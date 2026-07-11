@@ -98,7 +98,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   const isUnnamedGroup = !photo.groupName || photo.groupName === photo.groupId || photo.groupName === '[object Object]';
   const displayPhotoName = isGroupCard ? (isUnnamedGroup ? 'GROUP' : photo.groupName) : photo.name;
   const displayPhotoTags = isGroupCard ? undefined : photo.tags;
-  const displayCategoryName = isGroupCard ? (photo.categoryNameZh || undefined) : undefined;
+  const displayCategoryName = isGroupCard ? (photo.categoryName || undefined) : undefined;
 
   return (
     <PhotoCardBase

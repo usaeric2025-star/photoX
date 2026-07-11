@@ -129,17 +129,15 @@ export const ai = new Hono()
     }
 
     // Use safer query approach - select only what we need and handle errors per-table
-    let catRef: { id: number; nameZh: string | null; nameEn?: string | null; nameMs?: string | null }[] = [];
+    let catRef: { id: number; name: string | null }[] = [];
     let tagRef: { id: string | number; name: string | null }[] = [];
-    let groupRef: { id: string; name: unknown; status: string | null; createdAt: Date | null }[] = [];
+    let groupRef: { id: string; name: string | null; status: string | null; createdAt: Date | null }[] = [];
 
     try {
         const [catData, tagData] = await Promise.all([
             db.select({ 
                 id: categories.id, 
-                nameZh: categories.nameZh,
-                nameEn: categories.nameEn,
-                nameMs: categories.nameMs
+                name: categories.name,
             }).from(categories).limit(200),
             db.select({ 
                 id: tags.id, 
@@ -159,9 +157,7 @@ export const ai = new Hono()
     const context = {
         categories: catRef.map(c => ({ 
             id: c.id, 
-            zh: c.nameZh, 
-            en: c.nameEn, 
-            ms: c.nameMs 
+            name: c.name
         })).slice(0, 100),
         tags: tagRef.map(t => ({ 
             id: t.id, 
@@ -318,8 +314,8 @@ export const ai = new Hono()
         }
 
         // Prepare localized name and description
-        const groupName = typeof g.name === 'string' ? g.name : JSON.stringify(g.name);
-        const groupDesc = JSON.stringify(g.description);
+        const groupName = typeof g.name === 'string' ? g.name : (g.name as any)?.zh || '';
+        const groupDesc = g.description || { zh: '' };
 
         const [groupData] = await db.insert(groupsTable).values([{
             id: groupId,

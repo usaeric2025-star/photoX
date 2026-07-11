@@ -32,10 +32,10 @@ export const categories = new Hono()
 
     const formatted: FormattedCategory[] = activeData.map((item) => ({
         id: item.id,
-        name: item.nameZh || '',
-        zh: item.nameZh || '',
-        en: item.nameEn || '',
-        ms: item.nameMs || '',
+        name: item.name || '',
+        zh: item.name || '',
+        en: '',
+        ms: '',
         code: item.code || '',
         sortOrder: item.sortOrder || 0,
     }));
@@ -48,13 +48,13 @@ export const categories = new Hono()
     await db.delete(categoriesTable).where(sql`true`);
     
     const seedData = [
-      { id: 1, code: 'chair', nameZh: '椅子', nameEn: 'Chair', nameMs: 'Kerusi', sortOrder: 1 },
-      { id: 2, code: 'table', nameZh: '桌子', nameEn: 'Table', nameMs: 'Meja', sortOrder: 2 },
-      { id: 3, code: 'bed', nameZh: '床具', nameEn: 'Bed', nameMs: 'Katil', sortOrder: 3 },
-      { id: 4, code: 'cabinet', nameZh: '柜子', nameEn: 'Cabinet', nameMs: 'Almari', sortOrder: 4 },
-      { id: 5, code: 'office', nameZh: '办公', nameEn: 'Office', nameMs: 'Pejabat', sortOrder: 5 },
-      { id: 6, code: 'sofa', nameZh: '沙发', nameEn: 'Sofa', nameMs: 'Sofa', sortOrder: 6 },
-      { id: 7, code: 'others', nameZh: '其他', nameEn: 'Others', nameMs: 'Lain-lain', sortOrder: 7 }
+      { id: 1, code: 'chair', name: '椅子', sortOrder: 1, description: { zh: '各种椅子' } },
+      { id: 2, code: 'table', name: '桌子', sortOrder: 2, description: { zh: '各种桌子' } },
+      { id: 3, code: 'bed', name: '床具', sortOrder: 3, description: { zh: '各种床具' } },
+      { id: 4, code: 'cabinet', name: '柜子', sortOrder: 4, description: { zh: '各种柜子' } },
+      { id: 5, code: 'office', name: '办公', sortOrder: 5, description: { zh: '办公家具' } },
+      { id: 6, code: 'sofa', name: '沙发', sortOrder: 6, description: { zh: '舒适沙发' } },
+      { id: 7, code: 'others', name: '其他', sortOrder: 7, description: { zh: '其他家具' } }
     ];
 
     await db.insert(categoriesTable).values(seedData);

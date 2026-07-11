@@ -140,9 +140,7 @@ export function usePhotoEditAI() {
             } 
             else if (rawCatName) {
                 const found = currentCats.find(c => 
-                    c.name.toLowerCase() === rawCatName.toLowerCase() ||
-                    c.nameZh?.toLowerCase() === rawCatName.toLowerCase() ||
-                    c.nameEn?.toLowerCase() === rawCatName.toLowerCase()
+                    c.name.toLowerCase() === rawCatName.toLowerCase()
                 );
                 if (found) matchedId = String(found.id);
             }
@@ -197,10 +195,7 @@ export function usePhotoEditAI() {
               const chosenCategory = categories.find(c => String(c.id) === String(catId));
               if (chosenCategory) {
                   const catNames = [
-                      chosenCategory.name.toLowerCase(),
-                      chosenCategory.nameZh?.toLowerCase(),
-                      chosenCategory.nameEn?.toLowerCase(),
-                      chosenCategory.nameMs?.toLowerCase()
+                      chosenCategory.name.toLowerCase()
                   ].filter(Boolean);
                   
                   filteredRawNames = filteredRawNames.filter(n => !catNames.includes(n.toLowerCase()));
@@ -387,9 +382,7 @@ export function usePhotoEditAI() {
               matchedId = rawCatId;
           } else if (rawCatName) {
               const found = currentCats.find(c => 
-                  c.name.toLowerCase() === rawCatName.toLowerCase() ||
-                  c.nameZh?.toLowerCase() === rawCatName.toLowerCase() ||
-                  c.nameEn?.toLowerCase() === rawCatName.toLowerCase()
+                  c.name.toLowerCase() === rawCatName.toLowerCase()
               );
               if (found) matchedId = String(found.id);
           }

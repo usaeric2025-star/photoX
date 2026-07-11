@@ -74,23 +74,28 @@ interface SubCategory {
 
 export interface Category {
   id: number;
-  name: string; // Legacy or primary name
-  nameZh?: string;
-  nameEn?: string;
-  nameMs?: string;
-  zh?: string;
-  en?: string;
-  ms?: string;
-  aliases?: string[];
-  subcategories: SubCategory[];
-  userId?: string;
+  name: string;
+  description?: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  } | null;
   code?: string;
   sortOrder?: number;
+  isActive?: boolean;
+  aliases?: string[];
+  subcategories?: SubCategory[];
+  userId?: string;
 }
 
 export interface Tag {
   id: number;
   name: string;
+  description?: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  } | null;
   aliases?: string[];
   userId?: string;
   isPinned?: boolean;
@@ -101,6 +106,11 @@ export interface Tag {
 export interface Manufacturer {
   id: string;
   name: string;
+  description?: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  } | null;
   aliases?: string[];
 }
 

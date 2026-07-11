@@ -46,10 +46,7 @@ function CategoryItem({
     }
   });
 
-  let displayName = '未命名分类';
-  if (appLang === 'zh') displayName = cat.nameZh || cat.zh || cat.name;
-  else if (appLang === 'en') displayName = cat.nameEn || cat.en || cat.name;
-  else if (appLang === 'ms') displayName = cat.nameMs || cat.ms || cat.name;
+  const displayName = cat.name || '未命名分类';
 
   return (
       <div
@@ -118,7 +115,7 @@ function CategoryItem({
         placeholder={displayName}
         onConfirm={(name) => {
           if (name) {
-            onUpdate({ ...cat, name: name, nameZh: name, nameEn: name, nameMs: name });
+            onUpdate({ ...cat, name: name });
           }
         }}
       />
@@ -188,9 +185,7 @@ export function CategoriesSection({
                 return await runUpdateCategory({ 
                   id: c.id, 
                   updates: { 
-                    name_zh: c.nameZh || c.name, 
-                    name_en: c.nameEn || c.name, 
-                    name_ms: c.nameMs || c.name 
+                    name: c.name
                   } 
                 });
               }}

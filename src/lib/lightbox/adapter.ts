@@ -8,8 +8,8 @@ export function photosToLightboxSlides(photos: PhotoListItem[]): LightboxSlide[]
     src: getPhotoThumb(photo.imageUrl, 'LG', photo.imageHash),
     title: photo.name,
     description: (typeof photo.description === 'object' && photo.description !== null) 
-      ? (photo.description as any).zh || (photo.description as any).en || '' 
-      : (photo.description as string) || '',
+      ? ((photo.description as any).zh || (photo.description as any).en || '') 
+      : String(photo.description || ''),
     groupName: photo.groupName || undefined,
     original: photo,
     type: 'image',

@@ -5,5 +5,5 @@ import { eq, asc } from 'drizzle-orm';
 export async function getAllCategories() {
     return await db.select()
         .from(categoriesTable)
-        .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.nameZh));
+        .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name));
 }

@@ -33,8 +33,7 @@ export const manufacturers = new Hono()
       .insert(manufacturersTable)
       .values({
           id: crypto.randomUUID(),
-          name: manufacturerData.name,
-          aliases: manufacturerData.aliases || []
+          ...manufacturerData
       })
       .returning();
     
@@ -46,7 +45,7 @@ export const manufacturers = new Hono()
 
     await db
       .update(manufacturersTable)
-      .set({ name: updates.name })
+      .set(updates)
       .where(eq(manufacturersTable.id, id));
     
     return successResponse(c, null);

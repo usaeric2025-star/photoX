@@ -101,16 +101,14 @@ const TranslationSchema = v.object({
 export const PhotoListItemSchema = v.object({
     id: v.string(),
     name: v.string(),
-    description: v.optional(v.nullable(v.union([v.string(), TranslationSchema]))),
+    description: v.optional(v.nullable(TranslationSchema)),
     imageUrl: v.string(),
     thumbnailUrl: v.string(),
     imageHash: v.optional(v.nullable(v.string())),
     groupId: v.optional(v.nullable(v.string())),
     groupName: v.optional(v.nullable(v.string())),
     categoryId: v.optional(v.nullable(v.union([v.number(), v.string()]))),
-    categoryNameZh: v.optional(v.nullable(v.string())),
-    categoryNameEn: v.optional(v.nullable(v.string())),
-    categoryNameMs: v.optional(v.nullable(v.string())),
+    categoryName: v.optional(v.nullable(v.string())),
     memberCount: v.number(),
     tags: v.array(v.string()),
     isPinned: v.optional(v.boolean()),
@@ -159,6 +157,7 @@ const TagListItemSchema = v.object({
 export const TagReqSchema = v.object({
     id: v.optional(v.number()),
     name: v.optional(v.string()),
+    description: v.optional(v.nullable(TranslationSchema)),
     aliases: v.optional(v.array(v.string()))
 });
 
@@ -176,9 +175,8 @@ const CategoryListItemSchema = v.object({
 export const CategoryReqSchema = v.object({
     id: v.optional(v.number()),
     code: v.string(),
-    nameZh: v.string(),
-    nameEn: v.optional(v.string()),
-    nameMs: v.optional(v.string()),
+    name: v.string(),
+    description: v.optional(v.nullable(TranslationSchema)),
     sortOrder: v.optional(v.number()),
     isActive: v.optional(v.boolean())
 });
@@ -191,6 +189,7 @@ const ManufacturerListItemSchema = v.object({
 export const ManufacturerReqSchema = v.object({
     id: v.optional(v.string()),
     name: v.string(),
+    description: v.optional(v.nullable(TranslationSchema)),
     aliases: v.optional(v.array(v.string()))
 });
 
