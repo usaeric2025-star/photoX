@@ -230,7 +230,7 @@ export const PhotoSchema = v.object({
     manufacturerId: v.optional(v.nullable(v.string())),
     tags: v.pipe(
         v.array(TagSchema),
-        v.check((data) => data.length <= 3, '最多隻能有3個標籤')
+        v.check((data) => data.length <= 3, '最多只能有3个标签')
     ),
     description: TranslationSchema,
     itemCode: v.string(),

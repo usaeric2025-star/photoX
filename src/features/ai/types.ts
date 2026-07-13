@@ -101,14 +101,14 @@ class GeminiPhotoAIAdapter implements IPhotoAIAgentAdapter {
     const groupId = raw.group_id ? String(raw.group_id) : null;
 
     // 4. 提煉與淨化標籤 (Tag Names)
-    const rawTags = raw.tag_names || raw.new_tags || raw.tags || [];
+    const rawTags = raw.tagNames || raw.tag_names || raw.new_tags || raw.tags || raw.keywords || raw.labels || [];
     let tagNames: string[] = [];
     if (Array.isArray(rawTags)) {
       tagNames = rawTags
         .map((t: any) => {
           if (!t) return '';
           if (typeof t === 'object') {
-            return safeTrim(t.name || t.zh || t.en || '');
+            return safeTrim(t.name || t.zh || t.en || t.label || '');
           }
           return safeTrim(t);
         })

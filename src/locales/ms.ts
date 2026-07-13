@@ -280,7 +280,7 @@ export const ms = {
     reset: 'Tetap Semula',
     download: 'Muat Turun',
     details: 'Butiran',
-    estimatedPrice: 'Anggaran Harga',
+    estimatedPrice: 'Harga',
     productDescription: 'Deskripsi Produk',
     shareAndInquiry: 'Kongsi/Pertanyaan',
     backToTop: 'Kembali ke atas',

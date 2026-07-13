@@ -16,18 +16,25 @@ export const detailRoutes = new Hono()
         where: inArray(furnitureItems.id, ids),
         with: {
             tags: {
-                columns: {
-                    tagId: true
+                with: {
+                    tag: true
                 }
-            }
+            },
+            category: true,
+            group: true
         }
     });
 
     const formatted = results.map(photo => {
-        const { tags, ...rest } = photo;
+        const { tags, category, group, ...rest } = photo;
         return {
             ...rest,
-            photoTags: tags.map(t => ({ tagId: t.tagId }))
+            category,
+            group,
+            photoTags: tags.map(t => ({ 
+                tagId: t.tagId,
+                tags: t.tag // Match the naming expected by mapSupabasePhoto
+            }))
         };
     });
 

@@ -280,7 +280,7 @@ export const en = {
     reset: 'Reset',
     download: 'Download',
     details: 'Details',
-    estimatedPrice: 'Estimated Price',
+    estimatedPrice: 'Price',
     productDescription: 'Product Description',
     shareAndInquiry: 'Share/Inquiry',
     backToTop: 'Back to Top',

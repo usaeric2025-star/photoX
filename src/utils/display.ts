@@ -58,7 +58,14 @@ export function translateDimensionLabelToEnglish(label: string): string {
     const regex = new RegExp(zh, 'gi');
     result = result.replace(regex, en);
   });
-  return result;
+
+  // Strip "Estimated" and "AI" prefixes/suffixes that might be noisy
+  result = result.replace(/AI Estimated/gi, '')
+                 .replace(/Estimated/gi, '')
+                 .replace(/AI/gi, '')
+                 .trim();
+
+  return result || 'Specs';
 }
 
 async function translateDimensionLabelWithAi(label: string): Promise<string> {

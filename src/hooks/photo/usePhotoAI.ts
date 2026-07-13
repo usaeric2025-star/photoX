@@ -1,5 +1,5 @@
 import { logger } from '#lib/logger.js';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { translateDimensionLabelToEnglish } from '#src/utils/display.js';
 import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext.js";
 import { ErrorFactory } from '#lib/error/index.js';
@@ -14,6 +14,7 @@ import { useFilters } from '../ui/index.js';
 import { Tag, Photo, Category, PhotoAIResult } from '#src/types/index.js';
 import { ApiResponse } from '#shared/apiContractSchema.js';
 import { analyzePhoto } from '#src/features/ai/commands.js';
+import { PhotoAIAdapterRegistry } from '#src/features/ai/types.js';
 import { useUI, useAuth } from '#lib/store/index.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
@@ -66,6 +67,7 @@ export function usePhotoEditAI() {
   const { t } = useTranslation();
   const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminMaintenance();
   const { invalidateDetail, invalidateList, invalidateTags } = useInvalidatePhotos();
+  const [isReExtracting, setIsReExtracting] = useState(false);
   const invalidateAIResult = (id: string) => {
     queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', id] });
   };
@@ -353,109 +355,105 @@ export function usePhotoEditAI() {
           return;
       }
       
-      const result = (Array.isArray(rawResult) && rawResult.length > 0) ? rawResult[0] : (rawResult as Record<string, unknown>);
-      if (!result || typeof result !== 'object') {
-          showToast.error(t('invalidRawFormat'));
-          return;
-      }
-
-      const updates: Record<string, unknown> = {};
-      
-      if (result.name) {
-          let cleanName = '';
-          if (typeof result.name === 'object' && result.name !== null) {
-              const n = result.name as Record<string, string>;
-              cleanName = n.en || n.zh || n.ms || String(result.name);
-          } else {
-              cleanName = String(result.name);
-          }
-          updates.name = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
-      }
-
-      if (result.category_id || result.categoryId || result.category_name || result.categoryName) {
-          const rawCatId = String(result.category_id || result.categoryId || '');
-          const rawCatName = String(result.category_name || result.categoryName || '');
-          
-          let matchedId: string | null = null;
-          const currentCats = (queryClient.getQueryData<Category[]>(queryKeys.categories.list()) || categories) as Category[];
-          if (rawCatId && currentCats.find(c => String(c.id) === rawCatId)) {
-              matchedId = rawCatId;
-          } else if (rawCatName) {
-              const found = currentCats.find(c => 
-                  c.name.toLowerCase() === rawCatName.toLowerCase()
-              );
-              if (found) matchedId = String(found.id);
-          }
-          if (matchedId) updates.categoryId = String(matchedId);
-      }
-
-      const sourceTags = (Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : [])) as unknown[];
-      if (sourceTags.length > 0) {
-          const rawNames = sourceTags.map((t: unknown) => {
-              if (t && typeof t === 'object') {
-                  const tagObj = t as Record<string, unknown>;
-                  return String(tagObj.name || tagObj.id || '');
-              }
-              return String(t);
-          }).filter(Boolean);
-          const resolved = await resolveTagNamesToIds(rawNames, allTags);
-          if (resolved.length > 0) {
-             updates.tags = resolved.slice(0, 5).map(id => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
-          }
-      }
-
-      if (result.description) {
-          if (typeof result.description === 'object' && result.description !== null) {
-              updates.description = {
-                  zh: result.description.zh || '',
-                  en: result.description.en || '',
-                  ms: result.description.ms || ''
-              };
-          } else {
-              updates.description = { zh: String(result.description), en: '', ms: '' };
-          }
-      }
-
-      if (Array.isArray(result.dimensions)) {
-        updates.dimensions = result.dimensions.map((d: any) => ({
-            label: translateDimensionLabelToEnglish(String(d.label || t('dimensions'))),
-            unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
-            length: Number(d.length) || 0,
-            width: Number(d.width) || 0,
-            height: Number(d.height) || 0,
-            isAiEstimated: !!(d.isAiEstimated || d.is_ai_estimated),
-            isAi: true
-        }));
-      }
-
-      Object.entries(updates).forEach(([key, value]) => {
-          form.setFieldValue(key as keyof PhotoEditFormData, value as never);
-      });
-
+      setIsReExtracting(true);
       try {
-          await updatePhoto({ id: editPhotoId, updates });
-          invalidateDetail(editPhotoId);
-          invalidateList();
-          invalidateAIResult(editPhotoId);
-          
-          // Also update the source cache manually if possible
-          if (result.raw_result) {
-            queryClient.setQueryData(['photos', 'ai-result', editPhotoId], {
-              photoId: editPhotoId,
-              rawResult: result.raw_result,
-              processedResult: result,
-              createdAt: new Date().toISOString()
-            });
-          }
-          
-          showToast.success(t('reExtractSuccess'));
-      } catch (e) {
-          ErrorFactory.handle(e, { context: 'AI Re-extraction' });
-          showToast.error(t('saveDataFailed'));
+        let parsed: any = rawResult;
+        if (typeof parsed === 'string') {
+            try {
+                // Handle markdown blocks
+                const cleanRaw = parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                parsed = JSON.parse(cleanRaw);
+            } catch (e) {
+                showToast.error(t('invalidRawFormat'));
+                setIsReExtracting(false);
+                return;
+            }
+        }
+
+        if (Array.isArray(parsed)) {
+            parsed = parsed[0] || {};
+        }
+
+        if (!parsed || typeof parsed !== 'object') {
+            showToast.error(t('invalidRawFormat'));
+            setIsReExtracting(false);
+            return;
+        }
+
+        // Use the standard adapter to normalize data
+        const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
+        const normalized = adapter.normalize(parsed, typeof rawResult === 'string' ? rawResult : JSON.stringify(rawResult));
+
+        const updates: Record<string, unknown> = {};
+        
+        if (normalized.name) {
+            updates.name = normalized.name.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
+        }
+
+        if (normalized.categoryId) {
+            updates.categoryId = String(normalized.categoryId);
+        }
+
+        if (normalized.groupId) {
+            updates.groupId = String(normalized.groupId);
+        }
+
+        if (normalized.tagNames && normalized.tagNames.length > 0) {
+            const resolved = await resolveTagNamesToIds(normalized.tagNames, allTags);
+            if (resolved.length > 0) {
+               const latestTags = await ErrorFactory.unwrap<Tag[]>(
+                 api.tags.$get(),
+                 'Failed to fetch latest tags'
+               ).catch(() => allTags);
+               
+               updates.tags = resolved.slice(0, 3).map(id => latestTags.find(t => String(t.id) === String(id))).filter(Boolean);
+            }
+        }
+
+        if (normalized.description) {
+            updates.description = normalized.description;
+        }
+
+        if (normalized.dimensions && normalized.dimensions.length > 0) {
+          updates.dimensions = normalized.dimensions.map(d => ({
+              ...d,
+              label: translateDimensionLabelToEnglish(d.label || t('dimensions')),
+              isAiEstimated: true,
+              isAi: true
+          }));
+        }
+
+        Object.entries(updates).forEach(([key, value]) => {
+            form.setFieldValue(key as keyof PhotoEditFormData, value as never);
+        });
+
+        try {
+            await updatePhoto({ id: editPhotoId, updates });
+            invalidateDetail(editPhotoId);
+            invalidateList();
+            invalidateAIResult(editPhotoId);
+            
+            // Also update the source cache manually if possible
+            if (normalized.rawResult) {
+              queryClient.setQueryData(['photos', 'ai-result', editPhotoId], {
+                photoId: editPhotoId,
+                rawResult: normalized.rawResult,
+                processedResult: parsed,
+                createdAt: new Date().toISOString()
+              });
+            }
+            
+            showToast.success(t('reExtractSuccess'));
+        } catch (e) {
+            ErrorFactory.handle(e, { context: 'AI Re-extraction' });
+            showToast.error(t('saveDataFailed'));
+        }
+      } finally {
+        setIsReExtracting(false);
       }
   }, [editPhotoId, categories, allTags, form, updatePhoto, invalidateDetail, invalidateList, t]);
 
-  return { handleAiAnalyze: onAnalyze, handleReExtract, isAnalyzing };
+  return { handleAiAnalyze: onAnalyze, handleReExtract, isAnalyzing, isReExtracting };
 }
 
 /**

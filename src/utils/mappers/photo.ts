@@ -56,8 +56,9 @@ export function mapSupabasePhoto(raw: any, allTags?: Tag[]): Photo {
       price: String(raw.price || ''),
       tags,
       dimensions: Array.isArray(raw.dimensions) ? raw.dimensions.map((d: any) => validateDimension(d)) : [],
-      categoryName: '',
-      manufacturerName: ''
+      categoryName: raw.categoryName || '',
+      categoryDescription: raw.categoryDescription || null,
+      manufacturerName: raw.manufacturerName || ''
     };
 }
 

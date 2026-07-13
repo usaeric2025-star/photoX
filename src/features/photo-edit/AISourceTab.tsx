@@ -9,7 +9,7 @@ import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSession
 export function AISourceTab() {
   const { photoId } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
-  const { handleReExtract, isAnalyzing } = usePhotoEditAI();
+  const { handleReExtract, isAnalyzing, isReExtracting } = usePhotoEditAI();
   const { copy, copied } = useCopyToClipboard({
     successMessage: appLang === 'zh' ? '已复制' : 'Copied'
   });
@@ -24,7 +24,7 @@ export function AISourceTab() {
     }
   };
 
-  if (isPending || isAnalyzing) {
+  if (isPending || isAnalyzing || isReExtracting) {
     return (
       <div className="space-y-4 pt-4">
         <div className="flex items-center gap-2 animate-pulse">
@@ -35,7 +35,7 @@ export function AISourceTab() {
             <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
                 <span className="text-slate-400 text-xs font-mono">
-                    {isAnalyzing ? (appLang === 'zh' ? 'AI 正在分析中...' : 'AI Analyzing...') : (appLang === 'zh' ? '载入原始數據...' : 'Loading raw data...')}
+                    {isAnalyzing || isReExtracting ? (appLang === 'zh' ? 'AI 正在分析中...' : 'AI Analyzing...') : (appLang === 'zh' ? '载入原始數據...' : 'Loading raw data...')}
                 </span>
             </div>
         </div>
@@ -105,10 +105,11 @@ export function AISourceTab() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => onReExtract(aiResult.rawResult)}
+            disabled={isReExtracting}
             title={appLang === 'zh' ? '重新提取属性' : 'Re-extract Meta'}
-            className="flex items-center justify-center w-10 h-10 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm"
+            className="flex items-center justify-center w-10 h-10 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Icon name="refresh-cw" className="w-4 h-4" />
+            <Icon name="refresh-cw" className={`w-4 h-4 ${isReExtracting ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => copy(formattedResult)}

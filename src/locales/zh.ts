@@ -280,7 +280,7 @@ export const zh = {
     reset: '重置',
     download: '下载',
     details: '详情',
-    estimatedPrice: '预估价格',
+    estimatedPrice: '价格',
     productDescription: '产品描述',
     shareAndInquiry: '分享/咨询',
     backToTop: '回到顶部',

@@ -14,12 +14,15 @@ export function LightboxStage() {
     isZoomed,
     isSwiping,
     dragOffset,
+    dragOffsetY,
+    swipeDirection,
     handlers,
     handleToggleZoom,
   } = useLightboxInteractions({
     currentIndex: lightboxCurrentIndex,
     onNext: next,
     onPrev: prev,
+    onClose: clearLightboxData,
     minSwipeDistance: 50,
   });
 
@@ -38,6 +41,12 @@ export function LightboxStage() {
   return (
     <div 
       className="flex-1 relative flex items-center justify-center overflow-hidden touch-none"
+      style={{
+        backgroundColor: isSwiping && swipeDirection === 'vertical'
+          ? `rgba(0, 0, 0, ${Math.max(0.2, 0.9 - Math.abs(dragOffsetY) / 300 * 0.7)})`
+          : undefined,
+        transition: isSwiping ? 'none' : 'background-color 250ms ease-out',
+      }}
       {...handlers}
       onClick={clearLightboxData} // Clicking the background closes it
     >
@@ -55,8 +64,15 @@ export function LightboxStage() {
           <div 
             className="relative w-full h-full flex items-center justify-center select-none"
             style={{
-              transform: isSwiping ? `translateX(${dragOffset}px)` : 'translateX(0px)',
-              transition: isSwiping ? 'none' : 'transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+              transform: isSwiping 
+                ? (swipeDirection === 'vertical'
+                  ? `translateY(${dragOffsetY}px) scale(${Math.max(0.75, 1 - Math.abs(dragOffsetY) / 800)})`
+                  : `translateX(${dragOffset}px)`)
+                : 'translate(0px, 0px) scale(1)',
+              opacity: isSwiping && swipeDirection === 'vertical'
+                ? Math.max(0.3, 1 - Math.abs(dragOffsetY) / 250)
+                : 1,
+              transition: isSwiping ? 'none' : 'transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 250ms ease-out',
             }}
           >
             <div 

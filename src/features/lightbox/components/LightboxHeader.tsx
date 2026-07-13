@@ -1,7 +1,7 @@
 import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
 import { Photo } from '#src/types/photo.js';
-import { usePermission } from '#src/hooks/index.js';
+import { usePermission, useAdminMode } from '#src/hooks/index.js';
 
 interface LightboxHeaderProps {
   currentPhoto: Photo | { original: Photo };
@@ -26,7 +26,8 @@ export function LightboxHeader({
   const descriptionObj = photoData?.description;
   const hasDescription = !!descriptionObj;
   const { can, role } = usePermission();
-  const canEdit = can('photo:edit');
+  const isAdminMode = useAdminMode();
+  const canEdit = isAdminMode && can('photo:edit');
   
   return (
     <div className="absolute top-0 inset-x-0 p-4 sm:p-6 flex items-start justify-between z-[150] pointer-events-none">
