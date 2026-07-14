@@ -55,7 +55,7 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
     try {
       parsed = JSON.parse(parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
     } catch (e) {
-      throw ErrorFactory.fatal('Json Parse error', { context: 'analyzeSinglePhoto' });
+      throw new Error('Json Parse error');
     }
   }
   return parsed as Record<string, unknown>;
@@ -95,7 +95,7 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
       };
     } catch (e: any) {
       lastError = e;
-      if (e.name === 'AbortError') throw ErrorFactory.fatal('请求已取消', { context: 'analyzePhoto' });
+      if (e.name === 'AbortError') throw new Error('请求已取消');
       
       // If it's a 404/504 or common transient error, retry
       const statusCode = e.statusCode || (e.response && e.response.status);
@@ -111,8 +111,5 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
     }
   }
 
-  throw ErrorFactory.fatal((lastError as Error).message || 'AI 分析异常', { 
-    context: 'analyzePhoto',
-    originalError: lastError
-  });
+  throw new Error((lastError as Error).message || 'AI 分析异常');
 };

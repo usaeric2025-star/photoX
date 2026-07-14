@@ -90,6 +90,6 @@ export async function resolveTagNamesToIds(
 
     return tagIds;
   } catch (err) {
-    throw ErrorFactory.fatal((err as Error).message || '標籤解析失敗', { context: 'resolveTagNamesToIds' });
+    throw new Error((err as Error).message || '標籤解析失敗');
   }
 }

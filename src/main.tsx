@@ -73,7 +73,9 @@ async function init() {
   // 啟動背景 Worker
   setTimeout(() => {
     try {
-      dailyWorker.checkAndRun();
+      dailyWorker.checkAndRun().catch(e => {
+        logger.warn("Daily worker check failed", e);
+      });
       initChunkHandler();
     } catch (e) {
       console.warn("Background workers init failed", e);

@@ -1,6 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import babel from '@rolldown/plugin-babel';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
@@ -13,23 +12,12 @@ const ReactCompilerConfig = {
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    experimental: {
-      bundledDev: true,
-    },
     base: '/',
     worker: {
       format: 'es'
     },
     plugins: [
-      babel({
-        include: /\.[jt]sx?$/,
-        babelConfig: {
-          plugins: [
-            ["babel-plugin-react-compiler", ReactCompilerConfig],
-          ],
-        },
-      }),
-      react(), 
+      react({ babel: { plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]] } }), 
       tailwindcss(),
       visualizer({
         filename: 'dist/stats.html',
@@ -47,9 +35,6 @@ export default defineConfig(({mode}) => {
           format: 'esm',
           // ✅ 手动代码拆分
           manualChunks: (id) => {
-            if (id.includes('postgres') || id.includes('pg')) {
-              return 'empty';
-            }
             // 1. React 核心（稳定，极少变化）
             if (id.includes('node_modules/react/') || 
                 id.includes('node_modules/react-dom/') || 
@@ -123,7 +108,7 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: [
-        { find: 'postgres', replacement: fileURLToPath(new URL('./empty-module.js', import.meta.url)) },
+        
       ],
     },
     server: {

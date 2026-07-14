@@ -13,7 +13,7 @@ import {
   type InfiniteData
 } from '@tanstack/react-query';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { get, set, del } from 'idb-keyval';
+import * as idb from 'idb-keyval';
 import { showToast } from '#lib/ui/toast.js';
 
 export * from '@tanstack/react-query';
@@ -36,14 +36,14 @@ export const queryClient = new QueryClient({
 export const asyncPersister = createAsyncStoragePersister({
   storage: {
     getItem: async (key) => {
-      const val = await get(key);
+      const val = await idb.get(key);
       return val === undefined ? null : val;
     },
     setItem: async (key, value) => {
-      await set(key, value);
+      await idb.set(key, value);
     },
     removeItem: async (key) => {
-      await del(key);
+      await idb.del(key);
     },
   },
 });

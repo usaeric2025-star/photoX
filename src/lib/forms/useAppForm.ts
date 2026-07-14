@@ -1,8 +1,9 @@
 import { useForm } from '@tanstack/react-form';
 import { valibotValidator } from '@tanstack/valibot-form-adapter';
+import type * as v from 'valibot';
 
 interface UseAppFormOptions<TData> {
-    schema: unknown; // Valibot schema
+    schema?: v.GenericSchema | v.GenericSchemaAsync;
     defaultValues: TData;
     onSubmit: (values: TData) => Promise<void> | void;
     onValueChange?: (values: TData) => void;

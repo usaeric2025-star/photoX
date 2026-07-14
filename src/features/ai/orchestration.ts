@@ -35,7 +35,7 @@ const analyzeAndSavePhoto = async (
     
     // Validate that we have something to update
     if (!analysisData.name && !analysisData.description && (!analysisData.tagNames || analysisData.tagNames.length === 0)) {
-        throw ErrorFactory.fatal('AI 分析未返回有效結果', { context: 'analyzeAndSavePhoto' });
+        throw new Error('AI 分析未返回有效結果');
     }
 
     const { name: nameObj, description: descObj } = await mapAiToMultilingual(
@@ -85,7 +85,7 @@ const analyzeAndSavePhoto = async (
     return updateResult;
   } catch (err) {
     ErrorFactory.handle(err, { context: `[AI Orchestration] analyzeAndSavePhoto failed for ${photo.id}` });
-    throw ErrorFactory.fatal((err as Error).message || '分析照片失敗', { context: 'analyzeAndSavePhoto' });
+    throw new Error((err as Error).message || '分析照片失敗');
   }
 };
 

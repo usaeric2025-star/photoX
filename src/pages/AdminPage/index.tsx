@@ -33,6 +33,8 @@ export default function AdminPage() {
           'Prefetch categories failed'
         );
       },
+    }).catch(e => {
+      console.warn('Background prefetch categories failed', e);
     });
 
     // Prefetch tags in the background
@@ -44,6 +46,8 @@ export default function AdminPage() {
           'Prefetch tags failed'
         );
       },
+    }).catch(e => {
+      console.warn('Background prefetch tags failed', e);
     });
   }, [appLang]);
 

@@ -54,11 +54,6 @@ async function bootstrap() {
         }
       }
 
-      // SPA routing fallback: rewrite sub-routes (e.g., /admin) to /index.html so Vite middleware compiles the entry point correctly
-      if (req.url && !req.url.startsWith("/api") && !req.url.includes(".")) {
-        req.url = "/index.html";
-      }
-
       // Delegate to Vite middleware (Connect style)
       vite.middlewares(req, res, async () => {
         // Fallback to index.html for SPA during dev

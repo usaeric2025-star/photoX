@@ -21,5 +21,5 @@ export function useModalActions() {
     setPhotoId(null);
   };
 
-  return { modal: modal as ModalType, photoId, openModal, closeModal };
+  return { modal: modal as ModalType, setModal, photoId, setPhotoId, openModal, closeModal };
 }
