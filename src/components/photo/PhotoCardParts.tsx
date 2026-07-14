@@ -80,6 +80,20 @@ export const PhotoCardInfo = ({
             {categoryName}
           </span>
         )}
+        {photoName && (
+          <h3 className="text-sm font-bold text-white line-clamp-1 leading-tight tracking-tight">
+            {photoName}
+          </h3>
+        )}
+        {photoTags && photoTags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {photoTags.slice(0, 3).map((tag, idx) => (
+              <span key={idx} className="text-[9px] bg-white/20 backdrop-blur-sm text-white px-1.5 py-0.5 rounded-md font-medium">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

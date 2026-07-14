@@ -28,7 +28,18 @@ export function DimensionItem({
   const prefix = prefixMatch ? prefixMatch[1] : '';
   
   let dimensionsPart = prefixMatch ? prefixMatch[2] : label;
-  if (!dimensionsPart && (dim.height || dim.width || dim.length)) {
+  
+  // 📌 [Fix] If dimensionsPart doesn't contain numbers but we have numeric data, prioritize the numeric data
+  // This solves the "only see name, dimensions appear after deleting name" issue
+  const hasNumbers = /\d/.test(dimensionsPart);
+  const hasNumericData = !!(dim.height || dim.width || dim.length);
+  
+  if (hasNumericData && !hasNumbers) {
+    const h = dim.height ? `H${dim.height}` : '';
+    const w = dim.width ? `W${dim.width}` : '';
+    const l = dim.length ? `L${dim.length}` : '';
+    dimensionsPart = [h, w, l].filter(Boolean).join(' x ');
+  } else if (!dimensionsPart && hasNumericData) {
     const h = dim.height ? `H${dim.height}` : '';
     const w = dim.width ? `W${dim.width}` : '';
     const l = dim.length ? `L${dim.length}` : '';

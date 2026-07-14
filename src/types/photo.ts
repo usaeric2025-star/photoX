@@ -1,4 +1,5 @@
 export interface Dimension {
+  id?: string;
   label: string;
   unit: 'cm' | 'inch' | 'mm';
   length: number;

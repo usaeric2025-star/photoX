@@ -221,7 +221,7 @@ export function usePhotoEditAI() {
               }
 
               if (finalTagIds.length > 0) {
-                  const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 3); // Limit to 3 for automatic selection
+                  const uniqueIds = Array.from(new Set(finalTagIds)).slice(0, 10); // Limit to 10 for automatic selection
                   invalidateTags();
                   
                   const latestTags = await ErrorFactory.unwrap<Tag[]>(
@@ -406,7 +406,7 @@ export function usePhotoEditAI() {
                  'Failed to fetch latest tags'
                ).catch(() => allTags);
                
-               updates.tags = resolved.slice(0, 3).map(id => latestTags.find(t => String(t.id) === String(id))).filter(Boolean);
+               updates.tags = resolved.slice(0, 10).map(id => latestTags.find(t => String(t.id) === String(id))).filter(Boolean);
             }
         }
 

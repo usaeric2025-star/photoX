@@ -187,8 +187,12 @@ export function DialogHeader({
         <button
           type="button"
           onClick={onClose}
-          className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-xl ml-1"
+          className="h-10 px-3 flex-shrink-0 flex items-center justify-center gap-1.5 text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-red-50 transition-all rounded-xl ml-1 border border-transparent hover:border-red-100 group"
+          title={appLang === 'zh' ? '关闭' : 'Close'}
         >
+          <span className="text-xs font-bold hidden sm:inline group-hover:text-red-600 transition-colors uppercase">
+            {appLang === 'zh' ? '关闭' : 'Close'}
+          </span>
           <Icon name="x" size={20} />
         </button>
       </div>

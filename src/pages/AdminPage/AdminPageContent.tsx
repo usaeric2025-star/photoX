@@ -135,6 +135,11 @@ export function AdminPageContent() {
                 <Route path="/admin" component={AdminGallery} />
                 <Route path="/admin/" component={AdminGallery} />
                 
+                {/* 📌 [Fix] Catch-all for unknown admin subpaths to prevent 404 on UI micro-navigations */}
+                <Route path="/admin/:any*">
+                  <AdminGallery />
+                </Route>
+                
                 <Route>
                   <NotFoundPage isTransitionAllowed={false} />
                 </Route>

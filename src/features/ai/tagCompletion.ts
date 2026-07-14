@@ -29,7 +29,8 @@ export async function resolveTagNamesToIds(
       dbTags = (tagsData || []).map(t => ({
         ...t,
         name: (t.name || '').toUpperCase(),
-        id: Number(t.id) || 0
+        // Support both string and number IDs safely, avoid Number() conversion that breaks UUIDs
+        id: t.id
       })) as unknown as Tag[];
     }
 
