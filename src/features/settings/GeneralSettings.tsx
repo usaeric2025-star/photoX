@@ -7,9 +7,6 @@ import { AppSettings, Category, Tag, Manufacturer, Photo } from '#src/types/inde
 interface GeneralSettingsProps {
   settings: AppSettings;
   handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  categories: Category[];
-  tags: Tag[];
-  manufacturers: Manufacturer[];
   setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
   cardClass: string;
   inputClass: string;
@@ -19,9 +16,6 @@ interface GeneralSettingsProps {
 export function GeneralSettings({
   settings, 
   handleLogoUpload, 
-  categories, 
-  tags, 
-  manufacturers,
   setSettingField,
   cardClass,
   inputClass,
@@ -39,9 +33,6 @@ export function GeneralSettings({
       <LogoSection 
         settings={settings}
         handleLogoUpload={handleLogoUpload}
-        categories={categories}
-        tags={tags}
-        manufacturers={manufacturers}
         cardClass={cardClass}
         buttonStyles={buttonStyles}
         setSettingField={setSettingField}

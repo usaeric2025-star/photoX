@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { photoWallStore } from '../signal.js';
 import { PhotoWallGrid } from './PhotoWallGrid.js';
 import { usePhotoWall } from '#src/hooks/index.js';
-import { PhotoListResponse } from '#src/hooks/photo/usePhotos.js';
+import { PhotoListResponse } from '#src/hooks/photo/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -19,8 +19,12 @@ interface PhotoWallContainerProps {
   onPhotoClick?: (photo: PhotoListItem) => void;
 }
 
+import { useQueryState } from 'nuqs';
+import { parseAsPhotoId } from '#lib/nuqs/parsers.js';
+
 export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const { open: openLightbox, setLightboxData } = useLightbox();
+  const [photoId] = useQueryState('id', parseAsPhotoId);
   const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.filters);
   const patch = useUI(s => s.patch);
   const { uiTranslations: labels } = useTranslation();
@@ -99,8 +103,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
             }
 
             if (newIndex !== -1) {
-              const urlParams = new URLSearchParams(window.location.search);
-              const currentPhotoId = urlParams.get('photoId');
+              const currentPhotoId = photoId;
               
               let finalIndex = newIndex;
               if (currentPhotoId) {

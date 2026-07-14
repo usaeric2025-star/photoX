@@ -8,34 +8,27 @@ import { ManufacturerItem } from '#src/components/admin/ManufacturerItem.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 
 import { normalizeManufacturerName } from "#lib/utils.js";
-import { useUI, useTranslation } from '#src/hooks/index.js';
+import { useTranslation, useManufacturers, useManufacturerMutations } from '#src/hooks/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { FormProvider } from '#lib/forms/useFormField.js';
 
 interface ManufacturersSectionProps {
-  manufacturers: Manufacturer[];
-  addManufacturer: (name: string) => Promise<Manufacturer>;
-  updateManufacturer: (
-    id: string,
-    data: Partial<Manufacturer>,
-  ) => Promise<boolean>;
-  deleteManufacturer: (id: string) => void;
   cardClass: string;
   buttonStyles: { [key in "primary" | "secondary" | "accent"]: string };
 }
 
 export function ManufacturersSection({
-  manufacturers,
-  addManufacturer: rawAddManufacturer,
-  updateManufacturer: rawUpdateManufacturer,
-  deleteManufacturer,
   cardClass,
   buttonStyles,
 }: ManufacturersSectionProps) {
+  const { manufacturers = [] } = useManufacturers();
+  const manufacturerMutations = useManufacturerMutations();
+  const addManufacturer = manufacturerMutations.create.mutateAsync;
+  const updateManufacturer = manufacturerMutations.edit.mutateAsync;
+  const deleteManufacturer = manufacturerMutations.remove.mutateAsync;
   
   const [isAddOpen, addDialog] = useDisclosure(false);
-  const appLang = useUI(s => s.appLang);
   const { t } = useTranslation();
 
   const { submit: runAddManufacturer, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
@@ -43,7 +36,9 @@ export function ManufacturersSection({
     mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeManufacturerName(name);
       if (!normalized) return null;
-      return await rawAddManufacturer(normalized);
+      const r = await addManufacturer(normalized);
+      if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', normalized);
+      return r as Manufacturer;
     },
     successMessage: t('addMfrSuccess'),
     errorMessage: t('addMfrError')
@@ -52,7 +47,7 @@ export function ManufacturersSection({
   const { submit: runUpdateManufacturer, isLoading: isUpdating, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
     schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1)) }),
     mutationFn: async ({ id, name }: { id: string, name: string }) => {
-      await rawUpdateManufacturer(id, { name });
+      await updateManufacturer({ id, updates: { name } });
       return true;
     },
     successMessage: t('updateSuccess'),

@@ -1,40 +1,26 @@
-import { logger } from '#lib/logger.js';
-import { useAppRouter } from '#lib/router/index.js';
-import { useAppQuery as useQuery } from '#lib/query/index.js';
+import React, { Suspense, useState } from 'react';
+import { AppSettings } from '#src/types/index.js';
 import { useAuth } from '#lib/store/index.js';
-import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import React, { useState, Suspense } from 'react';
-import { Icon } from '#src/components/ui/Icon.js';
-import { api } from '#lib/api.js';
-
-import { showToast } from '#lib/ui/toast.js';
-import { Task } from '#lib/task-queue/types.js';
-import { AppSettings, User, ApiResponse, Category, Manufacturer, Tag } from '#src/types/index.js';
-import { useUI, UIStoreState } from '#lib/store/index.js';
-import { useSettingsManagement } from '#src/hooks/settings/useSettingsManagement.js';
-import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { 
-  useCategories, useTags, useManufacturers,
-  useSettings
+  useSettings, useTranslation 
 } from '#src/hooks/index.js';
-import { useSettingsLogic } from '#src/hooks/index.js';
 import { SettingsTabs } from './SettingsTabs.js';
 import { SettingsHeader } from './SettingsHeader.js';
 import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
-import { useTranslation } from '#src/hooks/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
-
-import { useSyncMutation } from '#src/hooks/index.js';
-import { useSignal } from '#lib/store/index.js';
-import { tasksSignal } from '#src/lib/task-queue/taskStore.js';
+import { StandardModalLayout } from '#src/components/ui/StandardModalLayout.js';
+import { useNormalizedLocation, useDebouncedCallback } from '#src/hooks/core/index.js';
+import { testAiConnection } from "#src/features/ai/AICommands.js";
+import { executeTask } from '#lib/task-queue/index.js';
+import { uploadToR2 } from '#src/lib/upload/index.js';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings.js').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings.js').then(m => ({ default: m.AISettings })));
-const TagsContainer = React.lazy(() => import('./TagsContainer.js').then(m => ({ default: m.TagsContainer })));
-const AssetManagementContainer = React.lazy(() => import('./AssetManagementContainer.js').then(m => ({ default: m.AssetManagementContainer })));
+const TagsSection = React.lazy(() => import('./TagsSection.js').then(m => ({ default: m.TagsSection })));
+const CategoriesSection = React.lazy(() => import('./CategoriesSection.js').then(m => ({ default: m.CategoriesSection })));
+const ManufacturersSection = React.lazy(() => import('./ManufacturersSection.js').then(m => ({ default: m.ManufacturersSection })));
 const DiagDashboard = React.lazy(() => import('#src/features/diagnostics/DiagDashboard.js').then(m => ({ default: m.DiagDashboard })));
-
 
 const BUTTON_STYLES = {
   primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
@@ -46,68 +32,75 @@ interface SettingsPageProps {
   onClose?: () => void;
 }
 
-import { StandardModalLayout } from '#src/components/ui/StandardModalLayout.js';
-
 export function SettingsPage({ onClose }: SettingsPageProps) {
-  const patch = useUI((s: UIStoreState) => s.patch);
-  const { navigate, route } = useAppRouter();
+  const [location, setLocation] = useNormalizedLocation();
   
-  const { categories = [] } = useCategories();
-  const { tags = [] } = useTags();
-  const { manufacturers = [] } = useManufacturers();
+  const { t, appLang } = useTranslation();
+
+  const user = useAuth(s => s.user);
+  const { settings, agnesApiKey, accessPasscode, updateSettings } = useSettings();
+  const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnesApiKey: key });
+  const setAccessPasscode = (code: string) => updateSettings({ ...settings, accessPasscode: code });
+  const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
+
+  const [testResult, setTestResult] = useState<{ success?: boolean; error?: string; loading?: boolean; } | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const { submit: runConnectionTest } = useFormSubmit({
+    schema: v.object({}),
+    mutationFn: async () => {
+      const ok = await testAiConnection(String(settings.agnesApiKey || ""), "google");
+      if (!ok) throw new Error(t('aiConnectFailed'));
+      return true;
+    },
+    onSuccess: () => setTestResult({ success: true }),
+    onError: (msg: unknown) => setTestResult({ success: false, error: String(msg) }),
+    successMessage: t('aiConnectSuccess'),
+    errorMessage: t('aiConnectFailed')
+  });
+
+  const testConnection = async () => {
+    if (!settings?.agnesApiKey) return;
+    await runConnectionTest({});
+  };
+
+  const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
+    updateSettings(newSettings).catch(console.error);
+    setHasChanges(false);
+  }, 1500);
+
+  const setSettingField = <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
+    const current = settings || {} as AppSettings;
+    const newSettings = { ...current, [field]: value };
+    void updateSettings(newSettings);
+    setHasChanges(true);
+    debouncedSave(newSettings);
+  };
+
+  const uploadLogo = async (file: File) => {
+    return executeTask({
+      label: t('uploadLogoTask'),
+      type: 'upload',
+      execute: async () => {
+        const fileKey = `settings/logo_${Date.now()}`;
+        const imageUrl = await uploadToR2(file, fileKey);
+        setSettingField('logoUrl', imageUrl);
+        return imageUrl;
+      }
+    });
+  };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) await uploadLogo(file);
   };
-  
-  const tasks = useSignal(tasksSignal);
-  const isMaintenanceRunning = Array.from(tasks.values()).some(t => (t.label.includes('维护') || t.label.includes('诊断')) && t.state?.status === 'processing');
-  
-  const { t, appLang } = useTranslation();
-
-  const user = useAuth(s => s.user);
-  const signIn = useAuth(s => s.signIn);
-  const signOut = useAuth(s => s.signOut);
-  const { settings, agnesApiKey, accessPasscode, updateSettings } = useSettings();
-  const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnesApiKey: key });
-  const setAccessPasscode = (code: string) => updateSettings({ ...settings, accessPasscode: code });
-  const setSettings = (s: AppSettings) => { updateSettings(s); };
-  const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
-
-  const {
-      deleteTag,
-      deleteCategory,
-      deleteManufacturer,
-      updateTag, updateCategory, addCategory, 
-      addManufacturer, updateManufacturer, addTag
-  } = useSettingsManagement();
-
-  const {
-    testResult,
-    hasChanges, setHasChanges,
-    activeTagMenuId, setActiveTagMenuId,
-    debouncedSave,
-    testConnection,
-    togglePin,
-    setSettingField,
-    uploadLogo
-  } = useSettingsLogic({
-    user: user || null,
-    settings,
-    agnesApiKey: String(agnesApiKey || ""),
-    saveSettings,
-    performPullSync: async () => {},
-    setSettings: (s: AppSettings) => { void updateSettings(s as Partial<AppSettings>); }
-  });
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
   const initialTab = (() => {
-    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-    if (pathname.startsWith('/admin/diagnose') || 
-        pathname.startsWith('/admin/error-logs') || 
-        pathname.startsWith('/admin/tasks')) {
+    if (location.startsWith('/admin/diagnose') || 
+        location.startsWith('/admin/error-logs') || 
+        location.startsWith('/admin/tasks')) {
       return 'status';
     }
     return 'general';
@@ -151,7 +144,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     <StandardModalLayout 
       onClose={() => {
         if (onClose) onClose();
-        else navigate.admin();
+        else setLocation('/admin');
       }}
       className="bg-brand-bg"
       header={
@@ -161,7 +154,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           onSave={() => runSaveSettings({ ...settings })}
           onClose={() => {
             if (onClose) onClose();
-            else navigate.admin();
+            else setLocation('/admin');
           }}
         />
       }
@@ -176,9 +169,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               <GeneralSettings 
                 settings={settings}
                 handleLogoUpload={handleLogoUpload}
-                categories={categories}
-                tags={tags}
-                manufacturers={manufacturers}
                 setSettingField={setSettingField}
                 cardClass={cardClass}
                 inputClass={inputClass}
@@ -209,30 +199,15 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {loadedTabs.includes('assets') && (
             <div className={activeTab === 'assets' ? 'block' : 'hidden'}>
               <Suspense fallback={<LoadingScreen />}>
-                <AssetManagementContainer 
-                  categories={categories}
-                  deleteCategory={deleteCategory}
-                  updateCategory={async (id: number, data: Partial<Category>) => { const r = await updateCategory({ id: Number(id), updates: data }); return !!r; }}
-                  addCategory={async (name: string) => { const r = await addCategory(name) as unknown as Category; if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addCategory', name); return r; }}
-                  manufacturers={manufacturers}
-                  addManufacturer={async (name: string) => { const r = await addManufacturer(name) as unknown as Manufacturer; if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', name); return r; }}
-                  updateManufacturer={async (id: string, data: Partial<Manufacturer>) => { const r = await updateManufacturer({ id: id, updates: data }); return !!r; }}
-                  deleteManufacturer={(id: string) => deleteManufacturer(id)}
+                <CategoriesSection 
                   cardClass={cardClass}
                   buttonStyles={BUTTON_STYLES}
                 />
-                <TagsContainer 
-                  tags={tags}
-                  settings={settings}
-                  addTag={async (name: string) => { const r = await addTag(name); if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', name); return r; }}
-                  updateTag={async (id: number, data: Partial<Tag>) => { const r = await updateTag({ id: Number(id), updates: data }); return !!r; }}
-                  activeTagMenuId={activeTagMenuId}
-                  setActiveTagMenuId={setActiveTagMenuId}
-                  deleteTag={(id: number) => deleteTag(id)}
-                  togglePin={(id: number) => togglePin(id)}
-                  setSettings={setSettings}
-                  setHasChanges={setHasChanges}
-                  debouncedSave={debouncedSave}
+                <ManufacturersSection 
+                  cardClass={cardClass}
+                  buttonStyles={BUTTON_STYLES}
+                />
+                <TagsSection 
                   cardClass={cardClass}
                   buttonStyles={BUTTON_STYLES}
                 />
@@ -251,4 +226,4 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
       </div>
     </StandardModalLayout>
   );
-};
+}

@@ -47,9 +47,6 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   });
 
   const isGroupCard = showGroupsCollapsed && photo.groupId && typeof photo.memberCount === 'number' && photo.memberCount > 1;
-  const isUnnamedGroup = !photo.groupName || photo.groupName === photo.groupId || photo.groupName === '[object Object]';
-  const displayPhotoName = isGroupCard ? (isUnnamedGroup ? 'GROUP' : photo.groupName) : photo.name;
-  const displayPhotoTags = isGroupCard ? undefined : photo.tags;
   const displayCategoryName = photo.categoryDescription?.[appLang] || photo.categoryName || undefined;
 
   return (
@@ -81,8 +78,6 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       )}
       <PhotoCardInfo 
         hideDetails={hideDetails}
-        photoTags={displayPhotoTags}
-        photoName={displayPhotoName}
         categoryName={displayCategoryName}
       />
     </PhotoCardBase>

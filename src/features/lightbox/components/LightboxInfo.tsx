@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
 import { Icon } from '#src/components/ui/Icon.js';
-import { usePhotoAIResult } from '#src/hooks/photo/usePhotoAI.js';
-import { usePermission, useAdminMode } from '#src/hooks/index.js';
+import { usePhotoAIResult, usePermission, useAdminMode } from '#src/hooks/index.js';
 import { Photo } from '#src/types/photo.js';
 import { getLocalizedDisplay, translateDimensionLabelToEnglish } from '#src/utils/display.js';
 

@@ -1,21 +1,21 @@
 import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useUI, useTranslation } from '#src/hooks/index.js';
+import { useUI, useTranslation, usePermission } from '#src/hooks/index.js';
 import { UIStoreState } from '#lib/store/index.js';
 
 import { Theme } from '#src/types/index.js';
 
 interface AdminHeaderLogoProps {
   logoUrl?: string | null;
-  role: 'admin' | 'staff' | 'public';
   totalCount: number;
   theme: Theme;
 }
 
-export function AdminHeaderLogo({ logoUrl, role, totalCount, theme }: AdminHeaderLogoProps) {
+export function AdminHeaderLogo({ logoUrl, totalCount, theme }: AdminHeaderLogoProps) {
   const { t, lang } = useTranslation();
   const [imgError, setImgError] = React.useState(false);
+  const { role } = usePermission();
 
   const showDefaultLogo = !logoUrl || logoUrl.trim() === '' || imgError;
 

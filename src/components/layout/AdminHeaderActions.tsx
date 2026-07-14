@@ -1,10 +1,10 @@
 import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { isTaskDrawerOpenSignal } from '#lib/store/index.js';
+import { isTaskDrawerOpen } from '#lib/store/index.js';
 import { User, Theme, TranslationType } from '#src/types/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
-import { useAppRouter } from '#lib/router/index.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
 import { usePermission } from '#src/hooks/index.js';
 
@@ -33,22 +33,22 @@ export function AdminHeaderActions({
   signOut,
   lang
 }: AdminHeaderActionsProps) {
-  const { navigate } = useAppRouter();
+  const [location, setLocation] = useNormalizedLocation();
   const { can, role } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
   const canManageSystem = can('system:settings');
   const canAccessDiagnostics = can('admin:dashboard:access');
   
   const menuItems = [
-    { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: navigate.admin },
-    ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: navigate.adminBatchEdit }] : []),
+    { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation('/admin') },
+    ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation('/admin/batch-edit') }] : []),
     ...(canAccessDiagnostics ? [
-      { id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: navigate.adminDiagnostics },
-      { id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: navigate.adminDiagnosticsLogs }
+      { id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: () => setLocation('/admin/diagnostics') },
+      { id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: () => setLocation('/admin/error-logs') }
     ] : []),
     ...(canManageSystem ? [
       { id: 'divider1', divider: true },
-      { id: 'settings', icon: 'settings' as const, label: t('settings', '系統設置'), onClick: navigate.settings }
+      { id: 'settings', icon: 'settings' as const, label: t('settings', '系統設置'), onClick: () => setLocation('/settings') }
     ] : [])
   ];
 
@@ -73,7 +73,7 @@ export function AdminHeaderActions({
       </button>
 
       <button
-        onClick={() => { isTaskDrawerOpenSignal.value = true; }}
+        onClick={() => { isTaskDrawerOpen.value = true; }}
         className={cn("w-9 h-9 relative shrink-0", theme.button)}
         title={t('taskCenter')}
       >
@@ -97,7 +97,7 @@ export function AdminHeaderActions({
         }
       >
         <div className="flex flex-col min-w-[220px] p-1 gap-1">
-          {(role === 'staff' || role === 'admin') ? (
+          {canAccessDiagnostics ? (
             <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
               <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px] shrink-0">
                 {user?.photoUrl && user.photoUrl.trim() !== '' ? (
@@ -140,7 +140,7 @@ export function AdminHeaderActions({
             <LanguageSwitcher mode="segmented" />
           </div>
 
-          {(role === 'staff' || role === 'admin') && (
+          {canAccessDiagnostics && (
             <>
               <div className="h-px bg-slate-100 my-1 mx-2" />
               <button

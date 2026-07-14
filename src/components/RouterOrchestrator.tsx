@@ -1,10 +1,12 @@
 import React, { lazy, Suspense, useEffect } from "react";
 import { ErrorBoundary } from "#src/components/shared/ErrorBoundary.js";
 import { motion, AnimatePresence } from "lite-sleek";
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Router } from "wouter";
 import { NotFoundPage } from "#src/pages/NotFoundPage.js";
 import { LoadingScreen } from "./ui/LoadingScreen.js";
 import { useAuth } from "#lib/store/index.js";
+
+import { useNormalizedLocation } from "#src/hooks/core/index.js";
 
 const PublicPage = lazy(() => import("#src/pages/PublicPage.js"));
 const AdminPage = lazy(() => import("#src/pages/AdminPage/index.js"));
@@ -31,21 +33,12 @@ const AdminGroupDetailRoute = () => (
 );
 
 export function RouterOrchestrator() {
-  const [location, setLocation] = useLocation();
+  const [location] = useNormalizedLocation();
   const isAuthLoading = useAuth(s => s.isLoading);
-  
-  // Normalize trailing slash to avoid routing mismatch (e.g. /admin/ -> /admin)
-  useEffect(() => {
-    const pathname = window.location.pathname;
-    if (pathname !== '/' && pathname.endsWith('/')) {
-      const newPath = pathname.slice(0, -1);
-      setLocation(newPath + window.location.search, { replace: true });
-    }
-  }, [location, setLocation]);
   
   const getPageGroupKey = (pathname: string) => {
     if (pathname === '/' || pathname.startsWith('/photo/')) return 'public-home';
-    if (pathname.startsWith('/admin')) return 'admin-dashboard';
+    if (pathname.startsWith('/admin') || pathname.startsWith('/settings') || pathname.startsWith('/diagnostics')) return 'admin-dashboard';
     if (pathname.startsWith('/group/')) return 'public-group';
     return pathname;
   };
@@ -56,48 +49,46 @@ export function RouterOrchestrator() {
     return <LoadingScreen />;
   }
 
-  // Admin 强制守卫 (简化路由匹配，避免 wouter 对子路由的 404)
+  // Admin 强制守卫 (针对管理端路径进行特殊布局处理)
   const isAdminPath = location.startsWith('/admin') || location.startsWith('/settings') || location.startsWith('/diagnostics');
   
-  if (isAdminPath) {
-    return (
-      <AnimatePresence>
-        <motion.div 
-          key="admin-dashboard"
-          variant="fade"
-          transition="easeOut"
-          className="flex-1 flex flex-col h-full w-full"
-        >
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingScreen />}>
-              <AdminPage />
-            </Suspense>
-          </ErrorBoundary>
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
   return (
-    <AnimatePresence>
-      <motion.div 
-        key={groupKey}
-        variant="fade"
-        transition="easeOut"
-        className="flex-1 flex flex-col h-full w-full"
-      >
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingScreen />}>
-            <Switch>
-              <Route path={PUBLIC_PATH} component={PublicPage} />
-              <Route path="/photo/:photoId" component={PublicPage} />
-              <Route path="/group/:slug" component={PublicGroupDetailPage} />
-              
-              <Route component={NotFoundPage} />
-            </Switch>
-          </Suspense>
-        </ErrorBoundary>
-      </motion.div>
-    </AnimatePresence>
+    <Router hook={useNormalizedLocation}>
+      <AnimatePresence>
+        {isAdminPath ? (
+          <motion.div 
+            key="admin-dashboard"
+            variant="fade"
+            transition="easeOut"
+            className="flex-1 flex flex-col h-full w-full"
+          >
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingScreen />}>
+                <AdminPage />
+              </Suspense>
+            </ErrorBoundary>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key={groupKey}
+            variant="fade"
+            transition="easeOut"
+            className="flex-1 flex flex-col h-full w-full"
+          >
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingScreen />}>
+                <Switch>
+                  <Route path={PUBLIC_PATH} component={PublicPage} />
+                  <Route path="/photo/:photoId" component={PublicPage} />
+                  <Route path="/group/:slug" component={PublicGroupDetailPage} />
+                  
+                  <Route component={NotFoundPage} />
+                </Switch>
+              </Suspense>
+            </ErrorBoundary>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Router>
   );
 }

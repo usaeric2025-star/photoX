@@ -1,10 +1,8 @@
-import { useAppRouter } from '#lib/router/index.js';
 import React, { useState, Suspense, useMemo } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useDiagnostics } from '#src/hooks/admin/useDiagnostics.js';
+import { useAdminActions } from '#src/hooks/admin/index.js';
 import { Button } from '#src/components/ui/Button.js';
 import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
-import { usePerformanceAudit } from '#src/hooks/admin/usePerformanceAudit.js';
 import { useQueryState, parseAsString } from 'nuqs';
 
 const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer.js').then(m => ({ default: m.ErrorLogViewer })));
@@ -12,32 +10,33 @@ const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter.js').then
 const TasksContent = React.lazy(() => import('./TasksList.js').then(m => ({ default: m.TasksContent })));
 const StatisticsScreen = React.lazy(() => import('../statistics/components/StatisticsScreen.js').then(m => ({ default: m.StatisticsScreen })));
 
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
+
 export function DiagDashboard() {
-  const { navigate, route } = useAppRouter();
   const [tab, setTab] = useQueryState('tab', parseAsString.withDefault('stats'));
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  const [location, setLocation] = useNormalizedLocation();
   
   const activeTab = (() => {
-    if (route?.name === 'adminTasks' || pathname.startsWith('/admin/tasks')) return 'tasks';
-    if (route?.name === 'adminDiagnosticsLogs' || pathname.startsWith('/admin/error-logs')) return 'logs';
+    if (location.startsWith('/admin/tasks')) return 'tasks';
+    if (location.startsWith('/admin/error-logs')) return 'logs';
     return tab;
   })();
 
   const setActiveTab = (newTab: 'diagnosis' | 'tasks' | 'logs' | 'stats') => {
     if (newTab === 'tasks') {
-      navigate.adminTasks();
+      setLocation('/admin/tasks');
     } else if (newTab === 'logs') {
-      navigate.adminDiagnosticsLogs();
+      setLocation('/admin/error-logs');
     } else {
-      if (route?.name !== 'adminDiagnostics' && !pathname.startsWith('/admin/diagnose')) {
-        navigate.adminDiagnostics();
+      if (!location.startsWith('/admin/diagnose')) {
+        setLocation('/admin/diagnostics');
       }
       setTab(newTab === 'stats' ? null : newTab);
     }
   };
 
-  const { isPending, refreshReport, runAudit } = useDiagnostics();
-  const isStandalone = pathname.startsWith('/diagnostics');
+  const { isAuditing: isPending, refreshReport, runAudit } = useAdminActions();
+  const isStandalone = location.startsWith('/diagnostics');
 
   return (
     <div className={isStandalone ? "h-screen overflow-y-auto w-full px-6 md:px-8 py-8 pb-32 no-scrollbar max-w-7xl mx-auto space-y-8 bg-slate-50 animate-in fade-in duration-500" : "space-y-8 animate-in fade-in duration-500"}>
@@ -45,7 +44,7 @@ export function DiagDashboard() {
         <div className="flex items-center gap-3">
           {isStandalone && (
             <button 
-              onClick={() => navigate.admin()}
+              onClick={() => setLocation('/admin')}
               className="p-2 mr-1 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
               title="返回管理後台"
             >

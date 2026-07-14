@@ -3,19 +3,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { LoginScreen } from '#src/components/admin/LoginScreen.js';
 import React from 'react';
 
-// Mock useAppRouter
-vi.mock('#lib/router', () => ({
-  useAppRouter: () => ({
-    navigate: {
-      home: vi.fn(),
-      admin: vi.fn(),
-    },
-    route: 'home',
-    params: {},
-    currentUrl: '',
-  }),
-}));
-
 // Mock locales
 vi.mock('#src/locales', () => ({
   translations: {

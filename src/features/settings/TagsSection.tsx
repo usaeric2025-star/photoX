@@ -17,45 +17,46 @@ import { queryKeys } from '#lib/query/keys.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import { FormProvider } from '#lib/forms/useFormField.js';
 import * as v from 'valibot';
+import { useTags, useSettings, useAuth, useTagMutations, useTranslation } from '#src/hooks/index.js';
+import { useDebouncedCallback } from '#src/hooks/core/index.js';
 
 interface TagsSectionProps {
-  tags: Tag[];
-  settings: AppSettings | null;
-  addTag: (name: string) => Promise<Tag>;
-  updateTag: (id: number, data: Partial<Tag>) => Promise<boolean>;
-  activeTagMenuId: number | null;
-  setActiveTagMenuId: (id: number | null) => void;
-  deleteTag: (id: number) => void;
-  togglePin: (tagId: number) => void;
-  setSettings: (s: AppSettings) => void;
-  setHasChanges: (b: boolean) => void;
-  debouncedSave: (s: AppSettings) => void;
   cardClass: string;
   buttonStyles: { accent: string };
 }
 
 export function TagsSection({
-  tags,
-  settings,
-  addTag: rawAddTag,
-  updateTag: rawUpdateTag,
-  activeTagMenuId,
-  setActiveTagMenuId,
-  deleteTag,
-  togglePin,
-  setSettings,
-  setHasChanges,
-  debouncedSave,
   cardClass,
   buttonStyles,
 }: TagsSectionProps) {
-    // ...
-    //   inside sort:
-    // (settings?.pinned_tags || []).includes(String(a.id)) ? 1 : 0;
-    // ...
-    //   inside map:
-    // isPinned={(settings?.pinned_tags || []).includes(String(tag.id))}
+  const { tags = [] } = useTags();
+  const user = useAuth(s => s.user);
+  const { settings, updateSettings } = useSettings();
   
+  const tagMutations = useTagMutations();
+  const addTag = tagMutations.create.mutateAsync;
+  const updateTag = tagMutations.edit.mutateAsync;
+  const deleteTag = tagMutations.remove.mutateAsync;
+  
+  const [activeTagMenuId, setActiveTagMenuId] = useState<number | null>(null);
+
+  const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
+    updateSettings(newSettings).catch(console.error);
+  }, 1500);
+
+  const togglePin = (tagId: number) => {
+    const currentPinned = (settings?.pinnedTags || []).map(Number);
+    let nextPinned;
+    if (currentPinned.includes(tagId)) {
+      nextPinned = currentPinned.filter((id) => id !== tagId);
+    } else {
+      nextPinned = [...currentPinned, tagId];
+    }
+    const nextSettings = { ...settings, pinnedTags: nextPinned.map(String) };
+    void updateSettings(nextSettings);
+    debouncedSave(nextSettings);
+  };
+
   const tasks = useSignal(tasksSignal);
   const isRunning = Array.from(tasks.values()).some((t) => t.state?.status === "processing");
 
@@ -68,7 +69,9 @@ export function TagsSection({
     mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeTagName(name);
       if (!normalized) return null;
-      return await rawAddTag(normalized);
+      const r = await addTag(normalized);
+      if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addTag', normalized);
+      return r as Tag;
     },
     successMessage: '已新增標籤 / Tag added',
     errorMessage: '新增失敗 / Add failed'
@@ -77,7 +80,7 @@ export function TagsSection({
   const { submit: runUpdateTag, isLoading: isUpdating, fieldErrors: editFieldErrors, clearFieldError: editClearFieldError } = useFormSubmit({
     schema: v.object({ id: v.number(), name: v.pipe(v.string(), v.minLength(1)) }),
     mutationFn: async ({ id, name }: { id: number, name: string }) => {
-      await rawUpdateTag(id, { name });
+      await updateTag({ id, updates: { name } });
       return true;
     },
     successMessage: '已更新 / Updated',
@@ -129,20 +132,12 @@ export function TagsSection({
               min={1}
               max={50}
               className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
-              value={
-                settings?.hotTagsCount !== undefined
-                  ? settings.hotTagsCount
-                  : 9
-              }
+              value={settings?.hotTagsCount ?? 9}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
                 const num = isNaN(val) ? 9 : val;
-                const nextSettings = {
-                  ...settings,
-                  hotTagsCount: num,
-                } as AppSettings;
-                setSettings(nextSettings);
-                setHasChanges(true);
+                const nextSettings = { ...settings, hotTagsCount: num } as AppSettings;
+                void updateSettings(nextSettings);
                 debouncedSave(nextSettings);
               }}
             />
@@ -160,20 +155,12 @@ export function TagsSection({
               min={0}
               max={100}
               className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
-              value={
-                settings?.hotTagThreshold !== undefined
-                  ? settings.hotTagThreshold
-                  : 10
-              }
+              value={settings?.hotTagThreshold ?? 10}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
                 const num = isNaN(val) ? 10 : val;
-                const nextSettings = {
-                  ...settings,
-                  hotTagThreshold: num,
-                } as AppSettings;
-                setSettings(nextSettings);
-                setHasChanges(true);
+                const nextSettings = { ...settings, hotTagThreshold: num } as AppSettings;
+                void updateSettings(nextSettings);
                 debouncedSave(nextSettings);
               }}
             />
@@ -211,7 +198,7 @@ export function TagsSection({
                 setEditingTag(t);
                 editDialog.open();
               }}
-              updateTag={rawUpdateTag}
+              updateTag={async (id, data) => { const r = await updateTag({ id, updates: data }); return !!r; }}
               deleteTag={deleteTag}
               isPinned={(settings?.pinnedTags || []).includes(String(tag.id))}
               togglePin={togglePin}

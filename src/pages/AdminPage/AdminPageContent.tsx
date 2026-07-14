@@ -1,4 +1,3 @@
-import { useAppRouter } from '#lib/router/index.js';
 import React, { Suspense, lazy } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
@@ -11,10 +10,12 @@ interface UploadModeDialogProps {
   onSelectMode: (mode: 'single' | 'group') => void;
 }
 const UploadModeDialog = lazy(() => import('#src/features/upload/components/UploadModeDialog.js').then(m => ({ default: m.UploadModeDialog }))) as React.ComponentType<UploadModeDialogProps>;
+
 import { usePhotoUpload } from '#src/hooks/index.js';
 import { UploadButton } from '#src/components/shared/UploadButton.js';
 import { SelectionToolbar } from '#src/features/selection/index.js';
 import { useUI, useSignal } from '#lib/store/index.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
 import { AdminHeader } from '#src/components/layout/AdminHeader.js';
 import { AdminAuthGate } from '#src/components/admin/AdminAuthGate.js';
@@ -31,7 +32,7 @@ const SettingsPage = lazy(() => import('#src/features/settings/SettingsPage.js')
 const AdminGroupDetailPage = lazy(() => import('#src/features/group/AdminGroupDetail.js').then(m => ({ default: m.AdminGroupDetailPage })));
 
 import { ScreenWrapper } from '#src/components/admin/ScreenWrapper.js';
-import { Switch, Route, useLocation } from 'wouter';
+import { Switch, Route } from 'wouter';
 import { NotFoundPage } from '#src/pages/NotFoundPage.js';
 
 function AdminGallery() {
@@ -55,28 +56,28 @@ function AdminGallery() {
 }
 
 function AdminBatchEditRoute() {
-  const { navigate } = useAppRouter();
+  const [location, setLocation] = useNormalizedLocation();
   return (
-    <ScreenWrapper key="admin-batch" onClose={navigate.admin}>
+    <ScreenWrapper key="admin-batch" onClose={() => setLocation('/admin')}>
       <BatchEditScreen />
     </ScreenWrapper>
   );
 }
 
 function AdminDiagRoute() {
-  const { navigate } = useAppRouter();
+  const [location, setLocation] = useNormalizedLocation();
   return (
-    <ScreenWrapper key="admin-diagnose" onClose={navigate.admin}>
+    <ScreenWrapper key="admin-diagnose" onClose={() => setLocation('/admin')}>
       <DiagDashboard />
     </ScreenWrapper>
   );
 }
 
 function AdminSettingsRoute() {
-  const { navigate } = useAppRouter();
+  const [location, setLocation] = useNormalizedLocation();
   return (
     <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
-      <SettingsPage onClose={navigate.admin} />
+      <SettingsPage onClose={() => setLocation('/admin')} />
     </div>
   );
 }
@@ -99,43 +100,31 @@ export function AdminPageContent() {
           <ErrorBoundary>
             <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
               <Switch>
+                {/* 📌 精简后的路由定义，不再需要重复定义带斜杠的路径 */}
                 <Route path="/admin/batch-edit" component={AdminBatchEditRoute} />
-                <Route path="/admin/batch-edit/" component={AdminBatchEditRoute} />
                 <Route path="/admin/batch" component={AdminBatchEditRoute} />
-                <Route path="/admin/batch/" component={AdminBatchEditRoute} />
-                <Route path="/admin/diagnostics" component={AdminDiagRoute} />
-                <Route path="/admin/diagnostics/" component={AdminDiagRoute} />
-                <Route path="/admin/diagnose" component={AdminDiagRoute} />
-                <Route path="/admin/diagnose/" component={AdminDiagRoute} />
-                <Route path="/diagnostics" component={AdminDiagRoute} />
-                <Route path="/diagnostics/" component={AdminDiagRoute} />
-                <Route path="/diagnostics/:any*" component={AdminDiagRoute} />
-                <Route path="/admin/tasks" component={AdminSettingsRoute} />
-                <Route path="/admin/tasks/" component={AdminSettingsRoute} />
-                <Route path="/admin/settings" component={AdminSettingsRoute} />
-                <Route path="/admin/settings/" component={AdminSettingsRoute} />
-                <Route path="/admin/error-logs" component={AdminSettingsRoute} />
-                <Route path="/admin/error-logs/" component={AdminSettingsRoute} />
-                <Route path="/admin/system" component={AdminSettingsRoute} />
-                <Route path="/admin/system/" component={AdminSettingsRoute} />
-                <Route path="/settings" component={AdminSettingsRoute} />
-                <Route path="/settings/" component={AdminSettingsRoute} />
-                <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
-                <Route path="/admin/group/:id/" component={AdminGroupDetailRoute} />
-                <Route path="/admin/groups" component={AdminGallery} />
-                <Route path="/admin/groups/" component={AdminGallery} />
-                <Route path="/admin/photos" component={AdminGallery} />
-                <Route path="/admin/photos/" component={AdminGallery} />
-                <Route path="/admin/tags" component={AdminGallery} />
-                <Route path="/admin/tags/" component={AdminGallery} />
-                <Route path="/admin/categories" component={AdminGallery} />
-                <Route path="/admin/categories/" component={AdminGallery} />
-                <Route path="/admin/manufacturer" component={AdminGallery} />
-                <Route path="/admin/manufacturer/" component={AdminGallery} />
-                <Route path="/admin" component={AdminGallery} />
-                <Route path="/admin/" component={AdminGallery} />
                 
-                {/* 📌 [Fix] Catch-all for unknown admin subpaths to prevent 404 on UI micro-navigations */}
+                <Route path="/admin/diagnostics" component={AdminDiagRoute} />
+                <Route path="/admin/diagnose" component={AdminDiagRoute} />
+                <Route path="/diagnostics" component={AdminDiagRoute} />
+                <Route path="/diagnostics/:any*" component={AdminDiagRoute} />
+                
+                <Route path="/admin/tasks" component={AdminSettingsRoute} />
+                <Route path="/admin/settings" component={AdminSettingsRoute} />
+                <Route path="/admin/error-logs" component={AdminSettingsRoute} />
+                <Route path="/admin/system" component={AdminSettingsRoute} />
+                <Route path="/settings" component={AdminSettingsRoute} />
+                
+                <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
+                
+                <Route path="/admin/groups" component={AdminGallery} />
+                <Route path="/admin/photos" component={AdminGallery} />
+                <Route path="/admin/tags" component={AdminGallery} />
+                <Route path="/admin/categories" component={AdminGallery} />
+                <Route path="/admin/manufacturer" component={AdminGallery} />
+                <Route path="/admin" component={AdminGallery} />
+                
+                {/* 📌 [Fix] 管理端兜底逻辑：匹配所有 /admin/ 开头的未定义路径，重定向到 AdminGallery */}
                 <Route path="/admin/:any*">
                   <AdminGallery />
                 </Route>

@@ -10,9 +10,11 @@ interface NotFoundPageProps {
   [key: string]: any;
 }
 
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
+
 export function NotFoundPage({ isTransitionAllowed = true }: NotFoundPageProps) {
   const { t } = useTranslation();
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  const [pathname] = useNormalizedLocation();
 
   // Detect and bypass transition-induced false positive 404s
   const isTransition = React.useMemo(() => {

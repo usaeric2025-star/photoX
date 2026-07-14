@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
-import { useAppRouter } from '#lib/router/index.js';
 import { useGroupData } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
@@ -10,13 +9,16 @@ import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 import { GroupDetailLayout } from './components/GroupDetailLayout.js';
 
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
+
+import { useRoute } from 'wouter';
+
 export function PublicGroupDetailPage() {
-  const { params } = useAppRouter();
+  const [match, params] = useRoute<{ slug: string }>('/group/:slug');
   const { groupId: fGroupId, photoId } = useFilters();
+  const [location] = useNormalizedLocation();
   
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const pathSlug = pathname.startsWith('/group/') ? pathname.split('/group/')[1]?.replace(/\/$/, '') : undefined;
-  const groupId = pathSlug || ((params as { slug?: string }).slug) || fGroupId;
+  const groupId = params?.slug || fGroupId;
   
   const [anchor, setAnchor] = React.useState(true);
   const { t } = useTranslation();

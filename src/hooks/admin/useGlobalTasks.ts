@@ -6,7 +6,6 @@ import { api } from '#lib/api.js';
 import { useAppQuery, queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { logger } from '#lib/logger.js';
-import { useAppRoute } from '#lib/router/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import type { Task } from '#lib/task-queue/types.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -22,6 +21,8 @@ interface RemoteJob {
   error?: string;
 }
 
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
+
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
  */
@@ -30,8 +31,7 @@ export function useGlobalTasks() {
   const { can } = usePermission();
   const canManageSystem = can('system:settings');
   const user = useAuth(s => s.user);
-  const route = useAppRoute();
-  const routeName = route?.name;
+  const [location] = useNormalizedLocation();
   
   // 1. Frontend Tasks (Real-time, transient)
   const sessionTasksMap = useSignal(tasksSignal);
@@ -58,12 +58,11 @@ export function useGlobalTasks() {
         if (!canManageSystem) return false;
         if (typeof document !== 'undefined' && document.hidden) return false;
         const hasRunning = Array.isArray(rJobs) && (rJobs as { status?: string }[]).some(job => job && job.status === 'processing');
-        const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+        
         const isStatusScreen = 
-          (typeof routeName === 'string' && ['adminTasks', 'adminDiagnostics', 'adminDiagnosticsLogs'].includes(routeName)) ||
-          pathname.startsWith('/admin/tasks') ||
-          pathname.startsWith('/admin/diagnose') ||
-          pathname.startsWith('/admin/error-logs');
+          location.startsWith('/admin/tasks') ||
+          location.startsWith('/admin/diagnose') ||
+          location.startsWith('/admin/error-logs');
         return (hasRunning || isStatusScreen) ? 5000 : false;
       },
     }

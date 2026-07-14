@@ -1,9 +1,7 @@
 import React, { memo } from 'react';
-import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect, usePermission } from '#src/hooks/index.js';
-import { useAdminMaintenance } from '#src/hooks/admin/useAdminMaintenance.js';
+import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect, usePermission, useAdminActions, useAIBatchAnalysis } from '#src/hooks/index.js';
 import { useUI, type UIStoreState, useSignal, activeTaskCountSignal } from '#lib/store/index.js';
-import { useAppRouter } from '#lib/router/index.js';
-import { useAIBatchAnalysis } from '#src/hooks/photo/usePhotoAI.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useMediaQuery } from '#src/hooks/index.js';
 import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '#src/hooks/group/index.js';
@@ -30,23 +28,21 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const isMultiSelect = useIsMultiSelect();
   const { clearSelection, patch, toggleMode } = useSelectionActions();
   
-  const { deletePhoto, batchUpdate } = useAdminMaintenance();
-  // const patch = useUI((s: UIStoreState) => s.patch); // Removed
-  const { navigate } = useAppRouter();
+  const { deletePhoto, batchUpdate } = useAdminActions();
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const confirm = useConfirm();
 
   const combineMutation = useGroupPhotosMutation();
   const removeMutation = useRemoveFromGroupMutation();
 
+  const [location, setLocation] = useNormalizedLocation();
+
   // Smart groupId detection from URL if not provided
   const groupId = React.useMemo(() => {
     if (propGroupId) return propGroupId;
-    if (typeof window === 'undefined') return undefined;
-    const path = window.location.pathname;
-    const match = path.match(/\/(admin\/)?group\/([^\/]+)/);
+    const match = location.match(/\/(admin\/)?group\/([^\/]+)/);
     return match ? match[2] : undefined;
-  }, [propGroupId]);
+  }, [propGroupId, location]);
 
   // ✅ 使用計算後的 Selector
   const activeTasks = useSignal(activeTaskCountSignal);
@@ -75,7 +71,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const handleBatchEdit = () => {
     if (selectedCount === 0 || isAnyPending) return;
     patch({ batchEditingIds: selectedIds });
-    navigate.adminBatchEdit();
+    setLocation('/admin/batch-edit');
   };
 
   const handleManualGroup = async () => {

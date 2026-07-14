@@ -6,7 +6,7 @@ import { OrgTab } from "./OrgTab.js";
 import { DetailsTab } from "./DetailsTab.js";
 import { AISourceTab } from "./AISourceTab.js";
 import { useUI } from '#lib/store/index.js';
-import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext.js";
+import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 
 export function PhotoEditTabs() {
   const { photoId } = usePhotoEditSessionContext();

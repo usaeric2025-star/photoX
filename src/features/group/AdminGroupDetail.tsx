@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAppRouter } from '#lib/router/index.js';
 import { useGroupData } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { Photo } from '#src/types/index.js';
@@ -13,13 +12,16 @@ import { AdminGroupHeader } from './components/AdminGroupHeader.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 import { GroupDetailLayout } from './components/GroupDetailLayout.js';
 
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
+
+import { useRoute } from 'wouter';
+
 export function AdminGroupDetailPage() {
-  const { params, navigate } = useAppRouter();
+  const [match, params] = useRoute<{ id: string }>('/admin/group/:id');
   const { groupId: fGroupId, photoId } = useFilters();
+  const [location, setLocation] = useNormalizedLocation();
   
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const pathId = pathname.startsWith('/admin/group/') ? pathname.split('/admin/group/')[1]?.replace(/\/$/, '') : undefined;
-  const groupId = pathId || (params as { id?: string }).id || fGroupId;
+  const groupId = params?.id || fGroupId;
   
   const { 
     group, 
@@ -90,11 +92,11 @@ export function AdminGroupDetailPage() {
   useEffect(() => {
     if (!loading && !group) {
       const timer = setTimeout(() => {
-        navigate.admin();
+        setLocation('/admin');
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [loading, group, navigate]);
+  }, [loading, group, setLocation]);
 
   if (!loading && !group) {
     return (
@@ -108,7 +110,7 @@ export function AdminGroupDetailPage() {
         fetchNextPage={() => {}}
         emptyTitle="分组不存在或已合并"
         emptyMessage="该分组可能已被删除、解散或合并至其他分组。正在跳转回管理页面..."
-        onRetry={() => navigate.admin()}
+        onRetry={() => setLocation('/admin')}
         bottomPadding={isMultiSelect}
         header={<div className="p-4 text-center text-slate-500 font-semibold bg-white border-b">分组不存在</div>}
       />
@@ -126,7 +128,7 @@ export function AdminGroupDetailPage() {
       fetchNextPage={fetchNextPage || (() => {})}
       emptyTitle="分组不存在或已合并"
       emptyMessage="该分组可能已被删除、解散或合并至其他分组。正在跳转回管理页面..."
-      onRetry={() => navigate.admin()}
+      onRetry={() => setLocation('/admin')}
       bottomPadding={isMultiSelect}
       header={
         <AdminGroupHeader 
@@ -146,7 +148,7 @@ export function AdminGroupDetailPage() {
             handleUpdateGroupData={handleUpdateGroupData}
             onUngroup={async (id) => {
               await dissolve.mutateAsync(id);
-              navigate.admin();
+              setLocation('/admin');
             }}
             update={async (updates) => { if (groupId) await update.mutateAsync({ id: groupId, updates }); }}
             t={t}

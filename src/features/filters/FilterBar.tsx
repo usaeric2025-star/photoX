@@ -5,8 +5,7 @@ import { SortToggle } from './SortToggle.js';
 import { CategoryGrid } from './CategoryGrid.js';
 import { ColumnsToggle } from '#src/components/layout/ColumnsToggle.js';
 import { GroupToggle } from '#src/components/ui/GroupToggle.js';
-import { useFilters } from '#src/hooks/index.js';
-import { useTags } from '#src/hooks/tag/index.js';
+import { useFilters, useTags } from '#src/hooks/index.js';
 import { cn } from '#lib/utils.js';
 
 const TagGrid = lazy(() => import('./TagGrid.js').then(m => ({ default: m.TagGrid })));
@@ -27,16 +26,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
   
   const [showTags, setShowTags] = useState(false);
   
-  // 延遲載入非關鍵資料 (P1)
-  const [isReadyForNonCritical, setIsReadyForNonCritical] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsReadyForNonCritical(true);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const { tags: allTags } = useTags({ enabled: isReadyForNonCritical });
+  const { tags: allTags } = useTags();
 
   const selectedTags = allTags?.filter(tag => filters.tagIds.includes(String(tag.id))) || [];
 

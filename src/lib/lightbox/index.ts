@@ -2,7 +2,7 @@ export * from './types.js';
 import { LightboxSlide } from './types.js';
 import { useUI } from '#lib/store/index.js';
 import { useFilters } from '#src/hooks/index.js';
-import { useAppRoute } from '#lib/router/index.js';
+import { useRoute } from 'wouter';
 
 export function useLightbox() {
   const slides = useUI(s => s.lightboxSlides || []);
@@ -12,10 +12,11 @@ export function useLightbox() {
   const setLightboxIndex = useUI(s => s.setLightboxIndex);
   
   const { photoId: queryPhotoId, setPhotoId, modal } = useFilters();
-  const route = useAppRoute();
+  const [isPhotoRoute, params] = useRoute<{ photoId: string }>('/photo/:photoId');
+  const [isAdminPhotoRoute, adminParams] = useRoute<{ photoId: string }>('/admin/photo/:photoId');
   
   const photoId = queryPhotoId || 
-    (route.name === 'photo' || route.name === 'adminPhoto' ? (route.params as Record<string, string>).photoId : null);
+    (isPhotoRoute ? params?.photoId : (isAdminPhotoRoute ? adminParams?.photoId : null));
   const isOpen = !!photoId;
   const isEditing = modal === 'edit';
   

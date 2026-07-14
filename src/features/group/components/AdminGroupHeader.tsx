@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAppRouter } from '#lib/router/index.js';
 import { Group } from '#src/types/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useIsMultiSelect, useSelectionActions, usePermission } from '#src/hooks/index.js';
@@ -10,6 +9,7 @@ import * as v from 'valibot';
 import { Input } from '#src/components/shared/Input.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useTranslation } from '#src/hooks/core/index.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { TranslationType } from '#src/locales/index.js';
 
 const GroupTitleSchema = v.object({
@@ -55,7 +55,7 @@ interface AdminGroupHeaderProps {
 }
 
 export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTitle }: AdminGroupHeaderProps) {
-  const { navigate } = useAppRouter();
+  const [location, setLocation] = useNormalizedLocation();
   const [copied, setCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(group.name);
@@ -127,7 +127,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
       {/* Left side: Back button & Title/Info section */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
         <button 
-          onClick={() => navigate.admin()}
+          onClick={() => setLocation('/admin')}
           className="p-1.5 -ml-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
           title={t('backToHome')}
         >

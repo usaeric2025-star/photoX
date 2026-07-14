@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
+import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 import { useManufacturers, useManufacturerMutations, useTags, useTagMutations } from '#src/hooks/index.js';
 import { useUI } from '#lib/store/index.js';
 import { PromptDialog } from '#src/components/ui/PromptDialog.js';
@@ -58,7 +58,7 @@ export function OrgTab() {
               tags={tags}
               addTag={async (name) => {
                 const result = await addTagMut(name);
-                return result?.id ? String(result.id) : null;
+                return result && typeof result === 'object' && 'id' in result ? String(result.id) : null;
               }}
               updateTag={async (id, name) => {
                 await updateTagMut({ id: Number(id), updates: { name } });

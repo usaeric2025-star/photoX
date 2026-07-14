@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useAppRouter } from '#lib/router/index.js';
 import { Group } from '#src/types/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useTranslation } from '#src/hooks/core/index.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
 interface PublicGroupHeaderProps {
   group: Group;
@@ -13,7 +13,7 @@ interface PublicGroupHeaderProps {
 
 export function PublicGroupHeader({ group, photoCount }: PublicGroupHeaderProps) {
   const [copied, setCopied] = useState(false);
-  const { navigate } = useAppRouter();
+  const [location, setLocation] = useNormalizedLocation();
   const { t } = useTranslation();
 
   const handleCopyId = async () => {
@@ -67,7 +67,7 @@ export function PublicGroupHeader({ group, photoCount }: PublicGroupHeaderProps)
         </button>
         
         <button 
-          onClick={() => navigate.home()}
+          onClick={() => setLocation('/')}
           className="p-2 -mr-2 text-slate-500 hover:text-slate-800 transition-colors ml-1"
           title={t('backToHome')}
         >

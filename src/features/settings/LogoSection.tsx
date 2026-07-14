@@ -5,9 +5,6 @@ import { Category, Tag, Manufacturer, AppSettings } from '#src/types/index.js';
 interface LogoSectionProps {
   settings: AppSettings | null;
   handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  categories: Category[];
-  tags: Tag[];
-  manufacturers: Manufacturer[];
   cardClass: string;
   buttonStyles: { secondary: string };
   setSettingField: <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => void;
@@ -17,9 +14,6 @@ interface LogoSectionProps {
 export function LogoSection({
   settings,
   handleLogoUpload,
-  categories,
-  tags,
-  manufacturers,
   cardClass,
   buttonStyles,
   setSettingField,

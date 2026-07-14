@@ -1,0 +1,115 @@
+import { useState, useEffect } from 'react';
+import { useSettings, useTranslation } from '#src/hooks/index.js';
+import { AppSettings } from '#src/types/index.js';
+import { showToast } from '#lib/ui/toast.js';
+import { testAiConnection } from "#src/features/ai/AICommands.js";
+
+export function useAISettingsActions(initialAgnesKey: string) {
+  const { settings, updateSettings } = useSettings();
+  const { t } = useTranslation();
+
+  const [localOpenRouterKey, setLocalOpenRouterKey] = useState(
+    settings?.openrouterApiKey ? '••••••••••••••••' : ''
+  );
+  const [localAgnesKey, setLocalAgnesKey] = useState(
+    settings?.agnesApiKey ? '••••••••••••••••' : ''
+  );
+  
+  const [openrouterModel, setOpenrouterModel] = useState(String(settings?.openrouterModel || 'google/gemini-2.5-flash'));
+  const [agnesModel, setAgnesModel] = useState(String(settings?.agnesModel || 'gemini-2.0-flash-exp'));
+
+  const [isEditingOpenRouter, setIsEditingOpenRouter] = useState(false);
+  const [isEditingAgnes, setIsEditingAgnes] = useState(false);
+
+  const [isTestingProvider, setIsTestingProvider] = useState<'openrouter' | 'agnes' | null>(null);
+  const [isSavingKey, setIsSavingKey] = useState<'openrouter' | 'agnes' | null>(null);
+  const [isSavingProvider, setIsSavingProvider] = useState(false);
+
+  const keysStatus = {
+    openrouter: !!settings?.openrouterApiKey,
+    agnes: !!settings?.agnesApiKey,
+    primaryProvider: String(settings?.primaryAiProvider || 'agnes')
+  };
+
+  const saveKey = async (provider: 'openrouter' | 'agnes', key: string) => {
+    setIsSavingKey(provider);
+    try {
+      const field = provider === 'openrouter' ? 'openrouterApiKey' : 'agnesApiKey';
+      await updateSettings({ [field]: key } as Partial<AppSettings>);
+      showToast.success(t('updateSuccess'));
+      if (provider === 'openrouter') {
+        setIsEditingOpenRouter(false);
+        setLocalOpenRouterKey('••••••••••••••••');
+      } else {
+        setIsEditingAgnes(false);
+        setLocalAgnesKey('••••••••••••••••');
+      }
+    } catch (e) {
+      showToast.error(t('updateError'));
+    } finally {
+      setIsSavingKey(null);
+    }
+  };
+
+  const saveProvider = async (provider: 'openrouter' | 'agnes') => {
+    setIsSavingProvider(true);
+    try {
+      await updateSettings({ primaryAiProvider: provider } as Partial<AppSettings>);
+      showToast.success(t('updateSuccess'));
+    } catch (e) {
+      showToast.error(t('updateError'));
+    } finally {
+      setIsSavingProvider(false);
+    }
+  };
+
+  const handleSaveModel = async (provider: 'openrouter' | 'agnes', model: string) => {
+    try {
+      const field = provider === 'openrouter' ? 'openrouterModel' : 'agnesModel';
+      await updateSettings({ [field]: model } as Partial<AppSettings>);
+      showToast.success(t('updateSuccess'));
+    } catch (e) {
+      showToast.error(t('updateError'));
+    }
+  };
+
+  const handleTest = async (provider: 'openrouter' | 'agnes') => {
+    setIsTestingProvider(provider);
+    try {
+      const apiKey = provider === 'openrouter' ? settings?.openrouterApiKey : settings?.agnesApiKey;
+      const ok = await testAiConnection(String(apiKey || ""), provider);
+      if (ok) {
+        showToast.success(t('aiConnectSuccess'));
+      } else {
+        showToast.error(t('aiConnectFailed'));
+      }
+    } catch (e) {
+      showToast.error(t('aiConnectFailed') + ': ' + String(e));
+    } finally {
+      setIsTestingProvider(null);
+    }
+  };
+
+  return {
+    keysStatus,
+    localOpenRouterKey,
+    setLocalOpenRouterKey,
+    localAgnesKey,
+    setLocalAgnesKey,
+    isEditingOpenRouter,
+    setIsEditingOpenRouter,
+    isEditingAgnes,
+    setIsEditingAgnes,
+    openrouterModel,
+    setOpenrouterModel,
+    agnesModel,
+    setAgnesModel,
+    isTestingProvider,
+    isSavingKey,
+    isSavingProvider,
+    handleTest,
+    saveKey,
+    saveProvider,
+    handleSaveModel
+  };
+}

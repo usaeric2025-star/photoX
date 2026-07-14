@@ -1,6 +1,4 @@
-import { useCategories } from '#src/hooks/category/index.js';
-import { useFilterState } from '#src/hooks/index.js';
-import { useTranslation } from '#src/hooks/index.js';
+import { useCategories, useFilters, useTranslation } from '#src/hooks/index.js';
 import { getTranslatedCategoryName } from '#src/utils/category.js';
 import { logger } from '#lib/logger.js';
 import type { FilterState } from './types.js';
@@ -32,7 +30,7 @@ function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick
 }
 
 export function CategoryGrid({ mode, enabled = true }: { mode?: 'public' | 'admin', enabled?: boolean }) {
-  const { filters, updateFilters } = useFilterState();
+  const { filters, updateFilters } = useFilters();
   const { appLang, uiTranslations } = useTranslation();
   const { categories, isLoading: isPending } = useCategories({ enabled });
 

@@ -1,22 +1,10 @@
-import { logger } from '#lib/logger.js';
-import { usePhotoEditSessionContext } from "#src/hooks/photo/index.js";
+import { usePhotoEditSessionContext } from "./hooks/PhotoEditSession.js";
 import React from "react";
 import { Icon } from '#src/components/ui/Icon.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { type PhotoEditFormData } from "#lib/valibot/schemas/photo.js";
-import {
-  usePhoto,
-  useRemoveFromGroupMutation,
-  useAdminMaintenance,
-  usePhotoMutations,
-  useFilters,
-} from '#src/hooks/index.js';
-import { useSignal, useUI, tasksSignal } from '#lib/store/index.js';
-import { Task } from '#lib/task-queue/types.js';
-import { showToast } from "#lib/ui/toast.js";
-import { ErrorFactory } from "#lib/error/ErrorFactory.js";
-import { usePhotoEditAI } from "#src/hooks/index.js";
-import { useGroupMutations } from "#src/hooks/group/index.js";
+import { useTranslation } from '#src/hooks/index.js';
+import { useDialogHeaderActions } from "./hooks/useDialogHeaderActions.js";
 
 interface DialogHeaderProps {
   onClose: () => void;
@@ -27,60 +15,27 @@ export function DialogHeader({
   onClose,
   onDeleteClick,
 }: DialogHeaderProps) {
-  const { commit, isPending, isSubmitting, form } = usePhotoEditSessionContext();
+  const { t } = useTranslation();
+  const { form } = usePhotoEditSessionContext();
   
-  const { modal, photoId, setModal, setPhotoId } = useFilters();
-  const editPhotoId = modal === 'edit' ? photoId : null;
-  const appLang = useUI((s) => s.appLang);
-  
-  const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  
-  
-
-  const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
-  const { setCover } = useGroupMutations();
-  const { updatePhoto: { mutateAsync: updateAdminPhoto } } = useAdminMaintenance();
-  const { deletePhotoAsync: deletePhoto } = usePhotoMutations();
-  
-  const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
-  const tasksMap = useSignal(tasksSignal) as Map<string, Task>;
-  const aiTask = Array.from(tasksMap.values()).find((t) => t.type === 'ai-analyze' && t.state.status === 'processing');
-  const aiMessage = aiTask?.state.status === 'processing' ? aiTask.state.message : undefined;
-  
-  const isPartOfGroup = !!detailPhoto?.groupId;
-
-  const onRemoveFromGroup = async () => {
-    if (editPhotoId && detailPhoto?.groupId) {
-      try {
-        await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.groupId });
-        showToast.success(appLang === 'zh' ? '已移出合组' : 'Removed from group');
-        onClose();
-      } catch (e) {
-        ErrorFactory.handle(e, { context: '移出合组' });
-      }
-    }
-  };
-
-  const onAiAnalyze = async () => {
-    const finalImageUrl = detailPhoto?.imageUrl;
-    if (finalImageUrl) {
-      try {
-        await handleAiAnalyze(finalImageUrl);
-        showToast.success(appLang === 'zh' ? '分析请求已发送' : 'Analysis request sent');
-      } catch (e) {
-        ErrorFactory.handle(e, { context: 'AI 识别' });
-      }
-    } else {
-      ErrorFactory.handle(appLang === 'zh' ? '照片信息缺失，无法识别' : 'Photo data missing', { context: 'AI 识别' });
-    }
-  }
+  const {
+    isPending,
+    isSubmitting,
+    isAnalyzing,
+    aiMessage,
+    isPartOfGroup,
+    editPhotoId,
+    onRemoveFromGroup,
+    onAiAnalyze,
+    onSave,
+    isCoverPending,
+    setCover
+  } = useDialogHeaderActions(onClose);
 
   const l = {
-    hidden: 'Hide',
-    visible: 'Show',
-    editTitle: 'Edit Product',
-    analyzeTitle: 'Analyze Product',
-    cover: 'Cover',
+    editTitle: t('editPhoto') || 'Edit Product',
+    analyzeTitle: t('analyzePhoto') || 'Analyze Product',
+    cover: t('cover') || 'Cover',
   };
 
   return (
@@ -122,19 +77,12 @@ export function DialogHeader({
                   type="button"
                   onClick={async () => {
                     const newState = !active;
-                    try {
-                      form.setFieldValue('isGroupCover', newState);
-                      if (newState && detailPhoto?.groupId && editPhotoId) {
-                        await setCover.mutateAsync({ groupId: detailPhoto.groupId, photoId: editPhotoId });
-                        showToast.success(appLang === 'zh' ? '已设置为封面' : 'Set as cover');
-                      }
-                    } catch (e) {
-                      ErrorFactory.handle(e, { context: '设置封面' });
-                    }
+                    form.setFieldValue('isGroupCover', newState);
+                    await setCover(newState);
                   }}
                   title={l.cover}
-                  disabled={setCover.isPending}
-                  className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${active ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"} ${setCover.isPending ? "opacity-50 cursor-wait" : ""}`}
+                  disabled={isCoverPending}
+                  className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${active ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"} ${isCoverPending ? "opacity-50 cursor-wait" : ""}`}
                 >
                   <Icon name="star" size={20} className={active ? "fill-white" : "fill-transparent"} />
                 </button>
@@ -147,7 +95,7 @@ export function DialogHeader({
           <button
             type="button"
             onClick={onRemoveFromGroup}
-            title="移出合组"
+            title={t('removeFromGroup') || "移出合組"}
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 border border-slate-200 shadow-sm hover:bg-slate-200 active:scale-95 transition-all"
           >
             <Icon name="log-out" size={18} />
@@ -167,14 +115,7 @@ export function DialogHeader({
 
         <button
           type="button"
-          onClick={async () => {
-            try {
-              await commit();
-            } catch (e) {
-              // commit inside PhotoEditSession handles its own toast
-              logger.error('[PhotoEdit] Save error intercepted in header', e);
-            }
-          }}
+          onClick={onSave}
           disabled={isSubmitting || isAnalyzing}
           className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSubmitting || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
         >
@@ -188,10 +129,10 @@ export function DialogHeader({
           type="button"
           onClick={onClose}
           className="h-10 px-3 flex-shrink-0 flex items-center justify-center gap-1.5 text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-red-50 transition-all rounded-xl ml-1 border border-transparent hover:border-red-100 group"
-          title={appLang === 'zh' ? '关闭' : 'Close'}
+          title={t('close') || '关闭'}
         >
           <span className="text-xs font-bold hidden sm:inline group-hover:text-red-600 transition-colors uppercase">
-            {appLang === 'zh' ? '关闭' : 'Close'}
+            {t('close') || '关闭'}
           </span>
           <Icon name="x" size={20} />
         </button>

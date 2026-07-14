@@ -1,32 +1,34 @@
 import { useState, useEffect } from 'react';
-import { useFilterState } from '#src/hooks/index.js';
+import { useFilters } from '#src/hooks/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { useDebouncedCallback } from '#src/hooks/core/index.js';
 
 export function SearchInput() {
-  const { filters, updateFilters } = useFilterState();
-  const [searchTerm, setSearchTerm] = useState(filters.search || '');
+  const { search, setSearch } = useFilters();
+  const [searchTerm, setSearchTerm] = useState(search || '');
   const { t } = useTranslation();
  
-  // Sync state if filters.search changes externally (e.g. filter reset)
+  // 同步外部變更（如重置過濾器）
   useEffect(() => {
-    setSearchTerm(filters.search || '');
-  }, [filters.search]);
+    if (search !== searchTerm) {
+      setSearchTerm(search || '');
+    }
+  }, [search]);
  
-  const debouncedUpdateFilters = useDebouncedCallback((value: string) => {
-    updateFilters({ search: value });
+  const debouncedSetSearch = useDebouncedCallback((value: string) => {
+    setSearch(value || null);
   }, 300);
  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    debouncedUpdateFilters(value);
+    debouncedSetSearch(value);
   };
  
   const handleClear = () => {
     setSearchTerm('');
-    debouncedUpdateFilters("");
+    setSearch(null);
   };
  
   return (

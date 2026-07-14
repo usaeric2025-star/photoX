@@ -21,9 +21,7 @@ export * from './core/index.js';
 export * from './admin/index.js';
 export * from './photo/index.js';
 export * from './group/index.js';
-export * from './category/index.js';
-export * from './tag/index.js';
-export * from './manufacturer/index.js';
+export * from './metadata/index.js';
 export * from './settings/index.js';
 export * from './selection/index.js';
 

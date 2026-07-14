@@ -1,5 +1,5 @@
 import { Field } from '@tanstack/react-form';
-import { usePhotoEditSessionContext } from "#src/hooks/photo/usePhotoEditSessionContext.js";
+import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 import { FormSectionHeader } from '#src/components/admin/FormShared.js';
 import { useCategories, useTranslation } from '#src/hooks/index.js';
 import { getTranslatedCategoryName } from "#src/utils/category.js";

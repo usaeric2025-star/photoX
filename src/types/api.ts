@@ -10,7 +10,6 @@ import type {
 } from '#shared/apiContractSchema.js';
 
 
-export type ApiResponse<T = unknown> = BaseApiResponse<T>;
 
 interface PaginatedResponse<T> {
   data: T[];

@@ -1,13 +1,13 @@
 import React from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { usePhotoEditSessionContext } from '#src/hooks/photo/usePhotoEditSessionContext.js';
+import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 import { DimensionEditor } from './DimensionEditor.js';
 import { Dimension } from '#src/types/index.js';
 import { safeArray } from '#lib/utils.js';
 import { useUI, useSignal } from '#lib/store/index.js';
 import { usePhoto, useFilters, useTranslation } from '#src/hooks/index.js';
 import { showToast } from '#lib/ui/toast.js';
-import { usePhotoEditAI } from '#src/hooks/index.js';
+import { usePhotoEditAI } from './hooks/usePhotoAI.js';
 import { AppField } from '#lib/forms/AppField.js';
 import { MultilingualInput } from '#src/components/shared/MultilingualInput.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';

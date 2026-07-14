@@ -106,6 +106,8 @@ export interface Tag {
   userId?: string;
   isPinned?: boolean;
   hotScore?: number;
+  usageCount?: number;
+  isHot?: boolean;
   isGlobal?: boolean;
 }
 

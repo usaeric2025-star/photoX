@@ -1,13 +1,9 @@
 import React, { useRef } from 'react';
 import { useLongPress } from '#src/hooks/core/index.js';
 import { useUI, UIStoreState } from '#lib/store/index.js';
-import { useAppRoute, useNavigation } from '#lib/router/index.js';
 import { PhotoListItem } from '#src/types/api.js';
-import { queryKeys } from '#lib/query/keys.js';
-import { getGroupById } from '#src/hooks/group/queries.js';
-import { STALE_TIMES } from '#lib/query/config.js';
-import { Photo } from '#src/types/index.js';
 import { useFilters } from '#src/features/filters/index.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useIsMultiSelect, useSelectionActions } from '../../hooks/selection/useSelection.js';
 import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 
@@ -40,19 +36,18 @@ export function usePhotoCard({
   const isMultiSelectActual = useIsMultiSelect();
   const { toggleSelect, toggleMode } = useSelectionActions();
   const patch = useUI((s: UIStoreState) => s.patch);
-  const route = useAppRoute();
-  const navigate = useNavigation();
+  const [location, setLocation] = useNormalizedLocation();
  
    const handleOpenLightbox = () => {
      logger.debug('[usePhotoCard] handleOpenLightbox for photo:', photo.id);
-     navigate.photo(photo.id);
+     setLocation(`/photo/${photo.id}`);
    };
     
   const handleGroupNavigate = (gid: string) => {
       if (isManagement) {
-          navigate.adminGroup(gid);
+          setLocation(`/admin/group/${gid}`);
       } else {
-          navigate.publicGroup(gid);
+          setLocation(`/group/${gid}`);
       }
   };
 
@@ -73,12 +68,8 @@ export function usePhotoCard({
       return;
     }
 
-    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
     const isAlreadyOnGroupPage = 
-      route.name === 'publicGroup' || 
-      route.name === 'adminGroup' || 
-      pathname.includes('/group/') ||
-      (route.params as Record<string, string>).groupId;
+      location.includes('/group/');
     const shouldGoToGroup = photo.groupId && showGroupsCollapsed && !isAlreadyOnGroupPage;
 
     if (shouldGoToGroup) {

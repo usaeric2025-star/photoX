@@ -25,25 +25,27 @@ export function DimensionItem({
 }: DimensionItemProps) {
   const label = dim.label || '';
   const prefixMatch = label.match(/^([A-Z0-9\u4e00-\u9fa5]+)\s*[:：]\s*(.*)$/i);
-  const prefix = prefixMatch ? prefixMatch[1] : '';
+  let prefix = prefixMatch ? prefixMatch[1] : '';
+  let dimensionsContent = prefixMatch ? prefixMatch[2] : label;
   
-  let dimensionsPart = prefixMatch ? prefixMatch[2] : label;
-  
-  // 📌 [Fix] If dimensionsPart doesn't contain numbers but we have numeric data, prioritize the numeric data
-  // This solves the "only see name, dimensions appear after deleting name" issue
-  const hasNumbers = /\d/.test(dimensionsPart);
+  const hasNumbers = /\d/.test(dimensionsContent);
   const hasNumericData = !!(dim.height || dim.width || dim.length);
   
+  // 📌 [Fix] If content has no numbers but we have numeric data, move existing content to prefix and use numeric data as content
+  // This preserves labels like "Large" or "Inner" while showing the actual dimensions
   if (hasNumericData && !hasNumbers) {
+    if (!prefix && dimensionsContent && dimensionsContent !== '---' && dimensionsContent.length < 20) {
+      prefix = dimensionsContent;
+    }
     const h = dim.height ? `H${dim.height}` : '';
     const w = dim.width ? `W${dim.width}` : '';
     const l = dim.length ? `L${dim.length}` : '';
-    dimensionsPart = [h, w, l].filter(Boolean).join(' x ');
-  } else if (!dimensionsPart && hasNumericData) {
+    dimensionsContent = [h, w, l].filter(Boolean).join(' x ');
+  } else if (!dimensionsContent && hasNumericData) {
     const h = dim.height ? `H${dim.height}` : '';
     const w = dim.width ? `W${dim.width}` : '';
     const l = dim.length ? `L${dim.length}` : '';
-    dimensionsPart = [h, w, l].filter(Boolean).join(' x ');
+    dimensionsContent = [h, w, l].filter(Boolean).join(' x ');
   }
 
   return (
@@ -72,7 +74,7 @@ export function DimensionItem({
             type="text" 
             placeholder="如: WD" 
             value={prefix} 
-            onChange={e => onUpdateLabel(idx, e.target.value.toUpperCase().trim(), dimensionsPart)}
+            onChange={e => onUpdateLabel(idx, e.target.value.toUpperCase().trim(), dimensionsContent)}
             className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" 
           />
         </div>
@@ -99,7 +101,7 @@ export function DimensionItem({
         <input 
           type="text" 
           placeholder={isAnalyzing ? "AI 识别中..." : "H94 x W96 x D23"} 
-          value={dimensionsPart || ""} 
+          value={dimensionsContent || ""} 
           onChange={e => onUpdateLabel(idx, prefix, e.target.value)}
           className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" 
         />

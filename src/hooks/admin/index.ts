@@ -1,12 +1,9 @@
 /**
- * 管理員具體操作集合（單張、批量、AI）
+ * 管理員操作、維護與審計聚合 (單張、批量、AI、診斷)
  */
-export * from './useAdminMaintenance.js';
-
-/**
- * 診斷報表與檢查邏輯
- */
-export * from './useDiagnostics.js';
+export * from './useAdminActions.js';
+export * from './useSystemMaintenance.js';
+export * from './usePerformanceAudit.js';
 
 /**
  * 系統級後台任務管理（全局）
@@ -14,11 +11,6 @@ export * from './useDiagnostics.js';
 export * from './useGlobalTasks.js';
 
 /**
- * 性能審計與報表
+ * 核心執行邏輯 (診斷子任務)
  */
-export * from './usePerformanceAudit.js';
-
-// Modularized business hooks
-export * from './useAdminMutations.js';
-export * from './useAdminBatch.js';
 export * from './useMaintenanceExecution.js';

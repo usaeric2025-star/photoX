@@ -1,8 +1,8 @@
-import { useAppRouter } from '#lib/router/index.js';
 import React from 'react';
 import { cn } from '#lib/utils.js';
 import { useAuth, activeTaskCountSignal, useSignal } from '#lib/store/index.js';
-import { useUI, useSettings, useAdminBatchActions, usePermission, useTranslation } from '#src/hooks/index.js';
+import { useUI, useSettings, useAdminActions, usePermission, useTranslation } from '#src/hooks/index.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useAppQuery } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { storage } from '#lib/storage.js';
@@ -15,12 +15,12 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ className }: AdminHeaderProps) {
-  const { handleBatchAiIdentifyTrigger } = useAdminBatchActions();
+  const { handleBatchAiIdentifyTrigger } = useAdminActions();
   const user = useAuth(s => s.user);
   const signOut = useAuth(s => s.signOut);
   const { settings } = useSettings();
   const { role } = usePermission();
-  const { navigate } = useAppRouter();
+  const [location, setLocation] = useNormalizedLocation();
 
   const { t, lang } = useTranslation();
   const isMultiSelect = useIsMultiSelect();
@@ -58,7 +58,6 @@ export function AdminHeader({ className }: AdminHeaderProps) {
       <div className="flex items-center gap-4">
         <AdminHeaderLogo 
           logoUrl={logoUrl}
-          role={role}
           totalCount={totalCount}
           theme={theme}
         />
@@ -74,7 +73,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           toggleMode={toggleMode}
           batchAiIdentify={handleBatchAiIdentifyTrigger}
           taskCount={taskCount}
-          handleAuthAction={() => navigate.home()}
+          handleAuthAction={() => setLocation('/')}
           theme={theme}
           t={t}
           user={user}

@@ -11,12 +11,9 @@ import * as v from 'valibot';
 import { FormProvider } from '#lib/forms/useFormField.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { motion, AnimatePresence } from 'lite-sleek';
+import { useCategories, useCategoryMutations, useTranslation } from '#src/hooks/index.js';
 
 interface CategoriesSectionProps {
-  categories: Category[];
-  addCategory: (name: string) => Promise<Category>;
-  updateCategory: (id: number, data: Partial<Category>) => Promise<boolean>;
-  deleteCategory: (id: number) => void;
   cardClass: string;
   buttonStyles: { [key in "primary" | "secondary" | "accent"]: string };
 }
@@ -33,7 +30,7 @@ function CategoryItem({
   const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
   const [isEditOpen, editDialog] = useDisclosure(false);
   const confirm = useConfirm();
-  const appLang = useUI((s) => s.appLang);
+  const { appLang, t } = useTranslation();
 
   const menuRef = useClickOutside<HTMLDivElement>(() => {
     if (activeMenuId === cat.id) setActiveMenuId(null);
@@ -82,15 +79,15 @@ function CategoryItem({
               }}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Icon name="pencil" size={12} /> 编辑名称
+              <Icon name="pencil" size={12} /> {t('edit')}
             </button>
             <button
               onClick={async (e) => {
                 e.stopPropagation();
                 if (await confirm({
-                  title: "确认删除",
-                  description: `确定要删除「${displayName}」吗？此操作不可恢复。`,
-                  confirmText: "删除",
+                  title: t('confirmDelete') || "确认删除",
+                  description: t('confirmDeleteCategoryMsg', { name: displayName }) || `确定要删除「${displayName}」吗？此操作不可恢复。`,
+                  confirmText: t('delete') || "删除",
                   variant: "destructive"
                 })) {
                   onDelete(cat.id);
@@ -99,7 +96,7 @@ function CategoryItem({
               }}
               className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Icon name="trash-2" size={12} /> 删除
+              <Icon name="trash-2" size={12} /> {t('delete')}
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1" />
           </motion.div>
@@ -109,8 +106,8 @@ function CategoryItem({
       <PromptDialog
         open={isEditOpen}
         onOpenChange={editDialog.toggle}
-        title="编辑分类名称 / Edit Category"
-        description="输入新的名称 / Enter new name:"
+        title={t('editCategory') || "编辑分类名称 / Edit Category"}
+        description={t('enterNewName') || "输入新的名称 / Enter new name:"}
         defaultValue={displayName}
         placeholder={displayName}
         onConfirm={(name) => {
@@ -124,19 +121,25 @@ function CategoryItem({
 }
 
 export function CategoriesSection({ 
-  categories, addCategory, updateCategory, deleteCategory, cardClass, buttonStyles
+  cardClass, buttonStyles
 }: CategoriesSectionProps) {
-  const appLang = useUI((s) => s.appLang);
+  const { categories = [] } = useCategories();
+  const categoryMutations = useCategoryMutations();
+  const addCategory = categoryMutations.create.mutateAsync;
+  const updateCategory = categoryMutations.edit.mutateAsync;
+  const deleteCategory = categoryMutations.remove.mutateAsync;
+  
+  const { t, appLang } = useTranslation();
   const [isAddOpen, addDialog] = useDisclosure(false);
 
   const { submit: runUpdateCategory, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
     schema: v.object({ id: v.number(), updates: v.record(v.string(), v.unknown()) }),
     mutationFn: async ({ id, updates }: { id: number, updates: Record<string, unknown> }) => {
-      await updateCategory(id, updates);
+      await updateCategory({ id, updates });
       return true;
     },
-    successMessage: '更新分類成功',
-    errorMessage: '更新分類失敗'
+    successMessage: t('updateSuccess'),
+    errorMessage: t('updateFailed')
   });
 
   const { submit: runDeleteCategory } = useFormSubmit({
@@ -145,8 +148,8 @@ export function CategoriesSection({
       await deleteCategory(id);
       return true;
     },
-    successMessage: '刪除分類成功',
-    errorMessage: '刪除分類失敗'
+    successMessage: t('deleteSuccess'),
+    errorMessage: t('deleteFailed')
   });
 
   const { submit: runAddCategory, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
@@ -155,8 +158,8 @@ export function CategoriesSection({
       await addCategory(name);
       return true;
     },
-    successMessage: '新增分類成功',
-    errorMessage: '新增分類失敗'
+    successMessage: t('createSuccess'),
+    errorMessage: t('createFailed')
   });
 
   return (
@@ -171,7 +174,7 @@ export function CategoriesSection({
 
       <div className="flex gap-2">
         <button onClick={addDialog.open} className={buttonStyles.accent}>
-          <Icon name="plus" size={16} /> {appLang === 'zh' ? '新增分类' : 'Add New'}
+          <Icon name="plus" size={16} /> {t('addCategory') || '新增分类'}
         </button>
       </div>
 
@@ -200,8 +203,8 @@ export function CategoriesSection({
         <PromptDialog
           open={isAddOpen}
           onOpenChange={addDialog.toggle}
-          title={appLang === 'zh' ? '新增分类' : 'New Category'}
-          description={appLang === 'zh' ? '输入分类名称：' : 'Category Name:'}
+          title={t('addCategory') || "新增分类"}
+          description={t('enterCategoryName') || "输入分类名称："}
           onConfirm={async (name: string) => {
             if (!name.trim()) return false;
             return await runAddCategory({ name });
