@@ -62,37 +62,57 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
 }
 
 export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<unknown> => {
-  try {
-    const data = await ErrorFactory.unwrap<Record<string, any>>(
-      api.ai.analyze.$post({ json: { photoId } }),
-      'AI 服務響應異常'
-    );
-    
-    let parsed = data;
-    if (Array.isArray(parsed)) {
-      parsed = parsed[0] || {};
+  const maxRetries = 2;
+  let lastError: unknown = null;
+
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      const data = await ErrorFactory.unwrap<Record<string, any>>(
+        api.ai.analyze.$post({ json: { photoId } }, { init: { signal } }),
+        'AI 服務響應異常'
+      );
+      
+      let parsed = data;
+      if (Array.isArray(parsed)) {
+        parsed = parsed[0] || {};
+      }
+      
+      const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
+      const normalized = adapter.normalize(parsed, data.raw_result || JSON.stringify(parsed));
+
+      let cleanName = normalized.name || '';
+      cleanName = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
+
+      return {
+        name: cleanName,
+        description: normalized.description,
+        category_id: normalized.categoryId,
+        group_id: normalized.groupId,
+        tagNames: normalized.tagNames,
+        tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
+        dimensions: normalized.dimensions,
+        raw_result: normalized.rawResult
+      };
+    } catch (e: any) {
+      lastError = e;
+      if (e.name === 'AbortError') throw ErrorFactory.fatal('请求已取消', { context: 'analyzePhoto' });
+      
+      // If it's a 404/504 or common transient error, retry
+      const statusCode = e.statusCode || (e.response && e.response.status);
+      const isTransient = statusCode === 404 || statusCode === 504 || statusCode === 502 || statusCode === 503 || e.message?.includes('timeout') || e.message?.includes('NOT_FOUND');
+      
+      if (isTransient && i < maxRetries) {
+        const delay = Math.pow(2, i) * 1000;
+        console.warn(`[analyzePhoto] Attempt ${i + 1} failed with ${e.message}, retrying in ${delay}ms...`);
+        await new Promise(res => setTimeout(res, delay));
+        continue;
+      }
+      break;
     }
-    
-    // 📌 使用業界標準 Adapter 正規化資料
-    const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
-    const normalized = adapter.normalize(parsed, data.raw_result || JSON.stringify(parsed));
-
-    // 清理名稱，移除 .jpg, .png 等後綴
-    let cleanName = normalized.name || '';
-    cleanName = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
-
-    return {
-      name: cleanName,
-         description: normalized.description, // 傳遞完整多語系物件 { zh, en, ms }
-         category_id: normalized.categoryId,
-         group_id: normalized.groupId,
-         tagNames: normalized.tagNames,
-         tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
-         dimensions: normalized.dimensions,
-         raw_result: normalized.rawResult
-       };
-  } catch (e) {
-    if ((e as Error).name === 'AbortError') throw ErrorFactory.fatal('请求已取消', { context: 'analyzePhoto' });
-    throw ErrorFactory.fatal((e as Error).message || 'AI 分析异常', { context: 'analyzePhoto' });
   }
+
+  throw ErrorFactory.fatal((lastError as Error).message || 'AI 分析异常', { 
+    context: 'analyzePhoto',
+    originalError: lastError
+  });
 };

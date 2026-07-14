@@ -168,23 +168,33 @@ export const ai = new Hono()
     const prompt = AI_PROMPTS.ANALYZE_PHOTO(context);
     const messages = [{ role: 'user', content: [{ type: 'image_url', image_url: { url: finalImageUrl } }, { type: 'text', text: prompt }]}];
 
-    const { data, rawText } = await executeAITask({
-        task: 'analyze',
-        provider,
-        model,
-        messages,
-        prompt,
-        metadata: { photoId, imageUrl: finalImageUrl }
-    });
+    try {
+        const { data, rawText } = await withTimeout(
+            executeAITask({
+                task: 'analyze',
+                provider,
+                model,
+                messages,
+                prompt,
+                metadata: { photoId, imageUrl: finalImageUrl }
+            }),
+            TIMEOUTS.AI_REQUEST,
+            'AI Analyze Photo'
+        );
 
-    if (data && (data as { _fallback?: boolean })._fallback) {
-        return errorResponse(c, (data as { _error?: string })._error || 'AI analysis failed', 500);
+        if (data && (data as { _fallback?: boolean })._fallback) {
+            return errorResponse(c, (data as { _error?: string })._error || 'AI analysis failed', 500);
+        }
+
+        return successResponse(c, {
+            ...(typeof data === 'object' && data !== null ? data : { result: data }),
+            raw_result: rawText
+        });
+    } catch (err: unknown) {
+        logger.error('[AI Analyze] Error or Timeout:', err);
+        const errMsg = err instanceof Error ? err.message : String(err);
+        return errorResponse(c, `AI分析服务异常或超时: ${errMsg}`, 504);
     }
-
-    return successResponse(c, {
-        ...(typeof data === 'object' && data !== null ? data : { result: data }),
-        raw_result: rawText
-    });
 })
 .post("/translate", async (c) => {
     const body = await c.req.json();
