@@ -87,13 +87,16 @@ apiApp.get('/health', async (c) => {
     try {
         const { db } = await import('./_lib/db/index.js');
         const { sql } = await import('drizzle-orm');
-        await db.execute(sql`SELECT 1`);
+        const { pingDbWithRetry } = await import('./_lib/utils/timeout.js');
+        
+        await pingDbWithRetry(db, sql);
+        
         return successResponse(c, { 
             status: 'ok', 
             timestamp: new Date().toISOString()
         });
     } catch (err) {
-        logger.error('[Health] Root DB Ping failed:', err);
+        logger.error('[Health] Root DB Ping failed after retries:', err);
         return errorResponse(c, err, 503);
     }
 });

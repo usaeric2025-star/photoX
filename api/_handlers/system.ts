@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { successResponse, errorResponse } from '../_lib/response.js';
-import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
+import { withTimeout, TIMEOUTS, pingDbWithRetry } from '../_lib/utils/timeout.js';
 import { logger } from '../_lib/logger.js';
 
 export const system = new Hono()
@@ -9,16 +9,15 @@ export const system = new Hono()
         const { db } = await import('../_lib/db/index.js');
         const { sql } = await import('drizzle-orm');
         
-        // Fast, lightweight ping to verify DB connectivity
-        const dbPromise = db.execute(sql`SELECT 1`);
-        await withTimeout(dbPromise, TIMEOUTS.PUBLIC_META, 'Health DB Ping');
+        // Robust ping to verify DB connectivity with automatic retries
+        await pingDbWithRetry(db, sql);
         
         return successResponse(c, { 
             status: 'ok', 
             timestamp: new Date().toISOString()
         });
     } catch (err) {
-        logger.error('[Health] DB Ping or connection failed:', err);
+        logger.error('[Health] DB Ping or connection failed after retries:', err);
         return errorResponse(c, err, 503);
     }
   })

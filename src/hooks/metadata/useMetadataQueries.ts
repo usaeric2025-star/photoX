@@ -5,49 +5,31 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { Category, Tag, Manufacturer } from '#src/types/index.js';
 import { useMemo, useState } from 'react';
 
-function useMetadataQueries(options?: { enabled?: boolean }) {
-  const { data: categories = [], isLoading: isCategoriesLoading } = useAppQuery(
+export const useCategories = (options?: { enabled?: boolean }) => {
+  const { data: categories = [], isLoading } = useAppQuery<Category[]>(
     queryKeys.categories.all,
     async () => ErrorFactory.unwrap<Category[]>(api.categories.$get(), 'Fetch categories failed'),
-    { enabled: options?.enabled }
+    options
   );
-
-  const { data: tags = [], isLoading: isTagsLoading } = useAppQuery(
-    queryKeys.tags.all,
-    async () => ErrorFactory.unwrap<Tag[]>(api.tags.$get(), 'Fetch tags failed'),
-    { enabled: options?.enabled }
-  );
-
-  const { data: manufacturers = [], isLoading: isManufacturersLoading } = useAppQuery(
-    queryKeys.manufacturers.all,
-    async () => ErrorFactory.unwrap<Manufacturer[]>(api.manufacturers.$get(), 'Fetch manufacturers failed'),
-    { enabled: options?.enabled }
-  );
-
-  return {
-    categories,
-    tags,
-    manufacturers,
-    isLoading: isCategoriesLoading || isTagsLoading || isManufacturersLoading,
-    isCategoriesLoading,
-    isTagsLoading,
-    isManufacturersLoading,
-  };
-}
-
-export const useCategories = (options?: { enabled?: boolean }) => {
-  const { categories, isCategoriesLoading } = useMetadataQueries(options);
-  return { categories, isLoading: isCategoriesLoading };
+  return { categories, isLoading };
 };
 
 export const useTags = (options?: { enabled?: boolean }) => {
-  const { tags, isTagsLoading } = useMetadataQueries(options);
-  return { tags, isLoading: isTagsLoading };
+  const { data: tags = [], isLoading } = useAppQuery<Tag[]>(
+    queryKeys.tags.all,
+    async () => ErrorFactory.unwrap<Tag[]>(api.tags.$get(), 'Fetch tags failed'),
+    options
+  );
+  return { tags, isLoading };
 };
 
 export const useManufacturers = (options?: { enabled?: boolean }) => {
-  const { manufacturers, isManufacturersLoading } = useMetadataQueries(options);
-  return { manufacturers, isLoading: isManufacturersLoading };
+  const { data: manufacturers = [], isLoading } = useAppQuery<Manufacturer[]>(
+    queryKeys.manufacturers.all,
+    async () => ErrorFactory.unwrap<Manufacturer[]>(api.manufacturers.$get(), 'Fetch manufacturers failed'),
+    options
+  );
+  return { manufacturers, isLoading };
 };
 
 /**

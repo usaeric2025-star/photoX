@@ -3,8 +3,10 @@ import { useSelectionActions } from '../../hooks/selection/useSelection.js';
 import { useInvalidatePhotos } from '../photo/useInvalidatePhotos.js';
 import { useTranslation } from '../core/index.js';
 import { showToast } from '#lib/ui/toast.js';
-import { ProductGroup } from '#src/types/index.js';
+import { ProductGroup, Photo } from '#src/types/index.js';
 import { GroupService } from './service.js';
+import { useOptimisticPhotoMutation } from '#lib/query/optimistic.js';
+import { generateId } from '#lib/id.js';
 
 /**
  * useGroupMutations
@@ -40,23 +42,45 @@ export function useGroupMutations() {
     },
   });
 
-  const setCoverMutation = useAppMutation({
+  const setCoverMutation = useOptimisticPhotoMutation({
     mutationFn: (args: { groupId: string; photoId: string }) => GroupService.setCover(args.photoId, args.groupId),
+    onMutateOptimistic: (args) => ({
+      ids: args.photoId,
+      updater: (photo: Photo) => ({
+        ...photo,
+        isGroupCover: true,
+        isCover: true,
+      } as Photo),
+    }),
+    errorContext: 'setCover',
     onSuccess: () => {
       showToast.success(t('setCoverSuccess'));
+    },
+    onSettled: () => {
       invalidateList();
     },
-    onError: () => { invalidateList(); }
   });
 
-  const movePhotosMutation = useAppMutation({
+  const movePhotosMutation = useOptimisticPhotoMutation({
     mutationFn: (args: { groupId: string; photoIds: string[] }) => GroupService.movePhotos(args.photoIds, args.groupId),
+    onMutateOptimistic: (args) => ({
+      ids: args.photoIds,
+      updater: (photo: Photo) => ({
+        ...photo,
+        groupId: args.groupId,
+        groupName: 'GROUP',
+        isGroupCover: false,
+        isCover: false,
+      } as Photo),
+    }),
+    errorContext: 'movePhotos',
     onSuccess: (_, variables) => {
       showToast.success(t('addPhotosSuccess', variables.photoIds.length));
       clearSelection();
+    },
+    onSettled: () => {
       invalidateList();
     },
-    onError: () => { invalidateList(); }
   });
 
   const dissolveMutation = useAppMutation({
@@ -67,14 +91,52 @@ export function useGroupMutations() {
     },
   });
 
-  const combineMutation = useAppMutation({
+  const combineMutation = useOptimisticPhotoMutation({
     mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => GroupService.groupPhotos(args.photoIds, args.targetGroupId),
-    onSuccess: (data: { newGroupId: string }, variables) => {
+    onMutateOptimistic: (args) => {
+      const targetGroupId = args.targetGroupId || generateId();
+      args.targetGroupId = targetGroupId;
+      return {
+        ids: args.photoIds,
+        updater: (photo: Photo) => ({
+          ...photo,
+          groupId: targetGroupId,
+          groupName: 'GROUP',
+          isGroupCover: false,
+          isCover: false,
+        } as Photo),
+      };
+    },
+    errorContext: 'combinePhotos',
+    onSuccess: (_, variables) => {
       showToast.success(t('mergePhotosSuccess', variables.photoIds.length));
       clearSelection();
+    },
+    onSettled: () => {
       invalidateList();
     },
-    onError: () => { invalidateList(); }
+  });
+
+  const removePhotosMutation = useOptimisticPhotoMutation({
+    mutationFn: (args: { photoIds: string[]; groupId: string }) => GroupService.removePhotos(args.photoIds, args.groupId),
+    onMutateOptimistic: (args) => ({
+      ids: args.photoIds,
+      updater: (photo: Photo) => ({
+        ...photo,
+        groupId: null,
+        groupName: null,
+        isGroupCover: false,
+        isCover: false,
+      } as Photo),
+    }),
+    errorContext: 'removePhotos',
+    onSuccess: (_, variables) => {
+      showToast.success(t('removePhotosSuccess', variables.photoIds.length));
+      clearSelection();
+    },
+    onSettled: () => {
+      invalidateList();
+    },
   });
 
   return {
@@ -85,9 +147,10 @@ export function useGroupMutations() {
     combine: combineMutation,
     movePhotos: movePhotosMutation,
     dissolve: dissolveMutation,
+    removePhotos: removePhotosMutation,
     isPending: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || 
                 setCoverMutation.isPending || combineMutation.isPending || movePhotosMutation.isPending || 
-                dissolveMutation.isPending,
+                dissolveMutation.isPending || removePhotosMutation.isPending,
   };
 }
 
@@ -99,21 +162,12 @@ export const useGroupPhotosMutation = () => {
 };
 
 export const useRemoveFromGroupMutation = () => {
-  const { isPending } = useGroupMutations();
-  const { invalidateList } = useInvalidatePhotos();
-  const { t } = useTranslation();
+  const { removePhotos, isPending } = useGroupMutations();
 
   return { 
     mutateAsync: (args: { photoIds: string[]; groupId?: string }) => {
       if (!args.groupId) throw new Error('groupId is required');
-      return GroupService.removePhotos(args.photoIds, args.groupId).then((res) => {
-          showToast.success(t('removePhotosSuccess', args.photoIds.length));
-          invalidateList();
-          return res;
-      }).catch(err => {
-          invalidateList();
-          throw err;
-      });
+      return removePhotos.mutateAsync({ photoIds: args.photoIds, groupId: args.groupId });
     },
     isPending 
   };
