@@ -24,6 +24,7 @@
     "lint": "tsc --noEmit && bash scripts/check-imports.sh",
     "knip": "knip",
     "test": "vitest",
+    "test:e2e": "playwright test",
     "test:watch": "vitest --watch",
     "storage:audit": "npx tsx scripts/storage/auditR2.ts",
     "storage:clean": "npx tsx scripts/storage/cleanOrphans.ts",

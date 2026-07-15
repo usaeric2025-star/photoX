@@ -75,4 +75,23 @@ export const system = new Hono()
         logger.error('[log-error] Failed to insert client error log:', err);
         return errorResponse(c, err);
     }
+  })
+  .post('/log-performance', async (c) => {
+    try {
+        const { name, duration, metadata } = await c.req.json();
+        const { db, systemLogs } = await import('../_lib/db/index.js');
+        
+        await db.insert(systemLogs).values({
+            message: `[Performance] ${name}: ${duration}ms`,
+            level: 'info',
+            operation: 'client.performance',
+            metadata: { ...metadata, duration },
+            createdAt: new Date()
+        });
+        
+        return successResponse(c, { success: true });
+    } catch (err) {
+        logger.error('[log-performance] Failed to insert performance log:', err);
+        return errorResponse(c, err);
+    }
   });
