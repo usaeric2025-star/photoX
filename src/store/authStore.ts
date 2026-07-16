@@ -61,10 +61,57 @@ export const initAuth = async () => {
 
 export const signIn = async () => {
   await safeAsync(async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.href },
-    });
+    if (typeof window === 'undefined') return;
+
+    // Save the current URL to restore after successful authentication
+    try {
+      storage.setItem('oauth_redirect_back_url', window.location.href);
+    } catch (e) {
+      logger.warn('[Auth] Failed to write redirect-back URL to storage:', e);
+    }
+
+    const isIframe = window.self !== window.top;
+    
+    if (isIframe) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { 
+          redirectTo: window.location.origin,
+          skipBrowserRedirect: true
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.url) {
+        const popup = window.open(
+          data.url,
+          'supabase_oauth_popup',
+          'width=600,height=700,status=no,resizable=yes,scrollbars=yes'
+        );
+        if (!popup) {
+          throw new Error('Popup blocked! Please allow popups for this site to sign in with Google.');
+        }
+      } else {
+        throw new Error('Failed to retrieve authorization URL from Supabase.');
+      }
+    } else {
+      // Standalone (Vercel, etc.) - use standard browser redirect
+      // Redirect to a clean base path (e.g., window.location.origin + window.location.pathname)
+      // to ensure it matches the redirect URLs allowed in the Supabase console.
+      const cleanRedirectUrl = window.location.origin + '/';
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { 
+          redirectTo: cleanRedirectUrl
+        },
+      });
+      if (error) {
+        throw error;
+      }
+    }
   }, { context: 'auth-signin' });
 };
 

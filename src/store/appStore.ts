@@ -6,6 +6,7 @@ import { scheduler } from '#lib/task-queue/scheduler.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { withTimeout } from '#lib/utils.js';
 import { api } from '#lib/api.js';
+import { storage } from '#lib/storage.js';
 import type { Category, Tag } from '#src/types/index.js';
 
 interface AppStatusState {
@@ -27,6 +28,32 @@ export const initializeApp = async () => {
     } catch (e) {
       ErrorFactory.handle(e, { context: '[appStore] Auth init timeout or error, proceeding as guest' });
       authLoadingSignal.value = false; // 強制結束加載狀態
+    }
+
+    // Restore saved redirect back URL if it exists
+    if (typeof window !== 'undefined') {
+      try {
+        const savedUrl = storage.getItem('oauth_redirect_back_url');
+        if (savedUrl) {
+          storage.remove('oauth_redirect_back_url');
+          const urlObj = new URL(savedUrl);
+          if (urlObj.origin === window.location.origin) {
+            console.info('[Auth] Restoring saved redirect-back URL after OAuth:', savedUrl);
+            window.history.replaceState(null, '', urlObj.pathname + urlObj.search + urlObj.hash);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }
+        } else {
+          // If no redirect back URL is saved, clean up Supabase hash/search params from the address bar
+          const hash = window.location.hash;
+          const search = window.location.search;
+          if (hash.includes('access_token=') || search.includes('code=')) {
+            window.history.replaceState(null, '', window.location.pathname);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }
+        }
+      } catch (err) {
+        console.warn('[Auth] Failed to restore saved redirect-back URL:', err);
+      }
     }
     
     // 3. 恢復任務佇列（此時 Auth 已就緒）

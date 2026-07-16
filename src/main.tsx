@@ -51,6 +51,53 @@ async function init() {
   setupQuerySync();
 
   if (typeof window !== 'undefined') {
+    // 1. Popup interception: if this is an OAuth popup callback, forward the query/hash results and close
+    if (window.opener) {
+      const search = window.location.search;
+      const hash = window.location.hash;
+      if ((search && search.includes('code=')) || (hash && hash.includes('access_token='))) {
+        try {
+          window.opener.postMessage({ type: 'SUPABASE_AUTH_CALLBACK', search, hash }, window.location.origin);
+        } catch (e) {
+          console.error('[OAuth Popup] postMessage to opener failed:', e);
+        }
+        window.close();
+        return; // Halt further app initialization inside the popup window
+      }
+    }
+
+    // 2. Main window listener: receive the code/hash from the popup, replace address bar state, and sync session
+    window.addEventListener('message', async (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'SUPABASE_AUTH_CALLBACK') {
+        const { search, hash } = event.data;
+        console.log('[Auth] Received OAuth callback from popup. Exchanging credentials...');
+        const newUrl = window.location.pathname + (search || '') + (hash || '');
+        window.history.replaceState(null, '', newUrl);
+        
+        try {
+          const { initAuth } = await import('./store/authStore.js');
+          await initAuth();
+          
+          // Clean up the address bar and restore original URL if possible
+          const { storage } = await import('./lib/storage.js');
+          const savedUrl = storage.getItem('oauth_redirect_back_url');
+          if (savedUrl) {
+            storage.remove('oauth_redirect_back_url');
+            const urlObj = new URL(savedUrl);
+            if (urlObj.origin === window.location.origin) {
+              window.history.replaceState(null, '', urlObj.pathname + urlObj.search + urlObj.hash);
+              window.dispatchEvent(new PopStateEvent('popstate'));
+              return;
+            }
+          }
+          window.history.replaceState(null, '', window.location.pathname);
+        } catch (err) {
+          console.error('[Auth] Failed to initialize session after OAuth popup callback:', err);
+        }
+      }
+    });
+
     window.addEventListener('unhandledrejection', (event) => {
       const reason = event.reason;
       const message = reason?.message || String(reason || '');
