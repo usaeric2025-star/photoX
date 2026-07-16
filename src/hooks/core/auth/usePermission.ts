@@ -14,6 +14,7 @@ export function usePermission() {
   const [passcode] = useLocalStorage({
     key: 'ais_mock_auth_passcode',
     defaultValue: '',
+    getInitialValueInEffect: false,
     deserialize: (val) => {
       try {
         const parsed = JSON.parse(val);

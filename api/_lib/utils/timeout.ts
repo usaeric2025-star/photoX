@@ -19,10 +19,12 @@ export function withTimeout<T>(promiseOrThenable: Promise<T> | PromiseLike<T>, m
   });
 }
 
+const DEFAULT_PING_TIMEOUT_MS = 15000; // 15 seconds to match statement_timeout and allow sufficient connection setup time
+
 /**
  * Executes a SELECT 1 query with retry logic to withstand transient connection timeouts
  */
-export async function pingDbWithRetry(db: any, sql: any, retries = 3, delayMs = 1500, timeoutMs = 6000): Promise<void> {
+export async function pingDbWithRetry(db: any, sql: any, retries = 3, delayMs = 1500, timeoutMs = DEFAULT_PING_TIMEOUT_MS): Promise<void> {
   for (let i = 0; i < retries; i++) {
     try {
       const dbPromise = db.execute(sql`SELECT 1`);
@@ -47,5 +49,6 @@ export const TIMEOUTS = {
   DB_QUERY: 30000, // 30 seconds for standard DB queries
   AI_REQUEST: 40000, // 40 seconds for AI inference 
   PUBLIC_META: 30000, // 30 seconds for fast-loading public settings/auth (Critical for cold start)
+  DB_PING: DEFAULT_PING_TIMEOUT_MS,
 };
 
