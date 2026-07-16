@@ -32,6 +32,17 @@ const apiApp = new Hono();
 apiApp.onError((err, c) => {
     logger.error('[API Error]', err);
     
+    // 如果錯誤對象已經自帶明確的 HTTP 狀態碼，則直接使用
+    if (err && typeof err === 'object') {
+        const anyErr = err as any;
+        if (typeof anyErr.statusCode === 'number') {
+            return errorResponse(c, err, anyErr.statusCode);
+        }
+        if (typeof anyErr.status === 'number') {
+            return errorResponse(c, err, anyErr.status);
+        }
+    }
+    
     // 避免將資料庫連線失敗、找不到資料庫、或 timeout 等系統/資料庫層面錯誤誤判為 404 Not Found
     const isDbOrNetworkError = 
         err.message?.includes('relation') || 
@@ -42,9 +53,12 @@ apiApp.onError((err, c) => {
         err.message?.includes('timeout') || 
         err.message?.includes('canceling') || 
         err.message?.includes('PostgresError') ||
-        err.message?.includes('DrizzleQueryError');
+        err.message?.includes('DrizzleQueryError') ||
+        err.message?.includes('pool');
 
-    if (!isDbOrNetworkError && (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound'))) {
+    const isAiPath = c.req.path.startsWith('/api/ai');
+
+    if (!isDbOrNetworkError && !isAiPath && (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound'))) {
         return errorResponse(c, err, 404);
     }
     if (err.message?.toLowerCase().includes('foreign key')) {

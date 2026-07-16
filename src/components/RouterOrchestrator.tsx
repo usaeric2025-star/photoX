@@ -7,6 +7,8 @@ import { LoadingScreen } from "./ui/LoadingScreen.js";
 import { useAuth } from "#lib/store/index.js";
 
 import { useNormalizedLocation } from "#src/hooks/core/index.js";
+import { DialogContainer } from "./layout/DialogContainer.js";
+import { SelectionProvider } from "#src/hooks/selection/useSelection.js";
 
 const PublicPage = lazy(() => import("#src/pages/PublicPage.js"));
 const AdminPage = lazy(() => import("#src/pages/AdminPage/index.js"));
@@ -54,41 +56,44 @@ export function RouterOrchestrator() {
   
   return (
     <Router hook={useNormalizedLocation}>
-      <AnimatePresence>
-        {isAdminPath ? (
-          <motion.div 
-            key="admin-dashboard"
-            variant="fade"
-            transition="easeOut"
-            className="flex-1 flex flex-col h-full w-full"
-          >
-            <ErrorBoundary>
-              <Suspense fallback={<LoadingScreen />}>
-                <AdminPage />
-              </Suspense>
-            </ErrorBoundary>
-          </motion.div>
-        ) : (
-          <motion.div 
-            key={groupKey}
-            variant="fade"
-            transition="easeOut"
-            className="flex-1 flex flex-col h-full w-full"
-          >
-            <ErrorBoundary>
-              <Suspense fallback={<LoadingScreen />}>
-                <Switch>
-                  <Route path={PUBLIC_PATH} component={PublicPage} />
-                  <Route path="/photo/:photoId" component={PublicPage} />
-                  <Route path="/group/:slug" component={PublicGroupDetailPage} />
-                  
-                  <Route component={NotFoundPage} />
-                </Switch>
-              </Suspense>
-            </ErrorBoundary>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SelectionProvider>
+        <AnimatePresence>
+          {isAdminPath ? (
+            <motion.div 
+              key="admin-dashboard"
+              variant="fade"
+              transition="easeOut"
+              className="flex-1 flex flex-col h-full w-full"
+            >
+              <ErrorBoundary>
+                <Suspense fallback={<LoadingScreen />}>
+                  <AdminPage />
+                </Suspense>
+              </ErrorBoundary>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key={groupKey}
+              variant="fade"
+              transition="easeOut"
+              className="flex-1 flex flex-col h-full w-full"
+            >
+              <ErrorBoundary>
+                <Suspense fallback={<LoadingScreen />}>
+                  <Switch>
+                    <Route path={PUBLIC_PATH} component={PublicPage} />
+                    <Route path="/photo/:photoId" component={PublicPage} />
+                    <Route path="/group/:slug" component={PublicGroupDetailPage} />
+                    
+                    <Route component={NotFoundPage} />
+                  </Switch>
+                </Suspense>
+              </ErrorBoundary>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <DialogContainer />
+      </SelectionProvider>
     </Router>
   );
 }

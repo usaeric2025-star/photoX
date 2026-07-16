@@ -15,7 +15,7 @@ export const AIService = {
    */
   analyze: async (photo: Photo): Promise<Record<string, unknown>> => {
     return ErrorFactory.unwrap(
-      api.admin.photos["photo-ai-analyze"].$post({
+      api.ai.analyze.$post({
         json: { 
           photoId: photo.id, 
           imageUrl: photo.thumbnailUrl || photo.imageUrl 

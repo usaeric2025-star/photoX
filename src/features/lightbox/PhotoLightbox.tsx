@@ -155,7 +155,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     if (photoData.id) setPhotoId(photoData.id);
   }, [effectivePhotos, setLightboxIndex, setPhotoId]);
 
-  if (!isOpen) return null;
+  if (!isOpen || isEditing) return null;
   
   if (isDeepLinkLoading) {
     return (

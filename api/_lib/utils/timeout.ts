@@ -22,7 +22,7 @@ export function withTimeout<T>(promiseOrThenable: Promise<T> | PromiseLike<T>, m
 /**
  * Executes a SELECT 1 query with retry logic to withstand transient connection timeouts
  */
-export async function pingDbWithRetry(db: any, sql: any, retries = 3, delayMs = 1500, timeoutMs = 12000): Promise<void> {
+export async function pingDbWithRetry(db: any, sql: any, retries = 3, delayMs = 1500, timeoutMs = 6000): Promise<void> {
   for (let i = 0; i < retries; i++) {
     try {
       const dbPromise = db.execute(sql`SELECT 1`);

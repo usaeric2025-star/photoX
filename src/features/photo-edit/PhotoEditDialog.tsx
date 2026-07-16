@@ -53,7 +53,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
         onClose={handleInterceptClose}
         size="screen"
         hidePadding
-        showCloseButton={true}
+        showCloseButton={false}
       >
         {isOpen && (
           <StandardModalLayout 
