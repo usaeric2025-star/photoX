@@ -1,9 +1,7 @@
 import React from 'react';
 import { cn } from '#lib/utils.js';
 
-import { FieldApi } from '@tanstack/react-form';
-
-interface AppFieldProps<TData, TName extends string> {
+interface AppFieldProps<TName extends string> {
     form: { Field: React.ComponentType<any> };
     name: TName;
     label?: string;
@@ -11,13 +9,13 @@ interface AppFieldProps<TData, TName extends string> {
     className?: string;
 }
 
-export function AppField<TData, TName extends string>({ form, name, label, children, className }: AppFieldProps<TData, TName>) {
+export function AppField<TName extends string>({ form, name, label, children, className }: AppFieldProps<TName>) {
     const Field = form.Field as React.ComponentType<any>;
     return (
         <Field 
             name={name}
         >
-            {(field) => (
+            {(field: any) => (
                 <div className={cn("space-y-1.5", className)}>
                     {label && (
                         <label className="text-sm font-medium text-foreground/70">
@@ -35,4 +33,3 @@ export function AppField<TData, TName extends string>({ form, name, label, child
         </Field>
     );
 }
-

@@ -1,10 +1,8 @@
-import { getTranslatedCategoryName } from "#src/utils/category.js";
-import { createTranslate } from '#src/locales/index.js';
-import React, { useRef } from "react";
-import { Category, Manufacturer } from '#src/types/index.js';
-import { useLongPress, useDisclosure, useTranslation } from "#src/hooks/index.js";
+import { useTranslation } from "#src/hooks/index.js";
+import React from "react";
+import { Manufacturer } from '#src/types/index.js';
+import { useLongPress, useDisclosure } from "#src/hooks/index.js";
 import { MenuDialog } from "#src/components/ui/MenuDialog.js";
-import { useUI, UIStoreState } from '#lib/store/index.js';
 
 interface SectionHeaderProps {
   title: string;
@@ -32,6 +30,7 @@ export function FormSectionHeader({
       </div>
       {onAction && (
         <button
+          type="button"
           onClick={onAction}
           className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 active:bg-blue-100 transition-colors"
         >
@@ -42,7 +41,7 @@ export function FormSectionHeader({
   );
 }
 
-interface ManufacturerSelectorProps {
+interface ManufacturerListProps {
   manufacturers: Manufacturer[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
@@ -50,15 +49,13 @@ interface ManufacturerSelectorProps {
   onDelete?: (mfr: Manufacturer) => void;
 }
 
-function ManufacturerList({
+export function ManufacturerList({
   manufacturers,
   selectedId,
   onSelect,
   onEdit,
   onDelete,
-}: ManufacturerSelectorProps) {
-  const patch = useUI((s: UIStoreState) => s.patch);
-
+}: ManufacturerListProps) {
   return (
     <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto content-start px-0.5 no-scrollbar">
       {(manufacturers || []).map((mfr) => {
@@ -89,7 +86,6 @@ interface ManufacturerButtonProps {
 const ManufacturerButton = ({ mfr, isSelected, onSelect, onEdit, onDelete }: ManufacturerButtonProps) => {
   const { t } = useTranslation();
   const [isMenuOpen, menuDialog] = useDisclosure(false);
-
   const longPress = useLongPress<HTMLButtonElement>({
     delay: 600,
     onLongPress: () => {
@@ -131,5 +127,3 @@ const ManufacturerButton = ({ mfr, isSelected, onSelect, onEdit, onDelete }: Man
     </>
   );
 };
-
-

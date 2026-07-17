@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { MaintenanceTool } from './MaintenanceTool.js';
 
@@ -6,9 +6,12 @@ interface MaintenanceCenterProps {
   onSuccess: () => void;
 }
 
+/**
+ * MaintenanceCenter
+ * 
+ * 系統維護指令中心，提供各類數據修復與清理工具。
+ */
 export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
   return (
     <div className="bg-slate-50 border border-slate-100 rounded-[32px] p-6 lg:p-8 space-y-8">
       <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">系统维护指令中心 / SYSTEM MAINTENANCE CENTER</h3>
@@ -16,7 +19,7 @@ export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
       {/* 第一组：必要定期检查 (Routine Checks) */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
-          <Icon name="check-circle-2" size={14} className="text-emerald-500" />
+          <Icon name="check-circle" size={14} className="text-emerald-500" />
           常规健康与数据同步 (Routine Sync & Health)
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

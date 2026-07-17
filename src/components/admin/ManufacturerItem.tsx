@@ -1,13 +1,11 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import { Icon } from '#src/components/ui/Icon.js';
 import { useDisclosure, useTranslation } from '#src/hooks/index.js';
-import { useClickOutside } from '#src/hooks/core/index.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
-import { useLongPress } from "#src/hooks/core/index.js";
 import { normalizeManufacturerName } from "#lib/utils.js";
 import { useConfirm } from '#src/context/ConfirmContext.js';
-
 import { Manufacturer } from '#src/types/index.js';
+import { NativePopover } from "#src/components/ui/NativePopover.js";
 
 interface ManufacturerProps {
   manufacturer: Manufacturer;
@@ -15,8 +13,11 @@ interface ManufacturerProps {
   onDelete: (id: string | number) => void;
 }
 
-import { NativePopover } from "#src/components/ui/NativePopover.js";
-
+/**
+ * ManufacturerItem
+ * 
+ * 顯示單個廠商項目，並提供編輯與刪除菜單。
+ */
 export const ManufacturerItem = ({
   manufacturer,
   onUpdate,
@@ -28,6 +29,7 @@ export const ManufacturerItem = ({
 
   return (
     <div
+      id={`mfr-item-${manufacturer.id}`}
       className="bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative"
     >
       <div className="flex flex-col">
@@ -39,17 +41,17 @@ export const ManufacturerItem = ({
       <NativePopover
         align="center"
         trigger={
-          <div className="p-1 cursor-pointer opacity-50 hover:opacity-100 transition-opacity">
-             {/* Small indicator or just trigger on name? User used long press or button? 
-                 In original it was absolute positioned over the whole thing based on activeMenuId.
-                 Let's add a small dots icon as a trigger for better UX.
-              */}
+          <button 
+            id={`mfr-menu-btn-${manufacturer.id}`}
+            className="p-1 cursor-pointer opacity-50 hover:opacity-100 transition-opacity outline-none"
+          >
              <Icon name="more-vertical" size={14} />
-          </div>
+          </button>
         }
       >
         <div className="flex flex-col gap-0.5 p-1 min-w-[120px]">
           <button
+            id={`edit-mfr-${manufacturer.id}`}
             onClick={(e) => {
               e.stopPropagation();
               editDialog.open();
@@ -58,13 +60,15 @@ export const ManufacturerItem = ({
           >
             <Icon name="pencil" size={12} /> {t('edit')}
           </button>
+          
           <button
+            id={`delete-mfr-${manufacturer.id}`}
             onClick={async (e) => {
               e.stopPropagation();
               if (await confirm({
-                title: t('confirmDeleteTitleBatch'),
-                description: t('confirmDeleteMfrDesc', manufacturer.name),
-                confirmText: t('delete'),
+                title: t('confirmDeleteTitleBatch') || "确认删除",
+                description: t('confirmDeleteMfrDesc', { name: manufacturer.name }) || `确定要删除「${manufacturer.name}」吗？`,
+                confirmText: t('delete') || "删除",
                 variant: "destructive"
               })) {
                 onDelete(manufacturer.id);
@@ -80,8 +84,8 @@ export const ManufacturerItem = ({
       <PromptDialog
         open={isEditOpen}
         onOpenChange={editDialog.toggle}
-        title={t('editMfrTitle')}
-        description={t('enterNewName')}
+        title={t('editMfrTitle') || "编辑厂商"}
+        description={t('enterNewName') || "输入新的名称："}
         defaultValue={manufacturer.name}
         placeholder={manufacturer.name}
         onConfirm={(name) => {

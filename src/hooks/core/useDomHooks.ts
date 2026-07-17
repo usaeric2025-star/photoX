@@ -17,7 +17,9 @@ export function useMediaQuery(query: string): boolean {
     if (typeof window === 'undefined') return;
     const media = window.matchMedia(query);
     const updateMatch = () => setMatches(media.matches);
+    
     updateMatch();
+    
     if (media.addEventListener) {
       media.addEventListener('change', updateMatch);
       return () => media.removeEventListener('change', updateMatch);
@@ -26,6 +28,7 @@ export function useMediaQuery(query: string): boolean {
       return () => media.removeListener(updateMatch);
     }
   }, [query]);
+
   return matches;
 }
 
@@ -33,8 +36,10 @@ export function useMediaQuery(query: string): boolean {
 export function useClickOutside<T extends HTMLElement = HTMLElement>(
   handler: () => void,
   events: string[] = ['mousedown', 'touchstart'],
-  nodes?: (HTMLElement | null)[]) {
+  nodes?: (HTMLElement | null)[]
+) {
   const ref = useRef<T>(null);
+
   useEffect(() => {
     const listener = (event: Event) => {
       const { target } = event;
@@ -42,9 +47,11 @@ export function useClickOutside<T extends HTMLElement = HTMLElement>(
       if (nodes && !nodes.every((node) => node && !node.contains(target as Node))) return;
       handler();
     };
+
     events.forEach((fn) => document.addEventListener(fn, listener));
     return () => events.forEach((fn) => document.removeEventListener(fn, listener));
   }, [handler, events, nodes]);
+
   return ref;
 }
 
@@ -60,6 +67,7 @@ interface UseCopyToClipboardOptions {
 export const useCopyToClipboard = (options?: UseCopyToClipboardOptions) => {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation();
+
   const copy = useCallback(
     async (text: string) => {
       const success = await copyToClipboard(text, options);
@@ -76,6 +84,7 @@ export const useCopyToClipboard = (options?: UseCopyToClipboardOptions) => {
     },
     [options, t]
   );
+
   return { copy, copied };
 };
 
@@ -111,6 +120,7 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
     if (disabled) return;
     const isTouchEvent = 'touches' in e;
     const now = Date.now();
+    
     if (!isTouchEvent && now - lastTouchTimeRef.current < 500) return;
     if (isTouchEvent) lastTouchTimeRef.current = now;
     
@@ -120,6 +130,7 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
     startCoordsRef.current = { x: clientX, y: clientY };
     isPressedRef.current = true;
     isLongPressRef.current = false;
+    
     timerRef.current = setTimeout(() => {
       if (isPressedRef.current) {
         isLongPressRef.current = true;
@@ -131,20 +142,24 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
 
   const handleMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (disabled || !isPressedRef.current || !startCoordsRef.current) return;
+    
     let clientX = 'touches' in e ? (e.touches[0]?.clientX || 0) : (e as React.MouseEvent).clientX;
     let clientY = 'touches' in e ? (e.touches[0]?.clientY || 0) : (e as React.MouseEvent).clientY;
+    
     const diffX = clientX - startCoordsRef.current.x;
     const diffY = clientY - startCoordsRef.current.y;
+    
     if (Math.sqrt(diffX * diffX + diffY * diffY) > 20) {
-      clearTimer();
       isPressedRef.current = false;
+      clearTimer();
     }
   }, [disabled, clearTimer]);
 
   const handleEnd = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (disabled) return;
     clearTimer();
-    if (isPressedRef.current && !isLongPressRef.current && onClick) onClick(e);
+    if (isPressedRef.current && !isLongPressRef.current && onClick) {
+      onClick(e);
+    }
     isPressedRef.current = false;
     startCoordsRef.current = null;
   }, [disabled, clearTimer, onClick]);
@@ -156,8 +171,14 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
   }, [clearTimer]);
 
   return {
-    onMouseDown: handleStart, onMouseMove: handleMove, onMouseUp: handleEnd, onMouseLeave: handleLeave,
-    onTouchStart: handleStart, onTouchMove: handleMove, onTouchEnd: handleEnd, onTouchCancel: handleLeave,
+    onMouseDown: handleStart, 
+    onMouseMove: handleMove, 
+    onMouseUp: handleEnd, 
+    onMouseLeave: handleLeave,
+    onTouchStart: handleStart, 
+    onTouchMove: handleMove, 
+    onTouchEnd: handleEnd, 
+    onTouchCancel: handleLeave,
     ref: elementRef,
   };
 }

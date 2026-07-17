@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { SearchInput } from './SearchInput.js';
 import { SortToggle } from './SortToggle.js';
@@ -15,6 +15,11 @@ interface FilterBarProps {
   className?: string;
 }
 
+/**
+ * FilterBar
+ * 
+ * 頂部過濾欄，包含搜索、標籤展開、分類網格、排序與佈局切換。
+ */
 export function FilterBar({ mode, className }: FilterBarProps) {
   const isAdmin = mode === 'admin';
   const { 
@@ -25,11 +30,10 @@ export function FilterBar({ mode, className }: FilterBarProps) {
   } = useFilters({ enableStatus: isAdmin });
   
   const [showTags, setShowTags] = useState(false);
-  
   const { tags: allTags } = useTags();
-
+  
   const selectedTags = allTags?.filter(tag => filters.tagIds.includes(String(tag.id))) || [];
-
+  
   const removeTag = (tagId: string) => {
     setTags(filters.tagIds.filter(id => id !== tagId));
   };
@@ -40,11 +44,12 @@ export function FilterBar({ mode, className }: FilterBarProps) {
         <div className="flex-1 min-w-0">
           <SearchInput />
         </div>
+        
         <div className="flex gap-2 shrink-0 items-center overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
           <button 
             onClick={() => setShowTags(!showTags)}
             className={cn(
-              "h-10 px-3 sm:px-4 rounded-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95 border",
+              "h-10 px-3 sm:px-4 rounded-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95 border relative",
               showTags 
                 ? "bg-slate-900 text-white border-slate-900 shadow-sm" 
                 : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm"
@@ -52,7 +57,8 @@ export function FilterBar({ mode, className }: FilterBarProps) {
             title={showTags ? '收起標籤' : '展開標籤'}
           >
             <span className="text-[13px] font-bold tracking-tight">Tags</span>
-            <Icon name="chevron-down"
+            <Icon 
+              name="chevron-down"
               size={16} 
               className={cn("transition-transform duration-300", showTags && "rotate-180")} 
             />
@@ -72,10 +78,10 @@ export function FilterBar({ mode, className }: FilterBarProps) {
       </div>
       
       <div className="px-4 pb-3 space-y-3">
-        {/* 分類 - 根據規範固定渲染 2 x 4 */}
+        {/* 分類網格 */}
         <CategoryGrid mode={mode} enabled={true} />
-
-        {/* 已選標籤顯示與移除 */}
+        
+        {/* 已選標籤 */}
         {selectedTags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 items-center pt-1 animate-fade-in border-t border-slate-50 mt-1">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Active:</span>
@@ -103,9 +109,13 @@ export function FilterBar({ mode, className }: FilterBarProps) {
           </div>
         )}
         
-        {/* 標籤 - 默認折疊，由上方按鈕控制 */}
+        {/* 標籤網格 */}
         {showTags && (
-          <Suspense fallback={<div className="h-40 flex items-center justify-center bg-slate-50/50 rounded-xl animate-pulse text-slate-400 text-xs font-bold uppercase tracking-widest">Loading Tags...</div>}>
+          <Suspense fallback={
+            <div className="h-40 flex items-center justify-center bg-slate-50/50 rounded-xl animate-pulse text-slate-400 text-xs font-bold uppercase tracking-widest">
+              Loading Tags...
+            </div>
+          }>
             <TagGrid onClose={() => setShowTags(false)} />
           </Suspense>
         )}

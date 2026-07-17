@@ -1,15 +1,15 @@
 import { STALE_TIMES } from '#lib/query/config.js';
 import { useAuth, tasksSignal, useSignal } from '#lib/store/index.js';
-import { useEffect, useState } from 'react';
 import { UnifiedTask, TaskStatus } from '#src/types/index.js';
 import { api } from '#lib/api.js';
-import { useAppQuery, queryClient } from '#lib/query/index.js';
+import { useAppQuery } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { logger } from '#lib/logger.js';
 import { useTranslation } from '#src/hooks/index.js';
 import type { Task } from '#lib/task-queue/types.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { usePermission } from '../core/auth/usePermission.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
 interface RemoteJob {
   id: string;
@@ -21,8 +21,6 @@ interface RemoteJob {
   error?: string;
 }
 
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
-
 /**
  * Adapter hook to aggregate frontend local tasks and backend maintenance jobs.
  */
@@ -30,7 +28,6 @@ export function useGlobalTasks() {
   const { t } = useTranslation();
   const { can } = usePermission();
   const canManageSystem = can('system:settings');
-  const user = useAuth(s => s.user);
   const [location] = useNormalizedLocation();
   
   // 1. Frontend Tasks (Real-time, transient)
@@ -76,7 +73,7 @@ export function useGlobalTasks() {
     let status: TaskStatus = 'processing';
     if (zt.state.status === 'completed') status = 'completed';
     if (zt.state.status === 'failed' || zt.state.status === 'cancelled') status = 'failed';
-
+    
     aggregatedTasks.push({
       id: zt.id,
       source: 'session', 
@@ -92,11 +89,11 @@ export function useGlobalTasks() {
   const safeRemoteJobs = Array.isArray(remoteJobs) ? remoteJobs : [];
   safeRemoteJobs.forEach(rj => {
     if (!rj?.id) return;
+    
     let status: TaskStatus = 'processing';
     if (rj.status === 'completed') status = 'completed';
     if (rj.status === 'failed') status = 'failed';
 
-    // Fix parse int for Date.now 
     const timestampPart = rj.id.split('_').pop();
     const parsedTime = parseInt(timestampPart || Date.now().toString());
 

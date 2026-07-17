@@ -25,6 +25,11 @@ interface TagEditorProps {
   hideHotLabel?: boolean;
 }
 
+/**
+ * TagEditor
+ * 
+ * 標籤編輯器內容區，包含搜尋、常用推薦與標籤列表。
+ */
 export function TagEditor({
   tags: allTags,
   selectedTagIds,
@@ -51,50 +56,48 @@ export function TagEditor({
       const newPinned = pinnedTags.includes(tagId)
         ? pinnedTags.filter((id: string) => id !== tagId)
         : [...pinnedTags, tagId];
-
+      
       const nextSettings = { ...settings, pinnedTags: newPinned };
-      await updateSettings(nextSettings);
+      await updateSettings(nextSettings as any);
     } catch (err) {
-      ErrorFactory.handle(err, { context: "切换置顶状态" });
+      ErrorFactory.handle(err as Error, { context: "切换置顶状态" });
     }
   };
 
   const { hotIds: hotTagsSet, pinnedIds } = useTagSorting(allTags, settings);
-
   const selectedSet = new Set(selectedTagIds.map(String));
   const pinnedSet = new Set(pinnedIds.map(String));
 
-  // 1. Selected Tags Summary (for quick view)
+  // 1. Selected Tags Summary
   const selectedTags = React.useMemo(() => {
     return allTags.filter(t => selectedSet.has(String(t.id)));
   }, [allTags, selectedTagIds]);
 
   // 2. Data Source & Deduplication
-  let displayList: Tag[] = [];
-  const term = deferredSearchTerm.trim();
-  if (!term) {
-    displayList = allTags;
-  } else {
-    displayList = searchResults;
-    const searchIds = new Set(searchResults.map(t => String(t.id)));
-    const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
-    displayList = [...displayList, ...missingSelected];
-  }
+  const displayList = React.useMemo(() => {
+    const term = deferredSearchTerm.trim();
+    let list: Tag[] = [];
+    if (!term) {
+      list = allTags;
+    } else {
+      list = searchResults;
+      const searchIds = new Set(searchResults.map(t => String(t.id)));
+      const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
+      list = [...list, ...missingSelected];
+    }
+    // Deduplicate by ID
+    return Array.from(new Map(list.map(t => [String(t.id), t])).values());
+  }, [deferredSearchTerm, allTags, searchResults, selectedTagIds]);
 
-  // Deduplicate displayList by ID
-  const uniqueDisplayList = Array.from(new Map(displayList.map(t => [String(t.id), t])).values());
-
-  // 3. Sort Logic - Strictly stable (Pinned -> Alphabetical)
-  // We NO LONGER sort by selected at the top in the main list to prevent jumping
+  // 3. Sort Logic
   const filteredTags = React.useMemo(() => {
-    return [...uniqueDisplayList].sort((a, b) => {
+    return [...displayList].sort((a, b) => {
       const aPinned = pinnedSet.has(String(a.id));
       const bPinned = pinnedSet.has(String(b.id));
       if (aPinned !== bPinned) return aPinned ? -1 : 1;
-
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
-  }, [uniqueDisplayList, pinnedIds]);
+  }, [displayList, pinnedIds]);
 
   return (
     <div className="space-y-2">
@@ -150,15 +153,15 @@ export function TagEditor({
            全部标签 / ALL TAGS
          </span>
       </div>
+      
       <div 
-        className="pb-1 max-h-[220px] overflow-y-auto flex flex-wrap gap-[6px] content-start"
+        className="pb-1 max-h-[220px] overflow-y-auto flex flex-wrap gap-[6px] content-start px-1"
       >
         {filteredTags.slice(0, 150).map((tag: Tag) => {
           const isSelected = selectedSet.has(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = pinnedIds.includes(String(tag.id));
           const isDisabled = !isSelected && selectedTagIds.length >= MAX_TAGS_PER_PHOTO;
-
           return (
             <TagButton
               key={tag.id}
@@ -193,7 +196,3 @@ export function TagEditor({
     </div>
   );
 }
-
-
-
-

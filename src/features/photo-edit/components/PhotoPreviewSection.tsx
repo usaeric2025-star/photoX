@@ -9,9 +9,14 @@ interface PhotoPreviewSectionProps {
   onZoom: () => void;
 }
 
+/**
+ * PhotoPreviewSection
+ * 
+ * 照片編輯對話框中的照片預覽區域。
+ */
 export function PhotoPreviewSection({ previewSrc, imageHash, onZoom }: PhotoPreviewSectionProps) {
   if (!previewSrc) return null;
-
+  
   return (
     <div className="w-1/3 shrink-0 space-y-2">
       <div 

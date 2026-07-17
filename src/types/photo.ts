@@ -62,48 +62,35 @@ export interface Photo {
       memberCount?: number; // Calculated, not persisted
       status?: 'confirmed' | 'rejected' | 'active';
   } | null;
-  categoryName: string;
-  categoryDescription?: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  } | null;
-  manufacturerName: string;
+  categoryName?: string;
+  manufacturerName?: string;
   [key: string]: unknown;
 }
 
-interface SubCategory {
+export interface SubCategory {
   id: number;
   name: string;
   aliases: string[];
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   description?: {
     zh: string;
     en?: string;
     ms?: string;
-  } | null;
+  };
   code?: string;
   sortOrder?: number;
   isActive?: boolean;
   aliases?: string[];
   subcategories?: SubCategory[];
-  userId?: string;
 }
 
 export interface Tag {
-  id: number;
+  id: string;
   name: string;
-  description?: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  } | null;
-  aliases?: string[];
-  userId?: string;
   isPinned?: boolean;
   hotScore?: number;
   usageCount?: number;
@@ -114,44 +101,31 @@ export interface Tag {
 export interface Manufacturer {
   id: string;
   name: string;
-  description?: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  } | null;
-  aliases?: string[];
+  description?: string;
 }
 
 export interface ProductGroup {
   id: string;
   name: string;
-  description?: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  } | null;
   coverPhotoId?: string | null;
-  isHidden?: boolean;
   userId: string;
   createdAt: string;
   updatedAt: string;
   status?: 'confirmed' | 'rejected' | 'active';
-  metadata?: Record<string, unknown>;
 }
 
 export type Group = ProductGroup;
 
 export interface ProductFormData {
-  id?: string;
   name: string;
+  description: {
+    zh: string;
+    en: string;
+    ms: string;
+  };
   categoryId: string | null;
   manufacturerId: string | null;
   tags: Tag[];
-  description: {
-    zh: string;
-    en?: string;
-    ms?: string;
-  };
   itemCode: string;
   manualCode: string;
   modelNumber: string;
@@ -159,20 +133,17 @@ export interface ProductFormData {
   isHidden: boolean;
   price: string;
   isGroupCover: boolean;
-  groupId?: string | null;
   uri?: string;
 }
 
-
 export interface PhotoAIResult {
-  id: string;
   photoId: string;
   rawResult?: string;
   parsedData?: Record<string, unknown>;
   createdAt?: string;
 }
 
-function isValidPhoto(photo: unknown): photo is Photo {
+export function isValidPhoto(photo: unknown): photo is Photo {
   const p = photo as Record<string, unknown>;
   return (
     !!p && typeof p.id === 'string'

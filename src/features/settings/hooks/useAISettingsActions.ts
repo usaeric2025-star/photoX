@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSettings, useTranslation } from '#src/hooks/index.js';
 import { AppSettings } from '#src/types/index.js';
 import { showToast } from '#lib/ui/toast.js';
 import { testAiConnection } from "#src/features/ai/AICommands.js";
 
-export function useAISettingsActions(initialAgnesKey: string) {
+/**
+ * useAISettingsActions
+ * 
+ * 管理 AI 設置相關的 UI 狀態與操作（Key 保存、模型切換、連接測試）。
+ */
+export function useAISettingsActions() {
   const { settings, updateSettings } = useSettings();
   const { t } = useTranslation();
 
@@ -14,13 +19,13 @@ export function useAISettingsActions(initialAgnesKey: string) {
   const [localAgnesKey, setLocalAgnesKey] = useState(
     settings?.agnesApiKey ? '••••••••••••••••' : ''
   );
-  
+
   const [openrouterModel, setOpenrouterModel] = useState(String(settings?.openrouterModel || 'google/gemini-2.5-flash'));
   const [agnesModel, setAgnesModel] = useState(String(settings?.agnesModel || 'gemini-2.0-flash-exp'));
-
+  
   const [isEditingOpenRouter, setIsEditingOpenRouter] = useState(false);
   const [isEditingAgnes, setIsEditingAgnes] = useState(false);
-
+  
   const [isTestingProvider, setIsTestingProvider] = useState<'openrouter' | 'agnes' | null>(null);
   const [isSavingKey, setIsSavingKey] = useState<'openrouter' | 'agnes' | null>(null);
   const [isSavingProvider, setIsSavingProvider] = useState(false);
@@ -36,7 +41,8 @@ export function useAISettingsActions(initialAgnesKey: string) {
     try {
       const field = provider === 'openrouter' ? 'openrouterApiKey' : 'agnesApiKey';
       await updateSettings({ [field]: key } as Partial<AppSettings>);
-      showToast.success(t('updateSuccess'));
+      showToast.success(t('updateSuccess') || '保存成功');
+      
       if (provider === 'openrouter') {
         setIsEditingOpenRouter(false);
         setLocalOpenRouterKey('••••••••••••••••');
@@ -45,7 +51,7 @@ export function useAISettingsActions(initialAgnesKey: string) {
         setLocalAgnesKey('••••••••••••••••');
       }
     } catch (e) {
-      showToast.error(t('updateError'));
+      showToast.error(t('updateError') || '保存失敗');
     } finally {
       setIsSavingKey(null);
     }
@@ -55,22 +61,14 @@ export function useAISettingsActions(initialAgnesKey: string) {
     setIsSavingProvider(true);
     try {
       await updateSettings({ primaryAiProvider: provider } as Partial<AppSettings>);
-      showToast.success(t('updateSuccess'));
-    } catch (e) {
-      showToast.error(t('updateError'));
     } finally {
       setIsSavingProvider(false);
     }
   };
 
   const handleSaveModel = async (provider: 'openrouter' | 'agnes', model: string) => {
-    try {
-      const field = provider === 'openrouter' ? 'openrouterModel' : 'agnesModel';
-      await updateSettings({ [field]: model } as Partial<AppSettings>);
-      showToast.success(t('updateSuccess'));
-    } catch (e) {
-      showToast.error(t('updateError'));
-    }
+    const field = provider === 'openrouter' ? 'openrouterModel' : 'agnesModel';
+    await updateSettings({ [field]: model } as Partial<AppSettings>);
   };
 
   const handleTest = async (provider: 'openrouter' | 'agnes') => {
@@ -79,12 +77,12 @@ export function useAISettingsActions(initialAgnesKey: string) {
       const apiKey = provider === 'openrouter' ? settings?.openrouterApiKey : settings?.agnesApiKey;
       const ok = await testAiConnection(String(apiKey || ""), provider);
       if (ok) {
-        showToast.success(t('aiConnectSuccess'));
+        showToast.success(t('aiConnectSuccess') || '連接成功');
       } else {
-        showToast.error(t('aiConnectFailed'));
+        showToast.error(t('aiConnectFailed') || '連接失敗');
       }
     } catch (e) {
-      showToast.error(t('aiConnectFailed') + ': ' + String(e));
+      showToast.error((t('aiConnectFailed') || '連接失敗') + ': ' + String(e));
     } finally {
       setIsTestingProvider(null);
     }

@@ -22,7 +22,7 @@ export default function PublicPage() {
   
   const [showScrollTop, setShowScrollTop] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+
   const filters = useMemo(() => {
     const categoryId = (category && category !== 'all' && category !== '') ? category : undefined;
     const tagId = (tags && tags.length > 0) ? tags[0] : undefined;
@@ -35,7 +35,7 @@ export default function PublicPage() {
       onlyGroupsCover: showGroupsCollapsed
     };
   }, [category, tags, search, sort, showGroupsCollapsed]);
-  
+
   const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
   const patch = useUI(s => s.patch);
   const { t } = useTranslation();
@@ -58,7 +58,6 @@ export default function PublicPage() {
       id="public-view"
     >
       <PublicHeader />
-
       <FilterBar mode="public" />
 
       <div 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NativeDialog } from '#src/components/ui/NativeDialog.js';
+import { Modal } from '#src/components/ui/Modal.js';
 import { Icon } from '#src/components/ui/Icon.js';
 
 interface UploadModeDialogProps {
@@ -8,11 +8,17 @@ interface UploadModeDialogProps {
   onSelectMode: (mode: 'single' | 'group') => void;
 }
 
+/**
+ * UploadModeDialog
+ * 
+ * 讓用戶選擇是普通上傳還是作為群組上傳。
+ */
 export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadModeDialogProps) {
   return (
-    <NativeDialog id="upload-mode-dialog" open={open} onClose={() => onOpenChange(false)} title="选择上传模式">
+    <Modal id="upload-mode-dialog" open={open} onClose={() => onOpenChange(false)} title="选择上传模式">
       <div className="p-4 space-y-3">
         <button
+          id="mode-single-btn"
           onClick={() => onSelectMode('single')}
           className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
         >
@@ -26,10 +32,11 @@ export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadMod
         </button>
 
         <button
+          id="mode-group-btn"
           onClick={() => onSelectMode('group')}
-          className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-brand-primary hover:bg-brand-primary/5 transition-all text-left"
+          className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
         >
-          <div className="p-3 bg-brand-primary/10 text-brand-primary rounded-lg shrink-0">
+          <div className="p-3 bg-blue-100 text-blue-600 rounded-lg shrink-0">
             <Icon name="layers" size={24} />
           </div>
           <div>
@@ -38,6 +45,6 @@ export function UploadModeDialog({ open, onOpenChange, onSelectMode }: UploadMod
           </div>
         </button>
       </div>
-    </NativeDialog>
+    </Modal>
   );
 }

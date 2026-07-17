@@ -1,6 +1,5 @@
 import { logger } from '#lib/logger.js';
 import { createClient } from '@supabase/supabase-js';
-import { ErrorFactory } from './error/ErrorFactory.js';
 import { getEnv } from '#lib/env.js';
 
 const supabaseUrl = getEnv('VITE_SUPABASE_URL');
@@ -75,4 +74,3 @@ export const supabase = isSupabaseConfigured
 if (typeof window !== 'undefined' && mode === 'development') {
   (window as unknown as { supabase: unknown }).supabase = supabase;
 }
-

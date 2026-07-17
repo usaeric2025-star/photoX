@@ -1,4 +1,3 @@
-
 // Gracefully filter out the React 19 warning for empty string passed to the boolean attribute 'inert'
 if (typeof window !== 'undefined') {
   const originalConsoleError = console.error;
@@ -15,16 +14,12 @@ if (typeof window !== 'undefined') {
 
   const originalConsoleWarn = console.warn;
   console.warn = function (...args: unknown[]) {
-    if (
-      typeof args[0] === 'string' && 
-      (args[0].includes("[Virtua]") || args[0].includes("oversize") || args[0].includes("Oversize"))
-    ) {
+    if (typeof args[0] === 'string' && (args[0].includes("[Virtua]") || args[0].includes("oversize") || args[0].includes("Oversize"))) {
       return;
     }
     originalConsoleWarn.apply(console, args as unknown as Parameters<typeof originalConsoleWarn>);
   };
 }
-
 
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -39,12 +34,9 @@ import { ErrorBoundary } from './components/shared/ErrorBoundary.js';
 import { FatalErrorOverlay } from './components/shared/FatalErrorOverlay.js';
 import { logger } from './lib/logger.js';
 import './index.css';
-// Removed import
-// Removed migration
 import { initChunkHandler } from './lib/chunkErrorHandler.js';
 import { dailyWorker } from './features/diagnostics/DailyWorker.js';
-import { useUI, setFatalError } from './lib/store/index.js';
-import { scheduler } from './lib/task-queue/scheduler.js';
+import { setFatalError } from './lib/store/index.js';
 import { setupQuerySync } from './lib/task-queue/querySync.js';
 
 async function init() {
@@ -59,44 +51,12 @@ async function init() {
         try {
           window.opener.postMessage({ type: 'SUPABASE_AUTH_CALLBACK', search, hash }, window.location.origin);
         } catch (e) {
-          console.error('[OAuth Popup] postMessage to opener failed:', e);
+          logger.error('[OAuth Popup] postMessage to opener failed:', e);
         }
         window.close();
         return; // Halt further app initialization inside the popup window
       }
     }
-
-    // 2. Main window listener: receive the code/hash from the popup, replace address bar state, and sync session
-    window.addEventListener('message', async (event) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type === 'SUPABASE_AUTH_CALLBACK') {
-        const { search, hash } = event.data;
-        console.log('[Auth] Received OAuth callback from popup. Exchanging credentials...');
-        const newUrl = window.location.pathname + (search || '') + (hash || '');
-        window.history.replaceState(null, '', newUrl);
-        
-        try {
-          const { initAuth } = await import('./store/authStore.js');
-          await initAuth();
-          
-          // Clean up the address bar and restore original URL if possible
-          const { storage } = await import('./lib/storage.js');
-          const savedUrl = storage.getItem('oauth_redirect_back_url');
-          if (savedUrl) {
-            storage.remove('oauth_redirect_back_url');
-            const urlObj = new URL(savedUrl);
-            if (urlObj.origin === window.location.origin) {
-              window.history.replaceState(null, '', urlObj.pathname + urlObj.search + urlObj.hash);
-              window.dispatchEvent(new PopStateEvent('popstate'));
-              return;
-            }
-          }
-          window.history.replaceState(null, '', window.location.pathname);
-        } catch (err) {
-          console.error('[Auth] Failed to initialize session after OAuth popup callback:', err);
-        }
-      }
-    });
 
     window.addEventListener('unhandledrejection', (event) => {
       const reason = event.reason;
@@ -115,7 +75,7 @@ async function init() {
   }
 
   // 異步加載輔助模組，不阻塞主渲染 (P0: 提高 FCP)
-  import('./lib/resizeObserverPolyfill.js').catch(e => console.warn("RO Polyfill load failed", e));
+  import('./lib/resizeObserverPolyfill.js').catch(e => logger.warn("RO Polyfill load failed", e));
   
   // 啟動背景 Worker
   setTimeout(() => {
@@ -125,7 +85,7 @@ async function init() {
       });
       initChunkHandler();
     } catch (e) {
-      console.warn("Background workers init failed", e);
+      logger.warn("Background workers init failed", e);
     }
   }, 1000);
 
@@ -140,7 +100,7 @@ async function init() {
         const message = (error as Error)?.message || String(error || '');
         if (/chunk|dynamically imported|module script|ResizeObserver|AbortError|cancel|abort|precondition|offline|websocket|hmr|DOMException|user_cancel|Failed to fetch|NetworkError/i.test(message)) return;
         setFatalError(error instanceof Error ? error : new Error(String(error)));
-      },
+      }
     });
     
     root.render(

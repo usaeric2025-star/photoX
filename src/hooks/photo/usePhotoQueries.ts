@@ -11,6 +11,7 @@ import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 import { PhotoAIResult } from '#src/types/index.js';
 
 export type PhotoListFilters = Record<string, unknown>;
+
 export type PhotoListResponse = {
   items: PhotoListItem[];
   nextCursor: string | null;
@@ -18,7 +19,7 @@ export type PhotoListResponse = {
 };
 
 export function usePhotos(params: PhotoListFilters = {}) {
-  const { photoId, modal, anchor, ...fetchParams } = params;
+  const { photoId, modal, anchor, ...fetchParams } = params as any;
   
   const result = useAppInfiniteQuery<PhotoListResponse, Error, string | undefined>(
     photoKeys.list(fetchParams),
@@ -63,7 +64,7 @@ export function usePhotos(params: PhotoListFilters = {}) {
 
 export const usePhoto = (photoId: string | null | undefined) => {
   const { t } = useTranslation();
-
+  
   return useAppQuery(
     photoId ? photoKeys.detail(photoId) : null,
     async () => {
@@ -88,7 +89,7 @@ export const usePhoto = (photoId: string | null | undefined) => {
 export function usePhotoAIResult(photoId: string, options?: { enabled?: boolean }) {
   const { can } = usePermission();
   const isEnabled = can('photo:ai-analyze') && (options?.enabled !== false);
-  
+
   return useAppQuery<PhotoAIResult | null>(
     (photoId && isEnabled) ? ['photos', 'ai-result', photoId] : null,
     async (): Promise<PhotoAIResult | null> => {

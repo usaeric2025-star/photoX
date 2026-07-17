@@ -28,18 +28,21 @@ export class ErrorFormatter {
 
   static formatValibotError(error: v.ValiError<v.GenericSchema>): string {
     return error.issues.map((issue) => {
-      const path = issue.path?.map((p) => String((p as unknown as Record<string, unknown>).key)).join('.') || '参数';
+      const path = issue.path?.map((p) => String((p as any).key)).join('.') || '参数';
       return `${path} ${issue.message}`;
     }).join('，');
   }
 
   static extractErrorMessage(error: unknown): string {
     if (!error) return '未知错误';
+    
     let rawMsg = '';
+    
     if (typeof error === 'string') {
       rawMsg = error;
     } else if (error && typeof error === 'object') {
       const errObj = error as Record<string, unknown>;
+      
       if (errObj.error && typeof errObj.error === 'string') {
         rawMsg = errObj.error;
       } else if (errObj.message && typeof errObj.message === 'string') {
@@ -77,6 +80,7 @@ export class ErrorFormatter {
     }
 
     const lowerMsg = rawMsg.toLowerCase();
+    
     if (lowerMsg.includes('failed to fetch') || lowerMsg.includes('network request failed')) {
       return '网络连接异常';
     }

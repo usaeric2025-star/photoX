@@ -25,14 +25,13 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
         setShowPreviewDialog(true);
       }
     } catch (e: unknown) {
-      ErrorFactory.handleError(e, t('previewAction'));
+      ErrorFactory.handle(e, { context: t('previewAction') });
     } finally {
       setIsPreviewing(false);
     }
   };
 
   const handleExecute = () => {
-    if (!action) return;
     setIsExecuting(true);
     setProgress(0);
     
@@ -58,7 +57,6 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
       },
       onError: () => {
         setIsExecuting(false);
-        setProgress(0);
       }
     });
   };

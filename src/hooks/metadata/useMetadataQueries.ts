@@ -5,6 +5,11 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { Category, Tag, Manufacturer } from '#src/types/index.js';
 import { useMemo, useState } from 'react';
 
+/**
+ * useCategories
+ * 
+ * 獲取所有分類。
+ */
 export const useCategories = (options?: { enabled?: boolean }) => {
   const { data: categories = [], isLoading } = useAppQuery<Category[]>(
     queryKeys.categories.all,
@@ -14,6 +19,11 @@ export const useCategories = (options?: { enabled?: boolean }) => {
   return { categories, isLoading };
 };
 
+/**
+ * useTags
+ * 
+ * 獲取所有標籤。
+ */
 export const useTags = (options?: { enabled?: boolean }) => {
   const { data: tags = [], isLoading } = useAppQuery<Tag[]>(
     queryKeys.tags.all,
@@ -23,6 +33,11 @@ export const useTags = (options?: { enabled?: boolean }) => {
   return { tags, isLoading };
 };
 
+/**
+ * useManufacturers
+ * 
+ * 獲取所有廠商。
+ */
 export const useManufacturers = (options?: { enabled?: boolean }) => {
   const { data: manufacturers = [], isLoading } = useAppQuery<Manufacturer[]>(
     queryKeys.manufacturers.all,
@@ -40,11 +55,10 @@ export const useManufacturers = (options?: { enabled?: boolean }) => {
 export function useTagSearch(keywordOrTags: string | Tag[]) {
   const [keyword, setKeyword] = useState(typeof keywordOrTags === 'string' ? keywordOrTags : '');
   
-  // 如果傳入的是字符串，執行服務端搜索
   const isServerSearch = typeof keywordOrTags === 'string';
-  const searchTerm = isServerSearch ? (keywordOrTags as string) : keyword;
-
-  const { data: searchResults = [], isLoading } = useAppQuery(
+  const searchTerm = isServerSearch ? keyword : '';
+  
+  const { data: searchResults = [], isLoading } = useAppQuery<Tag[]>(
     queryKeys.tags.search(searchTerm),
     async () => {
       if (!searchTerm.trim()) return [];
@@ -56,16 +70,16 @@ export function useTagSearch(keywordOrTags: string | Tag[]) {
   const filteredTags = useMemo(() => {
     if (isServerSearch) return searchResults;
     const allTags = Array.isArray(keywordOrTags) ? keywordOrTags : [];
-    if (!searchTerm.trim()) return allTags;
-    const lower = searchTerm.toLowerCase();
+    if (!keyword.trim()) return allTags;
+    const lower = keyword.toLowerCase();
     return allTags.filter(t => t.name.toLowerCase().includes(lower));
-  }, [isServerSearch, searchResults, keywordOrTags, searchTerm]);
+  }, [isServerSearch, searchResults, keywordOrTags, keyword]);
 
   return { 
-    keyword: searchTerm, 
+    keyword, 
     setKeyword, 
     filteredTags, 
-    data: filteredTags, // 兼容某些組件
+    data: filteredTags,
     isLoading 
   };
 }
@@ -85,7 +99,6 @@ export function useTagSorting(tags: Tag[], settings?: any) {
   }, [tags, settings]);
 
   const hotIds = useMemo(() => {
-    // 使用次數前 5 的標籤，或標記為 isHot 的標籤
     const fromTags = tags.filter(t => t.isHot).map(t => String(t.id));
     const sortedByCount = [...tags].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
     const topByCount = sortedByCount.slice(0, 5).map(t => String(t.id));

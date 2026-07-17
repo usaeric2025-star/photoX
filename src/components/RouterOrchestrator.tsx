@@ -9,56 +9,26 @@ import { useAuth } from "#lib/store/index.js";
 import { useNormalizedLocation } from "#src/hooks/core/index.js";
 import { DialogContainer } from "./layout/DialogContainer.js";
 import { SelectionProvider } from "#src/hooks/selection/useSelection.js";
-
+import { getRouteGroupKey, isAdminRoute } from "#src/lib/routing.js";
 const PublicPage = lazy(() => import("#src/pages/PublicPage.js"));
 const AdminPage = lazy(() => import("#src/pages/AdminPage/index.js"));
 const PublicGroupDetailPage = lazy(() => import("#src/features/group/PublicGroupDetail.js").then(m => ({ default: m.PublicGroupDetailPage })));
-const AdminGroupDetailPage = lazy(() => import("#src/features/group/AdminGroupDetail.js").then(m => ({ default: m.AdminGroupDetailPage })));
 const AdminAuthGate = lazy(() => import("./admin/AdminAuthGate.js").then(m => ({ default: m.AdminAuthGate })));
-const SettingsPage = lazy(() => import("#src/features/settings/SettingsPage.js").then(m => ({ default: m.SettingsPage })));
-const DiagDashboard = lazy(() => import("#src/features/diagnostics/DiagDashboard.js").then(m => ({ default: m.DiagDashboard })));
-
-/**
- * ⚠️ 路由配置锁定
- * - ADMIN_PATH 和 PUBLIC_PATH 禁止修改
- * - 新增 Admin 子页面去 AdminPage.tsx 或 AdminPageContent.tsx 添加
- * - 修改前请阅读 AGENTS.md 中的路由规范
- * - 任何修改必须经过 review 并更新文档
- */
-const ADMIN_PATH = '/admin/:subpath*';
-const PUBLIC_PATH = '/';
-
-const AdminGroupDetailRoute = () => (
-  <AdminAuthGate>
-    <AdminGroupDetailPage />
-  </AdminAuthGate>
-);
-
 export function RouterOrchestrator() {
   const [location] = useNormalizedLocation();
   const isAuthLoading = useAuth(s => s.isLoading);
   
-  const getPageGroupKey = (pathname: string) => {
-    if (pathname === '/' || pathname.startsWith('/photo/')) return 'public-home';
-    if (pathname.startsWith('/admin') || pathname.startsWith('/settings') || pathname.startsWith('/diagnostics')) return 'admin-dashboard';
-    if (pathname.startsWith('/group/')) return 'public-group';
-    return pathname;
-  };
-
-  const groupKey = getPageGroupKey(location);
-
+  const groupKey = getRouteGroupKey(location);
   if (isAuthLoading) {
     return <LoadingScreen />;
   }
-
   // Admin 强制守卫 (针对管理端路径进行特殊布局处理)
-  const isAdminPath = location.startsWith('/admin') || location.startsWith('/settings') || location.startsWith('/diagnostics');
-  
+  const isCurrentAdmin = isAdminRoute(location);
   return (
     <Router hook={useNormalizedLocation}>
       <SelectionProvider>
         <AnimatePresence>
-          {isAdminPath ? (
+          {isCurrentAdmin ? (
             <motion.div 
               key="admin-dashboard"
               variant="fade"
@@ -72,23 +42,22 @@ export function RouterOrchestrator() {
               </ErrorBoundary>
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key={groupKey}
               variant="fade"
               transition="easeOut"
               className="flex-1 flex flex-col h-full w-full"
             >
-              <ErrorBoundary>
-                <Suspense fallback={<LoadingScreen />}>
-                  <Switch>
-                    <Route path={PUBLIC_PATH} component={PublicPage} />
-                    <Route path="/photo/:photoId" component={PublicPage} />
-                    <Route path="/group/:slug" component={PublicGroupDetailPage} />
-                    
-                    <Route component={NotFoundPage} />
-                  </Switch>
-                </Suspense>
-              </ErrorBoundary>
+              <Suspense fallback={<LoadingScreen />}>
+                <Switch>
+                  <Route path="/" component={PublicPage} />
+                  <Route path="/photo/:photoId" component={PublicPage} />
+                  <Route path="/group/:slug" component={PublicGroupDetailPage} />
+                  <Route path="/category/:id" component={PublicPage} />
+                  <Route path="/tag/:id" component={PublicPage} />
+                  <Route component={NotFoundPage} />
+                </Switch>
+              </Suspense>
             </motion.div>
           )}
         </AnimatePresence>

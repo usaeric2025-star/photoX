@@ -1,7 +1,6 @@
-import { logger } from '#lib/logger.js';
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useAppQuery, useAppMutation, queryClient } from '#lib/query/index.js';
+import { useAppQuery, queryClient } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import { Button } from '#src/components/ui/Button.js';
@@ -24,6 +23,7 @@ interface LogEntry {
   stack_trace?: string;
   metadata?: Record<string, unknown> | null;
 }
+
 const LevelIcon = ({ level }: { level: ErrorLevel }) => {
   switch (level) {
     case 'critical': return <Icon name="shield-alert" size={14} className="text-red-600" />;
@@ -75,7 +75,7 @@ Message: ${log.message || log.error_message || ''}${metadataStr}${stack ? `\nSta
           <button 
             type="button"
             onClick={handleCopy}
-            className="p-1 rounded hover:bg-slate-150 hover:text-slate-600 transition-colors"
+            className="p-1 rounded hover:bg-slate-100 hover:text-slate-600 transition-colors"
             title="复制日志详情 / Copy details"
           >
             <Icon name="copy" size={12} className="text-slate-400 hover:text-slate-600" />
@@ -131,10 +131,10 @@ export const ErrorLogViewer = () => {
   });
 
   return (
-    <div className="bg-white p-6 rounded-[32px] border border-brand-navy/10 mt-4 shadow-sm">
+    <div className="bg-white p-6 rounded-[32px] border border-blue-900/10 mt-4 shadow-sm">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
-          <div className="w-1.5 h-3.5 bg-brand-gold rounded-full"></div>
+        <h3 className="font-black text-blue-900 text-[10px] uppercase tracking-widest flex items-center gap-2">
+          <div className="w-1.5 h-3.5 bg-amber-400 rounded-full"></div>
           系統錯誤與操作日誌 / System Logs
         </h3>
         

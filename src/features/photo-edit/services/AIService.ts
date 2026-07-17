@@ -102,36 +102,30 @@ export const AIService = {
     const rawCatId = String(result.category_id || result.categoryId || '');
     const rawCatName = String(result.category_name || result.categoryName || '');
     let matchedId: string | null = null;
+    
     if (rawCatId && categories.find(c => String(c.id) === rawCatId)) {
-        matchedId = rawCatId;
+      matchedId = rawCatId;
     } else if (rawCatName) {
-        const found = categories.find(c => c.name.toLowerCase() === rawCatName.toLowerCase());
-        if (found) matchedId = String(found.id);
+      const found = categories.find(c => c.name.toLowerCase() === rawCatName.toLowerCase());
+      if (found) matchedId = String(found.id);
     }
     if (matchedId) updates.categoryId = matchedId;
 
     // 4. Tags
     const sourceTags = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
     const sourceTagIds = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
-    
     const rawNames: string[] = sourceTags.map((t: any) => (typeof t === 'object' ? String(t?.name || '') : String(t))).filter(Boolean);
     const parsedTagIds: string[] = sourceTagIds.map((t: any) => (typeof t === 'object' ? String(t?.id || t?.tagId || '') : String(t))).filter(Boolean);
     
     const finalTagIds = new Set<string>();
     const unresolvedNames: string[] = [];
-    
+
     [...parsedTagIds, ...rawNames].forEach((idOrName: string) => {
       const found = allTags.find(t => String(t.id) === idOrName || t.name.toLowerCase() === idOrName.toLowerCase());
       if (found) finalTagIds.add(String(found.id));
       else unresolvedNames.push(idOrName);
     });
 
-    if (unresolvedNames.length > 0) {
-      // 這裡可以選擇是否要在後端自動創建標籤，或者僅保留已存在的
-      // 根據原邏輯，它是調用了 resolveTagNamesToIds
-    }
-    
-    // 返回基礎更新對象，標籤解析可能需要異步調用外部 resolve
     updates.unresolvedTagNames = unresolvedNames;
     updates.resolvedTagIds = Array.from(finalTagIds);
 

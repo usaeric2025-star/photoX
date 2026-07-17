@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useDisclosure } from '#src/hooks/core/index.js';
-import { useClickOutside } from '#src/hooks/core/index.js';
+import { useDisclosure, useClickOutside, useLongPress } from '#src/hooks/core/index.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
-import { useLongPress } from "#src/hooks/core/index.js";
 import { Category } from '#src/types/index.js';
-import { useUI } from '#lib/store/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { FormProvider } from '#lib/forms/useFormField.js';
@@ -31,7 +28,7 @@ function CategoryItem({
   const [isEditOpen, editDialog] = useDisclosure(false);
   const confirm = useConfirm();
   const { appLang, t } = useTranslation();
-
+  
   const menuRef = useClickOutside<HTMLDivElement>(() => {
     if (activeMenuId === cat.id) setActiveMenuId(null);
   });
@@ -46,7 +43,8 @@ function CategoryItem({
   const displayName = (cat.description as any)?.[appLang] || cat.name || '未命名分类';
 
   return (
-      <div
+    <div
+      id={`cat-item-${cat.id}`}
       ref={longPress.ref}
       onMouseDown={longPress.onMouseDown}
       onMouseMove={longPress.onMouseMove}
@@ -67,11 +65,13 @@ function CategoryItem({
       <AnimatePresence>
         {activeMenuId === cat.id && (
           <motion.div 
+            ref={menuRef}
             variant="scale"
             transition="easeOut"
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 min-w-[120px]"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 min-w-[120px] z-50"
           >
             <button
+              id={`edit-cat-${cat.id}`}
               onClick={(e) => {
                 e.stopPropagation();
                 editDialog.open();
@@ -82,6 +82,7 @@ function CategoryItem({
               <Icon name="pencil" size={12} /> {t('edit')}
             </button>
             <button
+              id={`delete-cat-${cat.id}`}
               onClick={async (e) => {
                 e.stopPropagation();
                 if (await confirm({
@@ -125,41 +126,32 @@ export function CategoriesSection({
 }: CategoriesSectionProps) {
   const { categories = [] } = useCategories();
   const categoryMutations = useCategoryMutations();
-  const addCategory = categoryMutations.create.mutateAsync;
-  const updateCategory = categoryMutations.edit.mutateAsync;
-  const deleteCategory = categoryMutations.remove.mutateAsync;
   
   const { t, appLang } = useTranslation();
   const [isAddOpen, addDialog] = useDisclosure(false);
 
   const { submit: runUpdateCategory, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.object({ id: v.number(), updates: v.record(v.string(), v.unknown()) }),
+    schema: v.any(),
     mutationFn: async ({ id, updates }: { id: number, updates: Record<string, unknown> }) => {
-      await updateCategory({ id, updates });
-      return true;
+      await categoryMutations.edit.mutateAsync({ id, updates });
     },
     successMessage: t('updateSuccess'),
-    errorMessage: t('updateFailed')
   });
 
   const { submit: runDeleteCategory } = useFormSubmit({
-    schema: v.object({ id: v.number() }),
+    schema: v.any(),
     mutationFn: async ({ id }: { id: number }) => {
-      await deleteCategory(id);
-      return true;
+      await categoryMutations.remove.mutateAsync(id);
     },
     successMessage: t('deleteSuccess'),
-    errorMessage: t('deleteFailed')
   });
 
   const { submit: runAddCategory, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: v.object({ name: v.pipe(v.string(), v.minLength(1)) }),
+    schema: v.any(),
     mutationFn: async ({ name }: { name: string }) => {
-      await addCategory(name);
-      return true;
+      await categoryMutations.create.mutateAsync({ name });
     },
     successMessage: t('createSuccess'),
-    errorMessage: t('createFailed')
   });
 
   return (
@@ -173,7 +165,7 @@ export function CategoriesSection({
       </div>
 
       <div className="flex gap-2">
-        <button onClick={addDialog.open} className={buttonStyles.accent}>
+        <button id="add-category-btn" onClick={addDialog.open} className={buttonStyles.accent}>
           <Icon name="plus" size={16} /> {t('addCategory') || '新增分类'}
         </button>
       </div>
@@ -186,7 +178,7 @@ export function CategoriesSection({
               cat={cat} 
               onUpdate={async (c) => {
                 return await runUpdateCategory({ 
-                  id: c.id, 
+                  id: Number(c.id), 
                   updates: { 
                     name: c.name,
                     description: { ...((cat.description as any) || {}), [appLang]: c.name }
@@ -207,10 +199,11 @@ export function CategoriesSection({
           description={t('enterCategoryName') || "输入分类名称："}
           onConfirm={async (name: string) => {
             if (!name.trim()) return false;
-            return await runAddCategory({ name });
+            await runAddCategory({ name });
+            return true;
           }}
         />
       </FormProvider>
     </section>
   );
-};
+}

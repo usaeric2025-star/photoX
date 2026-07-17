@@ -17,14 +17,17 @@ interface AISecuritySectionProps {
   inputClass: string;
 }
 
+/**
+ * AISecuritySection
+ * 
+ * AI 處理器配置與安全設置區塊。
+ */
 export function AISecuritySection({
   agnesApiKey: initialAgnesKey,
-  cardClass,
   inputClass
 }: AISecuritySectionProps) {
   const appLang = useUI(s => s.appLang);
   const { t } = useTranslation();
-
   const {
     keysStatus,
     localOpenRouterKey,
@@ -62,7 +65,7 @@ export function AISecuritySection({
            <div className="flex items-center gap-2 bg-white/50 p-1 rounded-full border border-slate-200">
               <span className="text-[8px] font-bold text-brand-navy/60 ml-2 uppercase">首选 / Primary</span>
               <div className="flex bg-slate-100 rounded-full p-0.5">
-                {(['openrouter', 'agnes'] as Array<'openrouter' | 'agnes'>).map(p => (
+                {(['openrouter', 'agnes'] as const).map(p => (
                    <button
                     key={p}
                     onClick={() => saveProvider(p)}
@@ -117,4 +120,3 @@ export function AISecuritySection({
     </div>
   );
 }
-

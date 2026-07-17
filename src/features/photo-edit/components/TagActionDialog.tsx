@@ -1,5 +1,5 @@
 import React from 'react';
-import { NativeDialog } from "#src/components/ui/NativeDialog.js";
+import { Modal } from "#src/components/ui/Modal.js";
 import { Icon } from '#src/components/ui/Icon.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { Tag } from '#src/types/index.js';
@@ -14,6 +14,11 @@ interface TagActionDialogProps {
   onDeleteTag: (id: string) => void;
 }
 
+/**
+ * TagActionDialog
+ * 
+ * 標籤動作對話框，用於置頂、重命名或刪除標籤。
+ */
 export const TagActionDialog = ({
   activeTag,
   pinnedIds,
@@ -23,13 +28,12 @@ export const TagActionDialog = ({
   onDeleteTag
 }: TagActionDialogProps) => {
   const confirm = useConfirm();
-
+  
   if (!activeTag) return null;
-
   const isPinned = pinnedIds.includes(String(activeTag.id));
 
   return (
-    <NativeDialog 
+    <Modal 
       id="tag-editor-dialog" 
       open={!!activeTag} 
       onClose={onClose} 
@@ -47,7 +51,9 @@ export const TagActionDialog = ({
             #{activeTag.name}
           </div>
         </div>
+
         <div className="space-y-3">
+          {/* 置頂按鈕 */}
           <button
             type="button"
             className="w-full flex items-center justify-center gap-3 text-amber-600 bg-amber-50 border border-amber-100/50 font-bold py-4 rounded-2xl hover:bg-amber-100 transition-all cursor-pointer shadow-sm shadow-amber-500/5"
@@ -56,7 +62,8 @@ export const TagActionDialog = ({
               onClose();
             }}
           >
-            <Icon name="heart"
+            <Icon 
+              name="heart"
               size={18}
               strokeWidth={2.5}
               className={isPinned ? "fill-amber-600" : ""}
@@ -64,39 +71,45 @@ export const TagActionDialog = ({
             {isPinned ? "取消置顶 / Unpin" : "设为置顶 / Pin as Hot"}
           </button>
           
+          {/* 重命名按鈕 */}
           <button
             type="button"
             className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50 border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5"
             onClick={() => {
               onRenameRequest(activeTag);
-              onClose();
             }}
           >
-            <Icon name="pencil" size={18} strokeWidth={2.5} /> 编辑名称 / Rename
+            <Icon name="pencil" size={18} strokeWidth={2.5} /> 
+            編輯名稱 / Rename
           </button>
 
+          {/* 刪除按鈕 */}
           <button
             type="button"
             className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50 border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5"
             onClick={async () => {
-              if (await confirm({
+              const ok = await confirm({
                 title: `彻底删除标签 / Permanent Delete: #${activeTag.name}`,
                 description: "无法撤销且会从所有照片中移除 / This will be permanently removed from all photos.",
                 confirmText: "删除",
                 variant: "destructive"
-              })) {
+              });
+
+              if (ok) {
                 try {
                   onDeleteTag(String(activeTag.id));
+                  onClose();
                 } catch (e) {
-                  ErrorFactory.handle(e, { context: "彻底删除标签" });
+                  ErrorFactory.handle(e as Error, { context: "彻底删除标签" });
                 }
               }
-              onClose();
             }}
           >
-            <Icon name="trash-2" size={18} strokeWidth={2.5} /> 彻底删除 / Delete
+            <Icon name="trash-2" size={18} strokeWidth={2.5} /> 
+            彻底删除 / Delete
           </button>
         </div>
+
         <button
           type="button"
           className="w-full text-slate-400 text-[10px] font-black uppercase tracking-tighter pt-2 active:text-slate-600 cursor-pointer"
@@ -105,6 +118,6 @@ export const TagActionDialog = ({
           取消操作 / CANCEL
         </button>
       </div>
-    </NativeDialog>
+    </Modal>
   );
 };

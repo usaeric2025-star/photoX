@@ -16,6 +16,7 @@ function setupChunkErrorHandler() {
     const msg = event.message || ''
     // 檢查是否為資源加載錯誤且包含 chunk/module 關鍵字
     const isResourceError = event.target instanceof HTMLElement && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')
+    
     if (isResourceError || /chunk|module script|dynamically imported/i.test(msg)) {
       handleChunkError(msg, event)
     }
@@ -53,7 +54,6 @@ export async function handleChunkError(msg: string, event?: Event | PromiseRejec
     setTimeout(() => window.location.reload(), 100)
   } catch (softError) {
     logger.warn('[Chunk] 刷新失敗', softError)
-    setTimeout(() => window.location.reload(), 100)
   }
 }
 
@@ -66,7 +66,7 @@ async function clearCaches() {
       logger.warn('[Chunk] Service Worker cleanup failed', e)
     }
   }
-  
+
   if ('caches' in window) {
     try {
       const keys = await caches.keys()

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePublicSettings, useTranslation } from '#src/hooks/index.js';
-import { useUI, UIStoreState } from '#lib/store/index.js';
+import { useUI } from '#lib/store/index.js';
 import { AppLink } from '#src/components/router/AppLink.js';
 import { storage } from '#lib/storage.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
@@ -20,8 +20,6 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   const { data: settings } = usePublicSettings();
   const appLang = useUI(s => s.appLang);
   const { t } = useTranslation();
-
-
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
@@ -70,7 +68,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
         <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-slate-900/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-20%] left-[-20%] w-[60%] h-[60%] bg-blue-600/5 rounded-full blur-[120px]" />
       </div>
-      
+
       {/* Absolute Close Button */}
       <div className="absolute top-8 right-8">
         <AppLink 
@@ -190,7 +188,6 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                   </div>
                 )}
               </div>
-              
               <Button
                 type="submit"
                 loading={isStaffLoggingIn}

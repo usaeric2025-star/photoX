@@ -2,7 +2,7 @@ import React from 'react';
 import { AppNameSection } from './AppNameSection.js';
 import { LogoSection } from './LogoSection.js';
 import { WhatsAppSection } from './WhatsAppSection.js';
-import { AppSettings, Category, Tag, Manufacturer, Photo } from '#src/types/index.js';
+import { AppSettings } from '#src/types/index.js';
 
 interface GeneralSettingsProps {
   settings: AppSettings;
@@ -13,6 +13,11 @@ interface GeneralSettingsProps {
   buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }
 
+/**
+ * GeneralSettings
+ * 
+ * 整合基本設置（應用名稱、Logo、WhatsApp 聯繫方式）。
+ */
 export function GeneralSettings({
   settings, 
   handleLogoUpload, 
@@ -21,7 +26,6 @@ export function GeneralSettings({
   inputClass,
   buttonStyles
 }: GeneralSettingsProps) {
-
   return (
     <div className="space-y-6">
       <AppNameSection 
@@ -30,14 +34,14 @@ export function GeneralSettings({
         cardClass={cardClass}
         inputClass={inputClass}
       />
+      
       <LogoSection 
-        settings={settings}
+        logoUrl={settings.logoUrl}
         handleLogoUpload={handleLogoUpload}
-        cardClass={cardClass}
         buttonStyles={buttonStyles}
-        setSettingField={setSettingField}
-        inputClass={inputClass}
+        cardClass={cardClass}
       />
+      
       <WhatsAppSection 
         settings={settings}
         setSettingField={setSettingField}
@@ -46,4 +50,4 @@ export function GeneralSettings({
       />
     </div>
   );
-};
+}

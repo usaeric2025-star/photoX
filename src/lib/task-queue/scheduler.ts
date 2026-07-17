@@ -1,10 +1,7 @@
 import { Task } from './types.js';
 import { taskTable } from './integrations/supabase.js';
-import { showToast } from '#lib/ui/toast.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { tasksSignal, addTask, updateTask, updateTaskState, removeTask, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/lib/task-queue/taskStore.js';
-
-// ... (rest of code)
+import { tasksSignal, addTask, updateTaskState, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/lib/task-queue/taskStore.js';
 
 class TaskScheduler {
   private queue: Task[] = [];
@@ -13,7 +10,6 @@ class TaskScheduler {
   
   // ✅ AbortController 僅存於內部 Map，不污染 Task 物件
   private controllers = new Map<string, AbortController>();
-  
   // ✅ 去重檢查：type + meta.key
   private activeKeys = new Set<string>();
 
@@ -26,8 +22,7 @@ class TaskScheduler {
     // 冪等檢查
     const key = `${task.type}:${task.meta?.key || task.id}`;
     if (this.activeKeys.has(key)) {
-    // silently ignore duplicate task
-
+      // silently ignore duplicate task
       return;
     }
     this.activeKeys.add(key);
@@ -37,7 +32,7 @@ class TaskScheduler {
     
     // 2. 寫入 Supabase（持久層）
     taskTable.insert(task).catch(e => ErrorFactory.handle(e, { context: '[Task] insert error' }));
-    
+
     // 3. 加入調度佇列
     this.queue.push(task);
     this.tick();
@@ -50,25 +45,23 @@ class TaskScheduler {
       controller.abort();
       this.controllers.delete(id);
     }
-    
+
     // 從佇列移除
     this.queue = this.queue.filter(t => t.id !== id);
     this.running.delete(id);
-    
+
     // 更新 Store
     updateTaskState(id, { status: 'cancelled' });
-    
+
     // 更新 Supabase
     taskTable.updateStatus(id, 'cancelled').catch(e => ErrorFactory.handle(e, { context: '[Task] cancel error' }));
-    
+
     // 釋放去重鍵
     const task = this.findTask(id);
     if (task) {
       const key = `${task.type}:${task.meta?.key || task.id}`;
       this.activeKeys.delete(key);
     }
-    
-    this.tick();
   }
 
   retry(id: string) {
@@ -118,7 +111,6 @@ class TaskScheduler {
       
       // 觸發 querySync（通過事件訂閱）
       this.onTaskComplete?.(task);
-
     } catch (error) {
       // 如果是取消，不觸發錯誤處理
       if (controller.signal.aborted) {
@@ -131,21 +123,18 @@ class TaskScheduler {
 
       const message = error instanceof Error ? error.message : String(error);
       const retryable = true; // 可根據錯誤類型判斷
-
       updateTaskState(task.id, { status: 'failed', error: message, retryable });
       setGlobalTaskStatus('failed');
       await taskTable.updateStatus(task.id, 'failed', { error: message, retryable });
-
       ErrorFactory.handle(error, { context: task.label });
     } finally {
       this.controllers.delete(task.id);
       this.running.delete(task.id);
       
       if (this.running.size === 0 && this.queue.length === 0) {
-        setGlobalTaskStatus('idle');
         setGlobalTaskProgress(0);
       }
-      
+
       // 釋放去重鍵（僅 completed 或 failed）
       const key = `${task.type}:${task.meta?.key || task.id}`;
       this.activeKeys.delete(key);
@@ -165,8 +154,6 @@ class TaskScheduler {
     // ✅ 先清除記憶體中可能存在的重複任務
     tasks.forEach(task => {
       const key = `${task.type}:${task.meta?.key || task.id}`;
-      // In a real restore, we need to bind the execute function again based on task type.
-      // For now, this is a placeholder.
       if (!this.activeKeys.has(key)) {
         this.activeKeys.add(key);
         addTask(task);
@@ -180,7 +167,6 @@ class TaskScheduler {
     // 先查佇列
     let found = this.queue.find(t => t.id === id);
     if (found) return found;
-    
     // 再查執行中
     const tasks = tasksSignal.value;
     return tasks.get(id);

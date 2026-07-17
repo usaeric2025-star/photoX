@@ -9,7 +9,7 @@ import { descLang } from '#lib/store/index.js';
 export const getLocalizedDisplay = (val: unknown, lang?: 'zh' | 'en' | 'ms'): string => {
   if (!val) return '';
   const currentLang = lang || descLang.value || 'zh';
-
+  
   if (typeof val === 'string') {
     try {
       if (val.startsWith('{') && val.endsWith('}')) {
@@ -24,7 +24,7 @@ export const getLocalizedDisplay = (val: unknown, lang?: 'zh' | 'en' | 'ms'): st
     const obj = val as Record<string, string>;
     return obj[currentLang] || obj.zh || obj.en || obj.ms || '';
   }
-  
+
   return String(val);
 };
 
@@ -52,7 +52,7 @@ export function translateDimensionLabelToEnglish(label: string): string {
     '坐面': 'Seat',
     '座面': 'Seat',
   };
-  
+
   let result = label;
   Object.entries(mapping).forEach(([zh, en]) => {
     const regex = new RegExp(zh, 'gi');

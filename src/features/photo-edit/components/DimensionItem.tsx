@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { Dimension, TranslationType } from '#src/types/index.js';
+import { Dimension } from '#src/types/index.js';
 
 interface DimensionItemProps {
   dim: Dimension;
@@ -13,6 +13,11 @@ interface DimensionItemProps {
   t: (key: string, ...args: unknown[]) => string;
 }
 
+/**
+ * DimensionItem
+ * 
+ * 單個尺寸編輯項組件。
+ */
 export function DimensionItem({
   dim,
   idx,
@@ -30,18 +35,11 @@ export function DimensionItem({
   
   const hasNumbers = /\d/.test(dimensionsContent);
   const hasNumericData = !!(dim.height || dim.width || dim.length);
-  
-  // 📌 [Fix] If content has no numbers but we have numeric data, move existing content to prefix and use numeric data as content
-  // This preserves labels like "Large" or "Inner" while showing the actual dimensions
+
   if (hasNumericData && !hasNumbers) {
     if (!prefix && dimensionsContent && dimensionsContent !== '---' && dimensionsContent.length < 20) {
       prefix = dimensionsContent;
     }
-    const h = dim.height ? `H${dim.height}` : '';
-    const w = dim.width ? `W${dim.width}` : '';
-    const l = dim.length ? `L${dim.length}` : '';
-    dimensionsContent = [h, w, l].filter(Boolean).join(' x ');
-  } else if (!dimensionsContent && hasNumericData) {
     const h = dim.height ? `H${dim.height}` : '';
     const w = dim.width ? `W${dim.width}` : '';
     const l = dim.length ? `L${dim.length}` : '';
@@ -52,17 +50,19 @@ export function DimensionItem({
     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative group">
       {total > 1 && (
         <button 
+          type="button"
           onClick={() => onRemove(idx)}
           className="absolute -top-2 -right-2 p-1.5 bg-white text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shadow-sm border border-slate-100"
-          title={t('deleteSpec')}
+          title={t('deleteSpec') || '刪除規格'}
         >
           <Icon name="x" size={16} />
         </button>
       )}
+
       <div className="grid grid-cols-5 gap-3">
         <div className="col-span-2 space-y-1.5">
           <div className="flex items-center justify-between px-1">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t('part')}</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t('part') || '部位'}</span>
             {dim.isAi && (
               <div className="flex items-center gap-1 text-purple-600">
                 <Icon name="sparkles" size={10} className="animate-pulse" />
@@ -79,7 +79,7 @@ export function DimensionItem({
           />
         </div>
         <div className="col-span-3 space-y-1.5">
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">{t('unit')}</span>
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">{t('unit') || '單位'}</span>
           <div className="flex gap-1 h-11">
             {['cm', 'mm', 'inch'].map(u => (
               <button 
@@ -94,9 +94,10 @@ export function DimensionItem({
           </div>
         </div>
       </div>
+
       <div className="space-y-1.5">
         <div className="flex justify-between items-center px-1">
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t('dimensionContent')} (H x W x D)</span>
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t('dimensionContent') || '尺寸內容'} (H x W x D)</span>
         </div>
         <input 
           type="text" 

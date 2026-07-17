@@ -1,5 +1,5 @@
-import { usePhotoEditSessionContext } from "./hooks/PhotoEditSession.js";
 import React from "react";
+import { usePhotoEditSessionContext } from "./hooks/PhotoEditSession.js";
 import { Icon } from '#src/components/ui/Icon.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { type PhotoEditFormData } from "#lib/valibot/schemas/photo.js";
@@ -11,6 +11,11 @@ interface DialogHeaderProps {
   onDeleteClick: () => void;
 }
 
+/**
+ * DialogHeader
+ * 
+ * 照片編輯對話框的首部，包含 AI 識別、設為封面、移出合組、刪除與保存按鈕。
+ */
 export function DialogHeader({
   onClose,
   onDeleteClick,
@@ -33,9 +38,9 @@ export function DialogHeader({
   } = useDialogHeaderActions(onClose);
 
   const l = {
-    editTitle: t('editPhoto') || 'Edit Product',
-    analyzeTitle: t('analyzePhoto') || 'Analyze Product',
-    cover: t('cover') || 'Cover',
+    editTitle: t('editPhoto') || '编辑照片 / Edit Photo',
+    analyzeTitle: t('analyzePhoto') || '分析照片 / Analyze Photo',
+    cover: t('cover') || '封面 / Cover',
   };
 
   return (
@@ -45,7 +50,7 @@ export function DialogHeader({
           {editPhotoId ? l.editTitle : l.analyzeTitle}
         </h2>
         {aiMessage && (
-          <div className="ml-4 px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-xs font-semibold animate-in fade-in flex items-center gap-2 max-w-[200px] sm:max-w-xs truncate">
+          <div className="mt-1 px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-[10px] font-semibold animate-in fade-in flex items-center gap-2 max-w-fit truncate">
             <LoadingSpinner size="xs" />
             <span className="truncate">{aiMessage}</span>
           </div>
@@ -54,11 +59,13 @@ export function DialogHeader({
 
       <div className="flex-none flex items-center justify-end gap-1.5 sm:gap-2">
         <div className="flex items-center gap-1.5">
+          {/* AI 識別 */}
           <button
             type="button"
             onClick={onAiAnalyze}
             disabled={isAnalyzing || isPending}
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-slate-100 shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200"}`}
+            title={t('aiRecognize') || 'AI 識別'}
           >
             {isAnalyzing ? (
               <LoadingSpinner size="xs" />
@@ -68,6 +75,7 @@ export function DialogHeader({
           </button>
         </div>
 
+        {/* 設為封面 */}
         {isPartOfGroup && (
           <form.Subscribe selector={(state: { values: PhotoEditFormData }) => state.values.isGroupCover}>
             {(isGroupCover: boolean | undefined) => {
@@ -91,6 +99,7 @@ export function DialogHeader({
           </form.Subscribe>
         )}
 
+        {/* 移出合組 */}
         {isPartOfGroup && (
           <button
             type="button"
@@ -102,29 +111,35 @@ export function DialogHeader({
           </button>
         )}
 
+        {/* 刪除按鈕 */}
         {editPhotoId && (
           <button
             type="button"
             onClick={onDeleteClick}
             disabled={isPending || isAnalyzing}
             className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold disabled:opacity-50"
+            title={t('delete') || '刪除'}
           >
             <Icon name="trash-2" size={18} />
           </button>
         )}
 
+        {/* 保存按鈕 */}
         <button
           type="button"
           onClick={onSave}
           disabled={isSubmitting || isAnalyzing}
           className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSubmitting || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
+          title={t('save') || '保存'}
         >
-          {isSubmitting || isAnalyzing ? (
+          {isSubmitting ? (
             <LoadingSpinner size="xs" />
           ) : (
             <Icon name="save" size={18} />
           )}
         </button>
+
+        {/* 關閉按鈕 */}
         <button
           type="button"
           onClick={onClose}

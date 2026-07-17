@@ -24,7 +24,6 @@ export function formatDateTime(date: Date | string | number | null | undefined, 
   if (!date) return '-';
   const d = dayjs(date);
   if (!d.isValid()) return '-';
-  
   if (locale === 'zh') d.locale('zh-cn');
   return d.tz(DEFAULT_TIMEZONE).format('YYYY-MM-DD HH:mm');
 }
@@ -33,7 +32,6 @@ export function formatTime(date: Date | string | number | null | undefined, loca
   if (!date) return '-';
   const d = dayjs(date);
   if (!d.isValid()) return '-';
-  
   if (locale === 'zh') d.locale('zh-cn');
   return d.tz(DEFAULT_TIMEZONE).format('HH:mm:ss');
 }
@@ -42,7 +40,6 @@ export function timeAgo(date: Date | string | number | null | undefined, locale 
   if (!date) return '-';
   const d = dayjs(date);
   if (!d.isValid()) return '-';
-  
   if (locale === 'zh') d.locale('zh-cn');
   return d.fromNow();
 }

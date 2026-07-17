@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { photoWallStore } from '../signal.js';
 import { PhotoWallGrid } from './PhotoWallGrid.js';
 import { usePhotoWall } from '#src/hooks/index.js';
@@ -7,11 +7,12 @@ import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { api } from '#lib/api.js';
-import { useAppQuery } from '#lib/query/index.js';
 import { useUI } from '#lib/store/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { AdminEmptyState } from '#src/pages/AdminPage/AdminEmptyState.js';
 import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
+import { useQueryState } from 'nuqs';
+import { parseAsPhotoId } from '#lib/nuqs/parsers.js';
 
 interface PhotoWallContainerProps {
   mode?: 'admin' | 'public';
@@ -19,9 +20,11 @@ interface PhotoWallContainerProps {
   onPhotoClick?: (photo: PhotoListItem) => void;
 }
 
-import { useQueryState } from 'nuqs';
-import { parseAsPhotoId } from '#lib/nuqs/parsers.js';
-
+/**
+ * PhotoWallContainer
+ * 
+ * 照片牆核心容器，負責數據加載、Lightbox 協調與狀態同步。
+ */
 export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const { open: openLightbox, setLightboxData } = useLightbox();
   const [photoId] = useQueryState('id', parseAsPhotoId);
@@ -29,18 +32,15 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const patch = useUI(s => s.patch);
   const { uiTranslations: labels } = useTranslation();
 
-  // Use refs to avoid recreating the onPhotoClick closure and triggering full-grid rerenders on scroll
   const photosRef = useRef(photos);
   photosRef.current = photos;
-
   const onPhotoClickRef = useRef(props.onPhotoClick);
   onPhotoClickRef.current = props.onPhotoClick;
 
   const isAggregated = !!props.filters?.onlyGroupsCover;
-
   const expandedPhotosRef = useRef<PhotoListItem[] | null>(null);
 
-  // Sync total count to global UI state
+  // 同步總數到全局 UI 狀態
   useEffect(() => {
     if (total !== undefined) {
       patch({ totalCount: total });
@@ -55,7 +55,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
 
     const currentPhotos = photosRef.current;
     
-    // If we have pre-fetched expanded photos, use them immediately
+    // 如果已有緩存的展開照片，立即使用
     if (isAggregated && expandedPhotosRef.current && expandedPhotosRef.current.length > 0) {
       const allPhotos = expandedPhotosRef.current;
       const expandedSlides = photosToLightboxSlides(allPhotos);
@@ -64,17 +64,15 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
       if (newIndex === -1 && photo.groupId) {
         newIndex = allPhotos.findIndex(p => p.groupId === photo.groupId);
       }
-      
       if (newIndex !== -1) {
         openLightbox(expandedSlides, newIndex);
         return;
       }
     }
 
-    // Fallback: Open with current list first, then fetch
+    // 回退：先用當前列表打開，再後台獲取展開數據
     const slides = photosToLightboxSlides(currentPhotos);
     const index = currentPhotos.findIndex(p => p.id === photo.id);
-    
     openLightbox(slides, index >= 0 ? index : 0);
 
     if (isAggregated) {
@@ -92,8 +90,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
         );
         
         const allPhotos = result.items;
-        expandedPhotosRef.current = allPhotos; // Update cache
-        
+        expandedPhotosRef.current = allPhotos; 
         if (allPhotos && allPhotos.length > 0) {
             const expandedSlides = photosToLightboxSlides(allPhotos);
             
@@ -101,10 +98,9 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
             if (newIndex === -1 && photo.groupId) {
                 newIndex = allPhotos.findIndex((p: PhotoListItem) => p.groupId === photo.groupId);
             }
-
+            
             if (newIndex !== -1) {
               const currentPhotoId = photoId;
-              
               let finalIndex = newIndex;
               if (currentPhotoId) {
                 const indexInNewList = allPhotos.findIndex((p: PhotoListItem) => p.id === currentPhotoId);
@@ -116,19 +112,19 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
             }
         }
       } catch (e) {
-        ErrorFactory.handleError(e, 'Failed to background expand groups for lightbox');
+        ErrorFactory.handle(e as Error, { context: 'Failed to background expand groups for lightbox' });
       }
     }
-  }, [openLightbox, setLightboxData, isAggregated, props.mode, props.filters]);
+  }, [openLightbox, setLightboxData, isAggregated, props.mode, props.filters, photoId]);
 
-  // Only update store mode and stable callback reference when needed
-  const mode = props.mode || 'public';
+  // 更新 Store 模式與穩定回調
   useEffect(() => {
+    const mode = props.mode || 'public';
     photoWallStore.setState({
       mode,
       onPhotoClick: handlePhotoClickStable,
     });
-  }, [mode, handlePhotoClickStable]);
+  }, [props.mode, handlePhotoClickStable]);
 
   if (error) {
     if (props.mode === 'admin') {
@@ -138,18 +134,18 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
         </div>
       );
     }
-    ErrorFactory.handle(error, { context: 'photo-wall-load' });
+    
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center gap-4 w-full">
         <div className="text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 max-w-md">
-          <p className="font-bold">加载失败</p>
+          <p className="font-bold">加载失败 / Load Failed</p>
           <p className="text-sm opacity-80 mt-1">{error.message}</p>
         </div>
         <button
           onClick={() => refresh()}
-          className="px-6 py-2.5 bg-primary text-white rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all font-medium"
+          className="px-6 py-2.5 bg-brand-navy text-white rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all font-medium"
         >
-          重试
+          重试 / Retry
         </button>
       </div>
     );
@@ -165,7 +161,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
     }
     return (
       <div className="text-center py-20 text-gray-500 w-full h-full flex flex-col justify-center items-center min-h-[400px]">
-        暂无照片
+        暂无照片 / No Photos
       </div>
     );
   }

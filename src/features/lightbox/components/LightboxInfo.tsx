@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePhotoAIResult, usePermission, useAdminMode } from '#src/hooks/index.js';
@@ -12,6 +12,11 @@ interface LightboxInfoProps {
   onLangChange: (lang: 'zh' | 'en' | 'ms') => void;
 }
 
+/**
+ * LightboxInfo
+ * 
+ * 燈箱右側的信息面板，展示名稱、描述、分類、標籤及尺寸信息。
+ */
 export function LightboxInfo({
   currentPhoto,
   showInfo,
@@ -24,20 +29,20 @@ export function LightboxInfo({
   const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
   const descriptionObj = photoData?.description;
   const displayDescription = getLocalizedDisplay(descriptionObj, lang);
-  
   const title = getLocalizedDisplay(photoData.name || '照片', lang);
   const uuid = photoData.id || 'N/A';
+  
   const categoryName = photoData.categoryDescription?.[lang] || photoData.categoryName || '无分类';
   const tags = photoData.tags || [];
-
+  
   const { can } = usePermission();
   const isAdminMode = useAdminMode();
+  
   const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id, { 
     enabled: showInfo && isAdminMode && can('photo:view-internal-info') 
   });
 
   const isAiIdentified = !!(photoData.metadata && (photoData.metadata as Record<string, unknown>).ai_raw) || !!photoData.isAnalyzing;
-
   const isAdmin = isAdminMode && can('photo:view-internal-info');
 
   return (
@@ -63,7 +68,7 @@ export function LightboxInfo({
                   </h3>
                 </div>
                 {isAiIdentified && (
-                  <div className="shrink-0 flex items-center gap-1.5 px-2 py-1 bg-purple-500/10 border border-purple-500/20 rounded-lg h-fit mt-5">
+                  <div className="shrink-0 flex items-center gap-1.5 px-2 py-1 bg-purple-500/10 border border-purple-500/20 rounded-lg h-fit mt-1">
                     <Icon name="sparkles" className="w-2.5 h-2.5 text-purple-400/70" />
                     <span className="text-[9px] font-bold text-purple-400/70 tracking-wider uppercase">AI</span>
                   </div>
@@ -140,7 +145,6 @@ export function LightboxInfo({
                     const isSingleValue = (!!dim.height && !dim.width && !dim.length) || 
                                           (!dim.height && !!dim.width && !dim.length) || 
                                           (!dim.height && !dim.width && !!dim.length);
-
                     let dimStr = '';
                     if (isSingleValue) {
                       dimStr = (dim.height || dim.width || dim.length || '').toString();
@@ -150,14 +154,11 @@ export function LightboxInfo({
                       const l = dim.length ? `L${dim.length}` : '';
                       dimStr = [h, w, l].filter(Boolean).join(' x ');
                     }
-
-                    // Avoid duplicate label if it looks like a dimension
+                    
                     if (label.match(/\d+/) || label.includes(' x ') || !label) {
                       label = 'Specs';
                     }
-
                     const isAi = !!(dim.isAi || dim.isAiEstimated);
-
                     return (
                       <div key={i} className="flex items-center justify-between text-xs bg-white/5 px-4 py-3 rounded-xl border border-white/5 group hover:bg-white/[0.08] transition-colors">
                         <div className="flex items-center gap-2">
@@ -234,6 +235,5 @@ export function LightboxInfo({
         </motion.div>
       )}
     </AnimatePresence>
-
   );
 }

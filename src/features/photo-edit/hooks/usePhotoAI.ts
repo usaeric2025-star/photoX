@@ -5,15 +5,12 @@ import { ErrorFactory } from '#lib/error/index.js';
 import { queryClient } from '#lib/query/index.js';
 import { executeTask } from '#lib/task-queue/index.js';
 import { useAdminActions, useCategories, useTags, useFilters, useTranslation } from '#src/hooks/index.js';
-import { Tag, Category } from '#src/types/index.js';
+import { Tag } from '#src/types/index.js';
 import { useAuth } from '#lib/store/index.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
-import { resolveTagNamesToIds } from '#src/features/ai/tagCompletion.js';
-import { queryKeys } from '#lib/query/keys.js';
-import { api } from '#lib/api.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/index.js';
 import { AIService } from '../services/AIService.js';
 
@@ -31,13 +28,13 @@ const AIAnalysisSchema = v.object({
 export function usePhotoEditAI() {
   const user = useAuth(s => s.user);
   const { form } = usePhotoEditSessionContext();
-  const { modal, photoId } = useFilters();
-  const editPhotoId = modal === 'edit' ? photoId : null;
+  const { modal, photoId: filterPhotoId } = useFilters();
+  const editPhotoId = modal === 'edit' ? filterPhotoId : null;
   const { t } = useTranslation();
-  const { updatePhoto: { mutateAsync: updatePhoto } } = useAdminActions();
+  const { updatePhoto } = useAdminActions();
   const { invalidateDetail, invalidateList, invalidateTags } = useInvalidatePhotos();
+  
   const [isReExtracting, setIsReExtracting] = useState(false);
-
   const { categories = [] } = useCategories();
   const { tags: allTags = [] } = useTags();
 
@@ -47,20 +44,23 @@ export function usePhotoEditAI() {
       if (!editPhotoId) throw new Error('Missing editPhotoId');
       
       return executeTask({
-        label: t('aiAnalyze'),
+        label: t('aiAnalyze') || 'AI 識別中',
         type: 'ai-analyze',
         userId: user?.id,
         execute: async (signal, onProgress) => {
-          onProgress(0.3, t('aiAnalyzingAttributes'));
+          onProgress(0.3, t('aiAnalyzingAttributes') || '正在識別屬性');
           const rawResult = await AIService.analyze({ id: editPhotoId, thumbnailUrl: imageUrl } as any);
           
-          onProgress(0.7, t('aiParsingResult'));
+          onProgress(0.7, t('aiParsingResult') || '正在解析結果');
           const updates = await AIService.parseToUpdates(rawResult, allTags, categories);
 
           // AI 標籤解析與回填
           if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
             const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
-            const finalTags = Array.from(new Set([...(updates.resolvedTagIds as string[]).map(id => allTags.find(t => String(t.id) === id)), ...resolvedTags])).filter(Boolean) as Tag[];
+            const finalTags = Array.from(new Set([
+              ...(updates.resolvedTagIds as string[]).map(id => allTags.find(t => String(t.id) === id)),
+              ...resolvedTags
+            ])).filter(Boolean) as Tag[];
             updates.tags = finalTags.slice(0, 10);
             invalidateTags();
           }
@@ -76,69 +76,76 @@ export function usePhotoEditAI() {
             }));
           }
 
-          // 回填表單與自動保存
+          // 回填表單
           Object.entries(updates).forEach(([key, value]) => {
             if (!['unresolvedTagNames', 'resolvedTagIds'].includes(key)) {
               form.setFieldValue(key as keyof PhotoEditFormData, value as never);
             }
           });
 
-          await updatePhoto({ id: editPhotoId, updates });
+          // 自動保存到後端
+          await updatePhoto.mutateAsync({ id: editPhotoId, updates });
           
           invalidateDetail(editPhotoId);
           invalidateList();
           queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
-
+          
           return rawResult;
         }
       });
     },
-    onError: (err) => {
-      ErrorFactory.handle(err, { context: 'AI Analysis' });
-      showToast.error(t('aiAnalyzeFailed'));
+    onSuccess: () => {
+      showToast.success(t('aiAnalyzeSuccessSimple') || '識別成功');
     },
-    successMessage: t('aiAnalyzeSuccessSimple'),
+    onError: (err) => {
+      ErrorFactory.handle(err as Error, { context: 'AI Analysis' });
+      showToast.error(t('aiAnalyzeFailed') || '識別失敗');
+    }
   });
 
   const onAnalyze = useCallback(async (previewSrc?: string, imageUrl?: string) => {
     const url = previewSrc || imageUrl;
     if (!url) return false;
-    return handleAiAnalyze({ imageUrl: url });
+    await handleAiAnalyze({ imageUrl: url });
+    return true;
   }, [handleAiAnalyze]);
 
   const handleReExtract = useCallback(async (rawResult: unknown) => {
-      if (!editPhotoId) return;
-      setIsReExtracting(true);
-      try {
-        let parsed = rawResult as any;
-        if (typeof parsed === 'string') {
-          const cleanRaw = parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-          parsed = JSON.parse(cleanRaw);
-        }
-
-        const updates = await AIService.parseToUpdates(parsed, allTags, categories);
-        
-        if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
-          const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
-          updates.tags = Array.from(new Set([...(updates.resolvedTagIds as any[]).map(id => allTags.find(t => String(t.id) === id)), ...resolvedTags])).filter(Boolean).slice(0, 10);
-        }
-
-        Object.entries(updates).forEach(([key, value]) => {
-          if (!['unresolvedTagNames', 'resolvedTagIds'].includes(key)) {
-            form.setFieldValue(key as keyof PhotoEditFormData, value as never);
-          }
-        });
-
-        await updatePhoto({ id: editPhotoId, updates });
-        invalidateDetail(editPhotoId);
-        invalidateList();
-        showToast.success(t('reExtractSuccess'));
-      } catch (e) {
-        ErrorFactory.handle(e, { context: 'AI Re-extraction' });
-        showToast.error(t('saveDataFailed'));
-      } finally {
-        setIsReExtracting(false);
+    if (!editPhotoId) return;
+    setIsReExtracting(true);
+    try {
+      let parsed = rawResult as any;
+      if (typeof parsed === 'string') {
+        const cleanRaw = parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        parsed = JSON.parse(cleanRaw);
       }
+      
+      const updates = await AIService.parseToUpdates(parsed, allTags, categories);
+      
+      if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
+        const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
+        updates.tags = Array.from(new Set([
+          ...(updates.resolvedTagIds as any[]).map(id => allTags.find(t => String(t.id) === id)),
+          ...resolvedTags
+        ])).filter(Boolean).slice(0, 10);
+      }
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (!['unresolvedTagNames', 'resolvedTagIds'].includes(key)) {
+          form.setFieldValue(key as keyof PhotoEditFormData, value as never);
+        }
+      });
+
+      await updatePhoto.mutateAsync({ id: editPhotoId, updates });
+      invalidateDetail(editPhotoId);
+      invalidateList();
+      showToast.success(t('reExtractSuccess') || '重新提取成功');
+    } catch (e) {
+      ErrorFactory.handle(e as Error, { context: 'AI Re-extraction' });
+      showToast.error(t('saveDataFailed') || '提取失敗');
+    } finally {
+      setIsReExtracting(false);
+    }
   }, [editPhotoId, allTags, categories, form, updatePhoto, invalidateDetail, invalidateList, t]);
 
   return { handleAiAnalyze: onAnalyze, handleReExtract, isAnalyzing, isReExtracting };

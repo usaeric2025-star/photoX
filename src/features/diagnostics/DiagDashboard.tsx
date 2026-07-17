@@ -1,17 +1,21 @@
-import React, { useState, Suspense, useMemo } from 'react';
+import React, { Suspense } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useAdminActions } from '#src/hooks/admin/index.js';
 import { Button } from '#src/components/ui/Button.js';
 import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
 import { useQueryState, parseAsString } from 'nuqs';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
 const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer.js').then(m => ({ default: m.ErrorLogViewer })));
 const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter.js').then(m => ({ default: m.MaintenanceCenter })));
 const TasksContent = React.lazy(() => import('./TasksList.js').then(m => ({ default: m.TasksContent })));
 const StatisticsScreen = React.lazy(() => import('../statistics/components/StatisticsScreen.js').then(m => ({ default: m.StatisticsScreen })));
 
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
-
+/**
+ * DiagDashboard
+ * 
+ * 系統診斷與維護儀錶盤，提供統計、修復工具、任務管理與錯誤日誌。
+ */
 export function DiagDashboard() {
   const [tab, setTab] = useQueryState('tab', parseAsString.withDefault('stats'));
   const [location, setLocation] = useNormalizedLocation();
@@ -28,7 +32,7 @@ export function DiagDashboard() {
     } else if (newTab === 'logs') {
       setLocation('/admin/error-logs');
     } else {
-      if (!location.startsWith('/admin/diagnose')) {
+      if (!location.startsWith('/admin/diagnostics')) {
         setLocation('/admin/diagnostics');
       }
       setTab(newTab === 'stats' ? null : newTab);
@@ -51,12 +55,13 @@ export function DiagDashboard() {
               <Icon name="arrow-left" size={20} />
             </button>
           )}
-          <Icon name="shield-check" className="w-8 h-8 text-brand-navy" />
+          <Icon name="shield-check" className="w-8 h-8 text-blue-900" />
           <div className="space-y-0.5">
-            <h1 className="text-2xl font-black text-brand-navy tracking-tight uppercase">系統維護中心</h1>
+            <h1 className="text-2xl font-black text-blue-900 tracking-tight uppercase">系統維護中心</h1>
             <p className="text-xs text-slate-500 font-medium">SYSTEM MAINTENANCE & RECOVERY HUB</p>
           </div>
         </div>
+
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
              {([
@@ -64,17 +69,17 @@ export function DiagDashboard() {
                { id: 'diagnosis', label: '診斷與修復 / Repair' },
                { id: 'tasks', label: '任務佇列 / Tasks' },
                { id: 'logs', label: '系統日誌 / Logs' }
-             ] as const).map(tab => (
+             ] as const).map(tabItem => (
                <button
-                 key={tab.id}
-                 onClick={() => setActiveTab(tab.id)}
+                 key={tabItem.id}
+                 onClick={() => setActiveTab(tabItem.id as any)}
                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all ${
-                   activeTab === tab.id 
-                    ? 'bg-white text-brand-navy shadow-sm' 
+                   activeTab === tabItem.id 
+                    ? 'bg-white text-blue-900 shadow-sm' 
                     : 'text-slate-400 hover:text-slate-600'
                  }`}
                >
-                 {tab.label}
+                 {tabItem.label}
                </button>
              ))}
           </div>
@@ -96,39 +101,32 @@ export function DiagDashboard() {
         </div>
       </div>
 
-      {activeTab === 'stats' && (
-        <div className="animate-in fade-in duration-500">
-          <Suspense fallback={<LoadingScreen />}>
-            <StatisticsScreen />
-          </Suspense>
-        </div>
-      )}
-
-      {activeTab === 'diagnosis' && (
-        <div className="space-y-8 animate-in fade-in duration-500">
-          <Suspense fallback={<LoadingScreen />}>
-          <MaintenanceCenter 
-            onSuccess={refreshReport} 
-          />
-          </Suspense>
-        </div>
-      )}
-
-      {activeTab === 'tasks' && (
-        <div className="animate-in fade-in slide-in-from-bottom-2">
-           <Suspense fallback={<LoadingScreen />}>
-           <TasksContent />
-           </Suspense>
-        </div>
-      )}
-
-      {activeTab === 'logs' && (
-        <div className="animate-in fade-in slide-in-from-bottom-2">
-           <Suspense fallback={<LoadingScreen />}>
-           <ErrorLogViewer />
-           </Suspense>
-        </div>
-      )}
+      <div className="relative">
+        <Suspense fallback={<LoadingScreen />}>
+          {activeTab === 'stats' && (
+            <div className="animate-in fade-in duration-500">
+              <StatisticsScreen />
+            </div>
+          )}
+          {activeTab === 'diagnosis' && (
+            <div className="space-y-8 animate-in fade-in duration-500">
+              <MaintenanceCenter 
+                onSuccess={refreshReport} 
+              />
+            </div>
+          )}
+          {activeTab === 'tasks' && (
+            <div className="animate-in fade-in slide-in-from-bottom-2">
+              <TasksContent />
+            </div>
+          )}
+          {activeTab === 'logs' && (
+            <div className="animate-in fade-in duration-500">
+              <ErrorLogViewer />
+            </div>
+          )}
+        </Suspense>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { logger } from '#lib/logger.js';
 import * as React from 'react';
-import { NativeDialog } from '#src/components/ui/NativeDialog.js';
+import { Modal } from '#src/components/ui/Modal.js';
 import { useUI } from '#lib/store/index.js';
 
 interface ConfirmDialogProps {
@@ -42,7 +42,7 @@ export const ConfirmDialog = ({
   };
 
   return (
-    <NativeDialog 
+    <Modal 
       id="confirm-dialog"
       open={open} 
       onClose={handleCancel} 
@@ -72,6 +72,6 @@ export const ConfirmDialog = ({
           </button>
         </div>
       </div>
-    </NativeDialog>
+    </Modal>
   );
 };

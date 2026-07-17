@@ -9,7 +9,7 @@ export interface ModalProps {
   children: React.ReactNode;
   title?: string;
   description?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' | 'screen';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full' | 'screen';
   className?: string;
   hidePadding?: boolean;
   showCloseButton?: boolean;
@@ -21,6 +21,9 @@ const sizeClasses = {
   lg: 'max-w-2xl w-full',
   xl: 'max-w-3xl w-full',
   '2xl': 'max-w-4xl w-full',
+  '3xl': 'max-w-5xl w-full',
+  '4xl': 'max-w-6xl w-full',
+  '5xl': 'max-w-7xl w-full',
   full: 'max-w-[90vw] w-full',
   screen: 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0',
 };
@@ -89,11 +92,13 @@ export function Modal({
     if (!el) return;
 
     const handleCancel = (e: Event) => {
+      if (e.target !== el) return;
       e.preventDefault();
       onClose();
     };
 
-    const handleClose = () => {
+    const handleClose = (e: Event) => {
+      if (e.target !== el) return;
       onClose();
     };
 
@@ -115,6 +120,12 @@ export function Modal({
         e.clientY <= rect.bottom
       );
       if (!isInDialog) {
+        // Ignore click if the original click element is already detached from the DOM
+        const originalTarget = e.nativeEvent?.target as Node;
+        if (originalTarget && !document.body.contains(originalTarget)) {
+          logger.debug('[Modal] Detached element click detected; ignoring backdrop close');
+          return;
+        }
         onClose();
       }
     }
@@ -139,11 +150,14 @@ export function Modal({
         {showCloseButton && (
           <button
             type="button"
-            onClick={() => onClose()}
-            className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer z-[60]"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all active:scale-95 z-[60]"
             aria-label="关闭"
           >
-            <Icon name="x" size={20} className="opacity-60" />
+            <Icon name="x" size={20} className="opacity-70 hover:opacity-100 transition-opacity" />
           </button>
         )}
 

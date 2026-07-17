@@ -17,9 +17,10 @@ export function useLightbox() {
   
   const photoId = queryPhotoId || 
     (isPhotoRoute ? params?.photoId : (isAdminPhotoRoute ? adminParams?.photoId : null));
+
   const isOpen = !!photoId;
   const isEditing = modal === 'edit';
-  
+
   const next = () => {
     if (slides.length <= 1) return;
     const nextIdx = (currentIndex + 1) % slides.length;
@@ -35,7 +36,6 @@ export function useLightbox() {
     if (slides.length <= 1) return;
     const prevIdx = (currentIndex - 1 + slides.length) % slides.length;
     setLightboxIndex(prevIdx);
-    
     const prevSlide = slides[prevIdx];
     if (prevSlide?.id) {
       setPhotoId(prevSlide.id);

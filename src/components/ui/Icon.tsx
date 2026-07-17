@@ -130,6 +130,8 @@ const iconMap: Record<string, LucideIcon> = {
   'whatsapp': MessageCircle,
 };
 
+import { logger } from '#src/lib/logger.js';
+
 type IconName = string;
 
 interface IconProps {
@@ -176,7 +178,7 @@ export const Icon = ({
   const LucideIconComponent = iconMap[normalizedName];
 
   if (!LucideIconComponent) {
-    console.warn(`[Icon] Icon "${name}" not found in explicit map.`);
+    logger.warn(`[Icon] Icon "${name}" not found in explicit map.`);
     return <span className={cn("inline-block", className)} style={{ width: size, height: size, ...style }} />;
   }
 

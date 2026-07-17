@@ -10,7 +10,7 @@ const UPLOAD_RETRY_COUNT = 2;
  */
 export async function uploadToR2(file: Blob, photoId: string, imageHash?: string): Promise<string> {
   let lastError: Error | null = null;
-
+  
   for (let attempt = 0; attempt <= UPLOAD_RETRY_COUNT; attempt++) {
     try {
       // 1. Get presigned URL
@@ -40,7 +40,6 @@ export async function uploadToR2(file: Blob, photoId: string, imageHash?: string
       });
 
       if (uploadRes.ok) return publicUrl;
-      
       throw new Error(`Upload failed: ${uploadRes.status}`);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));

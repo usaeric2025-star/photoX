@@ -5,11 +5,10 @@
 
 import * as v from 'valibot';
 
-
 // --- Existing Utility Types ---
-type JsonValue = string | number | boolean | null | Record<string, unknown> | JsonValue[];
-type AnyFunction = (...args: unknown[]) => unknown;
-type AnyArray = unknown[];
+export type JsonValue = string | number | boolean | null | Record<string, unknown> | JsonValue[];
+export type AnyFunction = (...args: unknown[]) => unknown;
+export type AnyArray = unknown[];
 
 export * from './photo.js';
 export * from './api.js';
@@ -18,9 +17,7 @@ export * from './tasks.js';
 import { translations } from '#src/locales/index.js';
 export type TranslationType = typeof translations['en'];
 
-// ... rest of the file
-
-interface Task {
+export interface Task {
   id: string;
   name: string;
   status: 'running' | 'completed' | 'error' | 'cancelled' | 'warning';
@@ -56,11 +53,10 @@ export interface AppSettings {
   [key: string]: unknown;
 }
 
-interface DialogData {
+export interface DialogData {
   title: string;
   message?: string | React.ReactNode;
   onConfirm?: () => void | Promise<void>;
-  onCancel?: () => void;
   confirmLabel?: string;
   cancelLabel?: string;
   type?: 'info' | 'warning' | 'danger' | 'success';
@@ -86,7 +82,7 @@ export interface Theme {
   popoverTrigger: string;
 }
 
-interface AppState {
+export interface AppState {
   photos: import('./photo.js').Photo[];
   categories: import('./photo.js').Category[];
   tags: import('./photo.js').Tag[];

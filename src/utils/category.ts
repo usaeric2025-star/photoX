@@ -18,7 +18,7 @@ export const getTranslatedCategoryName = (
   const activeCat = categoryMap 
     ? categoryMap.get(catIdStr) 
     : categories.find(c => String(c.id) === catIdStr || (c as unknown as Record<string, unknown>).code === catIdStr);
-  
+
   if (!activeCat) return "";
 
   const activeCatRecord = activeCat as unknown as Record<string, unknown>;
@@ -58,7 +58,7 @@ export const getTranslatedCategoryName = (
  * Simple helper to check if a category is "Uncategorized" based on various name variants.
  * Respects ID '7' as "Other" (valid category).
  */
-const isUncategorizedName = (name: string, t: TranslationType, catId?: string | number): boolean => {
+export const isUncategorizedName = (name: string, t: TranslationType, catId?: string | number): boolean => {
   if (catId && (String(catId) === '7' || String(catId) === 'Others' || String(catId) === 'other')) return false;
   const uncatValues = ['未分类', 'uncategorized', 'tiada kategori'];
   const nameLower = (name || '').toLowerCase().trim();

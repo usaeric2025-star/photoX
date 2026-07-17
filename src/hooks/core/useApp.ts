@@ -11,7 +11,11 @@ export function useAppInit() {
   const isAppStoreLoading = useSignal(appLoadingSignal);
   const appError = useSignal(appErrorSignal);
   const { data: settings, error: settingsError, isLoading: isSettingsLoading } = usePublicSettings();
-  useEffect(() => { initializeApp(); }, []);
+
+  useEffect(() => { 
+    initializeApp(); 
+  }, []);
+
   const error = appError || (settingsError as Error | null);
   const isError = !!error;
   const isReady = !isAppStoreLoading;
@@ -37,12 +41,14 @@ export function useIsManagement() {
 
 // --- Performance Hook ---
 export function usePerformance(name: string, threshold = 10) {
-  const start = performance.now();
   useEffect(() => {
-    const end = performance.now();
-    const duration = end - start;
-    if (duration > threshold) {
-      logger.debug(`[PERF] ${name} render took ${duration.toFixed(2)}ms`);
-    }
-  });
+    const start = performance.now();
+    return () => {
+      const end = performance.now();
+      const duration = end - start;
+      if (duration > threshold) {
+        logger.debug(`[PERF] ${name} took ${duration.toFixed(2)}ms`);
+      }
+    };
+  }, [name, threshold]);
 }

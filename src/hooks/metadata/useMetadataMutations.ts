@@ -10,7 +10,7 @@ type Domain = 'categories' | 'tags' | 'manufacturers';
 /**
  * useMetadataMutations
  * 
- * 處理元數據的增刪改。
+ * 處理元數據的增刪改（分類、標籤、廠商）。
  */
 function useMetadataMutations() {
   const { t } = useTranslation();
@@ -24,6 +24,7 @@ function useMetadataMutations() {
 
   const createMutation = useAppMutation({
     mutationFn: async ({ domain, data }: { domain: Domain; data: any }) => {
+      // @ts-ignore - Hono client indexing
       return ErrorFactory.unwrap(api[domain].$post({ json: data }), t('createFailed'));
     },
     onSuccess: (_, variables) => {
@@ -34,7 +35,8 @@ function useMetadataMutations() {
 
   const updateMutation = useAppMutation({
     mutationFn: async ({ domain, id, updates }: { domain: Domain; id: string | number; updates: any }) => {
-      return ErrorFactory.unwrap((api[domain] as any)[':id'].$put({ param: { id }, json: { updates } }), t('updateFailed'));
+      // @ts-ignore - Hono client indexing
+      return ErrorFactory.unwrap(api[domain][':id'].$put({ param: { id: String(id) }, json: { updates } }), t('updateFailed'));
     },
     onSuccess: (_, variables) => {
       showToast.success(t('updateSuccess'));
@@ -44,7 +46,8 @@ function useMetadataMutations() {
 
   const deleteMutation = useAppMutation({
     mutationFn: async ({ domain, id }: { domain: Domain; id: string | number }) => {
-      return ErrorFactory.unwrap((api[domain] as any)[':id'].$delete({ param: { id } }), t('deleteFailed'));
+      // @ts-ignore - Hono client indexing
+      return ErrorFactory.unwrap(api[domain][':id'].$delete({ param: { id: String(id) } }), t('deleteFailed'));
     },
     onSuccess: (_, variables) => {
       showToast.success(t('deleteSuccess'));
@@ -63,31 +66,31 @@ function useMetadataMutations() {
 // --- Specific Domain Hooks ---
 
 export function useCategoryMutations() {
-  const { create, update, remove } = useMetadataMutations();
+  const { create, update, remove, isPending } = useMetadataMutations();
   return {
     create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'categories', data }) },
     edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'categories', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'categories', id }) },
-    isPending: create.isPending || update.isPending || remove.isPending
+    isPending
   };
 }
 
 export function useTagMutations() {
-  const { create, update, remove } = useMetadataMutations();
+  const { create, update, remove, isPending } = useMetadataMutations();
   return {
     create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'tags', data }) },
     edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'tags', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'tags', id }) },
-    isPending: create.isPending || update.isPending || remove.isPending
+    isPending
   };
 }
 
 export function useManufacturerMutations() {
-  const { create, update, remove } = useMetadataMutations();
+  const { create, update, remove, isPending } = useMetadataMutations();
   return {
     create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'manufacturers', data }) },
     edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'manufacturers', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'manufacturers', id }) },
-    isPending: create.isPending || update.isPending || remove.isPending
+    isPending
   };
 }

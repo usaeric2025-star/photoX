@@ -39,3 +39,5 @@ export const queryKeys = {
     jobs: () => [...queryKeys.maintenance.all, 'jobs'] as const,
   }
 };
+
+export const photoKeys = queryKeys.photos;

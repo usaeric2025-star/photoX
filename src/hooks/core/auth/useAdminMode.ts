@@ -1,12 +1,11 @@
 import React, { createContext, useContext } from 'react';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
 const AdminModeContext = createContext<boolean>(false);
 
 export function AdminModeProvider({ children, value }: { children: React.ReactNode, value: boolean }) {
   return React.createElement(AdminModeContext.Provider, { value }, children);
 }
-
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
 /**
  * Unified hook to get the effective admin mode.
@@ -20,6 +19,5 @@ export function useAdminMode(): boolean {
   if (!context) {
     return location.startsWith('/admin') || location.startsWith('/settings') || location.startsWith('/diagnostics');
   }
-  
   return context;
 }

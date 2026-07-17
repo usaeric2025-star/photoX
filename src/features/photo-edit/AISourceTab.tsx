@@ -1,12 +1,17 @@
+import React from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { showToast } from '#lib/ui/toast.js';
-import React from 'react';
 import { usePhotoEditAI, usePhotoAIResult } from './hooks/usePhotoAI.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
 import { useUI } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 
+/**
+ * AISourceTab
+ * 
+ * 展示 AI 識別的原始記錄（JSON/Markdown）。
+ */
 export function AISourceTab() {
   const { photoId } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
@@ -14,14 +19,15 @@ export function AISourceTab() {
   const { copy, copied } = useCopyToClipboard({
     successMessage: appLang === 'zh' ? '已复制' : 'Copied'
   });
+  
   const { data: aiResult, isPending, error } = usePhotoAIResult(photoId);
 
   const onReExtract = async (raw: unknown) => {
     try {
-      await handleReExtract(raw as Record<string, unknown>);
+      await handleReExtract(raw);
       showToast.success(appLang === 'zh' ? '二次提取成功' : 'Re-extraction successful');
     } catch (e) {
-      ErrorFactory.handle(e, { context: '二次提取' });
+      ErrorFactory.handle(e as Error, { context: '二次提取' });
     }
   };
 
@@ -52,7 +58,6 @@ export function AISourceTab() {
         </div>
         <h3 className="font-sans font-semibold text-slate-800 text-base mb-1">
           {appLang === 'zh' ? '暂无 AI 识别原始记录' : 'No AI Analysis Log Found'}
-          {error ? ` - ${String(error)}` : ""}
         </h3>
         <p className="text-slate-500 text-xs max-w-sm font-sans mb-4">
           {appLang === 'zh' 
@@ -63,17 +68,15 @@ export function AISourceTab() {
     );
   }
 
-  // Prettify the JSON if it's stringified JSON, otherwise show raw text
+  // Prettify the JSON
   let formattedResult = '';
-  if (aiResult && aiResult.rawResult) {
-    try {
+  try {
+    if (aiResult && aiResult.rawResult) {
       const raw = typeof aiResult.rawResult === 'string' ? aiResult.rawResult.trim() : JSON.stringify(aiResult.rawResult);
-      // If it looks like JSON or contains JSON wrapping, try to parse and format it
       if (raw.startsWith('{') || raw.startsWith('[')) {
         const parsed = JSON.parse(raw);
         formattedResult = JSON.stringify(parsed, null, 2);
       } else {
-        // Check if it has markdown block ```json ... ```
         const match = raw.match(/```json\s+([\s\S]*?)```/);
         if (match) {
           const parsed = JSON.parse(match[1]);
@@ -82,14 +85,11 @@ export function AISourceTab() {
             formattedResult = raw;
         }
       }
-    } catch (e) {
-      // Keep original string if parsing fails
-      ErrorFactory.handleError(e, "格式化 AI 响应");
-      formattedResult = typeof aiResult.rawResult === 'string' ? aiResult.rawResult : JSON.stringify(aiResult.rawResult, null, 2);
     }
+  } catch (e) {
+    formattedResult = typeof aiResult.rawResult === 'string' ? aiResult.rawResult : JSON.stringify(aiResult.rawResult, null, 2);
   }
 
-  // Final fallback to ensure the pre isn't actually empty
   if (!formattedResult || formattedResult.trim() === '') {
      formattedResult = "/* The AI result was empty or unparseable */\n\n" + String(aiResult?.rawResult);
   }
@@ -100,7 +100,7 @@ export function AISourceTab() {
         <div className="flex items-center gap-2">
           <Icon name="terminal" className="w-4 h-4 text-indigo-500" />
           <span className="text-xs font-mono font-medium text-slate-600 uppercase tracking-wider">
-            {appLang === 'zh' ? '照片 AI 分析原始输出 (JSON / Markdown)' : 'Model Output Log (Raw Source)'}
+            {appLang === 'zh' ? '照片 AI 分析原始输出' : 'Model Output Log (Raw Source)'}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -131,7 +131,6 @@ export function AISourceTab() {
       </div>
 
       <div className="relative group rounded-2xl border border-slate-200 bg-slate-900 shadow-sm overflow-hidden">
-        {/* Top title bar */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-slate-950/80 border-b border-slate-800/60">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
@@ -143,15 +142,13 @@ export function AISourceTab() {
             <span>agnes-response.json</span>
           </div>
         </div>
-
-        {/* Console / Code view box */}
         <div className="p-4 overflow-x-auto max-h-[420px] no-scrollbar">
           <pre className="font-mono text-xs leading-relaxed text-indigo-200 whitespace-pre">
             {formattedResult}
           </pre>
         </div>
       </div>
-
+      
       <div className="flex gap-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-500 text-[11px] font-sans">
         <Icon name="info" className="w-4 h-4 text-slate-400 flex-shrink-0" />
         <p>

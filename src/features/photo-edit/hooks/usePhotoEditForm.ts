@@ -6,7 +6,6 @@ import { PhotoEditFormService } from '../services/PhotoEditFormService.js';
 import { usePhotoMutations } from '#src/hooks/photo/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { showToast } from '#lib/ui/toast.js';
-import { logger } from '#lib/logger.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useCategories, useManufacturers, useTags } from '#src/hooks/index.js';
 import { PhotoAIAdapterRegistry } from '#src/features/ai/types.js';
@@ -52,17 +51,20 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
     onSubmit
   });
 
+  const { form } = formObj;
+
   // 表單數據同步
   useEffect(() => {
-    if (photo && !formObj.form.state.isDirty) {
-      formObj.form.reset(defaultValues);
+    if (photo && !form.state.isDirty) {
+      form.reset(defaultValues);
     }
-  }, [defaultValues, formObj.form, photo]);
+  }, [defaultValues, form, photo]);
 
   // AI 標籤自動回填
   useEffect(() => {
     if (!photo?.metadata?.ai_raw || allTags.length === 0) return;
-    const currentTags = formObj.form.getFieldValue('tags');
+    
+    const currentTags = form.getFieldValue('tags');
     if (currentTags && currentTags.length > 0) return;
     if (defaultValues.tags && defaultValues.tags.length > 0) return;
 
@@ -86,7 +88,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
             
             if (matchedTags.length > 0) {
               setTimeout(() => {
-                formObj.form.setFieldValue('tags', matchedTags);
+                form.setFieldValue('tags', matchedTags);
               }, 100);
             }
           }
@@ -95,28 +97,29 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
         // Silently fail
       }
     };
-
     resolveAITags();
-  }, [photo, allTags, formObj.form, defaultValues.tags]);
+  }, [photo, allTags, form, defaultValues.tags]);
 
   const commit = useCallback(async (data?: PhotoEditFormData) => {
     if (data) {
-      Object.entries(data).forEach(([key, value]) => formObj.form.setFieldValue(key as keyof PhotoEditFormData, value as never));
+      Object.entries(data).forEach(([key, value]) => {
+        form.setFieldValue(key as keyof PhotoEditFormData, value as never);
+      });
     }
-    
+
     try {
-      await formObj.form.handleSubmit();
-      const state = formObj.form.state;
+      await form.handleSubmit();
+      const state = form.state;
       const hasErrors = Object.keys(state.errors).length > 0 || (state.fieldMeta && Object.values(state.fieldMeta).some(m => m?.errorMap?.onChange));
       if (hasErrors) return;
     } catch (err) {
       ErrorFactory.handle(err as Error, { context: 'PhotoEdit.commit' });
     }
-  }, [formObj]);
+  }, [form]);
 
   const discard = useCallback(() => {
-    formObj.form.reset();
-  }, [formObj.form]);
+    form.reset();
+  }, [form]);
 
-  return { form: formObj.form, commit, discard };
+  return { form, commit, discard };
 }

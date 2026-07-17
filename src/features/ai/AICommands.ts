@@ -7,6 +7,8 @@ import { DB_CONFIG } from '#src/constants/config.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { MAX_TAGS_PER_PHOTO } from '#src/constants/limits.js';
 
+import { logger } from '#lib/logger.js';
+
 /**
  * [V2.0-SERVICE-SINGLETON] AI Photo Analysis Service
  */
@@ -103,7 +105,7 @@ export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promi
       
       if (isTransient && i < maxRetries) {
         const delay = Math.pow(2, i) * 1000;
-        console.warn(`[analyzePhoto] Attempt ${i + 1} failed with ${e.message}, retrying in ${delay}ms...`);
+        logger.warn(`[analyzePhoto] Attempt ${i + 1} failed with ${e.message}, retrying in ${delay}ms...`);
         await new Promise(res => setTimeout(res, delay));
         continue;
       }

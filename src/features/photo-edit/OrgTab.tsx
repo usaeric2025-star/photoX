@@ -1,25 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 import { useManufacturers, useManufacturerMutations, useTags, useTagMutations } from '#src/hooks/index.js';
-import { useUI } from '#lib/store/index.js';
 import { PromptDialog } from '#src/components/ui/PromptDialog.js';
 import { CategorySelect } from './CategorySelect.js';
 import { PhotoTagSelector } from './PhotoTagSelector.js';
 import { ManufacturerSelect } from '#src/components/admin/ManufacturerSelect.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { AppField } from '#lib/forms/AppField.js';
-
 import { showToast } from '#lib/ui/toast.js';
-import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { VisibilityToggle } from './components/VisibilityToggle.js';
-
 import { useTranslation } from '#src/hooks/index.js';
 
+/**
+ * OrgTab
+ * 
+ * 照片編輯對話框中的組織（分類、標籤、廠商）分頁。
+ */
 export function OrgTab() {
   const { form } = usePhotoEditSessionContext();
-  const appLang = useUI((s) => s.appLang);
   const { manufacturers = [] } = useManufacturers();
   const { tags = [] } = useTags();
+  const { t } = useTranslation();
   
   const manufacturerMutations = useManufacturerMutations();
   const tagMutations = useTagMutations();
@@ -29,28 +29,30 @@ export function OrgTab() {
   const updateTagMut = tagMutations.edit.mutateAsync;
   const deleteTagMut = tagMutations.remove.mutateAsync;
 
-  const [isAddMfrOpen, setAddMfrOpen] = React.useState(false);
+  const [isAddMfrOpen, setAddMfrOpen] = useState(false);
 
-  const { t } = useTranslation();
-  
   return (
     <div className="m-0 p-4 space-y-8 animate-in fade-in slide-in-from-right-2 duration-300 pb-10">
       
-      <AppField form={form} name="isHidden">
+      {/* 隱藏狀態切換 */}
+      <form.Field name="isHidden">
         {({ state, handleChange }) => (
-          <VisibilityToggle value={!!state.value} onChange={(val) => {
-            handleChange(val);
-            showToast.success(val ? t('hidden') : t('visible'));
-          }} />
+          <VisibilityToggle 
+            value={!!state.value} 
+            onChange={(val) => {
+              handleChange(val);
+              showToast.success(val ? t('hidden') : t('visible'));
+            }} 
+          />
         )}
-      </AppField>
+      </form.Field>
 
-      {/* 1. 分类 */}
+      {/* 1. 分類選擇 */}
       <CategorySelect />
-      
-      {/* 2. 标签 */}
+
+      {/* 2. 標籤選擇 */}
       <section className="space-y-4">
-        <AppField form={form} name="tags">
+        <form.Field name="tags">
           {({ state, handleChange }) => (
             <PhotoTagSelector 
               selectedTagIds={Array.isArray(state.value) ? (typeof state.value[0] === 'object' ? (state.value as any[]).map(t => String(t.id)) : state.value as string[]) : []}
@@ -68,10 +70,10 @@ export function OrgTab() {
               }}
             />
           )}
-        </AppField>
+        </form.Field>
       </section>
 
-      {/* 3. 厂商 */}
+      {/* 3. 廠商選擇 */}
       <section className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">

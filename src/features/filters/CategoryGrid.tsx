@@ -1,3 +1,4 @@
+import React from 'react';
 import { useCategories, useFilters, useTranslation } from '#src/hooks/index.js';
 import { getTranslatedCategoryName } from '#src/utils/category.js';
 import { logger } from '#lib/logger.js';
@@ -11,10 +12,16 @@ interface CategoryButtonProps {
   onClick: () => void;
 }
 
-function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick }: CategoryButtonProps) {
+/**
+ * CategoryButton
+ * 
+ * 單個分類按鈕。
+ */
+function CategoryButton({ cat, isSelected, categoryName, onClick }: CategoryButtonProps) {
   return (
     <button
       id={`category-${cat.id ?? 'all'}`}
+      type="button"
       onClick={onClick}
       className={`
         px-2 py-2 rounded-lg text-[13px] font-bold truncate transition-all duration-300 active:scale-95 cursor-pointer border
@@ -29,7 +36,12 @@ function CategoryButton({ cat, isSelected, categoryName, currentFilters, onClick
   );
 }
 
-export function CategoryGrid({ mode, enabled = true }: { mode?: 'public' | 'admin', enabled?: boolean }) {
+/**
+ * CategoryGrid
+ * 
+ * 展示分類網格，支持快速切換分類過濾。
+ */
+export function CategoryGrid({ enabled = true }: { mode?: 'public' | 'admin', enabled?: boolean }) {
   const { filters, updateFilters } = useFilters();
   const { appLang, uiTranslations } = useTranslation();
   const { categories, isLoading: isPending } = useCategories({ enabled });
@@ -40,13 +52,13 @@ export function CategoryGrid({ mode, enabled = true }: { mode?: 'public' | 'admi
     return (
       <div className="grid grid-cols-4 gap-1.5">
          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="animate-shimmer h-[34px] rounded-xl bg-surface-soft" />
+            <div key={i} className="h-[34px] rounded-xl bg-slate-100 animate-pulse" />
          ))}
       </div>
     );
   }
 
-  // ✅ 固定 8 個：全部 + 前 7 個分類
+  // 固定 8 個：全部 + 前 7 個分類
   const displayCategories = [
     { id: null, code: 'all' },
     ...(categories?.slice(0, 7) || [])
@@ -55,14 +67,13 @@ export function CategoryGrid({ mode, enabled = true }: { mode?: 'public' | 'admi
   return (
     <div className="grid grid-cols-4 gap-1.5 select-none">
       {displayCategories.map(cat => {
-        // Fix: Use a more robust equality check for selection
         const isSelected = (!filters.categoryId && cat.id === null) || 
                           (filters.categoryId !== null && cat.id !== null && String(filters.categoryId) === String(cat.id));
-
+        
         const categoryName = cat.id === null 
           ? (uiTranslations.all || '全部')
-          : getTranslatedCategoryName(cat.id, categories || [], appLang, uiTranslations);
-
+          : getTranslatedCategoryName(cat.id as any, categories || [], appLang, uiTranslations);
+          
         return (
           <CategoryButton
             key={cat.id ?? 'all'}
@@ -70,7 +81,7 @@ export function CategoryGrid({ mode, enabled = true }: { mode?: 'public' | 'admi
             isSelected={isSelected}
             categoryName={categoryName}
             currentFilters={filters}
-            onClick={() => updateFilters({ categoryId: cat.id })}
+            onClick={() => updateFilters({ categoryId: cat.id as any })}
           />
         );
       })}

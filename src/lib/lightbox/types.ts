@@ -1,5 +1,3 @@
-import type { Photo } from '#src/types/photo.js';
-
 export interface LightboxSlide {
   id: string;
   src: string;
@@ -15,14 +13,14 @@ export interface LightboxSlide {
   original?: unknown; // 原始數據引用
 }
 
-interface LightboxConfig {
+export interface LightboxConfig {
   canDownload?: boolean;
   canZoom?: boolean;
   canThumbnails?: boolean;
   theme?: 'dark' | 'light';
 }
 
-interface LightboxState {
+export interface LightboxState {
   isOpen: boolean;
   slides: LightboxSlide[];
   currentIndex: number;

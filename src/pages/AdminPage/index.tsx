@@ -8,6 +8,8 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import type { Category, Tag } from '#src/types/index.js';
 
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { logger } from '#lib/logger.js';
+import { isAdminRoute } from '#lib/routing.js';
 
 export default function AdminPage() {
   const { t, appLang } = useTranslation();
@@ -16,14 +18,10 @@ export default function AdminPage() {
   useEffect(() => {
     document.title = t('adminPanelTitle');
     
-    const isAdmin = location.startsWith('/admin') || 
-                  location.startsWith('/settings') || 
-                  location.startsWith('/diagnostics');
-    
-    if (!isAdmin) {
-      console.warn('[Admin] Pathname deviation detected:', location);
+    if (!isAdminRoute(location)) {
+      logger.warn('[Admin] Pathname deviation detected:', location);
     }
-    
+
     // Prefetch categories in the background
     queryClient.prefetchQuery({
       queryKey: queryKeys.categories.list(),
@@ -34,7 +32,7 @@ export default function AdminPage() {
         );
       },
     }).catch(e => {
-      console.warn('Background prefetch categories failed', e);
+      logger.warn('Background prefetch categories failed', e);
     });
 
     // Prefetch tags in the background
@@ -47,11 +45,11 @@ export default function AdminPage() {
         );
       },
     }).catch(e => {
-      console.warn('Background prefetch tags failed', e);
+      logger.warn('Background prefetch tags failed', e);
     });
-  }, [appLang]);
+  }, [appLang, location, t]);
 
   return (
     <AdminPageContent />
   );
-};
+}

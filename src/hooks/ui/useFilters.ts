@@ -14,7 +14,7 @@ export type ModalType = 'edit' | 'delete' | 'add' | 'upload' | 'batch-edit' | 's
  * 
  * 處理所有與 URL 狀態相關的篩選、分頁、彈窗控制。
  */
-export function useFilters(options?: { enableStatus?: boolean }) {
+export function useFilters() {
   const [search, setSearch] = useQueryState('q', searchParser);
   const [category, setCategory] = useQueryState('c', categoryParser);
   const [tags, setTags] = useQueryState('t', tagsParser);
@@ -67,15 +67,12 @@ export function useFilters(options?: { enableStatus?: boolean }) {
   };
 }
 
-
 /**
  * useSearchTransition
- * 
- * 使用 React 19 的 Transitions 處理搜尋輸入，優化 UI 響應。
+ * 使用 React Transitions 處理搜尋輸入，優化 UI 響應。
  */
 export const useSearchTransition = (onUpdate: (value: string) => void) => {
   const [isPending, startTransition] = useTransition();
-
   const updateSearch = useCallback((searchTerm: string) => {
     startTransition(() => {
       onUpdate(searchTerm);

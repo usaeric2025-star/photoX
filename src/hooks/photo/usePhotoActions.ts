@@ -6,17 +6,21 @@ import { api } from '#lib/api.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useInvalidatePhotos } from './useInvalidatePhotos.js';
 import { Photo } from '#src/types/index.js';
-import { useAuth, uploadAsGroup } from '#lib/store/index.js';
+import { useAuth } from '#lib/store/index.js';
 import { hapticFeedback } from '#lib/ui/haptics.js';
 import { createTask } from '#lib/task-queue/index.js';
 import { executeBatchUpload } from '#lib/task-queue/adapters/upload.js';
 import { generateId } from '#lib/id.js';
-import { useSignal } from '@preact/signals-react';
-import { useUI, UIStoreState } from '#lib/store/index.js';
+import { useUI, UIStoreState, uploadAsGroup } from '#lib/store/index.js';
 import { useSelectionActions, batchEditingIdsSignal } from '#src/hooks/selection/useSelection.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { runBatchAnalysis } from '#src/features/ai/orchestration.js';
 
+/**
+ * usePhotoMutations
+ * 
+ * 整合所有照片編輯、刪除、置頂等 Mutation。
+ */
 export function usePhotoMutations() {
   const { t } = useTranslation();
   const { invalidateAll, invalidateList } = useInvalidatePhotos();
@@ -87,11 +91,7 @@ export function usePhotoMutations() {
       ids: id,
       updater: (photo: Photo) => ({ ...photo, isPinned } as Photo)
     }),
-    errorContext: 'togglePin',
-    onSuccess: () => {
-      showToast.success(t('updateSuccess'));
-      invalidateAll();
-    }
+    errorContext: 'togglePin'
   });
 
   const togglePin = useCallback(async (args: { id: string; isPinned: boolean }) => {
@@ -104,7 +104,6 @@ export function usePhotoMutations() {
     deleteMutation,
     togglePinMutation,
     togglePin,
-    // Aliases for compatibility
     editPhotoAsync: editMutation.mutateAsync,
     batchEditAsync: batchEditMutation.mutateAsync,
     deletePhotoAsync: deleteMutation.mutateAsync,
@@ -113,9 +112,14 @@ export function usePhotoMutations() {
   };
 }
 
+/**
+ * usePhotoUpload
+ * 
+ * 處理照片上傳邏輯，並啟動 TaskQueue 任務。
+ */
 export function usePhotoUpload() {
-  const user = useAuth(s => s.user);
   const { t } = useTranslation();
+  const user = useAuth(s => s.user);
 
   const uploadFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -124,7 +128,6 @@ export function usePhotoUpload() {
     try {
       hapticFeedback.medium();
       const userId = user?.id;
-      
       const isGroup = uploadAsGroup.value && fileArray.length > 1;
       const groupId = isGroup ? generateId() : undefined;
 
@@ -149,7 +152,13 @@ export function usePhotoUpload() {
   return { uploadFiles };
 }
 
+/**
+ * useBatchEdit
+ * 
+ * 處理批量編輯頁面的狀態與保存邏輯。
+ */
 export function useBatchEdit() {
+  const { t } = useTranslation();
   const batchEditingIds = batchEditingIdsSignal.value;
   const { patch: patchSelection } = useSelectionActions();
   const formState = useUI((s: UIStoreState) => s.formState);
@@ -157,7 +166,6 @@ export function useBatchEdit() {
   const updateForm = useUI((s: UIStoreState) => s.updateForm);
   
   const { batchEditAsync, deletePhotoAsync, isBatchEditing, isDeleting } = usePhotoMutations();
-
   const isPending = isBatchEditing || isDeleting;
   const [location, setLocation] = useNormalizedLocation();
 
@@ -167,7 +175,6 @@ export function useBatchEdit() {
     
     const updates = { ...formState } as Record<string, unknown>;
     const cleanUpdates: Record<string, unknown> = {};
-    
     Object.entries(updates).forEach(([key, value]) => {
       if (value !== '' && value !== undefined) {
         if (Array.isArray(value) && value.length === 0) return;
@@ -178,7 +185,6 @@ export function useBatchEdit() {
     await batchEditAsync({ ids, updates: cleanUpdates });
     patchSelection({ batchEditingIds: null });
     resetForm();
-    
     if (location.startsWith('/admin/batch-edit')) {
       setLocation('/admin');
     }
@@ -187,11 +193,8 @@ export function useBatchEdit() {
   const handleDelete = async (selectedIds: string[]) => {
     const ids = batchEditingIds || selectedIds;
     if (!ids || ids.length === 0) return;
-    
     await deletePhotoAsync(ids);
     patchSelection({ batchEditingIds: null, selectedIds: [] });
-    resetForm();
-    
     if (location.startsWith('/admin/batch-edit')) {
       setLocation('/admin');
     }
@@ -216,36 +219,41 @@ export function useBatchEdit() {
   };
 }
 
+/**
+ * useAIBatchAnalysis
+ * 
+ * 處理批量 AI 分析任務。
+ */
 export function useAIBatchAnalysis() {
+  const { t } = useTranslation();
   const user = useAuth(s => s.user);
   const { invalidateAll } = useInvalidatePhotos();
-  const { t } = useTranslation();
 
   const handleBatchAiAnalyze = useCallback(async (targetPhotos: Photo[]) => {
     if (!targetPhotos || targetPhotos.length === 0) {
       ErrorFactory.handle(t('selectPhotoFirst'), { context: t('batchAi') });
       return;
     }
-    
-    showToast.info(t('aiAnalyzing'));
 
+    showToast.info(t('aiAnalyzing'));
     const taskTitle = t('aiBatchTask', targetPhotos.length);
+
     createTask<{ successCount: number; groupSuccess: boolean }>({
-        label: taskTitle,
-        type: 'ai-analyze',
-        userId: user?.id,
-        meta: { photoCount: targetPhotos.length },
-        execute: async (signal, onProgress) => {
-            const { successCount, groupSuccess } = await runBatchAnalysis({
-                targetPhotos,
-                onProgress
-            });
-            invalidateAll();
-            return { successCount, groupSuccess };
-        },
-        onComplete: (result) => {
-            showToast.success(t('aiAnalyzeSuccess', result.successCount));
-        }
+      label: taskTitle,
+      type: 'ai-analyze',
+      userId: user?.id,
+      meta: { photoCount: targetPhotos.length },
+      execute: async (signal, onProgress) => {
+        const { successCount, groupSuccess } = await runBatchAnalysis({
+          targetPhotos,
+          onProgress
+        });
+        invalidateAll();
+        return { successCount, groupSuccess };
+      },
+      onComplete: (result) => {
+        showToast.success(t('aiAnalyzeSuccess', result.successCount));
+      }
     });
   }, [invalidateAll, t, user?.id]);
 

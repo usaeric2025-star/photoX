@@ -57,7 +57,6 @@ export async function processUpload(task: UploadTask, onStatus?: (status: string
     return {
       success: true,
       id,
-      imageUrl,
       fallback: compressed.fallback
     };
   } catch (error) {

@@ -23,19 +23,16 @@ function notify() {
 function interceptHistory() {
   if (isIntercepted || typeof window === 'undefined') return;
   isIntercepted = true;
-
   const originalPush = window.history.pushState;
   window.history.pushState = function (...args) {
     originalPush.apply(this, args);
     notify();
   };
-
   const originalReplace = window.history.replaceState;
   window.history.replaceState = function (...args) {
     originalReplace.apply(this, args);
     notify();
   };
-
   window.addEventListener('popstate', notify);
 }
 
@@ -69,7 +66,6 @@ let lastSelectedIds: string[] = [];
 let lastUrlSearch = '';
 
 function getCachedSelectedIds(): string[] {
-  if (typeof window === 'undefined') return [];
   const currentSearch = window.location.search;
   if (currentSearch === lastUrlSearch) {
     return lastSelectedIds;
@@ -82,6 +78,7 @@ function getCachedSelectedIds(): string[] {
   if (!isSame) {
     lastSelectedIds = parsed;
   }
+  
   lastUrlSearch = currentSearch;
   return lastSelectedIds;
 }
@@ -182,10 +179,7 @@ export function useIsPhotoSelected(id: string) {
     const selected = getSelectedIdsFromUrl();
     return selected.includes(id);
   }, [id]);
-
   return useSyncExternalStore(subscribeToUrl, getSnapshot, () => false);
 }
 
 export { batchEditingIdsSignal };
-
-

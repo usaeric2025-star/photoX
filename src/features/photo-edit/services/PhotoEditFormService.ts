@@ -17,7 +17,6 @@ export const PhotoEditFormService = {
    */
   getInitialValues: (photo: Partial<Photo> | null): PhotoEditFormData => {
     if (!photo) return {} as PhotoEditFormData;
-
     const p = photo;
     const metadata = (p.metadata || {}) as Record<string, any>;
     
@@ -46,7 +45,7 @@ export const PhotoEditFormService = {
           if (normalized.name && isGenericName) {
             name = normalized.name.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
           }
-          
+
           const isDescEmpty = !description.zh || description.zh === '---' || description.zh === '';
           if (normalized.description && isDescEmpty) {
             description = {
@@ -55,10 +54,10 @@ export const PhotoEditFormService = {
               ms: normalized.description.ms || normalized.description.zh || '',
             };
           }
-          
+
           if (normalized.categoryId && !categoryId) categoryId = normalized.categoryId;
           if (normalized.groupId && !groupId) groupId = normalized.groupId;
-          
+
           const isDimsEmpty = !dimensions || dimensions.length === 0 || (dimensions.length === 1 && dimensions[0].label === '---');
           if (normalized.dimensions && normalized.dimensions.length > 0 && isDimsEmpty) {
             dimensions = normalized.dimensions.map(d => ({
@@ -97,11 +96,10 @@ export const PhotoEditFormService = {
    */
   prepareSaveData: (values: PhotoEditFormData, photoId: string, originalPhoto: Partial<Photo> | null) => {
     const finalValues = { ...values };
-    
     if (!finalValues.itemCode) {
       finalValues.itemCode = generateItemCode();
     }
-    
+
     return photoEditAdapter(finalValues, photoId, {
       tags: Array.isArray(finalValues.tags) 
         ? (finalValues.tags as (Tag | string)[]).map((t) => typeof t === 'object' ? String(t.id ?? '') : String(t)).filter(Boolean) 

@@ -18,6 +18,11 @@ interface SelectionToolbarActionsProps {
   onBatchDelete: () => void;
 }
 
+/**
+ * SelectionToolbarActions
+ * 
+ * 批量操作工具欄的動作按鈕組。
+ */
 export function SelectionToolbarActions({
   selectedCount,
   isAnyPending,
@@ -26,7 +31,6 @@ export function SelectionToolbarActions({
   isMd,
   isRemoving,
   isCombining,
-  activeTasks,
   isDeleting,
   onRemoveFromGroup,
   onManualGroup,
@@ -38,9 +42,10 @@ export function SelectionToolbarActions({
       {/* 移出合組 (僅在合組頁面時顯示) */}
       {groupId && (
         <button
+          id="remove-from-group-btn"
           onClick={onRemoveFromGroup}
           disabled={selectedCount === 0 || isAnyPending}
-          className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
+          className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
           title="將照片移出此合組"
         >
           {isRemoving ? (
@@ -49,7 +54,7 @@ export function SelectionToolbarActions({
             <Icon name="folder-minus" size={14} className="text-amber-600 shrink-0" />
           )}
           <span className="shrink-0">
-            {isMd ? '移出合組' : isSm ? '移出' : '移出'}
+            {isMd ? '移出合組' : '移出'}
           </span>
         </button>
       )}
@@ -57,9 +62,10 @@ export function SelectionToolbarActions({
       {/* 手動合組 (在合組頁面時不顯示此功能) */}
       {!groupId && (
         <button
+          id="combine-photos-btn"
           onClick={onManualGroup}
           disabled={selectedCount < 2 || isAnyPending}
-          className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
+          className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
           title={selectedCount < 2 ? "請至少選取兩張照片以進行合組" : "手動將照片合併為一組"}
         >
           {isCombining ? (
@@ -68,29 +74,31 @@ export function SelectionToolbarActions({
             <Icon name="folder-plus" size={14} className="text-blue-600 shrink-0" />
           )}
           <span className="shrink-0">
-            {isMd ? '手動合組' : isSm ? '手動合組' : '合組'}
+            {isMd ? '手動合組' : '合組'}
           </span>
         </button>
       )}
 
       {/* 批量編輯 */}
       <button
+        id="batch-edit-btn"
         onClick={onBatchEdit}
         disabled={selectedCount === 0 || isAnyPending}
-        className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
+        className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
         title="編輯選取項目"
       >
         <Icon name="edit" size={14} className="text-indigo-600 shrink-0" />
         <span className="shrink-0">
-          {isMd ? '編輯' : '編輯'}
+          {isMd ? '批量編輯' : '編輯'}
         </span>
       </button>
 
       {/* 批量刪除 */}
       <button
+        id="batch-delete-btn"
         onClick={onBatchDelete}
         disabled={selectedCount === 0 || isAnyPending}
-        className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm"
+        className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
         title="批次刪除照片"
       >
         {isDeleting ? (
@@ -99,7 +107,7 @@ export function SelectionToolbarActions({
           <Icon name="trash-2" size={14} className="text-red-500 shrink-0" />
         )}
         <span className="shrink-0">
-          {isMd ? '批次刪除' : isSm ? '刪除' : '刪除'}
+          {isMd ? '批次刪除' : '刪除'}
         </span>
       </button>
     </div>

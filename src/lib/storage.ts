@@ -63,6 +63,7 @@ export const storage = {
       memoryCache.delete(key);
       return true;
     } catch {
+      memoryCache.delete(key);
       return false;
     }
   },
@@ -79,6 +80,7 @@ export const storage = {
       memoryCache.clear();
       return true;
     } catch {
+      memoryCache.clear();
       return false;
     }
   },
@@ -115,5 +117,5 @@ export const storage = {
       memoryCache.set(key, value);
       return false;
     }
-  },
+  }
 };

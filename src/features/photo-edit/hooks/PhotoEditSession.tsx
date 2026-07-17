@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import React, { createContext, useContext } from 'react';
 import { usePhoto } from '#src/hooks/photo/index.js';
 import { usePhotoEditForm } from './usePhotoEditForm.js';
 import { useAppForm } from '#lib/forms/useAppForm.js';
@@ -22,10 +22,7 @@ export const usePhotoEditSessionContext = () => {
     throw new Error('usePhotoEditSessionContext must be used within a PhotoEditSessionProvider');
   }
   return context;
-}
-
-export * from '../services/PhotoEditFormService.js';
-export * from './usePhotoEditForm.js';
+};
 
 interface PhotoEditSessionProps {
   photoId: string;
@@ -44,7 +41,7 @@ export const PhotoEditSessionProvider = ({
   onSuccess 
 }: PhotoEditSessionProps) => {
   const { data: photo, isPending } = usePhoto(photoId);
-  const { form, commit, discard } = usePhotoEditForm(photoId, (photo || null) as any, onSuccess);
+  const { form, commit, discard } = usePhotoEditForm(photoId, photo || null, onSuccess);
   
   return (
     <PhotoEditSessionContext.Provider value={{ 
@@ -60,3 +57,6 @@ export const PhotoEditSessionProvider = ({
     </PhotoEditSessionContext.Provider>
   );
 };
+
+export * from '../services/PhotoEditFormService.js';
+export * from './usePhotoEditForm.js';

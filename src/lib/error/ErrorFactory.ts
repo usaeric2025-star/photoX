@@ -73,6 +73,7 @@ export class ErrorFactory {
       VALIDATION_ERROR: ErrorCategory.VALIDATION,
       NETWORK_ERROR: ErrorCategory.NETWORK,
     };
+
     const codeStr = String(code);
     const category = categoryMap[codeStr] ?? ErrorCategory.BUSINESS;
 
@@ -125,7 +126,7 @@ export class ErrorFactory {
         }
         return json as T;
       }
-      
+
       // Handle standard parsed API JSON response object
       if (res && typeof res === 'object') {
         if (res.success === false) {
@@ -135,6 +136,7 @@ export class ErrorFactory {
           return res.data as T;
         }
       }
+
       return res as T;
     } catch (err) {
       if (isAppError(err)) {
@@ -178,8 +180,8 @@ export class ErrorFactory {
   static business(message: string): AppError {
     return this.create(message, {
       category: ErrorCategory.BUSINESS,
-      userMessage: message,
-      shouldReport: false,
+      code: ErrorCode.UNKNOWN_ERROR,
+      statusCode: 400
     });
   }
 
@@ -187,8 +189,8 @@ export class ErrorFactory {
     return this.create(message, {
       category: ErrorCategory.RUNTIME,
       userMessage: this.t.mutationRollbackFailed,
-      originalError,
       shouldReport: true,
+      originalError,
       code: ErrorCode.INTERNAL_ERROR,
       severity: ErrorSeverity.FATAL,
       statusCode: 500
@@ -212,14 +214,12 @@ export class ErrorFactory {
     const resLocalized = resource ? ErrorFormatter.mapResourceToLocalized(resource) : '';
     const cleanUserMsg = resource ? `${opLocalized}${resLocalized}${this.t.saveFailed}` : `${opLocalized}${this.t.saveFailed}`;
     const systemMsg = error instanceof Error ? error.message : this.extractErrorMessage(error);
+    
     return this.create(systemMsg, {
-      category: ErrorCategory.RUNTIME,
       userMessage: cleanUserMsg,
       originalError: error,
       context: { operation, resource },
-      shouldReport: true,
       code: ErrorCode.UNKNOWN_ERROR,
-      statusCode: 500
     });
   }
   
@@ -227,7 +227,6 @@ export class ErrorFactory {
     return this.create(message, {
       category: ErrorCategory.AUTH,
       userMessage: this.t.permissionDenied || '权限不足，拒绝访问',
-      shouldReport: false,
       code: ErrorCode.PERMISSION_DENIED,
       statusCode: 403,
       severity: ErrorSeverity.WARNING
@@ -251,7 +250,7 @@ export class ErrorFactory {
     if (isAppError(error)) return error;
     
     const fallbackMessage = context?.fallbackMessage;
-    
+
     if (error instanceof v.ValiError) {
       const msg = ErrorFormatter.formatValibotError(error);
       return this.create(msg, {
@@ -273,14 +272,14 @@ export class ErrorFactory {
         context
       });
     }
-    
+
     const systemMsg = typeof error === 'string' ? error : this.extractErrorMessage(error);
     return this.create(systemMsg, { 
       userMessage: fallbackMessage || systemMsg,
       context: { raw: error, ...context } 
     });
   }
-  
+
   static handle(error: unknown, options?: { context?: string; silent?: boolean }): void {
     const context = options?.context || 'unknown-context';
     const silent = options?.silent ?? false;
@@ -290,7 +289,6 @@ export class ErrorFactory {
   static handleError(error: unknown, context: string, silent: boolean = false): void {
     if (silent) return;
     this.capture(error);
-    
     const appError = isAppError(error)
       ? error
       : this.wrap(error, context);
@@ -299,7 +297,7 @@ export class ErrorFactory {
       showToast.error(appError);
     }
   }
-  
+
   static extractErrorMessage(error: unknown): string {
     return ErrorFormatter.extractErrorMessage(error);
   }

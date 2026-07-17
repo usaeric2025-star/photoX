@@ -9,23 +9,23 @@ interface UploadModeDialogProps {
   onOpenChange: (open: boolean) => void;
   onSelectMode: (mode: 'single' | 'group') => void;
 }
+
 const UploadModeDialog = lazy(() => import('#src/features/upload/components/UploadModeDialog.js').then(m => ({ default: m.UploadModeDialog }))) as React.ComponentType<UploadModeDialogProps>;
 
 import { usePhotoUpload } from '#src/hooks/index.js';
 import { UploadButton } from '#src/components/shared/UploadButton.js';
 import { SelectionToolbar } from '#src/features/selection/index.js';
-import { useUI, useSignal } from '#lib/store/index.js';
+import { useUI } from '#lib/store/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
-
 import { AdminHeader } from '#src/components/layout/AdminHeader.js';
 import { AdminAuthGate } from '#src/components/admin/AdminAuthGate.js';
 import { AdminContainer } from '#src/components/admin/AdminContainer.js';
-import { useFilters } from '#src/features/filters/index.js';
 import { FilterBar } from '#src/features/filters/index.js';
 
 interface SettingsPageProps {
   onClose?: () => void;
 }
+
 const BatchEditScreen = lazy(() => import('#src/features/batch-edit/BatchEditScreen.js').then(m => ({ default: m.BatchEditScreen })));
 const DiagDashboard = lazy(() => import('#src/features/diagnostics/DiagDashboard.js').then(m => ({ default: m.DiagDashboard })));
 const SettingsPage = lazy(() => import('#src/features/settings/SettingsPage.js').then(m => ({ default: m.SettingsPage }))) as React.ComponentType<SettingsPageProps>;
@@ -33,7 +33,6 @@ const AdminGroupDetailPage = lazy(() => import('#src/features/group/AdminGroupDe
 
 import { ScreenWrapper } from '#src/components/admin/ScreenWrapper.js';
 import { Switch, Route } from 'wouter';
-import { NotFoundPage } from '#src/pages/NotFoundPage.js';
 
 function AdminGallery() {
   const patch = useUI(s => s.patch);
@@ -56,7 +55,7 @@ function AdminGallery() {
 }
 
 function AdminBatchEditRoute() {
-  const [location, setLocation] = useNormalizedLocation();
+  const [_, setLocation] = useNormalizedLocation();
   return (
     <ScreenWrapper key="admin-batch" onClose={() => setLocation('/admin')}>
       <BatchEditScreen />
@@ -65,7 +64,7 @@ function AdminBatchEditRoute() {
 }
 
 function AdminDiagRoute() {
-  const [location, setLocation] = useNormalizedLocation();
+  const [_, setLocation] = useNormalizedLocation();
   return (
     <ScreenWrapper key="admin-diagnose" onClose={() => setLocation('/admin')}>
       <DiagDashboard />
@@ -74,7 +73,7 @@ function AdminDiagRoute() {
 }
 
 function AdminSettingsRoute() {
-  const [location, setLocation] = useNormalizedLocation();
+  const [_, setLocation] = useNormalizedLocation();
   return (
     <div key="admin-settings-container" className="h-full bg-slate-50 animate-scale-in">
       <SettingsPage onClose={() => setLocation('/admin')} />
@@ -87,12 +86,10 @@ function AdminGroupDetailRoute() {
 }
 
 export function AdminPageContent() {
-  const user = useAuth(s => s.user);
   const { uploadFiles } = usePhotoUpload();
-  
   const uploadModeDialogOpen = useUI(s => s.uploadModeDialogOpen);
   const patch = useUI(s => s.patch);
-  
+
   return (
     <AdminAuthGate>
       <div className="flex h-full bg-slate-50 overflow-hidden w-full relative">
@@ -100,7 +97,6 @@ export function AdminPageContent() {
           <ErrorBoundary>
             <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
               <Switch>
-                {/* 📌 精简后的路由定义，不再需要重复定义带斜杠的路径 */}
                 <Route path="/admin/batch-edit" component={AdminBatchEditRoute} />
                 <Route path="/admin/batch" component={AdminBatchEditRoute} />
                 
@@ -108,37 +104,31 @@ export function AdminPageContent() {
                 <Route path="/admin/diagnose" component={AdminDiagRoute} />
                 <Route path="/diagnostics" component={AdminDiagRoute} />
                 <Route path="/diagnostics/:any*" component={AdminDiagRoute} />
-                
+
                 <Route path="/admin/tasks" component={AdminSettingsRoute} />
                 <Route path="/admin/settings" component={AdminSettingsRoute} />
                 <Route path="/admin/error-logs" component={AdminSettingsRoute} />
                 <Route path="/admin/system" component={AdminSettingsRoute} />
                 <Route path="/settings" component={AdminSettingsRoute} />
-                
+
                 <Route path="/admin/group/:id" component={AdminGroupDetailRoute} />
-                
+
                 <Route path="/admin/groups" component={AdminGallery} />
                 <Route path="/admin/photos" component={AdminGallery} />
                 <Route path="/admin/tags" component={AdminGallery} />
                 <Route path="/admin/categories" component={AdminGallery} />
                 <Route path="/admin/manufacturer" component={AdminGallery} />
-                <Route path="/admin" component={AdminGallery} />
                 
-                {/* 📌 [Fix] 管理端兜底逻辑：匹配所有 /admin/ 开头的未定义路径，重定向到 AdminGallery */}
+                <Route path="/admin" component={AdminGallery} />
                 <Route path="/admin/:any*">
                   <AdminGallery />
-                </Route>
-                
-                <Route>
-                  <NotFoundPage isTransitionAllowed={false} />
                 </Route>
               </Switch>
             </Suspense>
           </ErrorBoundary>
-
           <SelectionToolbar />
         </div>
-        
+
         <input 
           type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
           onChange={(e) => {
@@ -148,19 +138,19 @@ export function AdminPageContent() {
             e.target.value = '';
           }}
         />
-      </div>
 
-      <Suspense fallback={null}>
-        <UploadModeDialog 
-          open={uploadModeDialogOpen}
-          onOpenChange={(open) => patch({ uploadModeDialogOpen: open })}
-          onSelectMode={(mode) => {
-            patch({ uploadModeDialogOpen: false, uploadAsGroup: mode === 'group' });
-            const input = document.getElementById('admin-quick-add-input') as HTMLInputElement;
-            if (input) input.click();
-          }}
-        />
-      </Suspense>
+        <Suspense fallback={null}>
+          <UploadModeDialog 
+            open={uploadModeDialogOpen}
+            onOpenChange={(open) => patch({ uploadModeDialogOpen: open })}
+            onSelectMode={(mode) => {
+              patch({ uploadModeDialogOpen: false, uploadAsGroup: mode === 'group' });
+              const input = document.getElementById('admin-quick-add-input') as HTMLInputElement;
+              if (input) input.click();
+            }}
+          />
+        </Suspense>
+      </div>
     </AdminAuthGate>
   );
 }

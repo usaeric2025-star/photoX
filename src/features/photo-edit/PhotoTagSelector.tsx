@@ -16,6 +16,11 @@ interface PhotoTagSelectorProps {
   hideHotLabel?: boolean;
 }
 
+/**
+ * PhotoTagSelector
+ * 
+ * 照片標籤選擇器，負責協調標籤列表與編輯對話框。
+ */
 export function PhotoTagSelector({
   selectedTagIds,
   onChange,
@@ -32,7 +37,7 @@ export function PhotoTagSelector({
   const cleanSelectedIds = Array.from(
     new Set(
       safeArray(selectedTagIds)
-        .map((item) => String(typeof item === 'object' && item !== null ? (item as Record<string, unknown>).id || '' : item).trim())
+        .map((item) => String(typeof item === 'object' && item !== null ? (item as any).id || '' : item).trim())
         .filter(Boolean),
     ),
   ) as string[];
@@ -65,6 +70,7 @@ export function PhotoTagSelector({
         showHotEffects={false}
         hideHotLabel={hideHotLabel}
       />
+
       <PromptDialog
         open={isAddOpen}
         onOpenChange={addDialog.toggle}
@@ -74,7 +80,7 @@ export function PhotoTagSelector({
           if (!name.trim()) return false;
           const saved = await addTag(name.trim());
           if (saved) {
-             if (cleanSelectedIds.length >= MAX_TAGS_PER_PHOTO) return true; // Prevent adding to selection if limit reached
+             if (cleanSelectedIds.length >= MAX_TAGS_PER_PHOTO) return true; 
              const existing = tags.find(t => t.name.toUpperCase() === name.trim().toUpperCase());
              const finalId = existing?.id !== undefined && existing?.id !== null ? String(existing.id) : String(saved);
              onChange([...new Set([...cleanSelectedIds, finalId])]);
@@ -82,6 +88,7 @@ export function PhotoTagSelector({
           return true;
         }}
       />
+
       {editingTag && (
         <PromptDialog
           open={isEditOpen}

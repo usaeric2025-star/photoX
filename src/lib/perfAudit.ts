@@ -1,3 +1,5 @@
+import { logger } from './logger.js';
+
 export interface PerfIncident {
   label: string;
   duration: number;
@@ -29,7 +31,7 @@ export const perfAudit = {
       
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(incidents));
     } catch (e) {
-      console.warn('[PerfAudit] Failed to record incident:', e);
+      logger.warn('[PerfAudit] Failed to record incident:', e);
     }
   },
 
@@ -38,7 +40,7 @@ export const perfAudit = {
       if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return [];
       const stored = window.localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   },
@@ -47,7 +49,7 @@ export const perfAudit = {
     try {
       if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
       window.localStorage.removeItem(STORAGE_KEY);
-    } catch (e) {
+    } catch {
       // ignore
     }
   }

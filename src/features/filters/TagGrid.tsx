@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Icon } from '#src/components/ui/Icon.js';
+import React from 'react';
 import { useTags, useTagSorting, useFilters, useTranslation } from '#src/hooks/index.js';
 import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
 import { useUI } from '#lib/store/index.js';
@@ -14,9 +13,15 @@ interface TagButtonProps {
   onClick: () => void;
 }
 
-function TagButton({ tag, isSelected, isPinned, isHot, currentFilters, onClick }: TagButtonProps) {
+/**
+ * TagButton
+ * 
+ * 單個標籤按鈕。
+ */
+function TagButton({ tag, isSelected, isPinned, isHot, onClick }: TagButtonProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all duration-300 cursor-pointer flex items-center gap-1 leading-none border ${
         isSelected
@@ -35,15 +40,19 @@ function TagButton({ tag, isSelected, isPinned, isHot, currentFilters, onClick }
   );
 }
 
+/**
+ * TagGrid
+ * 
+ * 展示所有標籤的網格，支持過濾篩選。
+ */
 export function TagGrid({ onClose }: { onClose?: () => void }) {
   const { filters, updateFilters } = useFilters();
   const { tags, isLoading: isPending } = useTags();
   const { data: settings } = usePublicSettings();
   
-  const appLang = useUI(s => s.appLang);
   const { t } = useTranslation();
-
-  // Use the standard hook to resolve sorted, pinned, and hot tags according to database parameters
+  
+  // Resolve sorted, pinned, and hot tags
   const { tagsToRender, pinnedIds, hotIds } = useTagSorting(tags || [], settings);
 
   const toggleTag = (tagId: string) => {
@@ -61,10 +70,10 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
   if (isPending) {
     const defaultPillWidths = ['w-16', 'w-20', 'w-14', 'w-24', 'w-16', 'w-20', 'w-12', 'w-16'];
     return (
-      <div className="border-t border-border-soft/50 pt-5 mt-1">
+      <div className="border-t border-slate-100 pt-5 mt-1">
         <div className="flex flex-wrap gap-2.5">
           {defaultPillWidths.map((width, i) => (
-            <div key={i} className={`animate-shimmer h-6 rounded-full bg-surface-soft ${width}`} />
+            <div key={i} className={`h-6 rounded-full bg-slate-100 animate-pulse ${width}`} />
           ))}
         </div>
       </div>
@@ -74,29 +83,28 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
   const hasSelectedTags = filters.tagIds.length > 0;
 
   return (
-    <div className="border-t border-border-soft/50 pt-3 mt-1">
+    <div className="border-t border-slate-100 pt-3 mt-1">
       <div className="flex items-center justify-between pb-2">
-        <span className="text-[11px] font-bold text-text-mute uppercase tracking-tight">
-          🏷️ {t('tagFilter', tagsToRender.length)}
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
+          🏷️ {t('tagFilter', tagsToRender.length) || `標籤 / TAGS (${tagsToRender.length})`}
         </span>
         {hasSelectedTags && (
           <button
+            type="button"
             onClick={clearTags}
-            className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-danger/10 text-danger hover:bg-danger/20 transition cursor-pointer"
+            className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-600 hover:bg-red-200 transition cursor-pointer"
           >
-            {t('reset')}
+            {t('reset') || '重置'}
           </button>
         )}
       </div>
 
       <div className="flex gap-3 items-start select-none">
-        {/* Tag container - show all tags with scroll if too many */}
-        <div className="flex flex-wrap gap-2.5 flex-1 min-w-0 pr-1 max-h-60 sm:max-h-80 overflow-y-auto custom-scrollbar px-1 py-1">
+        <div className="flex flex-wrap gap-2.5 flex-1 min-w-0 pr-1 max-h-60 sm:max-h-80 overflow-y-auto no-scrollbar px-1 py-1">
           {tagsToRender.map(tag => {
             const isSelected = filters.tagIds.includes(String(tag.id));
             const isPinned = pinnedIds.includes(String(tag.id)) || !!tag.isPinned;
             const isHot = hotIds.has(String(tag.id));
-
             return (
               <TagButton
                 key={tag.id}

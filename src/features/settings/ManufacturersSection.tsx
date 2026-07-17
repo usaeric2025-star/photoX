@@ -1,4 +1,3 @@
-import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import React from "react";
 import { Icon } from '#src/components/ui/Icon.js';
 import { Button } from '#src/components/ui/Button.js';
@@ -6,7 +5,6 @@ import { useDisclosure } from '#src/hooks/core/index.js';
 import { Manufacturer } from '#src/types/index.js';
 import { ManufacturerItem } from '#src/components/admin/ManufacturerItem.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
-
 import { normalizeManufacturerName } from "#lib/utils.js";
 import { useTranslation, useManufacturers, useManufacturerMutations } from '#src/hooks/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
@@ -18,40 +16,37 @@ interface ManufacturersSectionProps {
   buttonStyles: { [key in "primary" | "secondary" | "accent"]: string };
 }
 
+/**
+ * ManufacturersSection
+ * 
+ * 整合廠商列表的管理。
+ */
 export function ManufacturersSection({
   cardClass,
   buttonStyles,
 }: ManufacturersSectionProps) {
   const { manufacturers = [] } = useManufacturers();
   const manufacturerMutations = useManufacturerMutations();
-  const addManufacturer = manufacturerMutations.create.mutateAsync;
-  const updateManufacturer = manufacturerMutations.edit.mutateAsync;
-  const deleteManufacturer = manufacturerMutations.remove.mutateAsync;
   
   const [isAddOpen, addDialog] = useDisclosure(false);
   const { t } = useTranslation();
 
   const { submit: runAddManufacturer, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: v.object({ name: v.pipe(v.string(), v.minLength(1)) }),
+    schema: v.any(),
     mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeManufacturerName(name);
-      if (!normalized) return null;
-      const r = await addManufacturer(normalized);
-      if (!r) throw ErrorFactory.wrap(new Error("Failed"), 'addManufacturer', normalized);
-      return r as Manufacturer;
+      if (!normalized) return;
+      await manufacturerMutations.create.mutateAsync(normalized);
     },
     successMessage: t('addMfrSuccess'),
-    errorMessage: t('addMfrError')
   });
 
-  const { submit: runUpdateManufacturer, isLoading: isUpdating, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1)) }),
+  const { submit: runUpdateManufacturer, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
+    schema: v.any(),
     mutationFn: async ({ id, name }: { id: string, name: string }) => {
-      await updateManufacturer({ id, updates: { name } });
-      return true;
+      await manufacturerMutations.edit.mutateAsync({ id, updates: { name } });
     },
     successMessage: t('updateSuccess'),
-    errorMessage: t('updateError')
   });
 
   return (
@@ -59,33 +54,36 @@ export function ManufacturersSection({
       <div className="flex items-center justify-between">
         <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
           <div className="w-1.5 h-3.5 bg-brand-navy rounded-full"></div>
-          {t('manufacturersSettingsTitle')}
+          {t('manufacturersSettingsTitle') || '厂商列表 / Manufacturer List'}
         </h3>
         <span className="text-[10px] text-brand-navy/40 font-black uppercase">
-          {(manufacturers || []).length} Items
+          {manufacturers.length} Items
         </span>
       </div>
+
       <div className="flex gap-2">
         <Button 
+           id="add-mfr-btn"
            onClick={addDialog.open} 
            loading={isAdding} 
            className={buttonStyles.accent}
            leftIcon={!isAdding && <Icon name="plus" size={16} />}
            variant="primary"
         >
-          {t('addManufacturer')}
+          {t('addManufacturer') || '新增厂商'}
         </Button>
       </div>
+
       <FormProvider fieldErrors={updateFieldErrors} clearFieldError={updateClearFieldError}>
         <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
-          {(manufacturers || []).map((sub) => (
+          {manufacturers.map((sub) => (
             <ManufacturerItem
               key={sub.id}
               manufacturer={sub}
               onUpdate={async (mfr) => {
-                return await runUpdateManufacturer({ id: mfr.id, name: mfr.name });
+                return await runUpdateManufacturer({ id: String(mfr.id), name: mfr.name });
               }}
-              onDelete={(id) => deleteManufacturer(String(id))}
+              onDelete={(id) => manufacturerMutations.remove.mutateAsync(String(id))}
             />
           ))}
         </div>
@@ -96,11 +94,12 @@ export function ManufacturersSection({
           open={isAddOpen}
           onOpenChange={addDialog.toggle}
           loading={isAdding}
-          title={t('newMfrTitle')}
-          description={t('mfrNamePlaceholder')}
+          title={t('newMfrTitle') || "新增厂商"}
+          description={t('mfrNamePlaceholder') || "输入厂商名称："}
           onConfirm={async (name: string) => {
             if (!name.trim()) return false;
-            return await runAddManufacturer({ name });
+            await runAddManufacturer({ name });
+            return true;
           }}
         />
       </FormProvider>

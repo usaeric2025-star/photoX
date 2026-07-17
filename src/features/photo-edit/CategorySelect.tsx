@@ -1,11 +1,13 @@
-import { Field } from '@tanstack/react-form';
+import React from 'react';
 import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 import { FormSectionHeader } from '#src/components/admin/FormShared.js';
 import { useCategories, useTranslation } from '#src/hooks/index.js';
 import { getTranslatedCategoryName } from "#src/utils/category.js";
 
 /**
- * Encapsulated Category Selector for Photo Edit Drawer
+ * CategorySelect
+ * 
+ * 照片編輯對話框中的分類選擇組件。
  */
 export function CategorySelect() {
   const { form } = usePhotoEditSessionContext();
@@ -13,17 +15,17 @@ export function CategorySelect() {
   const { categories = [] } = useCategories();
   
   return (
-    <Field form={form} name="categoryId">
+    <form.Field name="categoryId">
       {(field) => (
         <section className="space-y-4">
-          <FormSectionHeader title={t('category')} />
+          <FormSectionHeader title={t('category') || '分類'} />
           <div className="grid grid-cols-4 gap-1.5 px-0.5">
             {categories
               .filter((cat) => cat && cat.id)
               .map((cat) => {
                 const isSelected = String(field.state.value || "") === String(cat.id || "");
                 const displayName = getTranslatedCategoryName(
-                  cat.id || undefined,
+                  cat.id as any,
                   categories,
                   appLang,
                   uiTranslations,
@@ -46,6 +48,6 @@ export function CategorySelect() {
           </div>
         </section>
       )}
-    </Field>
+    </form.Field>
   );
 }

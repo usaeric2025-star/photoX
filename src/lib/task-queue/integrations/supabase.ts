@@ -26,7 +26,7 @@ export const taskTable = {
       user_id: userId || null,
       created_at: new Date(task.createdAt).toISOString(),
     });
-    
+
     if (error) {
       logger.error('[Task] Insert error:', {
         error,
@@ -39,12 +39,9 @@ export const taskTable = {
 
   // 更新狀態
   updateStatus: async (id: string, status: string, data?: unknown) => {
-    if (!isSupabaseConfigured) {
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     const payload: Record<string, unknown> = { status };
     if (data !== undefined) payload.data = data;
-    
     const { error } = await supabase
       .from('tasks')
       .update(payload)
@@ -85,5 +82,5 @@ export const taskTable = {
       // ⚠️ execute 函數需要業務層重新綁定
       execute: async () => {},
     }));
-  },
+  }
 };

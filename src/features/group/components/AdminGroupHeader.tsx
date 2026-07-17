@@ -4,48 +4,10 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { useIsMultiSelect, useSelectionActions, usePermission } from '#src/hooks/index.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
-import { FormProvider, useFormField } from '#lib/forms/useFormField.js';
 import * as v from 'valibot';
-import { Input } from '#src/components/shared/Input.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useTranslation } from '#src/hooks/core/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
-import { TranslationType } from '#src/locales/index.js';
-
-const GroupTitleSchema = v.object({
-  title: v.pipe(v.string(), v.minLength(3, 'Title error')),
-});
-
-interface TitleInputProps {
-  value: string;
-  onChange: (val: string) => void;
-  onBlur: () => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
-  disabled: boolean;
-  t: (key: string, ...args: unknown[]) => string;
-}
-
-function TitleInput({ value, onChange, onBlur, onKeyDown, disabled, t }: TitleInputProps) {
-  const { error, onChange: clearError } = useFormField('title');
-  
-  return (
-    <Input
-      autoFocus
-      disabled={disabled}
-      value={value}
-      onChange={(e) => {
-        onChange(e.target.value);
-        clearError?.();
-      }}
-      onBlur={onBlur}
-      onKeyDown={onKeyDown}
-      error={error}
-      className="text-xl font-bold"
-      containerClassName="w-full max-w-sm"
-      placeholder={t('titlePlaceholder')}
-    />
-  );
-}
 
 interface AdminGroupHeaderProps {
   group: Group;
@@ -54,24 +16,27 @@ interface AdminGroupHeaderProps {
   onUpdateTitle: (newName: string) => Promise<void>;
 }
 
+/**
+ * AdminGroupHeader
+ * 
+ * 管理員合組詳情頁的首部控制欄，支持標題編輯、分享與批量操作切換。
+ */
 export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTitle }: AdminGroupHeaderProps) {
-  const [location, setLocation] = useNormalizedLocation();
+  const [, setLocation] = useNormalizedLocation();
   const [copied, setCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(group.name);
-  
   const { t } = useTranslation();
   const { toggleMode } = useSelectionActions();
   const isMultiSelect = useIsMultiSelect();
   const { can } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
 
-  // Create a dynamic schema to use translated error messages
   const dynamicSchema = v.object({
-    title: v.pipe(v.string(), v.minLength(3, t('titleMinLength'))),
+    title: v.pipe(v.string(), v.minLength(3, t('titleMinLength') || 'Title too short')),
   });
 
-  const { submit: updateTitle, isLoading: isUpdating, fieldErrors, clearFieldError } = useFormSubmit<typeof dynamicSchema, boolean>({
+  const { submit: updateTitle, isLoading: isUpdating } = useFormSubmit<typeof dynamicSchema, boolean>({
     schema: dynamicSchema,
     mutationFn: async ({ title }) => {
       await onUpdateTitle(title);
@@ -80,14 +45,14 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
     onSuccess: () => {
       setIsEditingTitle(false);
     },
-    successMessage: t('updateTitleSuccess'),
-    errorMessage: t('updateTitleFailed')
+    successMessage: t('updateTitleSuccess') || 'Title updated',
+    errorMessage: t('updateTitleFailed') || 'Update failed'
   });
 
   const handleCopyId = async () => {
     const success = await copyToClipboard(group.id);
     if (success) {
-      showToast.success(t('groupIdCopied'));
+      showToast.success(t('groupIdCopied') || 'ID copied');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -97,7 +62,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
     const url = `${window.location.origin}/group/${group.id}`;
     const success = await copyToClipboard(url);
     if (success) {
-      showToast.success(t('shareLinkCopied'));
+      showToast.success(t('shareLinkCopied') || 'Share link copied');
     }
   };
 
@@ -107,7 +72,6 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
       setIsEditingTitle(false);
       return;
     }
-    
     await updateTitle({ title: editTitleValue.trim() });
   };
 
@@ -123,17 +87,17 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
   };
 
   return (
-    <div className="glass-header !p-3 sm:!p-4 flex items-center justify-between w-full">
-      {/* Left side: Back button & Title/Info section */}
+    <div className="glass-header !p-3 sm:!p-4 flex items-center justify-between w-full border-b bg-white/80 backdrop-blur-md">
+      {/* Left side: Back button & Title section */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
         <button 
           onClick={() => setLocation('/admin')}
           className="p-1.5 -ml-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
-          title={t('backToHome')}
+          title={t('backToHome') || 'Back'}
         >
           <Icon name="arrow-left" className="w-5 h-5" />
         </button>
-
+        
         <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
             {isEditingTitle ? (
@@ -146,7 +110,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
                 onBlur={handleSaveTitle}
                 onKeyDown={handleKeyDown}
                 className="text-sm sm:text-base font-bold text-slate-900 bg-slate-50 border border-slate-200 outline-none ring-2 ring-indigo-500/20 rounded-md px-2 py-1 max-w-[150px] sm:max-w-xs transition-all"
-                placeholder={t('titlePlaceholder')}
+                placeholder={t('titlePlaceholder') || 'Enter title...'}
               />
             ) : (
               <h1 
@@ -155,16 +119,16 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
                   setEditTitleValue(group.name);
                   setIsEditingTitle(true);
                 }}
-                title={t('clickToEditTitle')}
+                title={t('clickToEditTitle') || 'Click to edit'}
               >
-                {group.name || t('clickToAddTitle')}
+                {group.name || t('clickToAddTitle') || 'Untitled Group'}
               </h1>
             )}
             
             <button 
               onClick={handleCopyId}
               className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-slate-600 transition-colors shrink-0 rounded bg-slate-50 border border-slate-100 hover:bg-slate-100 active:scale-95"
-              title={t('copyGroupId')}
+              title={t('copyGroupId') || 'Copy ID'}
             >
               <span className="font-mono tracking-wider font-medium opacity-80">ID: {group.id.substring(0, 6)}</span>
               {copied ? (
@@ -177,7 +141,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
           
           <div className="flex items-center shrink-0">
             <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 text-[10px] sm:text-xs font-semibold whitespace-nowrap border border-slate-200/50">
-              {photoCount > 0 ? t('photoCountNum', photoCount) : t('noPhotosText')}
+              {photoCount > 0 ? (t('photoCountNum', photoCount) || `${photoCount} Photos`) : (t('noPhotosText') || 'No photos')}
             </span>
           </div>
         </div>
@@ -185,12 +149,12 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
       
       {/* Right side: Action buttons */}
       <div className="flex items-center gap-1.5 shrink-0 pl-2">
-        <button 
+        <button
           onClick={handleShare}
           className="p-1.5 sm:p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
-          title={t('copyShareLink')}
+          title={t('copyShareLink') || 'Share'}
         >
-          <Icon name="share" className="w-4 h-4" />
+          <Icon name="share-2" className="w-4 h-4" />
         </button>
  
         {canBatchEdit && (
@@ -212,7 +176,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
           className="inline-flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/50 rounded-lg text-xs transition-all font-semibold"
         >
           <Icon name="settings" className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{t('settings')}</span>
+          <span className="hidden sm:inline">{t('settings') || 'Settings'}</span>
         </button>
       </div>
     </div>

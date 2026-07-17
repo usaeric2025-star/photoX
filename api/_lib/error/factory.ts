@@ -29,6 +29,17 @@ export const errorFactory = {
         }
         if (actualError.code) {
             context.postgresCode = actualError.code;
+            
+            // Map common Postgres error codes to specific codes
+            if (actualError.code === '57014') {
+                code = ErrorCode.TIMEOUT;
+                message = `Statement timeout: The query took too long to execute. (${message})`;
+            } else if (actualError.code === '23505') {
+                code = ErrorCode.ALREADY_EXISTS;
+            } else if (actualError.code === '23503') {
+                code = ErrorCode.FAILED_PRECONDITION;
+                message = `Foreign key violation: Referenced record does not exist. (${message})`;
+            }
         }
     }
     

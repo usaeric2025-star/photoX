@@ -1,5 +1,4 @@
-import { usePhotoMutations } from '#src/hooks/photo/index.js';
-import { useAIBatchAnalysis } from '#src/hooks/index.js';
+import { usePhotoMutations, useAIBatchAnalysis } from '#src/hooks/photo/index.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/useInvalidatePhotos.js';
 import { useQueryClient } from '#lib/query/index.js';
 import { useSelectedIds } from '#src/hooks/selection/useSelection.js';
@@ -13,7 +12,6 @@ import { AdminService } from './AdminService.js';
  * useAdminActions
  * 
  * 整合管理員的核心操作 Hook (Facade)。
- * 邏輯已抽離至 AdminService 與各領域 Hook。
  */
 export function useAdminActions() {
   const { t } = useTranslation();
@@ -22,7 +20,6 @@ export function useAdminActions() {
   const { handleBatchAiAnalyze } = useAIBatchAnalysis();
   const selectedIds = useSelectedIds();
   const queryClient = useQueryClient();
-
   const { auditResult, isAuditing, runAudit, deduplicate, runDailyCleanup } = useSystemMaintenance();
   const { performanceIssues, clearAudits } = usePerformanceAudit();
 
@@ -37,7 +34,7 @@ export function useAdminActions() {
     let photosToProcess = Array.isArray(allPhotos) ? allPhotos : AdminService.getAllCachedPhotos(queryClient);
     
     if (photosToProcess.length === 0) {
-      ErrorFactory.handle(t('selectPhotosToIdentify') || 'Select photos to identify', { context: t('batchAction') });
+      ErrorFactory.handle(t('selectPhotosToIdentify') || 'Select photos to identify', { context: 'batchAction' });
       return;
     }
 
@@ -55,17 +52,17 @@ export function useAdminActions() {
     // AI
     handleBatchAiIdentifyTrigger,
     handleBatchAiAnalyze,
-
+    
     // Maintenance
     auditResult,
     isAuditing,
     runAudit,
     runRepair: async (id: string) => {
-        if (id === 'deduplicate') return deduplicate({});
-        throw new Error('Unsupported repair action');
+      if (id === 'deduplicate') return deduplicate({});
+      throw new Error('Unsupported repair action');
     },
     runDailyCleanup,
-
+    
     // Performance
     performanceIssues,
     clearAudits,

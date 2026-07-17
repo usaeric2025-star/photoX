@@ -12,4 +12,3 @@ export const LimitSchema = v.pipe(
   v.minValue(1),
   v.maxValue(100)
 );
-

@@ -14,7 +14,6 @@ export function AdminContainer() {
     onlyGroupsCover: isAggregated,
     isAdminMode: true
   }), [filters.category, filters.tags, filters.search, filters.sort, isAggregated]);
-
   return (
     <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden relative animate-fade-in" id="main-admin-screen">
        <div 
@@ -29,4 +28,3 @@ export function AdminContainer() {
     </div>
   );
 }
-

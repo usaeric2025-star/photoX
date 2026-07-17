@@ -39,13 +39,13 @@ export interface UIStoreState {
 // Initial state
 const defaultForm: ProductFormData = {
   name: '',
+  description: { zh: '', en: '', ms: '' },
   categoryId: '',
-  tags: [],
   manufacturerId: '',
+  tags: [],
   itemCode: '',
   modelNumber: '',
   manualCode: '',
-  description: { zh: '', en: '', ms: '' },
   isHidden: false,
   dimensions: [],
   price: '',

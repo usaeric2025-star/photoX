@@ -18,9 +18,9 @@ const DimensionSchema = v.object({
   isAiEstimated: v.optional(v.nullable(v.boolean())),
 });
 
-const getPhotoEditSchema = (t: TranslationType) => v.object({
-  name: v.pipe(v.string(), v.minLength(1, t.titleRequired), v.maxLength(100, t.titleTooLong)),
-  description: v.optional(TranslationSchema),
+export const getPhotoEditSchema = (t: TranslationType) => v.object({
+  name: v.pipe(v.string(), v.minLength(1, t.titleRequired || 'Required'), v.maxLength(100, t.titleTooLong || 'Too long')),
+  description: v.optional(v.nullable(v.union([TranslationSchema, v.string()]))),
   categoryId: v.optional(v.nullable(v.string())),
   manufacturerId: v.optional(v.nullable(v.string())),
   groupId: v.optional(v.nullable(v.string())),
@@ -36,5 +36,4 @@ const getPhotoEditSchema = (t: TranslationType) => v.object({
 });
 
 export const PhotoEditSchema = getPhotoEditSchema({ titleRequired: 'Required', titleTooLong: 'Too long' } as unknown as TranslationType); // Fallback for types
-
 export type PhotoEditFormData = v.InferOutput<typeof PhotoEditSchema>;

@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { isTaskDrawerOpen } from '#lib/store/index.js';
-import { User, Theme, TranslationType } from '#src/types/index.js';
+import { User, Theme } from '#src/types/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
@@ -31,10 +31,9 @@ export function AdminHeaderActions({
   t = (key: string) => key,
   user,
   signOut,
-  lang
 }: AdminHeaderActionsProps) {
-  const [location, setLocation] = useNormalizedLocation();
-  const { can, role } = usePermission();
+  const [, setLocation] = useNormalizedLocation();
+  const { can } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
   const canManageSystem = can('system:settings');
   const canAccessDiagnostics = can('admin:dashboard:access');
@@ -56,6 +55,7 @@ export function AdminHeaderActions({
     <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0">
       {canBatchEdit && (
         <button
+          type="button"
           onClick={toggleMode}
           className={cn("w-9 h-9", multiSelect ? theme.buttonActive : theme.button)}
           title={multiSelect ? t('exitSelectMode') : t('selectModeToggle')}
@@ -63,8 +63,8 @@ export function AdminHeaderActions({
           <Icon name="check-square" size={18} />
         </button>
       )}
-
       <button
+        type="button"
         onClick={() => batchAiIdentify()}
         className={cn("w-9 h-9", theme.button)}
         title={t('aiSmartIdentify')}
@@ -73,6 +73,7 @@ export function AdminHeaderActions({
       </button>
 
       <button
+        type="button"
         onClick={() => { isTaskDrawerOpen.value = true; }}
         className={cn("w-9 h-9 relative shrink-0", theme.button)}
         title={t('taskCenter')}
@@ -89,6 +90,7 @@ export function AdminHeaderActions({
         align="end"
         trigger={
           <button
+            type="button"
             className={cn("w-9 h-9", theme.button)}
             title={t('adminMenu', '管理菜單')}
           >
@@ -97,7 +99,7 @@ export function AdminHeaderActions({
         }
       >
         <div className="flex flex-col min-w-[220px] p-1 gap-1">
-          {canAccessDiagnostics ? (
+          {user ? (
             <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
               <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px] shrink-0">
                 {user?.photoUrl && user.photoUrl.trim() !== '' ? (
@@ -106,24 +108,23 @@ export function AdminHeaderActions({
                   <Icon name="user" size={10} />
                 )}
               </div>
-              <span className="truncate">{user ? user.email?.split("@")[0] : t('loginTitleStaff')}</span>
+              <span className="truncate">{user.email?.split("@")[0] || t('loginTitleStaff')}</span>
             </div>
           ) : (
             <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">
               {t('guestLabel')}
             </div>
           )}
-
           <div className="h-px bg-slate-100 my-1 mx-2" />
-
           <div className="flex flex-col gap-0.5">
-            {menuItems.map((item) => {
+            {menuItems.map((item: any) => {
               if (item.divider) {
                 return <div key={item.id} className="h-px bg-slate-100 my-1 mx-2" />;
               }
               return (
                 <button 
                   key={item.id}
+                  type="button"
                   onClick={item.onClick}
                   className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-100 transition-colors text-left"
                 >
@@ -133,14 +134,10 @@ export function AdminHeaderActions({
               );
             })}
           </div>
-
-          <div className="h-px bg-slate-100 my-1 mx-2" />
-
           <div className="px-2 py-1">
             <LanguageSwitcher mode="segmented" />
           </div>
-
-          {canAccessDiagnostics && (
+          {user && (
             <>
               <div className="h-px bg-slate-100 my-1 mx-2" />
               <button
@@ -157,6 +154,7 @@ export function AdminHeaderActions({
       </NativePopover>
 
       <button
+        type="button"
         onClick={handleAuthAction}
         className={cn("w-9 h-9", theme.button)}
         title={t('viewModePublic')}

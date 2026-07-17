@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useCallback } from 'react';
 import { AppSettings } from '#src/types/index.js';
 import { useAuth } from '#lib/store/index.js';
 import { 
@@ -14,6 +14,7 @@ import { useNormalizedLocation, useDebouncedCallback } from '#src/hooks/core/ind
 import { testAiConnection } from "#src/features/ai/AICommands.js";
 import { executeTask } from '#lib/task-queue/index.js';
 import { uploadToR2 } from '#src/lib/upload/index.js';
+import { logger } from '#lib/logger.js';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings.js').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings.js').then(m => ({ default: m.AISettings })));
@@ -34,69 +35,57 @@ interface SettingsPageProps {
 
 export function SettingsPage({ onClose }: SettingsPageProps) {
   const [location, setLocation] = useNormalizedLocation();
-  
   const { t, appLang } = useTranslation();
-
-  const user = useAuth(s => s.user);
   const { settings, agnesApiKey, accessPasscode, updateSettings } = useSettings();
-  const setAgnesApiKey = (key: string) => updateSettings({ ...settings, agnesApiKey: key });
-  const setAccessPasscode = (code: string) => updateSettings({ ...settings, accessPasscode: code });
-  const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
-
+  
   const [testResult, setTestResult] = useState<{ success?: boolean; error?: string; loading?: boolean; } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
   const { submit: runConnectionTest } = useFormSubmit({
     schema: v.object({}),
     mutationFn: async () => {
-      const ok = await testAiConnection(String(settings.agnesApiKey || ""), "google");
+      const ok = await testAiConnection(String(agnesApiKey || ""), "google");
       if (!ok) throw new Error(t('aiConnectFailed'));
       return true;
     },
     onSuccess: () => setTestResult({ success: true }),
     onError: (msg: unknown) => setTestResult({ success: false, error: String(msg) }),
-    successMessage: t('aiConnectSuccess'),
-    errorMessage: t('aiConnectFailed')
   });
 
   const testConnection = async () => {
-    if (!settings?.agnesApiKey) return;
+    if (!agnesApiKey) return;
+    setTestResult({ loading: true });
     await runConnectionTest({});
   };
 
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
-    updateSettings(newSettings).catch(console.error);
+    updateSettings(newSettings).catch(e => logger.error('[SettingsPage] debouncedSave failed', e));
     setHasChanges(false);
   }, 1500);
 
-  const setSettingField = <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
-    const current = settings || {} as AppSettings;
-    const newSettings = { ...current, [field]: value };
-    void updateSettings(newSettings);
+  const setSettingField = useCallback(<K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
+    if (!settings) return;
+    const newSettings = { ...settings, [field]: value };
     setHasChanges(true);
     debouncedSave(newSettings);
-  };
-
-  const uploadLogo = async (file: File) => {
-    return executeTask({
-      label: t('uploadLogoTask'),
-      type: 'upload',
-      execute: async () => {
-        const fileKey = `settings/logo_${Date.now()}`;
-        const imageUrl = await uploadToR2(file, fileKey);
-        setSettingField('logoUrl', imageUrl);
-        return imageUrl;
-      }
-    });
-  };
+  }, [settings, debouncedSave]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) await uploadLogo(file);
+    if (file) {
+      await executeTask({
+        label: t('uploadLogoTask'),
+        type: 'upload',
+        execute: async () => {
+          const fileKey = `settings/logo_${Date.now()}`;
+          const imageUrl = await uploadToR2(file, fileKey);
+          setSettingField('logoUrl', imageUrl);
+          return imageUrl;
+        }
+      });
+    }
   };
 
-  const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
-  const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
   const initialTab = (() => {
     if (location.startsWith('/admin/diagnose') || 
         location.startsWith('/admin/error-logs') || 
@@ -105,6 +94,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     }
     return 'general';
   })();
+
   const [activeTab, setActiveTab] = React.useState(initialTab);
   const [loadedTabs, setLoadedTabs] = React.useState<string[]>(['general', initialTab]);
 
@@ -116,46 +106,33 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   };
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
-    schema: v.partial(v.object({
-      appName: v.string(),
-      logoUrl: v.string(),
-      pinnedTags: v.array(v.string()),
-      hotTagsCount: v.number(),
-      hotTagThreshold: v.number(),
-      agnesApiKey: v.string(),
-      whatsapp1Name: v.string(),
-      whatsapp1: v.string(),
-      whatsapp2Name: v.string(),
-      whatsapp2: v.string(),
-      accessPasscode: v.string(),
-    })),
+    schema: v.any(),
     mutationFn: async (s: Partial<AppSettings>) => {
-      await saveSettings(s);
-      return true;
+      await updateSettings(s as AppSettings);
     },
     onSuccess: () => {
       setHasChanges(false);
-    },
-    successMessage: appLang === 'zh' ? '設定已儲存' : 'Settings saved',
-    errorMessage: appLang === 'zh' ? '儲存失敗' : 'Save failed'
+    }
   });
+
+  const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
+  const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
+
+  const close = () => {
+    if (onClose) onClose();
+    else setLocation('/admin');
+  };
 
   return (
     <StandardModalLayout 
-      onClose={() => {
-        if (onClose) onClose();
-        else setLocation('/admin');
-      }}
+      onClose={close}
       className="bg-brand-bg"
       header={
         <SettingsHeader 
           hasChanges={hasChanges}
           isSaving={isSavingSettings}
           onSave={() => runSaveSettings({ ...settings })}
-          onClose={() => {
-            if (onClose) onClose();
-            else setLocation('/admin');
-          }}
+          onClose={close}
         />
       }
     >
@@ -166,14 +143,14 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {loadedTabs.includes('general') && (
             <div className={activeTab === 'general' ? 'block' : 'hidden'}>
               <Suspense fallback={<LoadingScreen />}>
-              <GeneralSettings 
-                settings={settings}
-                handleLogoUpload={handleLogoUpload}
-                setSettingField={setSettingField}
-                cardClass={cardClass}
-                inputClass={inputClass}
-                buttonStyles={BUTTON_STYLES}
-              />
+                <GeneralSettings 
+                  settings={settings!}
+                  handleLogoUpload={handleLogoUpload}
+                  setSettingField={setSettingField}
+                  cardClass={cardClass}
+                  inputClass={inputClass}
+                  buttonStyles={BUTTON_STYLES}
+                />
               </Suspense>
             </div>
           )}
@@ -181,17 +158,14 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {loadedTabs.includes('ai') && (
             <div className={activeTab === 'ai' ? 'block' : 'hidden'}>
               <Suspense fallback={<LoadingScreen />}>
-              <AISettings 
-                agnesApiKey={String(agnesApiKey || "")}
-                setAgnesApiKey={setAgnesApiKey}
-                testConnection={async () => { await testConnection(); }}
-                testResult={testResult}
-                accessPasscode={String(accessPasscode || "")}
-                setAccessPasscode={setAccessPasscode}
-                setSettingField={setSettingField}
-                cardClass={cardClass}
-                inputClass={inputClass}
-              />
+                <AISettings 
+                  agnesApiKey={String(agnesApiKey || "")}
+                  setAgnesApiKey={(key) => setSettingField('agnesApiKey', key)}
+                  testConnection={testConnection}
+                  testResult={testResult}
+                  accessPasscode={String(accessPasscode || "")}
+                  setAccessPasscode={(code) => setSettingField('accessPasscode', code)}
+                />
               </Suspense>
             </div>
           )}
@@ -199,18 +173,20 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {loadedTabs.includes('assets') && (
             <div className={activeTab === 'assets' ? 'block' : 'hidden'}>
               <Suspense fallback={<LoadingScreen />}>
-                <CategoriesSection 
-                  cardClass={cardClass}
-                  buttonStyles={BUTTON_STYLES}
-                />
-                <ManufacturersSection 
-                  cardClass={cardClass}
-                  buttonStyles={BUTTON_STYLES}
-                />
-                <TagsSection 
-                  cardClass={cardClass}
-                  buttonStyles={BUTTON_STYLES}
-                />
+                <div className="space-y-6">
+                  <CategoriesSection 
+                    cardClass={cardClass}
+                    buttonStyles={BUTTON_STYLES}
+                  />
+                  <ManufacturersSection 
+                    cardClass={cardClass}
+                    buttonStyles={BUTTON_STYLES}
+                  />
+                  <TagsSection 
+                    cardClass={cardClass}
+                    buttonStyles={BUTTON_STYLES}
+                  />
+                </div>
               </Suspense>
             </div>
           )}
@@ -218,7 +194,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {loadedTabs.includes('status') && (
             <div className={activeTab === 'status' ? 'block' : 'hidden'}>
               <Suspense fallback={<LoadingScreen />}>
-              <DiagDashboard />
+                <DiagDashboard />
               </Suspense>
             </div>
           )}

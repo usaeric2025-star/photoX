@@ -17,6 +17,11 @@ interface PhotoWallGridProps {
   isAggregated?: boolean;
 }
 
+/**
+ * PhotoWallGrid
+ * 
+ * 瀑布流網格組件，使用 dream-masonry 實現高性能無限捲動。
+ */
 export function PhotoWallGrid({
   photos,
   hasMore,
@@ -30,6 +35,7 @@ export function PhotoWallGrid({
   const { columns } = useGrid();
   const { appLang } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
+  
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(() => {
     if (typeof document !== 'undefined') {
       return document.getElementById('photo-wall-scroll-container');
@@ -38,11 +44,9 @@ export function PhotoWallGrid({
   });
 
   useEffect(() => {
-    if (scrollParent) return; // Already resolved synchronously
-
+    if (scrollParent) return; 
     if (!containerRef.current) return;
     
-    // Find closest parent that is scrollable
     let parent = containerRef.current.parentElement;
     while (parent) {
       const overflowY = window.getComputedStyle(parent).overflowY;
@@ -52,14 +56,14 @@ export function PhotoWallGrid({
       }
       parent = parent.parentElement;
     }
-  }, []);
+  }, [scrollParent]);
 
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || isLoading) return;
     loadMore();
   }, [loadMore, isLoadingMore, isLoading]);
 
-  // Defensive backup scroll listener to guarantee loading more items on scroll near bottom
+  // Scroll listener backup
   useEffect(() => {
     const parent = scrollParent || document.getElementById('photo-wall-scroll-container');
     if (!parent) return;
@@ -67,14 +71,12 @@ export function PhotoWallGrid({
     const handleScroll = () => {
       if (!hasMore || isLoadingMore || isLoading) return;
       const { scrollHeight, scrollTop, clientHeight } = parent;
-      // Trigger when we are within 1200px of the bottom (safely prefetching)
       if (scrollHeight - scrollTop - clientHeight < 1200) {
         handleLoadMore();
       }
     };
 
     parent.addEventListener('scroll', handleScroll, { passive: true });
-    // Also perform an initial check in case the initial items do not fill the height
     const timer = setTimeout(handleScroll, 500);
 
     return () => {
@@ -83,8 +85,6 @@ export function PhotoWallGrid({
     };
   }, [scrollParent, hasMore, isLoadingMore, isLoading, handleLoadMore]);
 
-  // Create a new ref-like object whenever scrollParent resolves/changes
-  // to force dream-masonry's hooks (useGrid, useInfiniteScroll) to re-run and bind listeners correctly
   const scrollContainer = useMemo(() => {
     if (!scrollParent) return null;
     return { current: scrollParent };
@@ -115,7 +115,7 @@ export function PhotoWallGrid({
 
   const renderEmpty = useCallback(() => (
     <div className="text-center py-20 text-gray-500 w-full">
-      暂无照片
+      暂无照片 / No Photos
     </div>
   ), []);
 
@@ -123,7 +123,7 @@ export function PhotoWallGrid({
     <div ref={containerRef} className="page-container pt-4 pb-32">
       <DreamMasonry
         key={scrollParent ? 'resolved' : 'pending'}
-        items={photos as PhotoListItem[]}
+        items={photos}
         hasMore={hasMore}
         onLoadMore={handleLoadMore}
         isLoading={isLoading && photos.length === 0}
@@ -131,26 +131,23 @@ export function PhotoWallGrid({
         scrollContainer={scrollContainer as React.RefObject<HTMLElement> | undefined}
         maxColumnCount={columns}
         minColumnCount={columns}
-        minColumnWidth={10}
         gutterSize={12}
         renderItem={renderItem}
         renderLoader={renderLoader}
         renderEmpty={renderEmpty}
         scrollThreshold={1000}
         overscan={600}
-        hysteresis={10}
       />
       
       {isLoadingMore && photos.length > 0 && (
         <div className="py-12 flex justify-center w-full">
            <div className="flex gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-navy/40 animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-navy/60 animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-navy animate-bounce"></div>
            </div>
         </div>
       )}
     </div>
   );
 }
-

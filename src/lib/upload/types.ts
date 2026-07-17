@@ -28,10 +28,10 @@ export interface PhotoRecord {
   id?: string;
   imageUrl: string;
   imageHash: string;
-  width: number;
-  height: number;
   name?: string;
-  description?: string;
+  description?: string | null;
   manualCode?: string;
+  width?: number;
+  height?: number;
   groupId?: string | null;
 }

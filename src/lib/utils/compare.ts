@@ -9,8 +9,9 @@ export function isShallowEqual(a: unknown, b: unknown): boolean {
   
   const objA = a as Record<string, unknown>;
   const objB = b as Record<string, unknown>;
+
   if (Array.isArray(a) !== Array.isArray(b)) return false;
-  
+
   if (Array.isArray(a)) {
     const arrA = a as unknown[];
     const arrB = b as unknown[];
@@ -20,11 +21,15 @@ export function isShallowEqual(a: unknown, b: unknown): boolean {
     }
     return true;
   }
+
   const keysA = Object.keys(objA);
   const keysB = Object.keys(objB);
+
   if (keysA.length !== keysB.length) return false;
+
   for (const key of keysA) {
     if (!Object.prototype.hasOwnProperty.call(objB, key) || !Object.is(objA[key], objB[key])) return false;
   }
+
   return true;
 }

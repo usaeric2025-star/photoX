@@ -7,13 +7,10 @@ interface RequirePermissionProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
-
 export function RequirePermission({ permission, children, fallback = null }: RequirePermissionProps) {
   const { can } = usePermission();
-
   if (!can(permission)) {
     return <>{fallback}</>;
   }
-
   return <>{children}</>;
 }

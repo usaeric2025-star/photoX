@@ -29,14 +29,14 @@ export async function safeAsync<T>(
     
     if (!isNoise) {
       if (!silent) {
-        ErrorFactory.handleError(error, context);
+        ErrorFactory.handle(error, { context });
       } else {
         logger.warn(`[SafeAsync] Suppressed Error in ${context}:`, error);
       }
     }
-    
+
     if (rethrow) {
-      throw ErrorFactory.wrap(error, context);
+      throw ErrorFactory.create(message, { originalError: error instanceof Error ? error : new Error(message), context });
     }
     return null;
   } finally {

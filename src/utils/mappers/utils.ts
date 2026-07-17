@@ -26,7 +26,7 @@ export const getThumbnailUrl = (imageUrlOrKey: string, width?: number, height?: 
     if (width) params.set('w', String(width));
     if (height) params.set('h', String(height));
     if (imageHash) params.set('v', imageHash.slice(0, 8));
-    
+
     const query = params.toString();
     const baseUrl = workerUrl.endsWith('/') ? workerUrl.slice(0, -1) : workerUrl;
     return `${baseUrl}/${cleanKey}${query ? `?${query}` : ''}`;
@@ -37,28 +37,31 @@ export const getThumbnailUrl = (imageUrlOrKey: string, width?: number, height?: 
 };
 
 export function normalizeStoredUrl(url: string | undefined | null): string {
-    if (!url) return '';
-    if (url.startsWith('data:')) return url;
-    
-    let processedUrl = url;
-    if (processedUrl.includes('/products/')) {
-        processedUrl = processedUrl
-            .replace('/products/', '/')
-            .replace(/\/(\d+-[a-z0-9]+\.webp)$/i, '/temp-$1');
-    }
-    
-    const match = processedUrl.match(/photox\/(public|thumb|original)\/(.+)/);
-    if (match) {
-        const pathAndFilename = match[0];
-        const r2Base = getEnv('VITE_R2_BASE_URL') || getEnv('VITE_R2_PUBLIC_URL_PREFIX') || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
-        const cleanBase = r2Base.endsWith('/') ? r2Base.slice(0, -1) : r2Base;
-        return `${cleanBase}/${pathAndFilename}`;
-    }
-    
-    return processedUrl;
+  if (!url) return '';
+  if (url.startsWith('data:')) return url;
+
+  let processedUrl = url;
+
+  // Legacy temporary fix for some broken paths
+  if (processedUrl.includes('/products/')) {
+    processedUrl = processedUrl
+      .replace('/products/', '/')
+      .replace(/\/(\d+-[a-z0-9]+\.webp)$/i, '/temp-$1');
+  }
+
+  // Ensure it includes the bucket path
+  const match = processedUrl.match(/photox\/(public|thumb|original)\/(.+)/);
+  if (match) {
+    const pathAndFilename = match[0];
+    const r2Base = getEnv('VITE_R2_BASE_URL') || getEnv('VITE_R2_PUBLIC_URL_PREFIX') || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
+    const cleanBase = r2Base.endsWith('/') ? r2Base.slice(0, -1) : r2Base;
+    return `${cleanBase}/${pathAndFilename}`;
+  }
+
+  return processedUrl;
 }
 
-const mapTranslationField = (value: unknown): { zh: string; en: string; ms: string } => {
+export const mapTranslationField = (value: unknown): { zh: string; en: string; ms: string } => {
   if (!value) return { zh: '', en: '', ms: '' };
 
   let target: unknown = value;
@@ -112,6 +115,7 @@ const mapTranslationField = (value: unknown): { zh: string; en: string; ms: stri
         };
       }
     }
+
     if (unwrappedEn && typeof unwrappedEn === 'object' && !Array.isArray(unwrappedEn)) {
       const uE = unwrappedEn as Record<string, unknown>;
       if ('zh' in uE || 'en' in uE || 'ms' in uE) {
@@ -122,6 +126,7 @@ const mapTranslationField = (value: unknown): { zh: string; en: string; ms: stri
         };
       }
     }
+
     if (unwrappedMs && typeof unwrappedMs === 'object' && !Array.isArray(unwrappedMs)) {
       const uM = unwrappedMs as Record<string, unknown>;
       if ('zh' in uM || 'en' in uM || 'ms' in uM) {
@@ -161,7 +166,7 @@ const mapTranslationField = (value: unknown): { zh: string; en: string; ms: stri
 /**
  * 泛用的欄位資料庫映射工具，減少多個 commands.ts 中的重複程式碼
  */
-const mapFieldsToDb = (
+export const mapFieldsToDb = (
   updates: Record<string, any>,
   allowedFields: string[],
   neverAllowed: string[],
@@ -178,4 +183,3 @@ const mapFieldsToDb = (
 
   return dbUpdates;
 };
-

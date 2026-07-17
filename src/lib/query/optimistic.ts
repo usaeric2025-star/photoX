@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, type InfiniteData, type QueryKey } from '@tanstack/react-query';
-import { photoKeys } from './index.js';
+import { photoKeys } from './keys.js';
 import { Photo } from '#src/types/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
@@ -31,18 +31,18 @@ export function useOptimisticPhotoMutation<TVariables = unknown, TData = unknown
       const idArray = Array.isArray(ids) ? ids : [ids];
 
       // 1. 取消所有照片相關查詢
-      await queryClient.cancelQueries({ queryKey: photoKeys.all });
+      await queryClient.cancelQueries({ queryKey: photoKeys.photos.all });
 
       // 2. 備份舊數據 (列表與詳情)
-      const previousLists = queryClient.getQueriesData<InfiniteData<unknown>>({ queryKey: photoKeys.lists() });
+      const previousLists = queryClient.getQueriesData<InfiniteData<unknown>>({ queryKey: photoKeys.photos.lists() });
       const previousDetails = idArray.map(id => ({
         id,
-        data: queryClient.getQueryData(photoKeys.detail(id))
+        data: queryClient.getQueryData(photoKeys.photos.detail(id))
       }));
 
       // 3. 執行樂觀更新 - 更新列表
       queryClient.setQueriesData<InfiniteData<any>>(
-        { queryKey: photoKeys.lists() },
+        { queryKey: photoKeys.photos.lists() },
         (old) => {
           if (!old) return old;
           return {
@@ -61,8 +61,7 @@ export function useOptimisticPhotoMutation<TVariables = unknown, TData = unknown
 
       // 4. 執行樂觀更新 - 更新詳情
       idArray.forEach(id => {
-        queryClient.setQueryData(photoKeys.detail(id), (old: unknown) => {
-          if (!old) return old;
+        queryClient.setQueryData(photoKeys.photos.detail(id), (old: unknown) => {
           return updater(old as Photo);
         });
       });
@@ -72,16 +71,19 @@ export function useOptimisticPhotoMutation<TVariables = unknown, TData = unknown
     onError: (err, variables, context) => {
       // 錯誤回滾
       const typedContext = context as { previousLists?: [QueryKey, unknown][], previousDetails?: { id: string, data: unknown }[] } | undefined;
+      
       if (typedContext?.previousLists) {
         typedContext.previousLists.forEach(([key, data]) => {
           queryClient.setQueryData(key, data);
         });
       }
+
       if (typedContext?.previousDetails) {
         typedContext.previousDetails.forEach(({ id, data }) => {
-          queryClient.setQueryData(photoKeys.detail(id), data);
+          queryClient.setQueryData(photoKeys.photos.detail(id), data);
         });
       }
+
       ErrorFactory.handle(err, { context: errorContext });
     },
     onSuccess: (data, variables) => {
@@ -90,7 +92,7 @@ export function useOptimisticPhotoMutation<TVariables = unknown, TData = unknown
     onSettled: (data, error, variables) => {
       if (onSettled) onSettled(data, error, variables);
       // 最後確保數據刷新
-      queryClient.invalidateQueries({ queryKey: photoKeys.all });
+      queryClient.invalidateQueries({ queryKey: photoKeys.photos.all });
     }
   });
 }

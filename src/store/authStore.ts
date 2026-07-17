@@ -48,11 +48,38 @@ export const initAuth = async () => {
         emailVerified: !!u.email_confirmed_at,
       };
       userSignal.value = mapped;
-      authLoadingSignal.value = false;
     } else {
       userSignal.value = null;
-      authLoadingSignal.value = false;
     }
+
+    // --- Long-term solution: Restore saved redirect back URL or clean up OAuth params ---
+    if (typeof window !== 'undefined') {
+      try {
+        const savedUrl = storage.getItem('oauth_redirect_back_url');
+        if (savedUrl) {
+          storage.remove('oauth_redirect_back_url');
+          const urlObj = new URL(savedUrl);
+          if (urlObj.origin === window.location.origin) {
+            logger.info('[Auth] Restoring saved redirect-back URL after OAuth:', savedUrl);
+            window.history.replaceState(null, '', urlObj.pathname + urlObj.search + urlObj.hash);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }
+        } else {
+          // Clean up Supabase hash/search params from the address bar if no redirect back URL exists
+          const hash = window.location.hash;
+          const search = window.location.search;
+          if (hash.includes('access_token=') || search.includes('code=')) {
+            window.history.replaceState(null, '', window.location.pathname);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }
+        }
+      } catch (err) {
+        logger.warn('[Auth] Failed to restore saved redirect-back URL or clean up hash:', err);
+      }
+    }
+    // ---------------------------------------------------------------------------------
+
+    authLoadingSignal.value = false;
   }, { 
       context: 'auth-init', 
       onFinally: () => { authLoadingSignal.value = false; } 
@@ -133,7 +160,8 @@ let authListenerInitialized = false;
 export const initAuthListener = () => {
   if (authListenerInitialized) return () => {};
   authListenerInitialized = true;
-  
+
+  // 1. Supabase Auth State Change Listener
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
     if (session?.user) {
       const u = session.user;
@@ -154,6 +182,31 @@ export const initAuthListener = () => {
       authLoadingSignal.value = false;
     }
   });
+
+  // 2. OAuth Popup Message Listener (Moved from main.tsx)
+  const handleMessage = async (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type === 'SUPABASE_AUTH_CALLBACK') {
+      const { search, hash } = event.data;
+      logger.info('[Auth] Received OAuth callback from popup. Syncing session...');
+      
+      // Update address bar so Supabase client can pick up the tokens
+      const newUrl = window.location.pathname + (search || '') + (hash || '');
+      window.history.replaceState(null, '', newUrl);
+      
+      // Trigger session sync
+      await initAuth();
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('message', handleMessage);
+  }
   
-  return () => data?.subscription.unsubscribe();
+  return () => {
+    data?.subscription.unsubscribe();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('message', handleMessage);
+    }
+  };
 };

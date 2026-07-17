@@ -45,7 +45,6 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      
       textArea.setSelectionRange(0, 999999);
       
       const success = document.execCommand('copy');
@@ -53,8 +52,7 @@ export async function copyToClipboard(text: string, options?: CopyOptions): Prom
       return !!success;
     } catch (fallbackErr) {
       logger.error('[copyToClipboard] Fallback also failed:', fallbackErr);
+      return false;
     }
   }
-
-  return false;
 }

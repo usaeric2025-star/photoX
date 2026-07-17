@@ -39,7 +39,7 @@ export function useLightboxInteractions({
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (!e.isPrimary || isZoomed) return;
-
+    
     // Double tap detection
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
@@ -53,26 +53,23 @@ export function useLightboxInteractions({
 
     setPointerStartX(e.clientX);
     setPointerStartY(e.clientY);
-    setDragOffset(0);
-    setDragOffsetY(0);
-    setSwipeDirection(null);
     setIsSwiping(true);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     if (pointerStartX === null || pointerStartY === null) return;
-
+    
     const diffX = e.clientX - pointerStartX;
     const diffY = e.clientY - pointerStartY;
-
+    
     let currentDirection = swipeDirection;
-
+    
     if (!currentDirection) {
       const absX = Math.abs(diffX);
       const absY = Math.abs(diffY);
       const threshold = 10;
-
+      
       if (absX > threshold || absY > threshold) {
         if (absX > absY) {
           currentDirection = 'horizontal';
@@ -107,13 +104,14 @@ export function useLightboxInteractions({
         onClose();
       }
     }
-    
+
     setPointerStartX(null);
     setPointerStartY(null);
+    setIsSwiping(false);
     setDragOffset(0);
     setDragOffsetY(0);
     setSwipeDirection(null);
-    setIsSwiping(false);
+    
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch (err) {}
@@ -122,10 +120,11 @@ export function useLightboxInteractions({
   const onPointerCancel = (e: React.PointerEvent) => {
     setPointerStartX(null);
     setPointerStartY(null);
+    setIsSwiping(false);
     setDragOffset(0);
     setDragOffsetY(0);
     setSwipeDirection(null);
-    setIsSwiping(false);
+    
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch (err) {}

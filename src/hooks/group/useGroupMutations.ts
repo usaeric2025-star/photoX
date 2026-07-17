@@ -1,4 +1,4 @@
-import { useAppMutation } from '#lib/query/index.js';
+import { useAppMutation, queryClient } from '#lib/query/index.js';
 import { useSelectionActions } from '../../hooks/selection/useSelection.js';
 import { useInvalidatePhotos } from '../photo/useInvalidatePhotos.js';
 import { useTranslation } from '../core/index.js';
@@ -11,7 +11,7 @@ import { generateId } from '#lib/id.js';
 /**
  * useGroupMutations
  * 
- * 處理群組相關的所有寫操作（創建、更新、刪除、移動、設為封面等）。
+ * 整合所有群組相關的寫操作。
  */
 export function useGroupMutations() {
   const { clearSelection } = useSelectionActions();
@@ -35,7 +35,7 @@ export function useGroupMutations() {
   });
 
   const deleteMutation = useAppMutation({
-    mutationFn: GroupService.delete,
+    mutationFn: (id: string) => GroupService.delete(id),
     onSuccess: () => {
       showToast.success(t('groupDeleted'));
       invalidateList();
@@ -58,7 +58,7 @@ export function useGroupMutations() {
     },
     onSettled: () => {
       invalidateList();
-    },
+    }
   });
 
   const movePhotosMutation = useOptimisticPhotoMutation({
@@ -68,7 +68,6 @@ export function useGroupMutations() {
       updater: (photo: Photo) => ({
         ...photo,
         groupId: args.groupId,
-        groupName: 'GROUP',
         isGroupCover: false,
         isCover: false,
       } as Photo),
@@ -80,7 +79,7 @@ export function useGroupMutations() {
     },
     onSettled: () => {
       invalidateList();
-    },
+    }
   });
 
   const dissolveMutation = useAppMutation({
@@ -95,13 +94,11 @@ export function useGroupMutations() {
     mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => GroupService.groupPhotos(args.photoIds, args.targetGroupId),
     onMutateOptimistic: (args) => {
       const targetGroupId = args.targetGroupId || generateId();
-      args.targetGroupId = targetGroupId;
       return {
         ids: args.photoIds,
         updater: (photo: Photo) => ({
           ...photo,
           groupId: targetGroupId,
-          groupName: 'GROUP',
           isGroupCover: false,
           isCover: false,
         } as Photo),
@@ -110,11 +107,8 @@ export function useGroupMutations() {
     errorContext: 'combinePhotos',
     onSuccess: (_, variables) => {
       showToast.success(t('mergePhotosSuccess', variables.photoIds.length));
-      clearSelection();
-    },
-    onSettled: () => {
       invalidateList();
-    },
+    }
   });
 
   const removePhotosMutation = useOptimisticPhotoMutation({
@@ -124,7 +118,6 @@ export function useGroupMutations() {
       updater: (photo: Photo) => ({
         ...photo,
         groupId: null,
-        groupName: null,
         isGroupCover: false,
         isCover: false,
       } as Photo),
@@ -132,11 +125,10 @@ export function useGroupMutations() {
     errorContext: 'removePhotos',
     onSuccess: (_, variables) => {
       showToast.success(t('removePhotosSuccess', variables.photoIds.length));
-      clearSelection();
     },
     onSettled: () => {
       invalidateList();
-    },
+    }
   });
 
   return {
@@ -154,21 +146,12 @@ export function useGroupMutations() {
   };
 }
 
-// --- Legacy Compatibility ---
+export function useGroupPhotosMutation() {
+  const { combine } = useGroupMutations();
+  return combine;
+}
 
-export const useGroupPhotosMutation = () => {
-  const { combine, isPending } = useGroupMutations();
-  return { mutateAsync: combine.mutateAsync, isPending };
-};
-
-export const useRemoveFromGroupMutation = () => {
-  const { removePhotos, isPending } = useGroupMutations();
-
-  return { 
-    mutateAsync: (args: { photoIds: string[]; groupId?: string }) => {
-      if (!args.groupId) throw new Error('groupId is required');
-      return removePhotos.mutateAsync({ photoIds: args.photoIds, groupId: args.groupId });
-    },
-    isPending 
-  };
-};
+export function useRemoveFromGroupMutation() {
+  const { removePhotos } = useGroupMutations();
+  return removePhotos;
+}

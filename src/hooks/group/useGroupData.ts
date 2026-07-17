@@ -35,6 +35,7 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
 
   const photos = data?.pages.flatMap(p => p.items) || [];
   const totalCount = data?.pages[0]?.total || 0;
+
   const loading = isGroupPending || isPhotosPending;
   const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
   const error = (groupError || photosError) ? (getErrorMessage(groupError || photosError)) : null;

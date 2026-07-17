@@ -17,12 +17,10 @@ import { useMemo } from 'react';
 export function useDialogHeaderActions(onClose: () => void) {
   const { t } = useTranslation();
   const { commit, isPending, isSubmitting } = usePhotoEditSessionContext();
-  const { modal, photoId } = useFilters();
-  const editPhotoId = modal === 'edit' ? photoId : null;
-  const appLang = useUI((s) => s.appLang);
+  const { modal, photoId: filterPhotoId } = useFilters();
+  const editPhotoId = modal === 'edit' ? filterPhotoId : null;
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  
   const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
   const { setCover } = useGroupMutations();
   const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
@@ -32,8 +30,8 @@ export function useDialogHeaderActions(onClose: () => void) {
     Array.from(tasksMap.values()).find((t) => t.type === 'ai-analyze' && t.state.status === 'processing'),
     [tasksMap]
   );
-  const aiMessage = aiTask?.state.status === 'processing' ? aiTask.state.message : undefined;
   
+  const aiMessage = aiTask?.state.status === 'processing' ? aiTask.state.message : undefined;
   const isPartOfGroup = !!detailPhoto?.groupId;
 
   const onRemoveFromGroup = async () => {
@@ -43,7 +41,7 @@ export function useDialogHeaderActions(onClose: () => void) {
         showToast.success(t('removedFromGroup') || 'Removed from group');
         onClose();
       } catch (e) {
-        ErrorFactory.handle(e, { context: t('removeFromGroupAction') || '移出合組' });
+        ErrorFactory.handle(e as Error, { context: t('removeFromGroupAction') || '移出合組' });
       }
     }
   };
@@ -53,12 +51,11 @@ export function useDialogHeaderActions(onClose: () => void) {
     if (finalImageUrl) {
       try {
         await handleAiAnalyze(finalImageUrl);
-        showToast.success(t('analysisRequestSent') || 'Analysis request sent');
       } catch (e) {
-        ErrorFactory.handle(e, { context: t('aiAnalyzeAction') || 'AI 識別' });
+        ErrorFactory.handle(e as Error, { context: t('aiAnalyzeAction') || 'AI 識別' });
       }
     } else {
-      ErrorFactory.handle(t('photoDataMissing') || 'Photo data missing', { context: t('aiAnalyzeAction') || 'AI 識別' });
+      ErrorFactory.handle(new Error(t('photoDataMissing') || 'Photo data missing'), { context: t('aiAnalyzeAction') || 'AI 識別' });
     }
   };
 

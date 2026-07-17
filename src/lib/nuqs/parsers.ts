@@ -1,4 +1,4 @@
-import { parseAsString, parseAsJson, parseAsBoolean, parseAsInteger, createParser } from 'nuqs';
+import { parseAsString, parseAsJson, parseAsBoolean, parseAsInteger } from 'nuqs';
 import * as v from 'valibot';
 import { parseWithValibot } from '#lib/valibot/adapters/nuqs.js';
 import { SortSchema } from '#lib/valibot/schemas/filters.js';
@@ -27,7 +27,7 @@ export const selectedIdsParser = parseAsJson<string[]>((value) =>
 export const sortParser = parseWithValibot(SortSchema).withDefault('newest');
 
 // Status Parser
-const statusParser = parseAsString.withDefault('all');
+export const statusParser = parseAsString.withDefault('all');
 
 // Batch Parser
 export const batchParser = parseAsBoolean.withDefault(false);
@@ -36,13 +36,16 @@ export const batchParser = parseAsBoolean.withDefault(false);
 export const modalParser = parseAsString.withDefault('none');
 
 // Page Parser (使用 Valibot)
-const pageParser = parseWithValibot(PageSchema).withDefault(1);
+export const pageParser = parseWithValibot(PageSchema).withDefault(1);
+
+// Limit Parser (使用 Valibot)
+export const limitParser = parseWithValibot(LimitSchema).withDefault(20);
 
 // Group ID Parser
 export const groupIdParser = parseAsString.withDefault('');
 
 // View Parser (grid | list)
-const viewParser = parseAsString.withDefault('grid');
+export const viewParser = parseAsString.withDefault('grid');
 
 // Anchor Parser (for scrolling to photo)
 export const anchorParser = parseAsBoolean.withDefault(false);
@@ -51,4 +54,4 @@ export const anchorParser = parseAsBoolean.withDefault(false);
 export const showGroupsCollapsedParser = parseAsBoolean.withDefault(true);
 
 // Columns Parser
-const columnsParser = parseAsInteger.withDefault(3);
+export const columnsParser = parseAsInteger.withDefault(3);

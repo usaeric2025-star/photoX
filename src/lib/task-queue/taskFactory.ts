@@ -55,7 +55,6 @@ export function createTask<T>(config: TaskConfig<T>): string {
     type,
     state: { status: 'queued' } as TaskState,
     createdAt: Date.now(),
-    userId,
     meta,
     execute: async (signal, onProgress) => {
       try {
@@ -71,10 +70,9 @@ export function createTask<T>(config: TaskConfig<T>): string {
         // 統一錯誤處理
         const wrappedError = error instanceof Error ? error : new Error(String(error));
         const userMessage = getErrorMessage(wrappedError);
-        
         logger.error(`[TaskFactory] ${type} 任務失敗: ${id}`, wrappedError);
         ErrorFactory.capture(wrappedError);
-        
+
         // Pass original error or wrap it? Let's just create a new error with userMessage
         const errorToThrow = new Error(userMessage) as Error & { originalError?: Error };
         errorToThrow.originalError = wrappedError;
@@ -114,7 +112,7 @@ export function executeTask<T>(config: TaskConfig<T>): Promise<T> {
   });
 }
 
-function createBatchTasks<T>(
+export function createBatchTasks<T>(
   items: T[],
   config: Omit<TaskConfig<T>, 'execute' | 'meta'> & {
     createPayload: (item: T) => { meta?: Record<string, unknown>, execute: TaskConfig<T>['execute'] }
@@ -129,4 +127,3 @@ function createBatchTasks<T>(
     });
   });
 }
-

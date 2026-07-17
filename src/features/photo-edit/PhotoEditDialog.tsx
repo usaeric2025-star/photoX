@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Modal } from "#src/components/ui/Modal.js";
-import { NativeDialog } from "#src/components/ui/NativeDialog.js";
 import { AppErrorBoundary } from "#src/components/layout/AppErrorBoundary.js";
 import { usePhoto } from "#src/hooks/photo/index.js";
 import { PhotoEditSessionProvider, usePhotoEditSessionContext } from "./hooks/PhotoEditSession.js";
@@ -84,7 +83,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
         )}
       </Modal>
       
-      <NativeDialog
+      <Modal
         id="dirty-confirm-dialog"
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
@@ -102,7 +101,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
             </button>
           </div>
         </div>
-      </NativeDialog>
+      </Modal>
     </>
   );
 }

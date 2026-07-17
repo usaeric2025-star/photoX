@@ -9,7 +9,6 @@ interface ManufacturerSelectProps {
   name: string;
   manufacturers: Manufacturer[];
 }
-
 export const ManufacturerSelect = ({ form, name, manufacturers }: ManufacturerSelectProps) => {
   const { t } = useTranslation();
   return (

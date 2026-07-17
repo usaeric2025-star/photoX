@@ -1,5 +1,4 @@
 import { useForm } from '@tanstack/react-form';
-import { valibotValidator } from '@tanstack/valibot-form-adapter';
 import type * as v from 'valibot';
 
 interface UseAppFormOptions<TData> {
@@ -16,9 +15,9 @@ export function useAppForm<TData>({
     onValueChange
 }: UseAppFormOptions<TData>) {
     const form = useForm({
-        defaultValues,
+        defaultValues: defaultValues as any,
         validators: {
-            onChange: schema as never,
+            onChange: schema as any,
         },
         onSubmit: async ({ value }) => {
             await onSubmit(value as TData);

@@ -16,7 +16,6 @@ export const executeBatchUpload = (
   userId: string = '',
   options: { groupId?: string } = {}
 ) => async (signal: AbortSignal, onProgress: (progress: number, message?: string) => void) => {
-  const results: any[] = [];
   const total = files.length;
   
   if (total === 0) return [];
@@ -59,7 +58,7 @@ export const executeBatchUpload = (
   }
 
   // 2. Stage 1: Hash Calculation (Parallel)
-  onProgress(0.1, `計算哈希 (${0}/${total})...`);
+  onProgress(0.1, `計算哈希 (0/${total})...`);
   let hashedCount = 0;
   const tasks: UploadTask[] = await parallelMap(
     files,
@@ -74,7 +73,7 @@ export const executeBatchUpload = (
 
   if (signal.aborted) throw new Error('Upload aborted');
 
-  // 3. Stage 2: Upload Coordination (Sequential Processing for better stability or limited parallel)
+  // 3. Stage 2: Upload Coordination
   let processedCount = 0;
   let skippedCount = 0;
   let failedCount = 0;
@@ -94,15 +93,14 @@ export const executeBatchUpload = (
         });
 
         processedCount++;
-        
         if (result.duplicate) skippedCount++;
         else if (!result.success) failedCount++;
         
         // Final update for this item
         onProgress(0.2 + (processedCount / total) * 0.8, `上傳中 (${processedCount}/${total})...`);
+        
         return { ...result, name: task.file.name };
       } catch (err) {
-        processedCount++;
         failedCount++;
         logger.error('[TaskQueue] Upload processing error:', err);
         return { success: false, error: String(err), name: task.file.name } as any;

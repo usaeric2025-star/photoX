@@ -25,15 +25,23 @@ export const AdminService = {
           for (const page of typedData.pages) {
             const items = (page.items || page.data || []) as any[];
             for (const item of items) {
-              if (item && typeof item.id === 'string') foundPhotos.set(item.id, item);
+              if (item && typeof item.id === 'string') {
+                foundPhotos.set(item.id, item);
+              }
             }
           }
         } 
         // 處理普通列表數據
         else if (Array.isArray(data)) {
           for (const item of data) {
-            if (item && typeof item.id === 'string') foundPhotos.set(item.id, item);
+            if (item && typeof item.id === 'string') {
+              foundPhotos.set(item.id, item);
+            }
           }
+        }
+        // 處理單個照片數據
+        else if (typeof data === 'object' && typedData.id) {
+          foundPhotos.set(typedData.id, typedData);
         }
       }
       return Array.from(foundPhotos.values());
@@ -48,18 +56,17 @@ export const AdminService = {
    */
   filterPhotosWithGroups: (allPhotos: any[], targetIds: string[]) => {
     if (targetIds.length === 0) return allPhotos;
-
     const selectedGroupIds = new Set<string>();
+    const targetIdSet = new Set(targetIds.map(id => String(id)));
+
     allPhotos.forEach((p) => {
-      if (targetIds.includes(String(p.id)) && p.groupId) {
+      if (targetIdSet.has(String(p.id)) && p.groupId) {
         selectedGroupIds.add(String(p.groupId));
       }
     });
     
-    const groupIdsArray = Array.from(selectedGroupIds);
-
     return allPhotos.filter((p) => 
-      targetIds.includes(String(p.id)) || (p.groupId && groupIdsArray.includes(String(p.groupId)))
+      targetIdSet.has(String(p.id)) || (p.groupId && selectedGroupIds.has(String(p.groupId)))
     );
   }
 };

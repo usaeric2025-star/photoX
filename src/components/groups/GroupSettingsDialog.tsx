@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react';
-import { NativeDialog } from "#src/components/ui/NativeDialog.js";
-import { ProductGroup, Dimension } from '#src/types/index.js';
+import { Modal } from "#src/components/ui/Modal.js";
+import { ProductGroup } from '#src/types/index.js';
 import { useTranslation } from '#src/hooks/index.js';
-import { Input } from "#src/components/shared/Input.js";
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { Button } from "#src/components/ui/Button.js";
 import { Icon } from '#src/components/ui/Icon.js';
-import { TranslationType } from '#src/locales/index.js';
 import { useForm } from '@tanstack/react-form';
 
 interface GroupSettingsDialogProps {
@@ -28,7 +26,7 @@ interface GroupSettingsHeaderProps {
   t: (key: string, ...args: unknown[]) => string;
 }
 
-function GroupSettingsHeader({ groupData, activeGroupId, onUngroup, setShowGroupSettings, t }: GroupSettingsHeaderProps) {
+function GroupSettingsHeader({ activeGroupId, onUngroup, setShowGroupSettings, t }: GroupSettingsHeaderProps) {
   const confirm = useConfirm();
   return (
     <div className="flex items-center justify-between p-4 border-b">
@@ -128,11 +126,11 @@ function GroupSettingsContent({ groupData, handleUpdateGroupData, t, setShowGrou
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('groupDesc')}</label>
               <textarea
+                rows={4}
                 name={field.name}
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
-                rows={4}
                 className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border"
                 placeholder={t('descPlaceholder')}
               />
@@ -159,25 +157,24 @@ function GroupSettingsContent({ groupData, handleUpdateGroupData, t, setShowGrou
 }
 
 export function GroupSettingsDialog(props: GroupSettingsDialogProps) {
-  const childProps = {
-    ...props
-  };
-
-  const headerProps = {
-    groupData: childProps.groupData,
-    activeGroupId: childProps.activeGroupId,
-    onUngroup: childProps.onUngroup,
-    setShowGroupSettings: childProps.setShowGroupSettings,
-    t: childProps.t,
-  };
-
+  const { t } = useTranslation();
   return (
-    <NativeDialog id="group-settings-dialog" open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding showCloseButton={false}>
+    <Modal id="group-settings-dialog" open={props.showGroupSettings} onClose={() => props.setShowGroupSettings(false)} size="lg" hidePadding showCloseButton={false}>
       <div className="flex flex-col bg-white overflow-hidden max-h-[85vh] w-full max-w-[500px] h-full sm:h-[800px]">
-        <GroupSettingsHeader {...headerProps} />
-        <GroupSettingsContent {...childProps} />
+        <GroupSettingsHeader 
+          groupData={props.groupData} 
+          activeGroupId={props.activeGroupId} 
+          onUngroup={props.onUngroup} 
+          setShowGroupSettings={props.setShowGroupSettings} 
+          t={t} 
+        />
+        <GroupSettingsContent 
+          groupData={props.groupData} 
+          handleUpdateGroupData={props.handleUpdateGroupData} 
+          t={t} 
+          setShowGroupSettings={props.setShowGroupSettings} 
+        />
       </div>
-    </NativeDialog>
+    </Modal>
   );
-};
-
+}

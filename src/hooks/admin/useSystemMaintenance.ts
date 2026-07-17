@@ -1,4 +1,4 @@
-import { useAppQuery, useAppMutation, queryClient } from '#lib/query/index.js';
+import { useAppQuery, useAppMutation } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { STALE_TIMES } from '#lib/query/config.js';
@@ -58,7 +58,7 @@ export function useSystemMaintenance() {
       label: labels.systemMaint,
       type: 'repair',
       execute: async (signal, onProgress) => {
-        onProgress(0, labels.diagnosing);
+        onProgress(0, labels.processing);
         const data = await ErrorFactory.unwrap<unknown>(api.admin.maintenance['daily-cleanup'].$post(), labels.mutationFailed);
         onProgress(1, labels.diagHealthy);
         return data;

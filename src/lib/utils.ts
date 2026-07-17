@@ -1,7 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { showToast } from '#lib/ui/toast.js';
-import { formatters } from "#src/utils/formatters.js"
 import { generateId } from "#lib/id.js"
 
 export function cn(...inputs: ClassValue[]) {
@@ -13,7 +11,7 @@ export function generateTraceId(): string {
 }
 
 /**
- * Converts a string to Title Case.
+ * Ensures a value is always an array.
  */
 export function safeArray<T>(arr: unknown): T[] {
   if (!arr) return [];
@@ -46,7 +44,7 @@ export function getPathFromUrl(url: string): string {
 }
 
 export function withTimeout<T>(promise: Promise<T>, ms: number, labelOrError?: string): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout>;
+  let timeoutId: any;
   const timeout = new Promise<never>((_, reject) => {
     const msg = labelOrError
       ? `Operation [${labelOrError}] timed out after ${ms}ms`
@@ -56,7 +54,7 @@ export function withTimeout<T>(promise: Promise<T>, ms: number, labelOrError?: s
   
   const actualPromise = Promise.resolve(promise);
   actualPromise.catch(() => {}); // prevent unhandled rejections if timeout wins
-  
+
   return Promise.race([actualPromise, timeout]).finally(() => {
     clearTimeout(timeoutId);
   });

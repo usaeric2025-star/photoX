@@ -1,7 +1,6 @@
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { 
   QueryClient,
-  QueryClientProvider,
   useQuery,
   useInfiniteQuery,
   useMutation,
@@ -17,6 +16,7 @@ import * as idb from 'idb-keyval';
 import { showToast } from '#lib/ui/toast.js';
 
 export * from '@tanstack/react-query';
+export * from './keys.js';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,7 +65,7 @@ export function useAppQuery<TData = unknown, TError = Error>(
       try {
         return await fetcherFn(...queryKey);
       } catch (error) {
-                throw error;
+        throw error;
       }
     },
     ...options,
@@ -87,7 +87,7 @@ export function useAppInfiniteQuery<TData = unknown, TError = Error, TPageParam 
       try {
         return await fetcherFn(pageParam as TPageParam);
       } catch (error) {
-                throw error;
+        throw error;
       }
     },
     ...options,
@@ -134,30 +134,14 @@ export function useAppMutation<TData = unknown, TVariables = unknown, TContext =
         onSuccess(...args);
       }
     },
-    onError: (...args) => {
+    onError: (error, ...args) => {
       if (errorContext) {
-              }
+        ErrorFactory.handle(error, { context: errorContext });
+      }
       if (onError) {
-        onError(...args);
+        onError(error, ...args);
       }
     },
     ...rest
   });
 }
-
-// Query Key Factory
-export const photoKeys = {
-  all: ['photos'] as const,
-  lists: () => [...photoKeys.all, 'list'] as const,
-  list: (filters: Record<string, unknown>) => [...photoKeys.lists(), filters] as const,
-  details: () => [...photoKeys.all, 'detail'] as const,
-  detail: (id: string) => [...photoKeys.details(), id] as const,
-};
-
-const groupKeys = {
-  all: ['groups'] as const,
-  lists: () => [...groupKeys.all, 'list'] as const,
-  list: (filters: Record<string, unknown>) => [...groupKeys.lists(), filters] as const,
-  details: () => [...groupKeys.all, 'detail'] as const,
-  detail: (id: string) => [...groupKeys.details(), id] as const,
-};

@@ -1,8 +1,8 @@
+import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { Button } from '#src/components/ui/Button.js';
-import { Dimension, TranslationType } from '#src/types/index.js';
-import { safeArray } from '#lib/utils.js';
+import { Dimension } from '#src/types/index.js';
 import { showToast } from '#lib/ui/toast.js';
+import { DimensionItem } from './components/DimensionItem.js';
 
 interface DimensionEditorProps {
   dimensions: Dimension[];
@@ -13,8 +13,11 @@ interface DimensionEditorProps {
   t: (key: string, ...args: unknown[]) => string;
 }
 
-import { DimensionItem } from './components/DimensionItem.js';
-
+/**
+ * DimensionEditor
+ * 
+ * 照片尺寸編輯器，支持手動輸入與 AI 識別。
+ */
 export function DimensionEditor({
   dimensions,
   onChange,
@@ -40,7 +43,7 @@ export function DimensionEditor({
     if (wMatch) newDims[idx].width = parseFloat(wMatch[1]);
     if (lMatch) newDims[idx].length = parseFloat(lMatch[1]);
     else if (dMatch) newDims[idx].length = parseFloat(dMatch[1]);
-
+    
     onChange(newDims);
   };
 
@@ -63,7 +66,7 @@ export function DimensionEditor({
     <div className="space-y-3 pt-2">
       <div className="flex items-center justify-between pl-1">
         <div className="flex items-center gap-1">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">{t('dimensionsTitle')}</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">{t('dimensionsTitle') || '尺寸 / DIMENSIONS'}</span>
           <button 
             type="button"
             onClick={() => showToast.info('AI 识别可自动提取照片中的尺寸规格信息')}
@@ -79,7 +82,7 @@ export function DimensionEditor({
               onClick={onAiAnalyze}
               disabled={isAnalyzing}
               className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-xl border transition-all shadow-sm ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}
-              title={t('aiRecognize')}
+              title={t('aiRecognize') || 'AI 識別'}
             >
               {isAnalyzing ? (
                 <div className="w-4 h-4 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
@@ -89,10 +92,10 @@ export function DimensionEditor({
             </button>
           )}
           <button 
-            onClick={onAddDimension}
             type="button"
+            onClick={onAddDimension}
             className="flex items-center justify-center w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 transition-all active:scale-95 shadow-sm"
-            title={t('addSpec')}
+            title={t('addSpec') || '新增規格'}
           >
             <Icon name="plus" size={20} />
           </button>
@@ -116,4 +119,4 @@ export function DimensionEditor({
       </div>
     </div>
   );
-};
+}

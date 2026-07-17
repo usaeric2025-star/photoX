@@ -3,7 +3,6 @@ import { queryKeys } from '#lib/query/keys.js';
 import { scheduler } from './scheduler.js';
 
 type FlushableTimeout = ReturnType<typeof setTimeout> & { flushed?: boolean };
-
 let invalidateTimer: FlushableTimeout | null = null;
 let pendingInvalidations = new Set<string>();
 
@@ -17,7 +16,6 @@ export function setupQuerySync(): () => void {
         pendingInvalidations.add('photos_list');
         scheduleInvalidation();
         break;
-
       case 'ai-analyze':
         // ✅ 本地更新單條數據（不需防抖）
         if (task.meta?.photoId) {
@@ -30,7 +28,6 @@ export function setupQuerySync(): () => void {
           queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', String(task.meta.photoId)] });
         }
         break;
-
       case 'repair':
         pendingInvalidations.add('diagnostics');
         scheduleInvalidation();
@@ -74,15 +71,15 @@ function flushInvalidations() {
     }
   });
 
-  if (invalidateTimer) {
-    clearTimeout(invalidateTimer);
-    invalidateTimer = null;
-  }
+  invalidateTimer = null;
 }
 
 // ✅ HMR 安全
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
-    flushInvalidations();
+    if (invalidateTimer) {
+      clearTimeout(invalidateTimer);
+      flushInvalidations();
+    }
   });
 }

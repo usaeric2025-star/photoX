@@ -31,6 +31,7 @@ const client = hc<AppType>(getBaseUrl(), {
     if (token) {
       return { Authorization: `Bearer ${token}` };
     }
+
     return {};
   },
   fetch: async (input, init) => {
@@ -47,12 +48,14 @@ const client = hc<AppType>(getBaseUrl(), {
       }
       
       const err = ErrorFactory.fromApiResponse(errorData, `${response.status} ${response.statusText}`);
+      
       // Automatically pop up toast for all 4xx/5xx errors
       ErrorFactory.handle(err, { context: 'API Request' });
     }
-    
+
     return response;
   }
 });
 
 export const api = client.api;
+export const rawApi = client;

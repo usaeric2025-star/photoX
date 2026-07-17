@@ -34,14 +34,13 @@ export const showToast = {
       
       const err = messageOrError as AppErrorLike & Record<string, unknown>;
       userMessage = err.userMessage || err.message || userMessage;
-      
+
       const extractSystemMsg = (e: unknown): string => {
         if (!e) return '';
         if (typeof e === 'string') return e;
         const obj = e as Record<string, unknown>;
         
         let details = '';
-        
         // Extract diagnostic details from context (e.g. upload failures list or field validations)
         if (obj.context && typeof obj.context === 'object') {
           const ctx = obj.context as Record<string, unknown>;
@@ -56,34 +55,34 @@ export const showToast = {
           } else if (ctx.fields && typeof ctx.fields === 'object') {
             details += ` [验证详情: ${JSON.stringify(ctx.fields)}]`;
           }
-          
+
           if (ctx.original) {
             return extractSystemMsg(ctx.original) + details;
           }
         }
-        
+
         if (obj.cause) {
           return extractSystemMsg(obj.cause) + details;
         }
-        
+
         if (obj.message) {
           return String(obj.message) + details;
         }
-        
+
         return JSON.stringify(e).substring(0, 500) + details;
       };
 
       systemMessage = extractSystemMsg(err);
-      
+
       // Extract code and traceId from either flat or nested backend formats
       if (err.error && typeof err.error === 'object') {
-        code = err.error.code || err.code || 'UNKNOWN_ERROR';
-        traceId = err.error.traceId || err.traceId || traceId;
+        const nested = err.error as Record<string, unknown>;
+        code = String(nested.code || err.code || 'UNKNOWN_ERROR');
+        traceId = String(nested.traceId || err.traceId || traceId);
       } else {
-        code = err.code || 'UNKNOWN_ERROR';
-        traceId = err.traceId || traceId;
+        code = String(err.code || 'UNKNOWN_ERROR');
+        traceId = String(err.traceId || traceId);
       }
-      
       timestamp = err.timestamp || '';
     } else {
       userMessage = String(messageOrError || userMessage);
@@ -91,7 +90,7 @@ export const showToast = {
 
     if (!traceId) traceId = Math.random().toString(36).substring(2, 10).toUpperCase();
     if (!timestamp) timestamp = new Date().toLocaleString('zh-CN');
-    
+
     const diagnosticsText = [
       `--- 诊断报告 ---`,
       `时间: ${timestamp}`,
@@ -99,9 +98,8 @@ export const showToast = {
       `ID: ${traceId}`,
       `信息: ${systemMessage || userMessage}`
     ].join('\n');
-    
+
     return toast.error(userMessage, {
-      id: options?.id,
       duration: options?.duration || 6000,
       action: {
         label: '复制诊断',
@@ -113,25 +111,23 @@ export const showToast = {
       }
     });
   },
-    
+
   info: (message: string, options?: ExternalToast) => 
     toast.info(message, {
-      id: options?.id,
       duration: options?.duration || 3000,
     }),
 
   warning: (message: string, options?: ExternalToast) => 
     toast.warning(message, {
-      id: options?.id,
       duration: options?.duration || 4000,
     }),
-    
+
   loading: (message: string, options?: ExternalToast) => 
     toast.loading(message, {
       id: options?.id,
     }),
-    
-  dismiss: (toastId?: string) => {
+
+  dismiss: (toastId?: string | number) => {
     toast.dismiss(toastId);
   }
 };

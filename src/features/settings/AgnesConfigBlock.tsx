@@ -24,6 +24,11 @@ interface AgnesConfigBlockProps {
   t: (key: string, ...args: unknown[]) => string;
 }
 
+/**
+ * AgnesConfigBlock
+ * 
+ * Agnes AI 服務配置區塊。
+ */
 export function AgnesConfigBlock({
   keysStatus,
   isEditingAgnes,
@@ -38,7 +43,6 @@ export function AgnesConfigBlock({
   handleTest,
   isSaving,
   isTesting,
-  appLang,
   t
 }: AgnesConfigBlockProps) {
   return (
@@ -49,7 +53,7 @@ export function AgnesConfigBlock({
            <p className="text-[8px] text-blue-900/40 font-bold uppercase tracking-widest">集成原生引擎 / Native Engine</p>
         </div>
         <div className="flex items-center gap-2">
-          {keysStatus.agnes && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">{t('active')}</div>}
+          {keysStatus.agnes && <div className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black uppercase">{t('active') || '已啟用'}</div>}
           <button 
             onClick={() => {
               setIsEditingAgnes(!isEditingAgnes);
@@ -84,7 +88,7 @@ export function AgnesConfigBlock({
           </div>
           
           <div className="space-y-1 mt-2 mb-2">
-            <label className="text-[10px] font-bold text-blue-900/60 block">模型型号</label>
+            <label className="text-[10px] font-bold text-blue-900/60 block">模型型号 / Model</label>
             <input
                 type="text"
                 placeholder="例如: gemini-2.0-flash-exp"
@@ -94,7 +98,7 @@ export function AgnesConfigBlock({
                 onBlur={() => handleSaveModel('agnes', agnesModel)}
             />
           </div>
-          
+
           <button 
             onClick={() => handleTest('agnes')} 
             disabled={isTesting !== null} 

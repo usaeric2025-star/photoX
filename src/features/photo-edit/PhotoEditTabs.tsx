@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Tabs } from "#src/components/shared/Tabs.js";
 import { cn } from "#lib/utils.js";
 import { BasicInfoTab } from "./BasicInfoTab.js";
@@ -8,10 +8,14 @@ import { AISourceTab } from "./AISourceTab.js";
 import { useUI } from '#lib/store/index.js';
 import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 
+/**
+ * PhotoEditTabs
+ * 
+ * 照片編輯對話框中的分頁容器。
+ */
 export function PhotoEditTabs() {
   const { photoId } = usePhotoEditSessionContext();
   const appLang = useUI((s) => s.appLang);
-
   const [activeTab, setActiveTab] = useState('basic');
   const [loadedTabs, setLoadedTabs] = useState<string[]>(['basic']);
 

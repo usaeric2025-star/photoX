@@ -16,11 +16,11 @@ class Logger {
   }
 
   warn(...args: unknown[]) {
-    console.warn('[WARN]', ...args);
+    if (this.enabled || !isBrowser) console.warn('[WARN]', ...args);
   }
 
   error(...args: unknown[]) {
-    console.error('[ERROR]', ...args);
+    if (this.enabled || !isBrowser) console.error('[ERROR]', ...args);
   }
 
   // 性能计时
@@ -63,5 +63,5 @@ export const logger = new Logger();
 
 // 挂载到 window 方便调试
 if (isDev && typeof window !== 'undefined') {
-  (window as Window & { logger?: Logger }).logger = logger;
+  (window as any).logger = logger;
 }

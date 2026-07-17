@@ -21,7 +21,6 @@ export const SettingsService = {
         settingsResponse,
         'Initialize Settings & Auth APIs failed'
       );
-      
       return { 
         app_name: 'photoX',
         ...settingsData
@@ -29,11 +28,10 @@ export const SettingsService = {
     } catch (e) {
       ErrorFactory.handle(e, { context: 'fetchPublicSettings' });
       return {
-        app_name: 'photoX',
         passcode_enabled: false,
         manufacturers: [],
         tags: []
-      } as AppSettings;
+      } as unknown as AppSettings;
     }
   },
 
@@ -51,13 +49,13 @@ export const SettingsService = {
           payload[key] = value;
         }
       });
-
+      
       if (rawPayload.provider) {
         void api.admin.settings['save-provider'].$post({
           json: { provider: rawPayload.provider }
         });
       }
-
+      
       if (rawPayload.pinned_tags || rawPayload.hot_tags_count !== undefined) {
         payload.tags_json = JSON.stringify({
           pinned_tags: rawPayload.pinned_tags || [],
@@ -67,14 +65,13 @@ export const SettingsService = {
       }
 
       payload.updated_at = new Date().toISOString();
-
+      
       await ErrorFactory.unwrap<unknown>(
         api.admin.settings['save-settings'].$post({
-          json: { settingsPayload: payload }
+          json: { settingsPayload: payload as any }
         }),
         '保存设置失败'
       );
-      
       return true;
     } catch (err) {
       throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'saveSettings');
@@ -89,22 +86,21 @@ export const SettingsService = {
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(fileName, file, { upsert: true });
-
+        
       if (uploadError) {
         throw ErrorFactory.wrap(uploadError, 'uploadLogo', fileName);
       }
-
+      
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(fileName);
-
+        
       await ErrorFactory.unwrap<unknown>(
         api.admin.settings['upsert-logo'].$post({
           json: { url: publicUrl }
         }),
         '更新Logo设置失败'
       );
-
       return publicUrl;
     } catch (err: unknown) {
       throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'uploadLogo');

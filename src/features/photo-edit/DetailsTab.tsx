@@ -4,32 +4,32 @@ import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 import { DimensionEditor } from './DimensionEditor.js';
 import { Dimension } from '#src/types/index.js';
 import { safeArray } from '#lib/utils.js';
-import { useUI, useSignal } from '#lib/store/index.js';
 import { usePhoto, useFilters, useTranslation } from '#src/hooks/index.js';
 import { showToast } from '#lib/ui/toast.js';
 import { usePhotoEditAI } from './hooks/usePhotoAI.js';
-import { AppField } from '#lib/forms/AppField.js';
 import { MultilingualInput } from '#src/components/shared/MultilingualInput.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 
+/**
+ * DetailsTab
+ * 
+ * 照片編輯對話框中的詳細信息（尺寸、描述）分頁。
+ */
 export function DetailsTab() {
   const { form } = usePhotoEditSessionContext();
   const { modal, photoId } = useFilters();
-  const appLang = useUI((s) => s.appLang);
-  
+  const { t } = useTranslation();
   
   const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
   const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
-
-  const { t } = useTranslation();
 
   const onAiAnalyze = async () => {
     if (detailPhoto?.imageUrl) {
       try {
         await handleAiAnalyze(undefined, detailPhoto.imageUrl);
-        showToast.success(t('analysisSent'));
+        showToast.success(t('analysisSent') || '分析請求已發送');
       } catch (e) {
-        ErrorFactory.handle(e, { context: t('aiRecognize') });
+        ErrorFactory.handle(e as Error, { context: t('aiRecognize') || 'AI 識別' });
       }
     }
   };
@@ -38,11 +38,11 @@ export function DetailsTab() {
     if (detailPhoto?.id) {
       const success = await copyToClipboard(detailPhoto.id);
       if (success) {
-        showToast.success(t('idCopied'));
+        showToast.success(t('idCopied') || 'ID 已複製');
       }
     }
   };
-  
+
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex items-center justify-between px-1">
@@ -58,7 +58,7 @@ export function DetailsTab() {
         </div>
       </div>
 
-      <AppField form={form} name="dimensions">
+      <form.Field name="dimensions">
         {({ state, handleChange }) => (
           <DimensionEditor 
             dimensions={safeArray<Dimension>(state.value as Dimension[] | null | undefined)}
@@ -69,13 +69,12 @@ export function DetailsTab() {
             t={t}
           />
         )}
-      </AppField>
+      </form.Field>
 
       <div className="space-y-4">
         <div className="flex items-center px-1 border-b border-slate-100 pb-2">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">物品说明 / DESCRIPTION</span>
         </div>
-
         <div className="space-y-4">
           <MultilingualInput form={form} name="description" type="textarea" />
         </div>

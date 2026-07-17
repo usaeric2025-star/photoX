@@ -63,5 +63,3 @@ const taskActions = {
 };
 
 export const { addTask, updateTask, updateTaskState, removeTask, clearAll } = taskActions;
-
-

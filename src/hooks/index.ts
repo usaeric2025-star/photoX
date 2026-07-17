@@ -21,6 +21,7 @@ export * from './core/index.js';
 export * from './admin/index.js';
 export * from './photo/index.js';
 export * from './group/index.js';
+export { useGroupPhotosMutation, useRemoveFromGroupMutation } from './group/index.js';
 export * from './metadata/index.js';
 export * from './settings/index.js';
 export * from './selection/index.js';

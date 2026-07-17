@@ -14,3 +14,8 @@ export * from './useGlobalTasks.js';
  * 核心執行邏輯 (診斷子任務)
  */
 export * from './useMaintenanceExecution.js';
+
+/**
+ * 管理員業務邏輯服務
+ */
+export * from './AdminService.js';

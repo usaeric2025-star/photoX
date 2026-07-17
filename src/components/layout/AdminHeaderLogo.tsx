@@ -1,9 +1,7 @@
 import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useUI, useTranslation, usePermission } from '#src/hooks/index.js';
-import { UIStoreState } from '#lib/store/index.js';
-
+import { useTranslation, usePermission } from '#src/hooks/index.js';
 import { Theme } from '#src/types/index.js';
 
 interface AdminHeaderLogoProps {
@@ -13,10 +11,9 @@ interface AdminHeaderLogoProps {
 }
 
 export function AdminHeaderLogo({ logoUrl, totalCount, theme }: AdminHeaderLogoProps) {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const [imgError, setImgError] = React.useState(false);
   const { role } = usePermission();
-
   const showDefaultLogo = !logoUrl || logoUrl.trim() === '' || imgError;
 
   return (
@@ -52,7 +49,6 @@ export function AdminHeaderLogo({ logoUrl, totalCount, theme }: AdminHeaderLogoP
           )}
         </div>
       )}
-
       <div className={cn("flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
         <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{t('totalStock')}</span>
         <span className={cn("shrink-0", theme.badgeVal)}>

@@ -34,7 +34,7 @@ export function validateDimension(dim: Dimension | null | undefined): Dimension 
   if (u === 'in' || u === 'inches' || u === 'inch') unit = 'inch';
   else if (u === 'cm' || u === 'centimeter' || u === 'centimetres') unit = 'cm';
   else if (u === 'mm' || u === 'millimeter' || u === 'millimetres') unit = 'mm';
-  
+
   return {
     ...dim,
     unit,

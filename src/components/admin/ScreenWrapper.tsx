@@ -15,6 +15,7 @@ export function ScreenWrapper({ children, onClose, title }: ScreenWrapperProps) 
           {title && <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">{title}</h2>}
         </div>
         <button 
+          type="button"
           onClick={onClose} 
           className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-900"
         >

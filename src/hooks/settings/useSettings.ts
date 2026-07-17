@@ -9,14 +9,14 @@ const useSettingsMutations = () => {
   const updateMutation = useAppMutation({
     mutationFn: SettingsService.save,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.settings.public() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings.all });
     }
   });
 
   const uploadMutation = useAppMutation({
     mutationFn: SettingsService.uploadLogo,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.settings.public() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings.all });
     }
   });
 
@@ -43,7 +43,7 @@ export function useSettings() {
     isPending,
     updateSettings,
     agnesApiKey: settings?.agnes_api_key,
-    accessPasscode: settings?.accessPasscode,
+    accessPasscode: (settings as any)?.access_passcode,
     updateSettingsSync: updateSettings,
   }), [settings, isPending, updateSettings]);
 }

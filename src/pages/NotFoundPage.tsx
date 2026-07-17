@@ -3,6 +3,8 @@ import { AppLink } from '#src/components/router/AppLink.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { ErrorFactory } from '#lib/error/index.js';
 import { useTranslation } from '#src/hooks/index.js';
+import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { isSystemPath } from '#src/lib/routing.js';
 
 interface NotFoundPageProps {
   isTransitionAllowed?: boolean;
@@ -10,40 +12,20 @@ interface NotFoundPageProps {
   [key: string]: any;
 }
 
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
-
 export function NotFoundPage({ isTransitionAllowed = true }: NotFoundPageProps) {
   const { t } = useTranslation();
   const [pathname] = useNormalizedLocation();
-
+  
   // Detect and bypass transition-induced false positive 404s
   const isTransition = React.useMemo(() => {
     if (!isTransitionAllowed) return false;
     if (!pathname) return false;
     
-    // Normalize path to strip trailing slash for matching (unless it's exactly "/")
-    const normPath = pathname !== '/' && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-    
-    // Public routes
-    if (normPath === '/') return true;
-    if (normPath.startsWith('/photo/')) return true;
-    if (normPath.startsWith('/group/')) return true;
-
-    // Admin, settings, or diagnostics routes (consistent with RouterOrchestrator)
-    if (
-      normPath.startsWith('/admin') || 
-      normPath.startsWith('/settings') || 
-      normPath.startsWith('/diagnostics')
-    ) {
-      return true;
-    }
-
-    return false;
-  }, [pathname]);
+    return isSystemPath(pathname);
+  }, [pathname, isTransitionAllowed]);
 
   React.useEffect(() => {
     if (isTransition) return;
-    
     // Log diagnostics only for actual invalid pages
     ErrorFactory.capture(new Error(`404: ${pathname}`));
   }, [isTransition, pathname]);
@@ -51,7 +33,6 @@ export function NotFoundPage({ isTransitionAllowed = true }: NotFoundPageProps) 
   if (isTransition) {
     return null;
   }
-
   
   // Decide what kind of 404 this is
   const config = React.useMemo(() => {
@@ -76,7 +57,6 @@ export function NotFoundPage({ isTransitionAllowed = true }: NotFoundPageProps) 
         icon: 'file-warning'
       };
     }
-    
     return {
       title: t('pathNotFoundTitle') || 'Page Not Found',
       description: t('pathNotFoundDesc', pathname) || `Path "${pathname}" not found`,
@@ -93,12 +73,12 @@ export function NotFoundPage({ isTransitionAllowed = true }: NotFoundPageProps) 
             <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
           </div>
         </div>
-
+        
         <h1 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">{config.title}</h1>
         <p className="text-slate-500 leading-relaxed mb-8 text-[15px]">
           {config.description}
         </p>
-
+        
         <div className="space-y-3">
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-left overflow-hidden">
             <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">{t('errorDiagnose') || 'Diagnosis'}</p>
@@ -108,7 +88,7 @@ export function NotFoundPage({ isTransitionAllowed = true }: NotFoundPageProps) 
               Referer: {document.referrer || 'Direct'}
             </code>
           </div>
-
+          
           <div className="grid grid-cols-2 gap-3 pt-4">
             <AppLink 
               to="/" 

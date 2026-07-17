@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { cn } from "#lib/utils.js";
 import { motion } from 'lite-sleek';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
-import { usePermission } from '#src/hooks/core/auth/usePermission.js';
 import { useUI } from '#lib/store/index.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 import { Photo } from '#src/types/photo.js';
@@ -25,6 +24,11 @@ interface PhotoLightboxProps {
   onEdit?: (photo: Photo) => void;
 }
 
+/**
+ * PhotoLightbox
+ * 
+ * 照片燈箱組件，支持全屏瀏覽、縮略圖導航、信息展示與 AI 屬性編輯。
+ */
 export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const { 
     isOpen: hookIsOpen, 
@@ -42,14 +46,15 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const currentIndex = props.initialIndex ?? hookIndex;
   const isOpen = props.isOpen ?? hookIsOpen;
   const onClose = props.onClose || hookClose;
+  
   const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
   const currentDescLang = useUI(s => s.descLang);
   const patch = useUI(s => s.patch);
-  
+
   // Auto-fetch photo if we are deep-linked but have no slides loaded
   const needsDeepLinkFetch = isOpen && sourcePhotos.length === 0 && !!queryPhotoId;
   const { data: deepLinkPhoto, isLoading: isDeepLinkLoading } = usePhoto(needsDeepLinkFetch ? queryPhotoId : null);
-  
+
   const finalSourcePhotos = useMemo(() => {
     if (sourcePhotos.length > 0) return sourcePhotos;
     if (deepLinkPhoto) return [deepLinkPhoto];
@@ -68,9 +73,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     try {
         patch({ descLang: newLang });
     } catch (e) {
-        ErrorFactory.handleError(e, 'Failed to change language');
+        ErrorFactory.handle(e as Error, { context: 'Failed to change language' });
     }
   };
+
   const normalizeSlide = (slide: Photo | { original: Photo } | LightboxSlide): Photo | { original: Photo } => {
     if (slide && typeof slide === 'object') {
         if ('original' in slide) return slide as { original: Photo };
@@ -87,7 +93,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
           name: (slide as LightboxSlide).title || '',
           categoryId: null,
           manufacturerId: null,
-          description: { zh: (slide as LightboxSlide).description || '', en: (slide as LightboxSlide).description || '' },
+          description: { zh: (slide as LightboxSlide).description || '', en: (slide as LightboxSlide).description || '', ms: '' },
           imageUrl: (slide as LightboxSlide).src,
           thumbnailSmUrl: (slide as LightboxSlide).src,
           thumbnailMdUrl: (slide as LightboxSlide).src,
@@ -156,7 +162,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   }, [effectivePhotos, setLightboxIndex, setPhotoId]);
 
   if (!isOpen || isEditing) return null;
-  
+
   if (isDeepLinkLoading) {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col font-sans select-none items-center justify-center">
@@ -176,9 +182,8 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   }
 
   if (effectivePhotos.length === 0) return null;
-  
   if (!baseActivePhoto) return null;
-  
+
   const activePhoto = activePhotoDetails || (('original' in baseActivePhoto)
      ? (baseActivePhoto as { original: Photo }).original
      : (baseActivePhoto as Photo));
@@ -214,10 +219,9 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         {/* Info Panel */}
         <LightboxInfo
           key={lang}
-          currentPhoto={activePhoto}
-          showInfo={showInfo}
           lang={lang}
           onLangChange={handleLangChange}
+          showInfo={showInfo}
         />
 
         {/* Main Stage */}
@@ -226,7 +230,6 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         {/* Thumbnails */}
         <LightboxThumbnails
           photos={effectivePhotos}
-          currentIndex={currentIndex}
           isOpen={isOpen}
           onSelect={handleSelect}
         />

@@ -3,7 +3,6 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { useAppQuery } from '#lib/query/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { api } from '#lib/api.js';
-import { PhotoListItem } from '#src/types/api.js';
 
 interface StatCardProps {
   title: string;
@@ -20,7 +19,7 @@ const StatCard = ({ title, value, subValue, icon: iconName, colorClass, delay = 
     style={{ animationDelay: `${delay}s`, animationFillMode: 'both' }}
   >
     <div className={`w-10 h-10 rounded-xl ${colorClass} flex items-center justify-center mb-1`}>
-      <Icon name={iconName as React.ComponentProps<typeof Icon>["name"]} size={20} />
+      <Icon name={iconName as any} size={20} />
     </div>
     <div className="space-y-1">
       <p className="text-[10px] font-black text-brand-navy/30 uppercase tracking-[0.2em]">{title}</p>
@@ -66,7 +65,6 @@ export function StatisticsScreen() {
   const tagsCount = stats?.totalTags || 0;
   const groupsCount = stats?.totalGroups || 0;
   
-  // Fake storage calculation for now (average 200KB per photo)
   const estStorage = (totalPhotos * 0.2).toFixed(1);
 
   return (
@@ -124,31 +122,31 @@ export function StatisticsScreen() {
           </h3>
           
           <div className="space-y-4">
-             <div className="flex items-center justify-between p-4 bg-brand-navy/5 rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-brand-navy shadow-sm">
-                    <Icon name="image" size={16} />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-brand-navy">隐藏资产 / Hidden</p>
-                    <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest">Private assets</p>
-                  </div>
+            <div className="flex items-center justify-between p-4 bg-brand-navy/5 rounded-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-brand-navy shadow-sm">
+                  <Icon name="image" size={16} />
                 </div>
-                <span className="text-sm font-black text-brand-navy">{hiddenCount}</span>
-             </div>
+                <div>
+                  <p className="text-[11px] font-bold text-brand-navy">隐藏资产 / Hidden</p>
+                  <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest">Private assets</p>
+                </div>
+              </div>
+              <span className="text-sm font-black text-brand-navy">{hiddenCount}</span>
+            </div>
 
-             <div className="flex items-center justify-between p-4 bg-brand-navy/5 rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-brand-navy shadow-sm">
-                    <Icon name="hard-drive" size={16} />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-brand-navy">估算占用 / Storage Est.</p>
-                    <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest">Estimated R2 usage</p>
-                  </div>
+            <div className="flex items-center justify-between p-4 bg-brand-navy/5 rounded-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-brand-navy shadow-sm">
+                  <Icon name="hard-drive" size={16} />
                 </div>
-                <span className="text-sm font-black text-brand-navy">~{estStorage} MB</span>
-             </div>
+                <div>
+                  <p className="text-[11px] font-bold text-brand-navy">估算占用 / Storage Est.</p>
+                  <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest">Estimated R2 usage</p>
+                </div>
+              </div>
+              <span className="text-sm font-black text-brand-navy">~{estStorage} MB</span>
+            </div>
           </div>
         </div>
 
@@ -169,7 +167,6 @@ export function StatisticsScreen() {
               <span className="text-[9px] font-black uppercase tracking-widest">Live: Operational</span>
             </div>
           </div>
-          
           <Icon name="bar-chart-3" size={200} className="absolute -bottom-20 -right-20 text-white/5 rotate-12" />
         </div>
       </div>

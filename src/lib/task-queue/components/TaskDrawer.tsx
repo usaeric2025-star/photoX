@@ -34,7 +34,6 @@ function TaskItem({ task }: { task: Task }) {
 
   const progress = task.state.status === 'processing' ? task.state.progress : (task.state.status === 'completed' ? 1 : 0);
   const progressPercent = Math.min(100, Math.max(0, Math.round(progress * 100)));
-
   const message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
   const results = (task.state.status === 'completed' || task.state.status === 'failed') ? (task.state as any).result : null;
   const failedItems = Array.isArray(results) ? results.filter((r: any) => !r.success) : [];
@@ -92,7 +91,7 @@ function TaskItem({ task }: { task: Task }) {
             </button>
           )}
           {failedItems.length > 0 && (
-            <button
+             <button
               type="button"
               onClick={() => setShowDetails(!showDetails)}
               className="text-[9px] text-blue-500 hover:underline font-bold"
@@ -142,7 +141,6 @@ export function TaskDrawer() {
 
   React.useEffect(() => {
     if (!isOpen) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -150,13 +148,12 @@ export function TaskDrawer() {
         isTaskDrawerOpen.value = false;
       }
     };
-
     window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => {
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
   }, [isOpen]);
-  
+
   if (!mounted) return null;
 
   return (
@@ -196,7 +193,6 @@ export function TaskDrawer() {
               </button>
             )}
             <button 
-              type="button"
               onClick={() => isTaskDrawerOpen.value = false}
               className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
               aria-label={t('close')}
@@ -205,6 +201,7 @@ export function TaskDrawer() {
             </button>
           </div>
         </div>
+        
         <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar h-[calc(100vh-64px)] pb-24">
           {tasks.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">

@@ -3,16 +3,17 @@ import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useDisclosure } from '#src/hooks/core/index.js';
 import { useTranslation, useFilters, usePhoto } from '#src/hooks/index.js';
-import { Image } from '#src/components/ui/Image.js';
-import { getThumbnailUrl } from '#src/utils/mappers/utils.js';
 import { showToast } from '#lib/ui/toast.js';
-import { NativeDialog } from '#src/components/ui/NativeDialog.js';
 import { Field } from '@tanstack/react-form';
 import { copyToClipboard } from '#src/utils/clipboard.js';
-
 import { PhotoPreviewSection } from './components/PhotoPreviewSection.js';
 import { PhotoZoomOverlay } from './components/PhotoZoomOverlay.js';
 
+/**
+ * BasicInfoTab
+ * 
+ * 照片編輯對話框中的基礎信息分頁。
+ */
 export function BasicInfoTab() {
   const { form } = usePhotoEditSessionContext();
   const { t } = useTranslation();
@@ -30,6 +31,7 @@ export function BasicInfoTab() {
           imageHash={detailPhoto?.imageHash} 
           onZoom={openZoom} 
         />
+        
         <div className="flex-1 space-y-3">
           <div className="space-y-3">
             <div className="space-y-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
@@ -37,7 +39,7 @@ export function BasicInfoTab() {
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('productName')}</span>
               </div>
               
-              <Field form={form} name="name">
+              <form.Field name="name">
                 {({ state, handleChange }) => (
                   <input 
                     type="text" 
@@ -48,29 +50,32 @@ export function BasicInfoTab() {
                     className="w-full bg-white border border-slate-200 h-11 px-4 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 min-w-0 transition-all" 
                   />
                 )}
-              </Field>
+              </form.Field>
             </div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4">
+        {/* SYS CODE */}
         <div className="space-y-1.5 opacity-50 select-none">
           <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
             <Icon name="lock" size={8} className="text-slate-300" />
             SYS CODE
           </h3>
-          <div className="w-full bg-slate-50 border border-slate-100 h-11 px-4 rounded-xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate">
+          <div className="w-full bg-slate-50 border border-slate-100 h-11 px-4 rounded-xl text-xs font-mono font-medium text-slate-400 cursor-not-allowed truncate flex items-center">
             {detailPhoto?.itemCode || t('systemCodeAuto')}
           </div>
         </div>
-        <div className="space-y-1.5 opacity-50 select-none">
+
+        {/* DB ID */}
+        <div className="space-y-1.5 opacity-50">
           <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter px-1 flex items-center gap-1">
-            <Icon name="lock" size={8} className="text-slate-300" />
+            <Icon name="database" size={8} className="text-slate-300" />
             DB ID
           </h3>
           <div 
-            className="w-full bg-slate-50 border border-slate-100 h-11 px-4 rounded-xl text-[10px] font-mono font-medium text-slate-400 cursor-help truncate" 
+            className="w-full bg-slate-50 border border-slate-100 h-11 px-4 rounded-xl text-[10px] font-mono font-medium text-slate-400 cursor-help truncate flex items-center" 
             title={detailPhoto?.id || ''}
             onClick={async () => {
               if (detailPhoto?.id) {
@@ -83,7 +88,8 @@ export function BasicInfoTab() {
           </div>
         </div>
 
-        <Field form={form} name="manualCode">
+        {/* Manual Code */}
+        <form.Field name="manualCode">
           {({ state, handleChange }) => (
             <div className="space-y-1.5">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">CODE</h3>
@@ -96,13 +102,15 @@ export function BasicInfoTab() {
               />
             </div>
           )}
-        </Field>
-        <Field form={form} name="modelNumber">
+        </form.Field>
+
+        {/* Model Number */}
+        <form.Field name="modelNumber">
           {({ state, handleChange }) => (
             <div className="space-y-1.5">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">MODEL</h3>
               <input 
-                type="text" 
+                type="text"
                 inputMode="numeric"
                 placeholder="MODEL..." 
                 value={(state.value as string) || ''}
@@ -111,22 +119,23 @@ export function BasicInfoTab() {
               />
             </div>
           )}
-        </Field>
-        <Field form={form} name="price">
+        </form.Field>
+
+        {/* Price */}
+        <form.Field name="price">
           {({ state, handleChange }) => (
             <div className="space-y-1.5">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">PRICE</h3>
               <input 
-                type="text" 
-                inputMode="numeric"
+                type="number"
                 placeholder="PRICE..." 
                 value={(state.value as string) || ''}
-                onChange={(e) => handleChange(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => handleChange(e.target.value)}
                 className="w-full bg-white border border-slate-200 h-11 px-4 rounded-xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all" 
               />
             </div>
           )}
-        </Field>
+        </form.Field>
       </div>
 
       <PhotoZoomOverlay 
