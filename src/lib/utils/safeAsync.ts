@@ -36,7 +36,10 @@ export async function safeAsync<T>(
     }
 
     if (rethrow) {
-      throw ErrorFactory.create(message, { originalError: error instanceof Error ? error : new Error(message), context });
+      throw ErrorFactory.create(message, { 
+        originalError: error instanceof Error ? error : new Error(message), 
+        context: { operation: context } 
+      });
     }
     return null;
   } finally {

@@ -1,12 +1,14 @@
 import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
+import { useSetAtom } from "jotai";
 import { isTaskDrawerOpen } from '#lib/store/index.js';
 import { User, Theme } from '#src/types/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
 import { usePermission } from '#src/hooks/index.js';
+import { ADMIN_ROUTES } from '#src/constants/config.js';
 
 interface AdminHeaderActionsProps {
   multiSelect: boolean;
@@ -33,21 +35,22 @@ export function AdminHeaderActions({
   signOut,
 }: AdminHeaderActionsProps) {
   const [, setLocation] = useNormalizedLocation();
+  const setTaskDrawerOpen = useSetAtom(isTaskDrawerOpen);
   const { can } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
   const canManageSystem = can('system:settings');
   const canAccessDiagnostics = can('admin:dashboard:access');
   
   const menuItems = [
-    { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation('/admin') },
-    ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation('/admin/batch-edit') }] : []),
+    { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation(ADMIN_ROUTES.HOME) },
+    ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) }] : []),
     ...(canAccessDiagnostics ? [
-      { id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: () => setLocation('/admin/diagnostics') },
-      { id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: () => setLocation('/admin/error-logs') }
+      { id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: () => setLocation(ADMIN_ROUTES.DIAGNOSTICS) },
+      { id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: () => setLocation(ADMIN_ROUTES.ERROR_LOGS) }
     ] : []),
     ...(canManageSystem ? [
       { id: 'divider1', divider: true },
-      { id: 'settings', icon: 'settings' as const, label: t('settings', '系統設置'), onClick: () => setLocation('/settings') }
+      { id: 'settings', icon: 'settings' as const, label: t('settings', '系統設置'), onClick: () => setLocation(ADMIN_ROUTES.SETTINGS) }
     ] : [])
   ];
 
@@ -74,7 +77,7 @@ export function AdminHeaderActions({
 
       <button
         type="button"
-        onClick={() => { isTaskDrawerOpen.value = true; }}
+        onClick={() => { setTaskDrawerOpen(true); }}
         className={cn("w-9 h-9 relative shrink-0", theme.button)}
         title={t('taskCenter')}
       >

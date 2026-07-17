@@ -1,7 +1,7 @@
 import { logger } from '#lib/logger.js';
 import * as React from 'react';
 import { Modal } from '#src/components/ui/Modal.js';
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 
 interface ConfirmDialogProps {
   open: boolean;

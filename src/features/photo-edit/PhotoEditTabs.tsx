@@ -1,3 +1,5 @@
+import { useAtomValue } from 'jotai';
+import { appLangAtom } from '#src/store/index.js';
 import React, { useState } from 'react';
 import { Tabs } from "#src/components/shared/Tabs.js";
 import { cn } from "#lib/utils.js";
@@ -5,7 +7,7 @@ import { BasicInfoTab } from "./BasicInfoTab.js";
 import { OrgTab } from "./OrgTab.js";
 import { DetailsTab } from "./DetailsTab.js";
 import { AISourceTab } from "./AISourceTab.js";
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 
 /**
@@ -15,7 +17,7 @@ import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
  */
 export function PhotoEditTabs() {
   const { photoId } = usePhotoEditSessionContext();
-  const appLang = useUI((s) => s.appLang);
+  const appLang = useAtomValue(appLangAtom);
   const [activeTab, setActiveTab] = useState('basic');
   const [loadedTabs, setLoadedTabs] = useState<string[]>(['basic']);
 

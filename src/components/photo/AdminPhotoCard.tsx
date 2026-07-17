@@ -7,7 +7,7 @@ import { PinButton } from './PinButton.js';
 import { usePermission, usePerformance, useTranslation } from '#src/hooks/index.js';
 import { useIsMultiSelect, useIsPhotoSelected } from '#src/hooks/index.js';
 import { useGrid } from '#src/context/GridContext.js';
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
 import { Icon } from '#src/components/ui/Icon.js';

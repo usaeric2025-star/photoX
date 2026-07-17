@@ -1,3 +1,6 @@
+import { useAtomValue } from 'jotai';
+import { showWhatsAppChoiceAtom } from '#src/store/index.js';
+import { patch } from '#lib/store/index.js';
 import React, { useMemo, useState, useRef } from 'react';
 import { useFilters } from '#src/features/filters/index.js';
 import { useTranslation } from '#src/hooks/index.js';
@@ -5,7 +8,7 @@ import { PublicHeader } from '#src/components/layout/PublicHeader.js';
 import { FilterBar } from '#src/features/filters/index.js';
 import { PhotoWall } from '#src/features/photo-wall/index.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
-import { useUI, type UIStoreState } from '#lib/store/index.js';
+import {  type UIStoreState } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Suspense, lazy } from 'react';
 
@@ -36,8 +39,8 @@ export default function PublicPage() {
     };
   }, [category, tags, search, sort, showGroupsCollapsed]);
 
-  const showWhatsAppChoice = useUI((s: UIStoreState) => s.showWhatsAppChoice);
-  const patch = useUI(s => s.patch);
+  const showWhatsAppChoice = useAtomValue(showWhatsAppChoiceAtom);
+  
   const { t } = useTranslation();
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {

@@ -1,9 +1,9 @@
-# PhotoX 核心开发规范 (2026-06 最终锁定)
+# PhotoX 核心开发规范 (2026-07 最終鎖定)
 
 ## 1. 核心技术栈
 - **状态管理**: 
   - URL 状态 (唯一真相来源): `nuqs`
-  - UI 瞬态 (如主题): `@preact/signals-react` (Signal)
+  - 全局/UI 状态: `Jotai` (Atom)
   - Server State: `TanStack Query` (`useAppQuery`), 写入通过 `queryClient` 处理。
   - 选择状态: `SelectionService` (使用 `useIsMultiSelect`, `useSelectionActions` 等)
 - **表单**: `@tanstack/react-form` + `Valibot` (取代 Zod/ArkType)
@@ -13,8 +13,11 @@
 - **数据库**: PostgreSQL + Drizzle ORM (严禁手动写 SQL)
 
 ## 2. 数据流与架构边界
-- **单向数据流**: URL → Hook → Component。禁止 `useEffect` 同步 URL ↔ Store。禁止使用 `useURLSync`。
-- **Hook 导入**: 统一从 `src/hooks/` 导入，按领域分类 (`photo/`, `category/`, `tag/`, `group/`)。
+- **原子化管理**: 
+  - 所有全局/UI 状态必须定義為 Jotai 原子。
+  - 嚴禁使用 `@preact/signals-react`、`Signal` 或 `useSyncExternalStore` 等舊有方案。
+  - **扁平化原則**: 相近領域的原子應整合在單一檔案內（如 `uiAtoms.ts`, `appAtoms.ts`），嚴禁為單個變量建立微型檔案。
+- **Hook 導入**: 統一從 `src/hooks/` 導入，按領域分類。
 - **API 路由**: 必须通过 Hono RPC (`hc`) 呼叫，严禁手动拼接 `/api/xxx`。
 
 ## 3. UI 与错误处理
@@ -78,9 +81,9 @@
 - **URL 状态 (唯一的视图真相来源 - `nuqs`)**：
   - 适用场景：搜寻、筛选、分页、多选 IDs (`selected`)、批量模式开关 (`batch`)。
   - 核心原则：禁止使用 `useEffect` 将 URL 状态与本地 State / Store 进行二次同步。
-- **UI 瞬态 (跨组件临时交互 - `@preact/signals-react` via `useUI`)**：
+- **UI 瞬态 (跨组件临时交互 - `Jotai` Atoms)**：
   - 适用场景：全局 Dialog 开关、目前 Lightbox 幻灯片数据、主题、语系。
-  - 核心原则：组件与 Hook 订阅时，**必须**通过 `useUI(selector)` 或 `useSignal` 进行，严禁在元件内手动呼叫原始 Signal 的 `.subscribe()`，也严禁在元件 Render 流程中直接读写 `signal.value` 以防失去 React 的响应追踪。
+  - 核心原则：组件与 Hook 订阅时，**必须**通过 `useAtom`, `useAtomValue` 或 `useSetAtom` 进行。
 - **Server State (服务端状态 - `TanStack Query`)**：
   - 适用场景：所有向后端 Hono RPC 请求的数据（分类、照片列表、标签等）。
   - 核心原则：统一使用 `useAppQuery` 与 `useAppMutation` 管理，并通过 `useInvalidatePhotos` 统一调度缓存失效。

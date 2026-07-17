@@ -1,9 +1,11 @@
+import { useAtomValue } from 'jotai';
+import { appLangAtom } from '#src/store/index.js';
 import React from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { showToast } from '#lib/ui/toast.js';
 import { usePhotoEditAI, usePhotoAIResult } from './hooks/usePhotoAI.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 
@@ -14,7 +16,7 @@ import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
  */
 export function AISourceTab() {
   const { photoId } = usePhotoEditSessionContext();
-  const appLang = useUI((s) => s.appLang);
+  const appLang = useAtomValue(appLangAtom);
   const { handleReExtract, isAnalyzing, isReExtracting } = usePhotoEditAI();
   const { copy, copied } = useCopyToClipboard({
     successMessage: appLang === 'zh' ? '已复制' : 'Copied'

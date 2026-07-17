@@ -1,7 +1,9 @@
+import { userAtom, totalCountAtom, signOut } from '#src/store/index.js';
 import React from 'react';
+import { useAtomValue } from 'jotai';
 import { cn } from '#lib/utils.js';
-import { useAuth, activeTaskCountSignal, useSignal } from '#lib/store/index.js';
-import { useUI, useSettings, useAdminActions, usePermission, useTranslation } from '#src/hooks/index.js';
+import {  activeTaskCountAtom } from '#lib/store/index.js';
+import {  useSettings, useAdminActions, usePermission, useTranslation } from '#src/hooks/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { storage } from '#lib/storage.js';
 import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
@@ -14,15 +16,15 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ className }: AdminHeaderProps) {
   const { handleBatchAiIdentifyTrigger } = useAdminActions();
-  const user = useAuth(s => s.user);
-  const signOut = useAuth(s => s.signOut);
+  const user = useAtomValue(userAtom);
+  
   const { settings } = useSettings();
   const [location, setLocation] = useNormalizedLocation();
   const { t, lang } = useTranslation();
   const isMultiSelect = useIsMultiSelect();
   const { toggleMode } = useSelectionActions();
-  const taskCount = useSignal(activeTaskCountSignal);
-  const uiTotalCount = useUI((s) => s.totalCount);
+  const taskCount = useAtomValue(activeTaskCountAtom);
+  const uiTotalCount = useAtomValue(totalCountAtom);
   const totalCount = uiTotalCount || 0;
 
   const cachedSettings = React.useMemo(() => {

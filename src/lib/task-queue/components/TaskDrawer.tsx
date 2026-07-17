@@ -1,6 +1,7 @@
 import React from 'react';
-import { useSignal, isTaskDrawerOpen, useTranslation } from '#src/hooks/index.js';
-import { tasksSignal, clearAll, addTask } from '#src/lib/task-queue/taskStore.js';
+import { useAtom, useAtomValue } from 'jotai';
+import {  isTaskDrawerOpen, useTranslation } from '#src/hooks/index.js';
+import { tasksAtom, clearAll, addTask } from '#src/lib/task-queue/taskStore.js';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Progress } from '#src/components/shared/Progress.js';
@@ -135,9 +136,9 @@ export function TaskDrawer() {
     setMounted(true);
   }, []);
 
-  const tasksMap = useSignal(tasksSignal);
+  const tasksMap = useAtomValue(tasksAtom);
   const tasks = React.useMemo(() => Array.from(tasksMap.values() as IterableIterator<Task>), [tasksMap]);
-  const isOpen = useSignal(isTaskDrawerOpen);
+  const [isOpen, setTaskDrawerOpen] = useAtom(isTaskDrawerOpen);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -145,7 +146,7 @@ export function TaskDrawer() {
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        isTaskDrawerOpen.value = false;
+        setTaskDrawerOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown, { capture: true });
@@ -165,7 +166,7 @@ export function TaskDrawer() {
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            isTaskDrawerOpen.value = false;
+            setTaskDrawerOpen(false);
           }}
         />
       )}
@@ -193,7 +194,7 @@ export function TaskDrawer() {
               </button>
             )}
             <button 
-              onClick={() => isTaskDrawerOpen.value = false}
+              onClick={() => setTaskDrawerOpen(false)}
               className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
               aria-label={t('close')}
             >

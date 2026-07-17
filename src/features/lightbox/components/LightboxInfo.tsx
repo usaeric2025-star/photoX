@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
 import { Icon } from '#src/components/ui/Icon.js';
-import { usePhotoAIResult, usePermission, useAdminMode } from '#src/hooks/index.js';
+import { usePhotoAIResult, usePermission, useAdminMode, useTranslation } from '#src/hooks/index.js';
 import { Photo } from '#src/types/photo.js';
 import { getLocalizedDisplay, translateDimensionLabelToEnglish } from '#src/utils/display.js';
+import { PLACEHOLDERS } from '#src/constants/config.js';
 
 interface LightboxInfoProps {
   currentPhoto: Photo | { original: Photo };
@@ -23,16 +24,17 @@ export function LightboxInfo({
   lang,
   onLangChange
 }: LightboxInfoProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
   
   const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
   const descriptionObj = photoData?.description;
   const displayDescription = getLocalizedDisplay(descriptionObj, lang);
-  const title = getLocalizedDisplay(photoData.name || '照片', lang);
-  const uuid = photoData.id || 'N/A';
+  const title = getLocalizedDisplay(photoData.name || t('unnamedItem'), lang);
+  const uuid = photoData.id || PLACEHOLDERS.EMPTY_VAL;
   
-  const categoryName = photoData.categoryDescription?.[lang] || photoData.categoryName || '无分类';
+  const categoryName = photoData.categoryDescription?.[lang] || photoData.categoryName || t('uncategorized');
   const tags = photoData.tags || [];
   
   const { can } = usePermission();
@@ -53,7 +55,7 @@ export function LightboxInfo({
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 20, scale: 0.95 }}
           transition="fast"
-          className="absolute top-24 sm:top-28 right-4 sm:right-6 w-[280px] sm:w-[320px] max-h-[calc(100vh-200px)] overflow-y-auto rounded-3xl bg-black/85 border border-white/10 shadow-2xl p-5 sm:p-6 z-[160] no-scrollbar pointer-events-auto backdrop-blur-sm"
+          className="absolute top-24 sm:top-28 right-4 sm:right-6 w-[280px] sm:w-[320px] max-h-[calc(100vh-200px)] overflow-y-auto rounded-3xl bg-black/85 border border-white/10 shadow-2xl p-5 sm:p-6 z-[160] no-scrollbar pointer-events-auto "
         >
           <div className="space-y-6">
             <div className="space-y-4">
@@ -61,10 +63,10 @@ export function LightboxInfo({
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2 text-white/30 text-[10px] font-black tracking-widest uppercase">
                     <Icon name="tag" className="w-3 h-3" />
-                    <span>Product Name</span>
+                    <span>{t('productName')}</span>
                   </div>
                   <h3 className="text-white font-bold text-lg sm:text-xl leading-tight tracking-tight">
-                    {title || 'Unnamed Item'}
+                    {title}
                   </h3>
                 </div>
                 {isAiIdentified && (
@@ -76,7 +78,7 @@ export function LightboxInfo({
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                {categoryName && categoryName !== '无分类' && (
+                {categoryName && categoryName !== t('uncategorized') && (
                   <span className="bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase flex items-center gap-1.5 border border-indigo-500/30">
                     <Icon name="layers" className="w-3 h-3 text-indigo-400" />
                     {categoryName}
@@ -99,7 +101,7 @@ export function LightboxInfo({
                 <div className="flex items-center justify-between border-b border-white/5 pb-2">
                   <div className="flex items-center gap-2 text-white/30 text-[10px] font-black tracking-widest uppercase">
                     <Icon name="file-text" className="w-3 h-3" />
-                    <span>Story</span>
+                    <span>{t('productStory')}</span>
                   </div>
                   <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
                     {(['zh', 'en', 'ms'] as const).map(l => {
@@ -135,7 +137,7 @@ export function LightboxInfo({
               <div className="pt-4 border-t border-white/10 space-y-3">
                 <div className="flex items-center gap-2 text-white/30 text-[10px] font-black tracking-widest uppercase">
                   <Icon name="maximize" className="w-3.5 h-3.5" />
-                  <span>Physical Specs</span>
+                  <span>{t('physicalSpecs')}</span>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                   {photoData.dimensions.map((dim, i) => {
@@ -156,7 +158,7 @@ export function LightboxInfo({
                     }
                     
                     if (label.match(/\d+/) || label.includes(' x ') || !label) {
-                      label = 'Specs';
+                      label = t('others');
                     }
                     const isAi = !!(dim.isAi || dim.isAiEstimated);
                     return (
@@ -185,13 +187,13 @@ export function LightboxInfo({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-white/30 text-[10px] font-black tracking-widest uppercase">
                     <Icon name="cpu" className="w-3 h-3" />
-                    <span>AI Deep Scan</span>
+                    <span>{t('aiDeepScan')}</span>
                   </div>
                   <button 
                     onClick={() => setShowRaw(!showRaw)}
                     className="text-[9px] font-bold uppercase tracking-wider text-white/40 hover:text-white transition-colors flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded-lg border border-white/5"
                   >
-                    {showRaw ? 'Hide' : 'Log'}
+                    {showRaw ? t('collapse') : t('more', 0).replace(' (+0)', '')}
                     <Icon name={showRaw ? 'chevron-up' : 'chevron-down'} className="w-2.5 h-2.5" />
                   </button>
                 </div>
@@ -214,7 +216,7 @@ export function LightboxInfo({
               <div className="pt-4 border-t border-white/5 flex flex-col gap-3 font-mono opacity-30 hover:opacity-100 transition-opacity">
                 <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-[0.2em] px-1">
                   <div className="flex items-center gap-3">
-                     <span className="text-white/20">Ref: {photoData.itemCode || '---'}</span>
+                     <span className="text-white/20">Ref: {photoData.itemCode || PLACEHOLDERS.EMPTY_VAL}</span>
                      <span className="text-white/20">|</span>
                      <button 
                        onClick={() => {

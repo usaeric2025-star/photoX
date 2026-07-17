@@ -2,7 +2,7 @@ import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { toast } from 'sonner';
 import { Photo } from '#src/types/photo.js';
-import { usePermission, useAdminMode } from '#src/hooks/index.js';
+import { usePermission, useAdminMode, useTranslation } from '#src/hooks/index.js';
 
 interface LightboxHeaderProps {
   currentPhoto: Photo | { original: Photo };
@@ -28,6 +28,7 @@ export function LightboxHeader({
   onEdit,
   onClose
 }: LightboxHeaderProps) {
+  const { t } = useTranslation();
   const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
   const descriptionObj = photoData?.description;
   const hasDescription = !!descriptionObj;
@@ -42,7 +43,7 @@ export function LightboxHeader({
     if (key) {
       const url = key.startsWith('http') ? key : new URL(key, window.location.origin).toString();
       navigator.clipboard.writeText(url);
-      toast.success('Image Link Copied');
+      toast.success(t('imageLinkCopied'));
     }
   };
 
@@ -67,7 +68,7 @@ export function LightboxHeader({
             className="h-10 sm:h-11 px-4 sm:px-5 bg-blue-600/20 text-blue-400 active:bg-blue-600 active:text-white rounded-2xl text-[10px] font-black tracking-[0.2em] shadow-2xl transition-all active:scale-95 flex items-center gap-2 border border-blue-500/20 uppercase"
           >
             <Icon name="edit" size={14} />
-            <span className="hidden sm:inline">Edit</span>
+            <span className="hidden sm:inline">{t('edit')}</span>
           </button>
         )}
 
@@ -81,7 +82,7 @@ export function LightboxHeader({
               ? 'bg-white text-black border-white' 
               : 'bg-black/80 border-white/10 text-white active:bg-black/60'
           }`}
-          title="Toggle Info"
+          title={t('diagnostics')}
         >
           <Icon name="info" className={`h-4 w-4 sm:h-5 sm:w-5 ${hasDescription && !showInfo ? 'text-blue-400' : ''}`} />
           {hasDescription && !showInfo && (
@@ -92,7 +93,7 @@ export function LightboxHeader({
         <button
           onClick={handleShare}
           className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-black/80 border border-white/10 active:bg-black/60 flex items-center justify-center text-white transition-all active:scale-90 shadow-2xl"
-          title="Share Link"
+          title={t('copyLink')}
         >
           <Icon name="share-2" className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
@@ -103,7 +104,7 @@ export function LightboxHeader({
             onClose();
           }}
           className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-black/80 border border-white/10 active:bg-black/60 flex items-center justify-center text-white transition-all active:scale-90 shadow-2xl ml-2"
-          title="Close"
+          title={t('close')}
         >
           <Icon name="x" size={20} />
         </button>

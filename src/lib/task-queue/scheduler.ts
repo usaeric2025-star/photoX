@@ -1,7 +1,9 @@
 import { Task } from './types.js';
 import { taskTable } from './integrations/supabase.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { tasksSignal, addTask, updateTaskState, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/lib/task-queue/taskStore.js';
+import { getDefaultStore } from "jotai";
+import { tasksAtom, addTask, updateTaskState, setGlobalTaskStatus, setGlobalTaskProgress } from '#src/lib/task-queue/taskStore.js';
+import { AI_CONFIG } from '#src/constants/config.js';
 
 class TaskScheduler {
   private queue: Task[] = [];
@@ -168,10 +170,10 @@ class TaskScheduler {
     let found = this.queue.find(t => t.id === id);
     if (found) return found;
     // 再查執行中
-    const tasks = tasksSignal.value;
+    const tasks = getDefaultStore().get(tasksAtom);
     return tasks.get(id);
   }
 }
 
 // 單例
-export const scheduler = new TaskScheduler(3);
+export const scheduler = new TaskScheduler(AI_CONFIG.CONCURRENCY);

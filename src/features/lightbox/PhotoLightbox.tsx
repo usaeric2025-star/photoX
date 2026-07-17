@@ -1,10 +1,13 @@
+import { useAtomValue } from 'jotai';
+import { descLangAtom } from '#src/store/index.js';
+import { patch } from '#lib/store/index.js';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { cn } from "#lib/utils.js";
 import { motion } from 'lite-sleek';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 import { Photo } from '#src/types/photo.js';
 import { usePhoto } from '#src/hooks/index.js';
@@ -48,8 +51,8 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const onClose = props.onClose || hookClose;
   
   const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
-  const currentDescLang = useUI(s => s.descLang);
-  const patch = useUI(s => s.patch);
+  const currentDescLang = useAtomValue(descLangAtom);
+  
 
   // Auto-fetch photo if we are deep-linked but have no slides loaded
   const needsDeepLinkFetch = isOpen && sourcePhotos.length === 0 && !!queryPhotoId;
@@ -222,6 +225,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
           lang={lang}
           onLangChange={handleLangChange}
           showInfo={showInfo}
+          currentPhoto={activePhoto!}
         />
 
         {/* Main Stage */}
@@ -232,6 +236,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
           photos={effectivePhotos}
           isOpen={isOpen}
           onSelect={handleSelect}
+          currentIndex={currentIndex}
         />
       </div>
     </div>

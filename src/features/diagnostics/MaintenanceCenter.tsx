@@ -1,6 +1,7 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { MaintenanceTool } from './MaintenanceTool.js';
+import { useTranslation } from '#src/hooks/core/index.js';
 
 interface MaintenanceCenterProps {
   onSuccess: () => void;
@@ -12,51 +13,55 @@ interface MaintenanceCenterProps {
  * 系統維護指令中心，提供各類數據修復與清理工具。
  */
 export function MaintenanceCenter({ onSuccess }: MaintenanceCenterProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-slate-50 border border-slate-100 rounded-[32px] p-6 lg:p-8 space-y-8">
-      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">系统维护指令中心 / SYSTEM MAINTENANCE CENTER</h3>
+      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">
+        {t('maintCenter')} / SYSTEM MAINTENANCE CENTER
+      </h3>
       
       {/* 第一组：必要定期检查 (Routine Checks) */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-1 text-xs font-black text-slate-700">
           <Icon name="check-circle" size={14} className="text-emerald-500" />
-          常规健康与数据同步 (Routine Sync & Health)
+          {t('routineSyncHealth')} (Routine Sync & Health)
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <MaintenanceTool 
             issueId="refresh_view"
-            title="刷新照片列表快取" 
-            description="手動刷新全局照片快取 (Materialized View)。如果遇到公開頁面數據不更新或顯示空白，請執行此操作。"
+            title={t('refreshPhotoCache')}
+            description={t('refreshPhotoCacheDesc')}
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
             issueId="repair_integrity"
-            title="修复数据库约束与一致性" 
-            description="针对 ai_audit_logs 约束进行热修复，并重新计算所有合组的封面与成员数量。解决照片合组后消失的问题。"
+            title={t('repairDatabase')}
+            description={t('repairDatabaseDesc')}
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
             issueId="deduplicate"
-            title="清理重複的照片記錄" 
-            description="自動識別基於檔案雜湊 (Hash) 的重複照片記錄，並僅保留最舊的一份。"
+            title={t('cleanDupPhotos')}
+            description={t('cleanDupPhotosDesc')}
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
             issueId="cleanup"
-            title="全域系統日誌清理" 
-            description="清除 30 天以前的系統日誌與 90 天之前的審計日誌，節省資料庫空間。"
+            title={t('cleanSystemLogs')}
+            description={t('cleanSystemLogsDesc')}
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
             issueId="ghost_records"
-            title="清理資料庫殘餘記錄" 
-            description="清理資料庫中存在，但在儲存庫中已經遺失的無效照片記錄。"
+            title={t('cleanGhostRecords')}
+            description={t('cleanGhostRecordsDesc')}
             onSuccess={onSuccess}
           />
           <MaintenanceTool 
             issueId="orphan_files"
-            title="啟動雲端孤兒照片掃描" 
-            description="【高級指令】全量掃描 R2 雲端儲存，若發現儲存桶有照片但資料庫無記錄，將強制重建資料。此操作消耗極高流量與 API 資源，請勿頻繁運行。"
+            title={t('scanOrphanPhotos')}
+            description={t('scanOrphanPhotosDesc')}
             danger={true}
             onSuccess={onSuccess}
           />

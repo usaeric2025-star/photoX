@@ -99,15 +99,15 @@ export const AIService = {
     }
 
     // 3. Category
-    const rawCatId = String(result.category_id || result.categoryId || '');
+    const rawCatId = result.category_id || result.categoryId || '';
     const rawCatName = String(result.category_name || result.categoryName || '');
-    let matchedId: string | null = null;
+    let matchedId: number | null = null;
     
-    if (rawCatId && categories.find(c => String(c.id) === rawCatId)) {
-      matchedId = rawCatId;
+    if (rawCatId && categories.find(c => String(c.id) === String(rawCatId))) {
+      matchedId = Number(rawCatId);
     } else if (rawCatName) {
       const found = categories.find(c => c.name.toLowerCase() === rawCatName.toLowerCase());
-      if (found) matchedId = String(found.id);
+      if (found) matchedId = Number(found.id);
     }
     if (matchedId) updates.categoryId = matchedId;
 
@@ -117,12 +117,12 @@ export const AIService = {
     const rawNames: string[] = sourceTags.map((t: any) => (typeof t === 'object' ? String(t?.name || '') : String(t))).filter(Boolean);
     const parsedTagIds: string[] = sourceTagIds.map((t: any) => (typeof t === 'object' ? String(t?.id || t?.tagId || '') : String(t))).filter(Boolean);
     
-    const finalTagIds = new Set<string>();
+    const finalTagIds = new Set<number>();
     const unresolvedNames: string[] = [];
 
     [...parsedTagIds, ...rawNames].forEach((idOrName: string) => {
       const found = allTags.find(t => String(t.id) === idOrName || t.name.toLowerCase() === idOrName.toLowerCase());
-      if (found) finalTagIds.add(String(found.id));
+      if (found) finalTagIds.add(Number(found.id));
       else unresolvedNames.push(idOrName);
     });
 

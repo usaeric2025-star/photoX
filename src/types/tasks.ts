@@ -1,4 +1,4 @@
-export type TaskStatus = 'processing' | 'completed' | 'failed' | 'cancelled';
+export type TaskStatus = 'processing' | 'completed' | 'failed' | 'cancelled' | 'queued';
 
 export interface UnifiedTask {
   id: string;

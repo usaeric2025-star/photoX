@@ -1,11 +1,11 @@
+import { patch } from '#lib/store/index.js';
 import React, { useRef } from 'react';
 import { useLongPress } from '#src/hooks/core/index.js';
-import { useUI, UIStoreState } from '#lib/store/index.js';
 import { PhotoListItem } from '#shared/apiContractSchema.js';
-import { useFilters } from '#src/hooks/ui/useFilters.js';
+import { useFilters } from '#src/hooks/ui/useUI.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useIsMultiSelect, useSelectionActions } from '#src/hooks/selection/useSelection.js';
-import { usePermission } from '#src/hooks/core/auth/usePermission.js';
+import { usePermission } from '#src/hooks/index.js';
 import { logger } from '#lib/logger.js';
 
 interface UsePhotoCardInteractionProps {
@@ -37,7 +37,7 @@ export function usePhotoCard({
   const canBatchEdit = can('photo:batch-edit');
   
   const { toggleSelect, toggleMode } = useSelectionActions();
-  const patch = useUI((s: UIStoreState) => s.patch);
+  
   const [location, setLocation] = useNormalizedLocation();
 
   const handleOpenLightbox = () => {

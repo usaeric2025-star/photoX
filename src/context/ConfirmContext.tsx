@@ -1,8 +1,7 @@
 import React from 'react';
 import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
-import { signal } from '@preact/signals-react';
+import { atom, useAtomValue, getDefaultStore } from 'jotai';
 import { useTranslation } from '#src/hooks/index.js';
-import { useSignal } from '#lib/store/index.js';
 
 interface ConfirmOptions {
   title: string;
@@ -16,16 +15,18 @@ interface ConfirmState extends ConfirmOptions {
   resolve?: (value: boolean) => void;
 }
 
-const confirmStateSignal = signal<ConfirmState>({
+const confirmStateAtom = atom<ConfirmState>({
   open: false,
   title: '',
   description: '',
 });
 
+const store = getDefaultStore();
+
 const confirmStore = {
-  getState: () => confirmStateSignal.value,
+  getState: () => store.get(confirmStateAtom),
   setState: (updates: Partial<ConfirmState>) => {
-    confirmStateSignal.value = { ...confirmStateSignal.value, ...updates };
+    store.set(confirmStateAtom, { ...store.get(confirmStateAtom), ...updates });
   }
 };
 
@@ -44,19 +45,19 @@ export function useConfirm() {
 }
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
-  const state = useSignal(confirmStateSignal);
+  const state = useAtomValue(confirmStateAtom);
   const { t } = useTranslation();
-
+  
   const handleConfirm = () => {
     state.resolve?.(true);
     confirmStore.setState({ open: false, resolve: undefined });
   };
-
+  
   const handleCancel = () => {
     state.resolve?.(false);
     confirmStore.setState({ open: false, resolve: undefined });
   };
-
+  
   return (
     <>
       {children}

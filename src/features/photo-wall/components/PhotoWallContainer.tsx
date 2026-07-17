@@ -1,17 +1,18 @@
+import { patch } from '#lib/store/index.js';
 import React, { useEffect, useRef, useCallback } from 'react';
 import { photoWallStore } from '../signal.js';
 import { PhotoWallGrid } from './PhotoWallGrid.js';
-import { usePhotoWall } from '#src/hooks/index.js';
-import { PhotoListResponse } from '#src/hooks/photo/index.js';
-import { PhotoListItem } from '#src/types/api.js';
+import { usePhotoWall, ListPhotosResponse } from '#src/hooks/index.js';
+import { PhotoListItem } from '#shared/apiContractSchema.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { api } from '#lib/api.js';
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { AdminEmptyState } from '#src/pages/AdminPage/AdminEmptyState.js';
 import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
 import { useQueryState } from 'nuqs';
+import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { parseAsPhotoId } from '#lib/nuqs/parsers.js';
 
 interface PhotoWallContainerProps {
@@ -26,10 +27,10 @@ interface PhotoWallContainerProps {
  * 照片牆核心容器，負責數據加載、Lightbox 協調與狀態同步。
  */
 export function PhotoWallContainer(props: PhotoWallContainerProps) {
-  const { open: openLightbox, setLightboxData } = useLightbox();
-  const [photoId] = useQueryState('id', parseAsPhotoId);
-  const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.filters);
-  const patch = useUI(s => s.patch);
+  const { open: openLightbox, setLightboxData, setLightboxIndex } = useLightbox();
+  const [photoId] = useQueryState(QUERY_PARAMS.PHOTO_ID, parseAsPhotoId);
+  const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.mode);
+  
   const { uiTranslations: labels } = useTranslation();
 
   const photosRef = useRef(photos);
@@ -77,10 +78,10 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
 
     if (isAggregated) {
       try {
-        const result = await ErrorFactory.unwrap<PhotoListResponse>(
+        const result = await ErrorFactory.unwrap<ListPhotosResponse>(
           api.photos.list.$post({ 
              json: { 
-               ...props.filters,
+               ...props.filters as any,
                onlyGroupsCover: false,
                limit: 1000,
                isAdminMode: props.mode === 'admin'
@@ -108,7 +109,8 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
                   finalIndex = indexInNewList;
                 }
               }
-              setLightboxData(expandedSlides, finalIndex);
+              setLightboxData(expandedSlides);
+              setLightboxIndex(finalIndex);
             }
         }
       } catch (e) {

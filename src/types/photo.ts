@@ -45,7 +45,7 @@ export interface Photo {
   userId?: string;
   type?: string;
   uri?: string; 
-  categoryId: string | null; 
+  categoryId: number | null; 
   manufacturerId: string | null;
   tags?: Tag[]; 
   price?: string;
@@ -74,7 +74,7 @@ export interface SubCategory {
 }
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   description?: {
     zh: string;
@@ -89,7 +89,7 @@ export interface Category {
 }
 
 export interface Tag {
-  id: string;
+  id: number;
   name: string;
   isPinned?: boolean;
   hotScore?: number;
@@ -107,6 +107,11 @@ export interface Manufacturer {
 export interface ProductGroup {
   id: string;
   name: string;
+  description?: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  } | null;
   coverPhotoId?: string | null;
   userId: string;
   createdAt: string;
@@ -141,11 +146,4 @@ export interface PhotoAIResult {
   rawResult?: string;
   parsedData?: Record<string, unknown>;
   createdAt?: string;
-}
-
-export function isValidPhoto(photo: unknown): photo is Photo {
-  const p = photo as Record<string, unknown>;
-  return (
-    !!p && typeof p.id === 'string'
-  );
 }

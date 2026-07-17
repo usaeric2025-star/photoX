@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal } from '#src/components/ui/Modal.js';
 import { Input } from '#src/components/shared/Input.js';
-import { useUI, incrementDialogCount, decrementDialogCount } from '#lib/store/index.js';
+import {  incrementDialogCount, decrementDialogCount } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Button } from '#src/components/ui/Button.js';
 import { useFormField } from '#lib/forms/useFormField.js';

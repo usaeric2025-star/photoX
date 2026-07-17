@@ -1,4 +1,5 @@
 import { api } from '#lib/api.js';
+import { getDefaultStore } from "jotai";
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { descLang } from '#lib/store/index.js';
 
@@ -8,7 +9,7 @@ import { descLang } from '#lib/store/index.js';
  */
 export const getLocalizedDisplay = (val: unknown, lang?: 'zh' | 'en' | 'ms'): string => {
   if (!val) return '';
-  const currentLang = lang || descLang.value || 'zh';
+  const currentLang = lang || getDefaultStore().get(descLang) || 'zh';
   
   if (typeof val === 'string') {
     try {

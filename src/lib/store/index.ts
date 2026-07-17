@@ -1,173 +1,133 @@
-import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
-import { type Signal, effect } from '@preact/signals-react';
-import { isShallowEqual } from '#lib/utils/compare.js';
+import { useMemo } from 'react';
+import { useAtomValue, getDefaultStore } from 'jotai';
 import { 
-  appLang, descLang, groupSettingsOpen, uploadAsGroup, formState, showPassPrompt, 
-  isPhotoPickerOpen, photoPickerGroupId, isInitialDataLoading, focusedGroupPhotoId, 
-  showWhatsAppChoice, uploadModeDialogOpen, isTaskDrawerOpen, isSidebarOpen, 
-  pendingPhotoId, pendingFiles, activeDialogCount, fatalError, totalCount,
-  lightboxSlides, lightboxCurrentIndex,
-  updateForm, resetForm, incrementDialogCount, decrementDialogCount, setLightboxData, setLightboxIndex, clearLightboxData, patch, setFatalError,
-  type UIStoreState
-} from '#src/store/uiStore.js';
+  appLangAtom, 
+  descLangAtom, 
+  groupSettingsOpenAtom, 
+  uploadAsGroupAtom, 
+  formStateAtom, 
+  showPassPromptAtom, 
+  isPhotoPickerOpenAtom, 
+  photoPickerGroupIdAtom, 
+  isInitialDataLoadingAtom, 
+  focusedGroupPhotoIdAtom, 
+  showWhatsAppChoiceAtom, 
+  uploadModeDialogOpenAtom, 
+  isTaskDrawerOpenAtom, 
+  isSidebarOpenAtom, 
+  pendingPhotoIdAtom, 
+  pendingFilesAtom, 
+  activeDialogCountAtom, 
+  fatalErrorAtom, 
+  totalCountAtom, 
+  lightboxSlidesAtom, 
+  lightboxCurrentIndexAtom,
+  incrementDialogCountAtom,
+  decrementDialogCountAtom,
+  closeLightboxAtom,
+  defaultForm
+} from '#src/store/index.js';
 
-// UI 狀態 (Signals)
-export { descLang, uploadAsGroup, isTaskDrawerOpen, fatalError };
+import { ProductFormData } from '#src/types/index.js';
+import { LightboxSlide } from '#lib/lightbox/types.js';
 
-export type { UIStoreState };
-export type { AuthState };
-
-// UI Actions
-export { setFatalError, incrementDialogCount, decrementDialogCount };
-
-// Helper: useSignal
-export function useSignal<T>(sig: Signal<T>): T {
-  const subscribe = useCallback((onStoreChange: () => void) => {
-    let isInitial = true;
-    const unsubscribe = sig.subscribe(() => {
-      if (isInitial) {
-        isInitial = false;
-        return;
-      }
-      onStoreChange();
-    });
-    isInitial = false;
-    return unsubscribe;
-  }, [sig]);
-
-  const getSnapshot = useCallback(() => sig.value, [sig]);
-
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+export interface UIStoreState {
+  appLang: 'zh' | 'en' | 'ms';
+  descLang: 'zh' | 'en' | 'ms';
+  groupSettingsOpen: boolean;
+  uploadAsGroup: boolean;
+  formState: ProductFormData;
+  showPassPrompt: boolean;
+  isPhotoPickerOpen: boolean;
+  photoPickerGroupId: string | null;
+  isInitialDataLoading: boolean;
+  focusedGroupPhotoId: string | null;
+  showWhatsAppChoice: boolean;
+  uploadModeDialogOpen: boolean;
+  isTaskDrawerOpen: boolean;
+  isSidebarOpen: boolean;
+  pendingPhotoId: string | null;
+  pendingFiles: FileList | File[] | null;
+  activeDialogCount: number;
+  fatalError: Error | null;
+  totalCount: number;
+  lightboxSlides: LightboxSlide[];
+  lightboxCurrentIndex: number;
+  patch: (update: Partial<UIStoreState>) => void;
+  updateForm: (updates: Partial<ProductFormData>) => void;
+  resetForm: () => void;
+  incrementDialogCount: () => void;
+  decrementDialogCount: () => void;
+  setLightboxData: (slides: LightboxSlide[]) => void;
+  setLightboxIndex: (index: number) => void;
+  clearLightboxData: () => void;
+  setFatalError: (error: Error | null) => void;
 }
 
-// Export Signals hooks for compatibility
-export const useAppLang = () => useSignal(appLang);
-export const useDescLang = () => useSignal(descLang);
+const store = getDefaultStore();
 
-// Compatible useUI hook (Reactive with selector support)
-export function useUI<T = UIStoreState>(selector?: (state: UIStoreState) => T): T {
-  const getUIState = useCallback((): UIStoreState => ({
-    appLang: appLang.value,
-    descLang: descLang.value,
-    groupSettingsOpen: groupSettingsOpen.value,
-    uploadAsGroup: uploadAsGroup.value,
-    formState: formState.value,
-    showPassPrompt: showPassPrompt.value,
-    isPhotoPickerOpen: isPhotoPickerOpen.value,
-    photoPickerGroupId: photoPickerGroupId.value,
-    isInitialDataLoading: isInitialDataLoading.value,
-    focusedGroupPhotoId: focusedGroupPhotoId.value,
-    showWhatsAppChoice: showWhatsAppChoice.value,
-    uploadModeDialogOpen: uploadModeDialogOpen.value,
-    isTaskDrawerOpen: isTaskDrawerOpen.value,
-    isSidebarOpen: isSidebarOpen.value,
-    pendingPhotoId: pendingPhotoId.value,
-    pendingFiles: pendingFiles.value,
-    activeDialogCount: activeDialogCount.value,
-    fatalError: fatalError.value,
-    totalCount: totalCount.value,
-    lightboxSlides: lightboxSlides.value,
-    lightboxCurrentIndex: lightboxCurrentIndex.value,
-    patch,
-    updateForm,
-    resetForm,
-    incrementDialogCount,
-    decrementDialogCount,
-    setLightboxData,
-    setLightboxIndex,
-    clearLightboxData,
-    setFatalError
-  }), []);
+const patch = (update: Partial<UIStoreState>) => {
+  if (update.appLang !== undefined) store.set(appLangAtom, update.appLang);
+  if (update.descLang !== undefined) store.set(descLangAtom, update.descLang);
+  if (update.groupSettingsOpen !== undefined) store.set(groupSettingsOpenAtom, update.groupSettingsOpen);
+  if (update.uploadAsGroup !== undefined) store.set(uploadAsGroupAtom, update.uploadAsGroup);
+  if (update.showPassPrompt !== undefined) store.set(showPassPromptAtom, update.showPassPrompt);
+  if (update.isPhotoPickerOpen !== undefined) store.set(isPhotoPickerOpenAtom, update.isPhotoPickerOpen);
+  if (update.photoPickerGroupId !== undefined) store.set(photoPickerGroupIdAtom, update.photoPickerGroupId);
+  if (update.isInitialDataLoading !== undefined) store.set(isInitialDataLoadingAtom, update.isInitialDataLoading);
+  if (update.focusedGroupPhotoId !== undefined) store.set(focusedGroupPhotoIdAtom, update.focusedGroupPhotoId);
+  if (update.showWhatsAppChoice !== undefined) store.set(showWhatsAppChoiceAtom, update.showWhatsAppChoice);
+  if (update.uploadModeDialogOpen !== undefined) store.set(uploadModeDialogOpenAtom, update.uploadModeDialogOpen);
+  if (update.isTaskDrawerOpen !== undefined) store.set(isTaskDrawerOpenAtom, update.isTaskDrawerOpen);
+  if (update.isSidebarOpen !== undefined) store.set(isSidebarOpenAtom, update.isSidebarOpen);
+  if (update.pendingPhotoId !== undefined) store.set(pendingPhotoIdAtom, update.pendingPhotoId);
+  if (update.pendingFiles !== undefined) store.set(pendingFilesAtom, update.pendingFiles);
+  if (update.fatalError !== undefined) store.set(fatalErrorAtom, update.fatalError);
+  if (update.totalCount !== undefined) store.set(totalCountAtom, update.totalCount);
+  if (update.lightboxSlides !== undefined) store.set(lightboxSlidesAtom, update.lightboxSlides);
+  if (update.lightboxCurrentIndex !== undefined) store.set(lightboxCurrentIndexAtom, update.lightboxCurrentIndex);
+};
 
-  const selectorRef = useRef(selector);
-  selectorRef.current = selector;
-  const lastSelectedStateRef = useRef<T | null>(null);
+const updateForm = (updates: Partial<ProductFormData>) => {
+  store.set(formStateAtom as any, { ...store.get(formStateAtom), ...updates });
+};
 
-  const getSnapshot = useCallback(() => {
-    const rawState = getUIState();
-    const currentSelector = selectorRef.current;
-    const selected = currentSelector ? currentSelector(rawState) : (rawState as unknown as T);
-    if (lastSelectedStateRef.current !== null && isShallowEqual(lastSelectedStateRef.current, selected)) {
-      return lastSelectedStateRef.current;
-    }
-    lastSelectedStateRef.current = selected;
-    return selected;
-  }, [getUIState]);
+const resetForm = () => {
+  store.set(formStateAtom as any, defaultForm);
+};
 
-  const subscribe = useCallback((onStoreChange: () => void) => {
-    let isInitial = true;
-    let lastSelected: T | UIStoreState | undefined = undefined;
-    const dispose = effect(() => {
-      const state = getUIState();
-      const currentSelector = selectorRef.current;
-      const selected = currentSelector ? currentSelector(state) : (state as unknown as T);
-      if (isInitial) {
-        lastSelected = selected;
-        return;
-      }
-      if (!isShallowEqual(lastSelected, selected)) {
-        lastSelected = selected;
-        onStoreChange();
-      }
-    });
-    isInitial = false;
-    return dispose;
-  }, [getUIState]);
+const incrementDialogCount = () => {
+  store.set(incrementDialogCountAtom as any);
+};
 
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-}
+const decrementDialogCount = () => {
+  store.set(decrementDialogCountAtom as any);
+};
 
-// Auth and other stores
-import { userSignal, authLoadingSignal, initAuth, signIn, signOut, setUser, setLoading, type AuthState } from '#src/store/authStore.js';
-import { tasksSignal, activeTaskCountSignal } from '#src/lib/task-queue/taskStore.js';
+const setLightboxData = (slides: LightboxSlide[]) => {
+  store.set(lightboxSlidesAtom as any, slides);
+};
 
-export { tasksSignal, activeTaskCountSignal };
+const setLightboxIndex = (index: number) => {
+  store.set(lightboxCurrentIndexAtom as any, index);
+};
 
-export function useAuth<T = AuthState>(selector?: (state: AuthState) => T): T {
-  const getAuthState = useCallback((): AuthState => ({
-    user: userSignal.value,
-    isLoading: authLoadingSignal.value,
-    init: initAuth,
-    signIn,
-    signOut,
-    setUser,
-    setLoading
-  }), []);
+const clearLightboxData = () => {
+  store.set(closeLightboxAtom as any);
+};
 
-  const selectorRef = useRef(selector);
-  selectorRef.current = selector;
-  const lastSelectedStateRef = useRef<T | null>(null);
+const setFatalError = (error: Error | null) => {
+  store.set(fatalErrorAtom as any, error);
+};
 
-  const getSnapshot = useCallback(() => {
-    const rawState = getAuthState();
-    const currentSelector = selectorRef.current;
-    const selected = currentSelector ? currentSelector(rawState) : (rawState as unknown as T);
-    if (lastSelectedStateRef.current !== null && isShallowEqual(lastSelectedStateRef.current, selected)) {
-      return lastSelectedStateRef.current;
-    }
-    lastSelectedStateRef.current = selected;
-    return selected;
-  }, [getAuthState]);
+export { patch, updateForm, resetForm, setLightboxData, setLightboxIndex, clearLightboxData, setFatalError, incrementDialogCount, decrementDialogCount };
+export const fatalError = fatalErrorAtom;
+export const descLang = descLangAtom;
+export const isTaskDrawerOpen = isTaskDrawerOpenAtom;
 
-  const subscribe = useCallback((onStoreChange: () => void) => {
-    let isInitial = true;
-    let lastSelected: T | AuthState | undefined = undefined;
-    const dispose = effect(() => {
-      const state = getAuthState();
-      const currentSelector = selectorRef.current;
-      const selected = currentSelector ? currentSelector(state) : (state as unknown as T);
-      if (isInitial) {
-        lastSelected = selected;
-        return;
-      }
-      if (!isShallowEqual(lastSelected, selected)) {
-        lastSelected = selected;
-        onStoreChange();
-      }
-    });
-    isInitial = false;
-    return dispose;
-  }, [getAuthState]);
+export const useAppLang = () => useAtomValue(appLangAtom);
+export const useDescLang = () => useAtomValue(descLangAtom);
 
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-}
+// Tasks
+import { tasksAtom, activeTaskCountAtom } from '#src/lib/task-queue/taskStore.js';
+export { tasksAtom, activeTaskCountAtom };

@@ -9,6 +9,8 @@ import { handleChunkError } from '#lib/chunkErrorHandler.js';
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  context?: string;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface State {
@@ -163,7 +165,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    ErrorFactory.handle(error, { context: 'ErrorBoundary' });
+    const { context = 'ErrorBoundary', onError } = this.props;
+    ErrorFactory.handle(error, { context });
+    
+    if (onError) {
+      onError(error, errorInfo);
+    }
+
     const isChunkFailure = error.message.includes('Failed to fetch dynamically imported module') || 
          error.message.includes('Loading chunk');
     if (isChunkFailure) {

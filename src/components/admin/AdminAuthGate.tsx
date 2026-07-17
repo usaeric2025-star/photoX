@@ -1,38 +1,32 @@
+import { userAtom, authLoadingAtom, passcodeAtom, signIn } from '#src/store/index.js';
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useAuth } from '#lib/store/index.js';
 import { usePublicSettings, useTranslation } from '#src/hooks/index.js';
-import { useLocalStorage } from '#src/hooks/core/index.js';
-import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
-
 import { RequirePermission } from '#src/components/auth/RequirePermission.js';
-import { AdminModeProvider } from '#src/hooks/core/auth/useAdminMode.js';
+import { AdminModeProvider } from '#src/hooks/index.js';
+import { useAtomValue } from 'jotai';
+
 const LoginScreen = lazy(() => import('./LoginScreen.js').then(m => ({ default: m.LoginScreen })));
 interface AdminAuthGateProps {
   children: React.ReactNode;
 }
 export function AdminAuthGate({ children }: AdminAuthGateProps) {
   const { t } = useTranslation();
-  const [passcode] = useLocalStorage({
-    key: 'ais_mock_auth_passcode',
-    defaultValue: '',
-    getInitialValueInEffect: false,
-    deserialize: (val) => {
-      try {
-        const parsed = JSON.parse(val);
-        return String(parsed);
-      } catch {
-        return val;
-      }
+  let passcode = useAtomValue(passcodeAtom);
+  try {
+    if (typeof passcode === 'string' && passcode.startsWith('"')) {
+      passcode = JSON.parse(passcode);
     }
-  });
-  const user = useAuth(s => s.user);
-  const isAuthLoading = useAuth(s => s.isLoading);
-  const signIn = useAuth(s => s.signIn);
+  } catch (e) {}
+  
+  const user = useAtomValue(userAtom);
+  const isAuthLoading = useAtomValue(authLoadingAtom);
+  
   const { data: settings, isLoading: isSettingsLoading } = usePublicSettings();
   
   const isStaffMode = !!settings?.accessPasscode && String(passcode) === settings.accessPasscode;
   const [forceShow, setForceShow] = useState(false);
+
   useEffect(() => {
     if (!isAuthLoading && !isSettingsLoading) return;
     const timer = setTimeout(() => {
@@ -40,7 +34,8 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
     }, 3000);
     return () => clearTimeout(timer);
   }, [isAuthLoading, isSettingsLoading]);
-  // Auth or settings are still loading
+
+  // ✅ Loading state protection: don't let it fall through to a 404 or login screen too early
   if ((isAuthLoading || isSettingsLoading) && !user && !isStaffMode && !forceShow) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50">
@@ -53,6 +48,22 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
       </div>
     );
   }
+
+  // ✅ Auth Gate Logic
+  if (!user && !isStaffMode) {
+    return (
+      <div className="h-screen w-full bg-slate-50">
+        <Suspense fallback={
+          <div className="flex h-screen w-full items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
+        }>
+          <LoginScreen signIn={signIn} />
+        </Suspense>
+      </div>
+    );
+  }
+
   return (
     <RequirePermission
       permission="staff:workspace:access"

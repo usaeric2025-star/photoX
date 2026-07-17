@@ -1,15 +1,18 @@
+import { useAtomValue } from 'jotai';
+import { lightboxSlidesAtom, lightboxCurrentIndexAtom } from '#src/store/index.js';
 export * from './types.js';
+import { setLightboxData, clearLightboxData, setLightboxIndex } from '#lib/store/index.js';
 import { LightboxSlide } from './types.js';
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { useFilters } from '#src/hooks/index.js';
 import { useRoute } from 'wouter';
 
 export function useLightbox() {
-  const slides = useUI(s => s.lightboxSlides || []);
-  const currentIndex = useUI(s => s.lightboxCurrentIndex || 0);
-  const setLightboxData = useUI(s => s.setLightboxData);
-  const clearLightboxData = useUI(s => s.clearLightboxData);
-  const setLightboxIndex = useUI(s => s.setLightboxIndex);
+  const slides = useAtomValue(lightboxSlidesAtom);
+  const currentIndex = useAtomValue(lightboxCurrentIndexAtom);
+  
+  
+  
   
   const { photoId: queryPhotoId, setPhotoId, modal } = useFilters();
   const [isPhotoRoute, params] = useRoute<{ photoId: string }>('/photo/:photoId');
@@ -43,7 +46,8 @@ export function useLightbox() {
   };
 
   const open = (slides: LightboxSlide[], index: number = 0) => {
-    setLightboxData(slides, index);
+    setLightboxData(slides);
+    setLightboxIndex(index);
     if (slides[index]?.id) {
       setPhotoId(slides[index].id);
     }

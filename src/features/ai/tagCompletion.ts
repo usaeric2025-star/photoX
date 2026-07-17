@@ -11,7 +11,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 export async function resolveTagNamesToIds(
   tagNames: string[], 
   existingTags?: Tag[]
-): Promise<string[]> {
+): Promise<number[]> {
   if (!tagNames || tagNames.length === 0) return [];
 
   try {
@@ -29,12 +29,11 @@ export async function resolveTagNamesToIds(
       dbTags = (tagsData || []).map(t => ({
         ...t,
         name: (t.name || '').toUpperCase(),
-        // Support both string and number IDs safely, avoid Number() conversion that breaks UUIDs
-        id: t.id
+        id: Number(t.id)
       })) as unknown as Tag[];
     }
 
-    const tagIds: string[] = [];
+    const tagIds: number[] = [];
     const missingNames: string[] = [];
 
     const normalizedTagNames = tagNames
@@ -51,13 +50,12 @@ export async function resolveTagNamesToIds(
     const uniqueNames = Array.from(new Set(normalizedTagNames));
 
     uniqueNames.forEach(name => {
-      const existing = dbTags.find((t: Tag) => 
-        (String(t.id) === name) || (t.name && t.name.toUpperCase() === name) || 
-        (t.aliases && Array.isArray(t.aliases) && t.aliases.some((a: string) => a.toUpperCase() === name))
+      const existing = dbTags.find((t: any) => 
+        (String(t.id) === name) || (t.name && t.name.toUpperCase() === name)
       );
       
       if (existing) {
-        tagIds.push(String(existing.id));
+        tagIds.push(Number(existing.id));
       } else {
         missingNames.push(name);
       }
@@ -77,7 +75,7 @@ export async function resolveTagNamesToIds(
 
         if (Array.isArray(createdTags)) {
           createdTags.forEach((t: Tag) => {
-            if (t.id) tagIds.push(String(t.id));
+            if (t.id) tagIds.push(Number(t.id));
           });
         }
         

@@ -2,6 +2,7 @@ import { scheduler } from './scheduler.js';
 import { generateId } from '#lib/id.js';
 import { logger } from '#lib/logger.js';
 import { ErrorFactory } from '#lib/error/index.js';
+import { getDefaultStore } from "jotai";
 import { isTaskDrawerOpen } from '#lib/store/index.js';
 import { getErrorMessage } from '#lib/error/errorMessages.js';
 import type { Task, TaskType, TaskState } from './types.js';
@@ -87,7 +88,7 @@ export function createTask<T>(config: TaskConfig<T>): string {
   scheduler.enqueue(task);
 
   if (!silent) {
-    isTaskDrawerOpen.value = true;
+    getDefaultStore().set(isTaskDrawerOpen, true);
   }
 
   return id;

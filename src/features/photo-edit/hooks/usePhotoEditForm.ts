@@ -10,6 +10,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useCategories, useManufacturers, useTags } from '#src/hooks/index.js';
 import { PhotoAIAdapterRegistry } from '#src/features/ai/types.js';
 import { resolveTagNamesToIds } from '#src/features/ai/tagCompletion.js';
+import { REGEX } from '#src/constants/config.js';
 
 /**
  * usePhotoEditForm
@@ -72,7 +73,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
       try {
         let rawJson = photo.metadata!.ai_raw;
         if (typeof rawJson === 'string') {
-          const cleanRaw = rawJson.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          const cleanRaw = rawJson.replace(REGEX.MD_JSON_CODE_BLOCK, '').trim();
           rawJson = JSON.parse(cleanRaw);
         }
         

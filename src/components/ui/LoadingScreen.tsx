@@ -1,9 +1,13 @@
+import { toast } from 'sonner';
 import { logger } from '#lib/logger.js';
 import React, { useEffect } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { PhotoGridSkeleton } from '#src/components/photo/PhotoSkeleton.js';
+import { useTranslation } from '#src/hooks/core/index.js';
+import { APP_CONFIG } from '#src/constants/config.js';
 
 export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetry?: () => void }) => {
+  const { t } = useTranslation();
   logger.debug('🔄 [LoadingScreen] Rendered');
 
   useEffect(() => {
@@ -22,19 +26,19 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <Icon name="alert-triangle" className="w-10 h-10 text-red-500" />
         </div>
-        <h3 className="text-2xl font-black text-gray-900 mb-2">啟動失敗</h3>
+        <h3 className="text-2xl font-black text-gray-900 mb-2">{t('startupFailed')}</h3>
         <p className="text-slate-500 mb-6 font-medium leading-relaxed">
-          {error.message?.includes('逾時') ? '連線速度較慢或系統正在初始化，請稍候片刻後重新整理頁面' : (error.message || '系統啟動時遇到一點問題')}
+          {error.message?.includes('逾時') ? t('slowConnection') : (error.message || t('startupProblem'))}
         </p>
         
         <details className="group mb-6">
           <summary className="text-[10px] uppercase tracking-wider text-slate-400 font-bold cursor-pointer list-none flex items-center justify-center gap-1 hover:text-slate-500 transition">
-            <span>診斷資訊 (Diagnostics)</span>
+            <span>{t('diagnosticsInfo')}</span>
             <Icon name="chevron-down" className="w-2.5 h-2.5 group-open:rotate-180 transition-transform" />
           </summary>
           <div className="mt-4 bg-slate-50 rounded-xl p-4 text-left border border-slate-100 overflow-hidden">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-[10px] text-slate-400 font-bold">Error Details</div>
+              <div className="text-[10px] text-slate-400 font-bold">{t('errorDetails')}</div>
               <button 
                 onClick={() => {
                   const data = {
@@ -45,11 +49,11 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
                     type: error.name
                   };
                   navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-                  alert('診斷資料已複製到剪貼簿');
+                  toast.success(t('diagCopied'));
                 }}
                 className="text-[10px] text-brand-navy font-bold hover:underline"
               >
-                複製代碼
+                {t('copyCode')}
               </button>
             </div>
             <code className="text-[11px] text-slate-600 block break-all font-mono leading-tight max-h-40 overflow-y-auto">
@@ -70,19 +74,19 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
             className="w-full py-4 bg-brand-navy text-white font-bold rounded-2xl hover:opacity-90 transition active:scale-95 shadow-lg flex items-center justify-center gap-2"
           >
             <Icon name="refresh-cw" className="w-4 h-4" />
-            嘗試重新載入
+            {t('tryReload')}
           </button>
           
           <button
-            onClick={() => window.location.href = '/?mode=admin&view=maintenance'}
+            onClick={() => window.location.href = '/admin/diagnostics'}
             className="w-full py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition active:scale-95"
           >
-            進入維護中心 (Diagnostics)
+            {t('enterMaintCenter')} (Diagnostics)
           </button>
         </div>
         
-        <div className="mt-8 text-[10px] text-slate-300 font-medium">
-          PhotoX Core Engine v2.6 • 穩定性優先模式
+        <div className="mt-8 text-[10px] text-slate-300 font-medium uppercase tracking-widest">
+          {APP_CONFIG.NAME} Core • {t('stabilityPriority')}
         </div>
       </div>
     </div>

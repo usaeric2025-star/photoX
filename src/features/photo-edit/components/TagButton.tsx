@@ -3,6 +3,7 @@ import { cn } from "#lib/utils.js";
 import { Icon } from '#src/components/ui/Icon.js';
 import { Tag } from '#src/types/index.js';
 import { useLongPress } from "#src/hooks/index.js";
+import { ANIMATION_CONFIG } from '#src/constants/config.js';
 
 interface TagButtonProps {
   tag: Tag;
@@ -31,7 +32,7 @@ export const TagButton = memo(function TagButton({
   onLongPress 
 }: TagButtonProps) {
   const handlers = useLongPress<HTMLButtonElement>({
-    delay: 800,
+    delay: ANIMATION_CONFIG.LONG_DELAY,
     onLongPress: () => {
       onLongPress();
     },

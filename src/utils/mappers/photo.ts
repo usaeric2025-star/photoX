@@ -1,6 +1,7 @@
 import { Photo, Tag } from '#src/types/index.js';
 import { generateItemCode, validateDimension } from '#src/utils/photo.js';
 import { getThumbnailUrl, normalizeStoredUrl } from './utils.js';
+import { THUMBNAIL_SIZES } from '#src/lib/image/thumbnailConfig.js';
 
 /**
  * Maps raw database/API data to the internal Photo type.
@@ -17,7 +18,7 @@ export function mapSupabasePhoto(raw: any, allTags?: Tag[]): Photo {
       const tagObj = t.tags || t;
       if (tagObj && tagObj.id) {
         tags.push({
-          id: String(tagObj.id),
+          id: Number(tagObj.id),
           name: String(tagObj.name || ''),
           isPinned: !!tagObj.is_pinned,
           hotScore: Number(tagObj.hot_score || 0),
@@ -38,13 +39,13 @@ export function mapSupabasePhoto(raw: any, allTags?: Tag[]): Photo {
     modelNumber: String(raw.model_number || raw.modelNumber || ''),
     imageHash,
     name: raw.name || '',
-    categoryId: (raw.category_id || raw.categoryId || null) as string | null,
+    categoryId: (raw.category_id || raw.categoryId !== undefined ? Number(raw.category_id || raw.categoryId) : null) as number | null,
     manufacturerId: (raw.manufacturer_id || raw.manufacturerId || null) as string | null,
     description: raw.description || raw.description_translations || null,
     imageUrl,
-    thumbnailSmUrl: getThumbnailUrl(imageUrl, 120, undefined, imageHash),
-    thumbnailMdUrl: getThumbnailUrl(imageUrl, 400, undefined, imageHash),
-    thumbnailLgUrl: getThumbnailUrl(imageUrl, 800, undefined, imageHash),
+    thumbnailSmUrl: getThumbnailUrl(imageUrl, THUMBNAIL_SIZES.SM, THUMBNAIL_SIZES.SM, imageHash),
+    thumbnailMdUrl: getThumbnailUrl(imageUrl, THUMBNAIL_SIZES.MD, THUMBNAIL_SIZES.MD, imageHash),
+    thumbnailLgUrl: getThumbnailUrl(imageUrl, THUMBNAIL_SIZES.LG, THUMBNAIL_SIZES.LG, imageHash),
     createdAt,
     updatedAt: String(raw.updated_at || raw.updatedAt || createdAt),
     groupId: (raw.group_id || raw.groupId || null) as string | null,

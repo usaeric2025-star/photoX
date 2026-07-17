@@ -1,13 +1,16 @@
+import { useAtomValue } from 'jotai';
+import { appLangAtom } from '#src/store/index.js';
+import { patch } from '#lib/store/index.js';
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useUI, UIStoreState } from '#lib/store/index.js';
+import {  UIStoreState } from '#lib/store/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 
 export function LanguageSwitcher({ mode = 'buttons' }: { mode?: 'buttons' | 'dropdown' | 'segmented' | 'lightbox' }) {
-  const appLang = useUI((s: UIStoreState) => s.appLang);
-  const patch = useUI((s: UIStoreState) => s.patch);
+  const appLang = useAtomValue(appLangAtom);
+  
 
   const langs: { code: 'zh' | 'en' | 'ms'; label: string }[] = [
     { code: 'zh', label: '中文' },

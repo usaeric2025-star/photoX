@@ -27,7 +27,7 @@ export function FilterBar({ mode, className }: FilterBarProps) {
     setShowGroupsCollapsed, 
     filters, 
     setTags
-  } = useFilters({ enableStatus: isAdmin });
+  } = useFilters();
   
   const [showTags, setShowTags] = useState(false);
   const { tags: allTags } = useTags();

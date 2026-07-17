@@ -17,7 +17,9 @@ export default defineConfig(({mode}) => {
       format: 'es'
     },
     plugins: [
-      react({ babel: { plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]] } }), 
+      react({ babel: { plugins: [
+        ['babel-plugin-react-compiler', ReactCompilerConfig]
+      ] } }), 
       tailwindcss(),
       visualizer({
         filename: 'dist/stats.html',

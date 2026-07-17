@@ -1,14 +1,17 @@
+import { useAtomValue } from 'jotai';
+import { userAtom, authLoadingAtom, signOut } from '#src/store/index.js';
+import { patch } from '#lib/store/index.js';
 import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useAuth } from '#lib/store/index.js';
-import { useUI, usePublicSettings, usePermission, UIStoreState, useTranslation } from '#src/hooks/index.js';
+import { } from '#lib/store/index.js';
+import {  usePublicSettings, usePermission, useTranslation, type UIStoreState } from '#src/hooks/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
 import { storage } from '#lib/storage.js';
-import { useLocation } from 'wouter';
+import { APP_CONFIG, ADMIN_ROUTES } from '#src/constants/config.js';
 
 interface PublicHeaderProps {
   totalCount?: number;
@@ -18,15 +21,15 @@ interface PublicHeaderProps {
 }
 
 export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }: PublicHeaderProps) {
-  const user = useAuth(s => s.user);
-  const isLoading = useAuth(s => s.isLoading);
-  const signOut = useAuth(s => s.signOut);
+  const user = useAtomValue(userAtom);
+  const isLoading = useAtomValue(authLoadingAtom);
+  
   const { data: settings } = usePublicSettings();
   const { can } = usePermission();
-  const patch = useUI((s: UIStoreState) => s.patch);
+  
   const [location, setLocation] = useNormalizedLocation();
-  const isAdminRoute = location.startsWith('/admin');
-  const isGroupPage = location.startsWith('/group/') || location.startsWith('/admin/group/');
+  const isAdminRoute = location.startsWith(ADMIN_ROUTES.HOME);
+  const isGroupPage = location.startsWith('/group/') || location.startsWith(ADMIN_ROUTES.GROUP_DETAIL_BASE + '/');
 
   const { t } = useTranslation();
 
@@ -51,7 +54,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
     if (isAdminRoute) {
       setLocation('/');
     } else {
-      setLocation('/admin');
+      setLocation(ADMIN_ROUTES.HOME);
     }
   };
 
@@ -85,7 +88,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               <Icon name="camera" size={16} />
             </div>
             <span className={cn("text-base font-bold tracking-tight", theme.logoText)}>
-              PhotoX
+              {APP_CONFIG.NAME}
             </span>
           </div>
         )}
@@ -157,20 +160,20 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             <div className="flex flex-col gap-0.5">
               {(() => {
                 const items = [];
-                items.push({ id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation('/') });
+                items.push({ id: 'gallery', icon: 'image' as const, label: t('gallery'), onClick: () => setLocation('/') });
                 if (isStaff) {
-                  items.push({ id: 'admin', icon: 'layout-dashboard' as const, label: t('viewModeAdmin', '管理後台'), onClick: () => setLocation('/admin') });
+                  items.push({ id: 'admin', icon: 'layout-dashboard' as const, label: t('viewModeAdmin'), onClick: () => setLocation(ADMIN_ROUTES.HOME) });
                   if (can('photo:batch-edit')) {
-                    items.push({ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation('/admin/batch-edit') });
+                    items.push({ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) });
                   }
                   if (can('system:settings')) {
-                    items.push({ id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: () => setLocation('/admin/diagnostics') });
-                    items.push({ id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: () => setLocation('/admin/error-logs') });
+                    items.push({ id: 'diagnostics', icon: 'diagnostics' as const, label: t('diagnostics'), onClick: () => setLocation(ADMIN_ROUTES.DIAGNOSTICS) });
+                    items.push({ id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs'), onClick: () => setLocation(ADMIN_ROUTES.ERROR_LOGS) });
                     items.push({ id: 'divider1', divider: true });
-                    items.push({ id: 'settings', icon: 'settings' as const, label: t('settings', '系統設置'), onClick: () => setLocation('/settings') });
+                    items.push({ id: 'settings', icon: 'settings' as const, label: t('settings'), onClick: () => setLocation(ADMIN_ROUTES.SETTINGS) });
                   }
                 } else {
-                  items.push({ id: 'admin', icon: 'log-in' as const, label: t('adminPanel', '管理後台'), onClick: () => setLocation('/admin') });
+                  items.push({ id: 'admin', icon: 'log-in' as const, label: t('adminPanel'), onClick: () => setLocation(ADMIN_ROUTES.HOME) });
                 }
 
                 return items.map((item) => {

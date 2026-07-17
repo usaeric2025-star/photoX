@@ -14,8 +14,8 @@ import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import { FormProvider } from '#lib/forms/useFormField.js';
 import * as v from 'valibot';
 import { useTags, useSettings, useTagMutations, useTranslation } from '#src/hooks/index.js';
-import { useSignal } from '#lib/store/index.js';
-import { tasksSignal } from '#src/lib/task-queue/taskStore.js';
+import { useAtomValue } from "jotai";
+import { tasksAtom } from '#src/lib/task-queue/taskStore.js';
 import { executeTask } from '#lib/task-queue/index.js';
 
 interface TagsSectionProps {
@@ -42,7 +42,7 @@ export function TagsSection({
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
-  const tasks = useSignal(tasksSignal);
+  const tasks = useAtomValue(tasksAtom);
   const isRunning = Array.from(tasks.values()).some((t) => t.state?.status === "processing");
 
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
@@ -51,14 +51,15 @@ export function TagsSection({
 
   const togglePin = (tagId: number) => {
     if (!settings) return;
-    const currentPinned = (settings.pinnedTags || []).map(Number);
+    const currentPinned = (settings.pinnedTags || []);
+    const tagIdStr = String(tagId);
     let nextPinned;
-    if (currentPinned.includes(tagId)) {
-      nextPinned = currentPinned.filter((id) => id !== tagId);
+    if (currentPinned.includes(tagIdStr)) {
+      nextPinned = currentPinned.filter((id) => id !== tagIdStr);
     } else {
-      nextPinned = [...currentPinned, tagId];
+      nextPinned = [...currentPinned, tagIdStr];
     }
-    const nextSettings = { ...settings, pinnedTags: nextPinned.map(String) };
+    const nextSettings = { ...settings, pinnedTags: nextPinned };
     void updateSettings(nextSettings);
     debouncedSave(nextSettings);
   };
@@ -75,7 +76,7 @@ export function TagsSection({
 
   const { submit: runUpdateTag, isLoading: isUpdating, fieldErrors: editFieldErrors, clearFieldError: editClearFieldError } = useFormSubmit({
     schema: v.any(),
-    mutationFn: async ({ id, name }: { id: number, name: string }) => {
+    mutationFn: async ({ id, name }: { id: string, name: string }) => {
       await tagMutations.edit.mutateAsync({ id, updates: { name } });
     },
     successMessage: t('updateSuccess') || '已更新',

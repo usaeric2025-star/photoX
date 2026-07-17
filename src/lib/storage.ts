@@ -23,6 +23,8 @@ export const STORAGE_KEYS = {
   RECENTLY_VIEWED: 'recently_viewed',
   LAST_MAINTENANCE_RUN: 'last_maintenance_day',
   CACHE_VERSION: 'cache_version_v2',
+  UPLOAD_AS_GROUP: 'uploadAsGroup',
+  PHOTO_WALL_COLUMNS: 'photo-wall-columns',
 } as const;
 
 type StorageKey = string;

@@ -250,7 +250,7 @@ export const groups = new Hono()
       await syncGroupCoversAndCount(affectedGroupIds);
       await refreshPhotosView();
 
-      return successResponse(c, null);
+      return successResponse(c, { targetGroupId });
   })
   .post('/move-photos', async (c) => {
     const body = await c.req.json();

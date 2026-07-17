@@ -4,6 +4,7 @@ import { Image } from '#src/components/ui/Image.js';
 import { Photo } from '#src/types/photo.js';
 import { useLightboxInteractions } from '#src/hooks/ui/index.js';
 import { useLightbox } from '#lib/lightbox/index.js';
+import { GESTURE_CONFIG, ANIMATION_CONFIG } from '#src/constants/config.js';
 
 export function LightboxStage() {
   const { slides: lightboxSlides, currentIndex: lightboxCurrentIndex, next, prev, clearLightboxData } = useLightbox();
@@ -11,10 +12,10 @@ export function LightboxStage() {
   const currentPhoto = lightboxSlides[lightboxCurrentIndex];
 
   const {
+    scale,
+    position,
     isZoomed,
     isSwiping,
-    dragOffset,
-    dragOffsetY,
     swipeDirection,
     handlers,
     handleToggleZoom,
@@ -23,7 +24,7 @@ export function LightboxStage() {
     onNext: next,
     onPrev: prev,
     onClose: clearLightboxData,
-    minSwipeDistance: 50,
+    minSwipeDistance: GESTURE_CONFIG.SWIPE_THRESHOLD,
   });
 
   if (!currentPhoto) return null;
@@ -43,9 +44,9 @@ export function LightboxStage() {
       className="flex-1 relative flex items-center justify-center overflow-hidden touch-none"
       style={{
         backgroundColor: isSwiping && swipeDirection === 'vertical'
-          ? `rgba(0, 0, 0, ${Math.max(0.2, 0.9 - Math.abs(dragOffsetY) / 300 * 0.7)})`
+          ? `rgba(0, 0, 0, ${Math.max(0.2, 0.9 - Math.abs(position.y) / GESTURE_CONFIG.OPACITY_DIVISOR * 0.7)})`
           : undefined,
-        transition: isSwiping ? 'none' : 'background-color 250ms ease-out',
+        transition: isSwiping ? 'none' : `background-color ${ANIMATION_CONFIG.LITE_SLEEK_DEFAULT}ms ease-out`,
       }}
       {...handlers}
       onClick={clearLightboxData} // Clicking the background closes it
@@ -66,21 +67,17 @@ export function LightboxStage() {
             style={{
               transform: isSwiping 
                 ? (swipeDirection === 'vertical'
-                  ? `translateY(${dragOffsetY}px) scale(${Math.max(0.75, 1 - Math.abs(dragOffsetY) / 800)})`
-                  : `translateX(${dragOffset}px)`)
-                : 'translate(0px, 0px) scale(1)',
+                  ? `translateY(${position.y}px) scale(${Math.max(0.75, 1 - Math.abs(position.y) / GESTURE_CONFIG.SCALE_DIVISOR)})`
+                  : `translateX(${position.x}px)`)
+                : `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               opacity: isSwiping && swipeDirection === 'vertical'
-                ? Math.max(0.3, 1 - Math.abs(dragOffsetY) / 250)
+                ? Math.max(0.3, 1 - Math.abs(position.y) / 250)
                 : 1,
-              transition: isSwiping ? 'none' : 'transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 250ms ease-out',
+              transition: isSwiping || isZoomed ? 'none' : `transform ${ANIMATION_CONFIG.LITE_SLEEK_DEFAULT}ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity ${ANIMATION_CONFIG.LITE_SLEEK_DEFAULT}ms ease-out`,
             }}
           >
             <div 
-              className="w-full h-full flex items-center justify-center cursor-pointer"
-              onDoubleClick={handleToggleZoom}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
+              className="w-full h-full flex items-center justify-center"
             >
               <Image
                 src={src}
@@ -88,7 +85,7 @@ export function LightboxStage() {
                 lqipSrc={lqipSrc}
                 priority={true}
                 containerClassName="bg-transparent"
-                className={`object-contain max-w-full max-h-full drop-shadow-2xl transition-all duration-300 select-none ${isZoomed ? 'scale-150 cursor-zoom-out' : 'scale-100 cursor-zoom-in'}`}
+                className={`object-contain max-w-full max-h-full drop-shadow-2xl select-none ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
               />
             </div>
           </div>

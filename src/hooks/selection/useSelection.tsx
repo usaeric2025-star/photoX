@@ -1,7 +1,27 @@
-import React, { createContext, useContext, useMemo, useCallback, useSyncExternalStore } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useQueryState } from 'nuqs';
+import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { batchParser, selectedIdsParser } from '#lib/nuqs/parsers.js';
-import { SelectionService, batchEditingIdsSignal } from './service.js';
+import { batchEditingIdsAtom, isAvoidingSelectionAtom } from '#src/store/atoms/ui/uiAtoms.js';
+import { getDefaultStore } from 'jotai';
+
+const store = getDefaultStore();
+
+/**
+ * SelectionService: 處理非 URL 的瞬態選擇狀態 (Jotai)
+ */
+export const SelectionService = {
+  setBatchEditing: (ids: string[] | null) => {
+    store.set(batchEditingIdsAtom, ids);
+  },
+  setAvoidingSelection: (avoid: boolean) => {
+    store.set(isAvoidingSelectionAtom, avoid);
+  },
+  clearTransient: () => {
+    store.set(batchEditingIdsAtom, null);
+    store.set(isAvoidingSelectionAtom, false);
+  }
+};
 
 interface SelectionActions {
   toggleSelect: (id: string) => void;
@@ -12,83 +32,12 @@ interface SelectionActions {
 
 const SelectionActionsContext = createContext<SelectionActions | null>(null);
 
-// Intercept window history to support useSyncExternalStore on URL query params
-const listeners = new Set<() => void>();
-let isIntercepted = false;
-
-function notify() {
-  listeners.forEach((l) => l());
-}
-
-function interceptHistory() {
-  if (isIntercepted || typeof window === 'undefined') return;
-  isIntercepted = true;
-  const originalPush = window.history.pushState;
-  window.history.pushState = function (...args) {
-    originalPush.apply(this, args);
-    notify();
-  };
-  const originalReplace = window.history.replaceState;
-  window.history.replaceState = function (...args) {
-    originalReplace.apply(this, args);
-    notify();
-  };
-  window.addEventListener('popstate', notify);
-}
-
-export function subscribeToUrl(callback: () => void) {
-  interceptHistory();
-  listeners.add(callback);
-  return () => {
-    listeners.delete(callback);
-  };
-}
-
-// Extract selected IDs directly from URL search string
-function getSelectedIdsFromUrl(): string[] {
-  if (typeof window === 'undefined') return [];
-  const params = new URLSearchParams(window.location.search);
-  const val = params.get('selected');
-  if (!val) return [];
-  try {
-    const parsed = JSON.parse(decodeURIComponent(val));
-    if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) {
-      return parsed;
-    }
-  } catch (e) {
-    // Ignore parse error
-  }
-  return [];
-}
-
-// Module-level cache for referential stability of useSelectedIds
-let lastSelectedIds: string[] = [];
-let lastUrlSearch = '';
-
-function getCachedSelectedIds(): string[] {
-  const currentSearch = window.location.search;
-  if (currentSearch === lastUrlSearch) {
-    return lastSelectedIds;
-  }
-  
-  const parsed = getSelectedIdsFromUrl();
-  const isSame = parsed.length === lastSelectedIds.length && 
-                 parsed.every((val, idx) => val === lastSelectedIds[idx]);
-                 
-  if (!isSame) {
-    lastSelectedIds = parsed;
-  }
-  
-  lastUrlSearch = currentSearch;
-  return lastSelectedIds;
-}
-
 /**
  * SelectionProvider: Exposes memoized, stable selection actions.
  */
 export function SelectionProvider({ children }: { children: React.ReactNode }) {
-  const [batch, setBatch] = useQueryState('batch', { ...batchParser, history: 'replace', shallow: true });
-  const [selected, setSelected] = useQueryState('selected', { ...selectedIdsParser, history: 'replace', shallow: true });
+  const [batch, setBatch] = useQueryState(QUERY_PARAMS.BATCH, { ...batchParser, history: 'replace', shallow: true });
+  const [selected, setSelected] = useQueryState(QUERY_PARAMS.SELECTED, { ...selectedIdsParser, history: 'replace', shallow: true });
 
   const actions = useMemo(() => {
     const toggleSelect = (id: string) => {
@@ -146,40 +95,32 @@ export function useSelectionActions() {
  * useIsMultiSelect: Driven by URL state (batch=true)
  */
 export function useIsMultiSelect() {
-  const [batch] = useQueryState('batch', batchParser);
+  const [batch] = useQueryState(QUERY_PARAMS.BATCH, batchParser);
   return !!batch;
 }
 
 /**
- * useSelectionCount: Driven by URL state with precise subscription.
+ * useSelectionCount: Driven by URL state.
  */
 export function useSelectionCount() {
-  const getSnapshot = useCallback(() => {
-    return getSelectedIdsFromUrl().length;
-  }, []);
-  return useSyncExternalStore(subscribeToUrl, getSnapshot, () => 0);
+  const [selected] = useQueryState(QUERY_PARAMS.SELECTED, selectedIdsParser);
+  return selected?.length || 0;
 }
 
 /**
- * useSelectedIds: Driven by URL state with precise subscription and referential stability.
+ * useSelectedIds: Driven by URL state.
  */
 export function useSelectedIds() {
-  const getSnapshot = useCallback(() => {
-    return getCachedSelectedIds();
-  }, []);
-  return useSyncExternalStore(subscribeToUrl, getSnapshot, () => []);
+  const [selected] = useQueryState(QUERY_PARAMS.SELECTED, selectedIdsParser);
+  return selected || [];
 }
 
 /**
- * useIsPhotoSelected: Atomic subscription to a photo's selection status.
- * Unaffected cards will not re-render when other photo selections change.
+ * useIsPhotoSelected: Checks if a photo is selected via URL state.
  */
 export function useIsPhotoSelected(id: string) {
-  const getSnapshot = useCallback(() => {
-    const selected = getSelectedIdsFromUrl();
-    return selected.includes(id);
-  }, [id]);
-  return useSyncExternalStore(subscribeToUrl, getSnapshot, () => false);
+  const [selected] = useQueryState(QUERY_PARAMS.SELECTED, selectedIdsParser);
+  return selected?.includes(id) || false;
 }
 
-export { batchEditingIdsSignal };
+export { batchEditingIdsAtom };

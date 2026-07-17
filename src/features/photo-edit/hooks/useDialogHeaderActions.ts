@@ -1,7 +1,8 @@
 import { usePhotoEditSessionContext } from "./PhotoEditSession.js";
 import { usePhoto, useRemoveFromGroupMutation, useAdminActions, useFilters, useTranslation } from '#src/hooks/index.js';
 import { usePhotoEditAI } from './usePhotoAI.js';
-import { useUI, tasksSignal, useSignal } from '#lib/store/index.js';
+import { useAtomValue } from "jotai";
+import {  tasksAtom } from '#lib/store/index.js';
 import { Task } from '#lib/task-queue/types.js';
 import { showToast } from "#lib/ui/toast.js";
 import { ErrorFactory } from "#lib/error/ErrorFactory.js";
@@ -25,7 +26,7 @@ export function useDialogHeaderActions(onClose: () => void) {
   const { setCover } = useGroupMutations();
   const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
   
-  const tasksMap = useSignal(tasksSignal) as Map<string, Task>;
+  const tasksMap = useAtomValue(tasksAtom) as Map<string, Task>;
   const aiTask = useMemo(() => 
     Array.from(tasksMap.values()).find((t) => t.type === 'ai-analyze' && t.state.status === 'processing'),
     [tasksMap]

@@ -5,6 +5,7 @@ import { logger } from '#lib/logger.js';
 import { PhotoAIAdapterRegistry } from '#src/features/ai/types.js';
 import { generateItemCode } from '#src/utils/photo.js';
 import { photoEditAdapter } from '#lib/forms/index.js';
+import { REGEX, PLACEHOLDERS } from '#src/constants/config.js';
 
 /**
  * PhotoEditFormService
@@ -33,7 +34,7 @@ export const PhotoEditFormService = {
       try {
         let rawJson = metadata.ai_raw;
         if (typeof rawJson === 'string') {
-          const cleanRaw = rawJson.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          const cleanRaw = rawJson.replace(REGEX.MD_JSON_CODE_BLOCK, '').trim();
           rawJson = JSON.parse(cleanRaw);
         }
         
@@ -41,12 +42,12 @@ export const PhotoEditFormService = {
           const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
           const normalized = adapter.normalize(rawJson, JSON.stringify(rawJson));
           
-          const isGenericName = !name || name === '---' || name === '' || /^(IMG_|DSC_|P_)\d+/i.test(name) || /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(name);
+          const isGenericName = !name || name === PLACEHOLDERS.EMPTY_VAL || name === '' || REGEX.GENERIC_PHOTO_NAME.test(name) || REGEX.IMAGE_EXTENSIONS.test(name);
           if (normalized.name && isGenericName) {
-            name = normalized.name.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
+            name = normalized.name.replace(REGEX.IMAGE_EXTENSIONS, '').trim();
           }
 
-          const isDescEmpty = !description.zh || description.zh === '---' || description.zh === '';
+          const isDescEmpty = !description.zh || description.zh === PLACEHOLDERS.EMPTY_VAL || description.zh === '';
           if (normalized.description && isDescEmpty) {
             description = {
               zh: normalized.description.zh || '',
@@ -55,10 +56,10 @@ export const PhotoEditFormService = {
             };
           }
 
-          if (normalized.categoryId && !categoryId) categoryId = normalized.categoryId;
+          if (normalized.categoryId && !categoryId) categoryId = Number(normalized.categoryId);
           if (normalized.groupId && !groupId) groupId = normalized.groupId;
 
-          const isDimsEmpty = !dimensions || dimensions.length === 0 || (dimensions.length === 1 && dimensions[0].label === '---');
+          const isDimsEmpty = !dimensions || dimensions.length === 0 || (dimensions.length === 1 && dimensions[0].label === PLACEHOLDERS.EMPTY_VAL);
           if (normalized.dimensions && normalized.dimensions.length > 0 && isDimsEmpty) {
             dimensions = normalized.dimensions.map(d => ({
               ...d,

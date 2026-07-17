@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from 'react';
-import { fatalError, useSignal, useTranslation } from '#src/hooks/index.js';
+import { fatalError } from "#src/hooks/index.js";
+import { useAtomValue } from "jotai";
+import { useTranslation } from '#src/hooks/index.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
 import { isAppError, AppError } from '#shared/AppError.js';
 
 export const FatalErrorOverlay = () => {
   const { t } = useTranslation();
-  const error = useSignal(fatalError);
+  const error = useAtomValue(fatalError) as any;
   const { copy, copied } = useCopyToClipboard({ 
     successMessage: t('copySuccess'),
     showToast: false // Toast feedback is often hidden behind native dialogs
@@ -32,13 +34,13 @@ export const FatalErrorOverlay = () => {
     if (isAppError(error)) {
         errorCode = String(error.code);
         traceIdStr = error.traceId;
-    } else if ('code' in error) {
+    } else if (error && typeof error === 'object' && 'code' in error) {
         errorCode = String((error as { code?: string | number }).code);
-    } else if ('status' in error) {
+    } else if (error && typeof error === 'object' && 'status' in error) {
         errorCode = String((error as { status?: string | number }).status);
     }
 
-    if (!isAppError(error) && 'traceId' in error) {
+    if (!isAppError(error) && error && typeof error === 'object' && 'traceId' in error) {
         traceIdStr = String((error as { traceId?: string }).traceId);
     }
 
@@ -58,7 +60,7 @@ export const FatalErrorOverlay = () => {
 
   const getDisplayCode = () => {
       if (isAppError(error)) return error.code;
-      if ('code' in error) return (error as { code?: string | number }).code;
+      if (error && typeof error === 'object' && 'code' in error) return (error as { code?: string | number }).code;
       return 'FATAL';
   };
 

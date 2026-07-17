@@ -1,6 +1,8 @@
+import { useAtomValue } from "jotai";
 import React, { memo, useMemo, useEffect } from 'react';
-import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect, usePermission, useAdminActions } from '#src/hooks/index.js';
-import { useUI, useSignal, activeTaskCountSignal } from '#lib/store/index.js';
+import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect, usePermission, useAdminActions, useTranslation } from '#src/hooks/index.js';
+import { showToast } from '#src/lib/ui/toast.js';
+import {  activeTaskCountAtom } from '#lib/store/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useMediaQuery } from '#src/hooks/index.js';
@@ -36,6 +38,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const combineMutation = useGroupPhotosMutation();
   const removeMutation = useRemoveFromGroupMutation();
   const [location, setLocation] = useNormalizedLocation();
+  const { t } = useTranslation();
 
   // Smart groupId detection from URL if not provided
   const groupId = useMemo(() => {
@@ -44,7 +47,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
     return match ? match[2] : undefined;
   }, [propGroupId, location]);
 
-  const activeTasks = useSignal(activeTaskCountSignal);
+  const activeTasks = useAtomValue(activeTaskCountAtom);
   const isAnyPending = deletePhoto.isPending || batchUpdate.isPending || combineMutation.isPending || removeMutation.isPending;
   const isVisible = isMultiSelect || selectedCount > 0;
 
@@ -74,22 +77,35 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
 
   const handleManualGroup = async () => {
     const idsToGroup = [...selectedIds];
-    clearSelection();
+    const toastId = showToast.loading(t('processing') || '處理中...');
+    
     try {
-      await combineMutation.mutateAsync({ photoIds: idsToGroup });
+      const result = await combineMutation.mutateAsync({ photoIds: idsToGroup });
+      showToast.success(t('mergePhotosSuccess', idsToGroup.length), { id: toastId });
+      
+      // Navigate to the target group
+      if (result?.targetGroupId) {
+        setLocation(`/admin/group/${result.targetGroupId}`);
+      }
+      
+      clearSelection();
     } catch (err: unknown) {
-      // Errors handled by mutation hook
+      showToast.dismiss(toastId);
+      // Errors are also handled by mutation hook's onError
     }
   };
 
   const handleRemoveFromGroup = async () => {
     if (selectedCount === 0 || isAnyPending || !groupId) return;
     const idsToRemove = [...selectedIds];
-    clearSelection();
+    const toastId = showToast.loading(t('processing') || '處理中...');
+    
     try {
       await removeMutation.mutateAsync({ photoIds: idsToRemove, groupId });
+      showToast.success(t('removePhotosSuccess', idsToRemove.length), { id: toastId });
+      clearSelection();
     } catch (err: unknown) {
-      // Errors handled by mutation hook
+      showToast.dismiss(toastId);
     }
   };
 
@@ -101,8 +117,14 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
       variant: 'destructive',
     });
     if (ok) {
-      await deletePhoto.mutateAsync(selectedIds);
-      clearSelection();
+      const toastId = showToast.loading(t('processing') || '處理中...');
+      try {
+        await deletePhoto.mutateAsync(selectedIds);
+        showToast.success(t('deleteSuccess'), { id: toastId });
+        clearSelection();
+      } catch (err: unknown) {
+        showToast.dismiss(toastId);
+      }
     }
   };
 

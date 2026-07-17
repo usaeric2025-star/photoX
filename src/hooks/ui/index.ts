@@ -7,13 +7,11 @@
  * 1. URL 狀態 (唯一的視圖真相來源 - nuqs):
  *    - 適用：搜尋、篩選、分頁、多選 IDs (selected)、批量模式開關 (batch)。
  *    - 核心原則：禁止使用 useEffect 將 URL 狀態與本地 State / Store 進行二次同步。
- * 2. UI 瞬態 (跨組件臨時交互 - @preact/signals-react via useUI):
+ * 2. UI 瞬態 (跨組件臨時交互 - jotai via ):
  *    - 適用：全域 Dialog 開關、目前 Lightbox 投影片數據、主題、語系。
  * 📌 [設計原則]
  * - 嚴禁為單一的 URL 狀態或單一彈窗控制編寫獨立的微型 Hook 檔案！
  * ============================================================================
  */
 
-export * from './useFilters.js';
-export * from './useModalActions.js';
-export * from './useLightbox.js';
+export * from './useUI.js';

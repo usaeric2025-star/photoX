@@ -1,6 +1,6 @@
 import { analyzePhoto, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './AICommands.js';
 import { translateFields } from './translationService.js';
-import { updatePhoto } from '#src/hooks/photo/PhotoCommands.js';
+import { updatePhoto } from '#src/hooks/photo/usePhotos.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { resolveTagNamesToIds } from './tagCompletion.js';
 import { withTimeout } from '#lib/utils.js';
@@ -46,7 +46,7 @@ const analyzeAndSavePhoto = async (
     const updateResult = await updatePhoto(photo.id, {
       name: (nameObj.en || nameObj.zh || '').substring(0, 200),
       description: descObj,
-      categoryId: analysisData.category_id ? String(analysisData.category_id) : (photo.categoryId || null),
+      categoryId: analysisData.category_id != null ? Number(analysisData.category_id) : (photo.categoryId ?? null),
       dimensions: analysisData.dimensions || [],
       metadata: {
         ...(photo.metadata as Record<string, unknown> || {}),
@@ -59,7 +59,7 @@ const analyzeAndSavePhoto = async (
     const tagIds = analysisData.tagIds || [];
     
     if (tagNames.length > 0 || tagIds.length > 0) {
-      let finalTagIds = [...tagIds];
+      let finalTagIds: (string | number)[] = [...tagIds];
       if (tagNames.length > 0) {
          try {
              const resolveResult = await resolveTagNamesToIds(tagNames, []);
@@ -69,15 +69,15 @@ const analyzeAndSavePhoto = async (
          } catch(e) {}
       }
       
-      finalTagIds = Array.from(new Set(finalTagIds.map(String)));
+      const stringifiedIds = Array.from(new Set(finalTagIds.map(String)));
       
-      if (finalTagIds.length > 0) {
+      if (stringifiedIds.length > 0) {
           const tagSources: Record<string, "ai"> = {};
-          finalTagIds.forEach(id => {
+          stringifiedIds.forEach(id => {
               tagSources[id] = "ai";
           });
           await api.tags['sync-photo-tags'].$post({
-              json: { photoId: photo.id, tagIds: finalTagIds, tagSources }
+              json: { photoId: photo.id, tagIds: stringifiedIds, tagSources }
           });
       }
     }

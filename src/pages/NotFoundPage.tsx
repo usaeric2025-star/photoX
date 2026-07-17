@@ -1,38 +1,23 @@
 import React from 'react';
 import { AppLink } from '#src/components/router/AppLink.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { ErrorFactory } from '#lib/error/index.js';
+import { ErrorCapture } from '#lib/error/ErrorCapture.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
-import { isSystemPath } from '#src/lib/routing.js';
 
-interface NotFoundPageProps {
-  isTransitionAllowed?: boolean;
-  params?: Record<string, string | undefined>;
-  [key: string]: any;
-}
-
-export function NotFoundPage({ isTransitionAllowed = true }: NotFoundPageProps) {
+export function NotFoundPage() {
   const { t } = useTranslation();
   const [pathname] = useNormalizedLocation();
   
-  // Detect and bypass transition-induced false positive 404s
-  const isTransition = React.useMemo(() => {
-    if (!isTransitionAllowed) return false;
-    if (!pathname) return false;
-    
-    return isSystemPath(pathname);
-  }, [pathname, isTransitionAllowed]);
-
   React.useEffect(() => {
-    if (isTransition) return;
-    // Log diagnostics only for actual invalid pages
-    ErrorFactory.capture(new Error(`404: ${pathname}`));
-  }, [isTransition, pathname]);
-
-  if (isTransition) {
-    return null;
-  }
+    // Categorize the 404 for better error tracking
+    let type = 'page.404';
+    if (pathname.startsWith('/api/')) type = 'api.404';
+    else if (pathname.match(/\.(jpg|jpeg|png|gif|webp|svg|pdf)$/i)) type = 'resource.404';
+    else if (pathname.startsWith('/admin/') || pathname.startsWith('/settings/') || pathname.startsWith('/diagnostics/')) type = 'admin.404';
+    
+    ErrorCapture.capture(new Error(`[${type}] 404 Not Found: ${pathname}`));
+  }, [pathname]);
   
   // Decide what kind of 404 this is
   const config = React.useMemo(() => {

@@ -1,7 +1,9 @@
+import { useAtomValue } from 'jotai';
+import { pendingPhotoIdAtom } from '#src/store/index.js';
 import * as React from 'react';
 import { Modal } from '#src/components/ui/Modal.js';
-import { useUI } from '#lib/store/index.js';
-import { usePublicSettings } from '#src/hooks/settings/useSettings.js';
+import { } from '#lib/store/index.js';
+import { usePublicSettings } from '#src/hooks/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useTranslation, usePhoto } from '#src/hooks/index.js';
 import { getEnv } from '#lib/env.js';
@@ -13,7 +15,7 @@ interface WhatsAppDialogProps {
 
 export const WhatsAppDialog = ({ open, onOpenChange }: WhatsAppDialogProps) => {
   const { data: settings } = usePublicSettings();
-  const pendingPhotoId = useUI(s => s.pendingPhotoId);
+  const pendingPhotoId = useAtomValue(pendingPhotoIdAtom);
   const { data: pendingPhoto } = usePhoto(open && pendingPhotoId ? pendingPhotoId : null);
   const { t } = useTranslation();
 

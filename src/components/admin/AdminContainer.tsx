@@ -3,7 +3,7 @@ import { PhotoWall } from '#src/features/photo-wall/index.js';
 import { useFilters } from '#src/hooks/index.js';
 
 export function AdminContainer() {
-  const filters = useFilters({ enableStatus: true });
+  const filters = useFilters();
   const isAggregated = filters.showGroupsCollapsed;
   
   const filtersObj = React.useMemo(() => ({

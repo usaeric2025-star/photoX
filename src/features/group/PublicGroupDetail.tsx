@@ -1,10 +1,13 @@
+import { useAtomValue } from 'jotai';
+import { showWhatsAppChoiceAtom } from '#src/store/index.js';
+import { patch } from '#lib/store/index.js';
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { useGroupData } from '#src/hooks/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { useFilters, useTranslation } from '#src/hooks/index.js';
 import { PublicGroupHeader } from './components/PublicGroupHeader.js';
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 import { GroupDetailLayout } from './components/GroupDetailLayout.js';
@@ -36,8 +39,8 @@ export function PublicGroupDetailPage() {
 
   const photos = useMemo(() => rawPhotos || [], [rawPhotos]);
 
-  const showWhatsAppChoice = useUI(s => s.showWhatsAppChoice);
-  const patchUI = useUI(s => s.patch);
+  const showWhatsAppChoice = useAtomValue(showWhatsAppChoiceAtom);
+  const patchUI = patch;
   const { open: openLightbox } = useLightbox();
 
   const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);

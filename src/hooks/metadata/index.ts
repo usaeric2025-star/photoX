@@ -4,5 +4,4 @@
  * ============================================================================
  */
 
-export * from './useMetadataQueries.js';
-export * from './useMetadataMutations.js';
+export * from './useMetadata.js';

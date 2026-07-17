@@ -87,7 +87,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
   };
 
   return (
-    <div className="glass-header !p-3 sm:!p-4 flex items-center justify-between w-full border-b bg-white/80 backdrop-blur-md">
+    <div className="glass-header !p-3 sm:!p-4 flex items-center justify-between w-full border-b bg-white/80 ">
       {/* Left side: Back button & Title section */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
         <button 

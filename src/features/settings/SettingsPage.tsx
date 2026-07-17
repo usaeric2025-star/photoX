@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useCallback } from 'react';
 import { AppSettings } from '#src/types/index.js';
-import { useAuth } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { 
   useSettings, useTranslation 
 } from '#src/hooks/index.js';
@@ -165,6 +165,9 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                   testResult={testResult}
                   accessPasscode={String(accessPasscode || "")}
                   setAccessPasscode={(code) => setSettingField('accessPasscode', code)}
+                  setSettingField={setSettingField}
+                  cardClass={cardClass}
+                  inputClass={inputClass}
                 />
               </Suspense>
             </div>

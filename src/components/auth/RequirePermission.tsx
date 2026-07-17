@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePermission } from '#src/hooks/core/auth/usePermission.js';
+import { usePermission } from '#src/hooks/index.js';
 import { Capability } from '#src/config/permissions.js';
 
 interface RequirePermissionProps {

@@ -1,3 +1,5 @@
+import { useAtomValue } from 'jotai';
+import { userAtom } from '#src/store/index.js';
 import { useCallback, useState } from 'react';
 import { translateDimensionLabelToEnglish } from '#src/utils/display.js';
 import { usePhotoEditSessionContext } from "./PhotoEditSession.js";
@@ -6,7 +8,7 @@ import { queryClient } from '#lib/query/index.js';
 import { executeTask } from '#lib/task-queue/index.js';
 import { useAdminActions, useCategories, useTags, useFilters, useTranslation } from '#src/hooks/index.js';
 import { Tag } from '#src/types/index.js';
-import { useAuth } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { showToast } from '#lib/ui/toast.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
@@ -26,7 +28,7 @@ const AIAnalysisSchema = v.object({
  * 處理照片編輯過程中的 AI 識別、自動回填與自動保存。
  */
 export function usePhotoEditAI() {
-  const user = useAuth(s => s.user);
+  const user = useAtomValue(userAtom);
   const { form } = usePhotoEditSessionContext();
   const { modal, photoId: filterPhotoId } = useFilters();
   const editPhotoId = modal === 'edit' ? filterPhotoId : null;
@@ -58,7 +60,7 @@ export function usePhotoEditAI() {
           if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
             const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
             const finalTags = Array.from(new Set([
-              ...(updates.resolvedTagIds as string[]).map(id => allTags.find(t => String(t.id) === id)),
+              ...(updates.resolvedTagIds as number[]).map(id => allTags.find(t => Number(t.id) === id)),
               ...resolvedTags
             ])).filter(Boolean) as Tag[];
             updates.tags = finalTags.slice(0, 10);
@@ -125,7 +127,7 @@ export function usePhotoEditAI() {
       if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
         const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
         updates.tags = Array.from(new Set([
-          ...(updates.resolvedTagIds as any[]).map(id => allTags.find(t => String(t.id) === id)),
+          ...(updates.resolvedTagIds as number[]).map(id => allTags.find(t => Number(t.id) === id)),
           ...resolvedTags
         ])).filter(Boolean).slice(0, 10);
       }

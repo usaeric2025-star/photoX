@@ -1,9 +1,11 @@
+import { useAtomValue } from 'jotai';
+import { appLangAtom } from '#src/store/index.js';
 import { OpenRouterConfigBlock } from './OpenRouterConfigBlock.js';
 import { AgnesConfigBlock } from './AgnesConfigBlock.js';
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { AppSettings } from '#src/types/index.js';
-import { useUI } from '#lib/store/index.js';
+import { } from '#lib/store/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { useAISettingsActions } from './hooks/useAISettingsActions.js';
 
@@ -26,7 +28,7 @@ export function AISecuritySection({
   agnesApiKey: initialAgnesKey,
   inputClass
 }: AISecuritySectionProps) {
-  const appLang = useUI(s => s.appLang);
+  const appLang = useAtomValue(appLangAtom);
   const { t } = useTranslation();
   const {
     keysStatus,
@@ -49,7 +51,7 @@ export function AISecuritySection({
     saveKey,
     saveProvider,
     handleSaveModel
-  } = useAISettingsActions(initialAgnesKey);
+  } = useAISettingsActions();
 
   return (
     <div className="grid grid-cols-1 gap-6">
@@ -94,7 +96,6 @@ export function AISecuritySection({
             handleTest={handleTest}
             isSaving={isSavingKey && keysStatus.primaryProvider === 'openrouter' ? 'openrouter' : null}
             isTesting={isTestingProvider && keysStatus.primaryProvider === 'openrouter' ? 'openrouter' : null}
-            appLang={appLang}
             t={t}
           />
 

@@ -1,4 +1,4 @@
-import { signal, computed } from '@preact/signals-react';
+import { atom, getDefaultStore, PrimitiveAtom } from 'jotai';
 import { Task } from '#lib/task-queue/types.js';
 
 interface TaskServiceState {
@@ -8,13 +8,14 @@ interface TaskServiceState {
   progress: number;
 }
 
-export const tasksSignal = signal<Map<string, Task>>(new Map());
-const globalTaskStatusSignal = signal<TaskServiceState['status']>('idle');
-const globalTaskProgressSignal = signal<number>(0);
+export const tasksAtom = atom<Map<string, Task>>(new Map()) as PrimitiveAtom<Map<string, Task>>;
+const globalTaskStatusAtom = atom<TaskServiceState['status']>('idle') as PrimitiveAtom<TaskServiceState['status']>;
+const globalTaskProgressAtom = atom<number>(0) as PrimitiveAtom<number>;
 
-export const activeTaskCountSignal = computed(() => {
+export const activeTaskCountAtom = atom((get) => {
   let count = 0;
-  tasksSignal.value.forEach(t => {
+  const tasks = get(tasksAtom);
+  tasks.forEach(t => {
     if (t.state?.status === 'processing' || t.state?.status === 'queued') {
       count++;
     }
@@ -22,44 +23,34 @@ export const activeTaskCountSignal = computed(() => {
   return count;
 });
 
+const store = getDefaultStore();
+
+
 export const setGlobalTaskStatus = (status: TaskServiceState['status']) => {
-  globalTaskStatusSignal.value = status;
+  store.set(globalTaskStatusAtom, status);
 };
 
 export const setGlobalTaskProgress = (progress: number) => {
-  globalTaskProgressSignal.value = progress;
+  store.set(globalTaskProgressAtom, progress);
 };
 
-const taskActions = {
-  addTask: (task: Task) => {
-    const newTasks = new Map(tasksSignal.value);
-    newTasks.set(task.id, task);
-    tasksSignal.value = newTasks;
-  },
-  updateTask: (taskId: string, updates: Partial<Task>) => {
-    const newTasks = new Map(tasksSignal.value);
-    const task = newTasks.get(taskId);
-    if (task) {
-      newTasks.set(taskId, { ...task, ...updates } as Task);
-      tasksSignal.value = newTasks;
-    }
-  },
-  updateTaskState: (taskId: string, state: Partial<Task['state']>) => {
-    const newTasks = new Map(tasksSignal.value);
-    const task = newTasks.get(taskId);
-    if (task) {
-      newTasks.set(taskId, { ...task, state: { ...task.state, ...state } as Task['state'] });
-      tasksSignal.value = newTasks;
-    }
-  },
-  removeTask: (taskId: string) => {
-    const newTasks = new Map(tasksSignal.value);
-    newTasks.delete(taskId);
-    tasksSignal.value = newTasks;
-  },
-  clearAll: () => {
-    tasksSignal.value = new Map();
+export const addTask = (task: Task) => {
+  const current = store.get(tasksAtom);
+  const newTasks = new Map(current);
+  newTasks.set(task.id, task);
+  store.set(tasksAtom, newTasks);
+};
+
+export const updateTaskState = (taskId: string, state: Partial<Task['state']>) => {
+  const current = store.get(tasksAtom);
+  const task = current.get(taskId);
+  if (task) {
+    const newTasks = new Map(current);
+    newTasks.set(taskId, { ...task, state: { ...task.state, ...state } as Task['state'] });
+    store.set(tasksAtom, newTasks);
   }
 };
 
-export const { addTask, updateTask, updateTaskState, removeTask, clearAll } = taskActions;
+export const clearAll = () => {
+  store.set(tasksAtom, new Map());
+};

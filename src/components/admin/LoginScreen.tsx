@@ -1,12 +1,13 @@
+import { appLangAtom, userAtom, passcodeAtom } from '#src/store/index.js';
 import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePublicSettings, useTranslation } from '#src/hooks/index.js';
-import { useUI } from '#lib/store/index.js';
 import { AppLink } from '#src/components/router/AppLink.js';
 import { storage } from '#lib/storage.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { Button } from '#src/components/ui/Button.js';
+import { useAtomValue, useSetAtom } from 'jotai';
 
 const StaffLoginSchema = v.object({
   passcode: v.pipe(v.string(), v.minLength(1)),
@@ -18,11 +19,12 @@ interface LoginScreenProps {
 
 export function LoginScreen({ signIn }: LoginScreenProps) {
   const { data: settings } = usePublicSettings();
-  const appLang = useUI(s => s.appLang);
+  const appLang = useAtomValue(appLangAtom);
   const { t } = useTranslation();
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
+  const setGlobalPasscode = useSetAtom(passcodeAtom);
 
   // 1. Staff Login Submission
   const { submit: submitStaff, isLoading: isStaffLoggingIn, fieldErrors, clearFieldError } = useFormSubmit({
@@ -33,14 +35,14 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
       }
       
       if (passcode === settings.accessPasscode) {
-        storage.setItem('ais_mock_auth_passcode', JSON.stringify(passcode));
+        setGlobalPasscode(JSON.stringify(passcode));
         return true;
       } else {
         throw new Error(t('invalidCode'));
       }
     },
     onSuccess: () => {
-      window.location.reload();
+      // Navigation/re-render will naturally happen because of passcodeAtom change
     },
     successMessage: 'Staff login successful',
     errorMessage: 'Login failed'

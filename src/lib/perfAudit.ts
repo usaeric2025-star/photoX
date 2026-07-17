@@ -1,4 +1,3 @@
-import { logger } from './logger.js';
 
 export interface PerfIncident {
   label: string;
@@ -31,7 +30,7 @@ export const perfAudit = {
       
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(incidents));
     } catch (e) {
-      logger.warn('[PerfAudit] Failed to record incident:', e);
+      console.warn('[PerfAudit] Failed to record incident:', e);
     }
   },
 

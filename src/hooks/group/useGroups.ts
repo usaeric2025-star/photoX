@@ -1,0 +1,353 @@
+import { useCallback, useMemo } from 'react';
+import { useAtomValue } from 'jotai';
+import { userAtom } from '#src/store/atoms/auth/authAtoms.js';
+import { queryClient, useAppQuery, useAppMutation } from '#lib/query/index.js';
+import { queryKeys } from '#lib/query/keys.js';
+import { STALE_TIMES } from '#lib/query/config.js';
+import { useOptimisticPhotoMutation } from '#lib/query/optimistic.js';
+import { generateId } from '#lib/id.js';
+import { showToast } from '#lib/ui/toast.js';
+import { ProductGroup, Photo } from '#src/types/index.js';
+import { api } from '#lib/api.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+/**
+ * GroupService
+ * 
+ * 處理群組與照片關係的 API 呼叫。
+ */
+export const GroupService = {
+  list: async () => {
+    return ErrorFactory.unwrap<ProductGroup[]>(
+      api.groups.$get(),
+      '獲取群組列表失敗'
+    );
+  },
+
+  create: async (data: { name: string; userId: string }) => {
+    return ErrorFactory.unwrap<ProductGroup>(
+      api.groups.$post({ json: { groupData: { name: data.name }, userId: data.userId } }),
+      '創建群組失敗'
+    );
+  },
+
+  update: async (id: string, updates: Partial<ProductGroup>) => {
+    return ErrorFactory.unwrap<ProductGroup>(
+      api.groups[':id'].$put({ param: { id }, json: { updates } }),
+      '更新群組失敗'
+    );
+  },
+
+  delete: async (id: string) => {
+    return ErrorFactory.unwrap<unknown>(
+      api.groups[':id'].$delete({ param: { id } }),
+      '刪除群組失敗'
+    );
+  },
+
+  setCover: async (photoId: string, groupId: string) => {
+    return ErrorFactory.unwrap<unknown>(
+      api.groups['set-cover'].$post({ json: { photoId, groupId } }),
+      '設置封面失敗'
+    );
+  },
+
+  movePhotos: async (photoIds: string[], groupId: string) => {
+    return ErrorFactory.unwrap<unknown>(
+      api.groups['move-photos'].$post({ json: { photoIds, targetGroupId: groupId, userId: 'staff', groupData: {} } }),
+      '移動照片失敗'
+    );
+  },
+
+  removePhotos: async (photoIds: string[], groupId: string) => {
+    return ErrorFactory.unwrap<unknown>(
+      api.groups['remove-photos'].$post({ json: { photoIds, groupId } }),
+      '從群組移除照片失敗'
+    );
+  },
+
+  ungroup: async (groupId: string) => {
+    return ErrorFactory.unwrap<unknown>(
+      api.groups['ungroup'].$post({ json: { groupId } }),
+      '解散群組失敗'
+    );
+  },
+
+  getById: async (id: string, mode: 'admin' | 'public' = 'public') => {
+    return ErrorFactory.unwrap<ProductGroup>(
+      api.groups[':id'].$get({ param: { id }, query: { isAdminMode: mode === 'admin' ? 'true' : 'false' } }),
+      '獲取群組詳情失敗'
+    );
+  },
+
+  upsert: async (group: Partial<ProductGroup> & { id: string }) => {
+    return ErrorFactory.unwrap<ProductGroup>(
+      api.groups.upsert.$post({ json: group }),
+      '更新或創建群組失敗'
+    );
+  },
+
+  groupPhotos: async (photoIds: string[], targetGroupId?: string) => {
+    return ErrorFactory.unwrap<{ targetGroupId: string }>(
+      api.groups['group-photos'].$post({ json: { photoIds, targetGroupId, userId: 'staff', groupData: {} } }),
+      '組合照片失敗'
+    );
+  }
+};
+import { useFilters } from '../ui/useUI.js';
+import { usePhotos, useInvalidatePhotos } from '../photo/index.js';
+import { useSelectionActions } from '../selection/useSelection.js';
+import { useTranslation } from '../core/index.js';
+
+/**
+ * useGroupDetail
+ * 獲取單個群組的詳細信息。
+ */
+export function useGroupDetail(id: string | null, isAdmin = false) {
+  const { data: group, isLoading, error } = useAppQuery(
+    id ? queryKeys.groups.detail(id, isAdmin) : null,
+    async () => {
+      if (!id) return null;
+      return GroupService.getById(id, isAdmin ? 'admin' : 'public');
+    },
+    {
+      staleTime: STALE_TIMES.LONG,
+    }
+  );
+  return { group, isLoading, error };
+}
+
+/**
+ * useGroupData
+ * 獲取群組及其照片列表。
+ */
+interface UseGroupDataOptions {
+  groupId: string | null;
+  isAdmin?: boolean;
+}
+
+export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
+  const { search, category, tags, sort } = useFilters();
+  const { group, isLoading: isGroupPending, error: groupError } = useGroupDetail(groupId, !!isAdmin);
+  
+  const {
+    data,
+    isPending: isPhotosPending,
+    error: photosError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = usePhotos({
+    groupId: groupId || undefined,
+    mode: isAdmin ? 'admin' : 'public',
+    categoryId: category,
+    tagId: tags?.[0],
+    searchQuery: search,
+    sortOrder: sort,
+    onlyGroupsCover: false,
+  });
+
+  const photos = data?.pages.flatMap(p => p.items) || [];
+  const totalCount = data?.pages[0]?.total || 0;
+  const loading = isGroupPending || isPhotosPending;
+  const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
+  const error = (groupError || photosError) ? (getErrorMessage(groupError || photosError)) : null;
+
+  return {
+    group,
+    photos,
+    totalCount,
+    loading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  };
+}
+
+/**
+ * useGroupEditState
+ * 處理群組編輯過程中的中間狀態與級聯更新邏輯。
+ */
+export const useGroupEditState = (
+  activeGroupId: string | null,
+  dbGroupPhotos: Photo[] | undefined,
+  onUpdatePhoto: (id: string, data: Partial<Photo>) => Promise<unknown>
+) => {
+  const user = useAtomValue(userAtom);
+  const { group: queriedGroupData, isLoading: isGroupDataPending } = useGroupDetail(activeGroupId, true);
+
+  const initialGroupData = queriedGroupData || (activeGroupId && !isGroupDataPending ? {
+    id: activeGroupId,
+    name: "GROUP",
+    description: { zh: "" },
+    coverPhotoId: null,
+    userId: user?.id || "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    status: 'active' as const
+  } : null) as ProductGroup | null;
+
+  const handleUpdateGroupData = useCallback(async (updates: Partial<ProductGroup>) => {
+    if (!activeGroupId || !initialGroupData) return;
+    const nextGroupData = { ...initialGroupData, ...updates };
+    try {
+      await GroupService.upsert(nextGroupData);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(activeGroupId, true) });
+    } catch (err) {
+      throw err;
+    }
+  }, [activeGroupId, initialGroupData]);
+
+  return {
+    groupData: initialGroupData,
+    isGroupDataPending,
+    handleUpdateGroupData
+  };
+};
+
+/**
+ * useGroupMutations
+ * 整合所有群組相關的寫操作。
+ */
+export function useGroupMutations() {
+  const { clearSelection } = useSelectionActions();
+  const { invalidateList } = useInvalidatePhotos();
+  const { t } = useTranslation();
+
+  const createMutation = useAppMutation({
+    mutationFn: (args: { name: string; userId: string }) => GroupService.create({ name: args.name, userId: args.userId }),
+    onSuccess: () => {
+      showToast.success(t('groupCreated'));
+      invalidateList();
+    },
+  });
+
+  const updateMutation = useAppMutation({
+    mutationFn: (args: { id: string; updates: Partial<ProductGroup> }) => GroupService.update(args.id, args.updates),
+    onSuccess: () => {
+      showToast.success(t('groupUpdated'));
+      invalidateList();
+    },
+  });
+
+  const deleteMutation = useAppMutation({
+    mutationFn: (id: string) => GroupService.delete(id),
+    onSuccess: () => {
+      showToast.success(t('groupDeleted'));
+      invalidateList();
+    },
+  });
+
+  const setCoverMutation = useOptimisticPhotoMutation({
+    mutationFn: (args: { groupId: string; photoId: string }) => GroupService.setCover(args.photoId, args.groupId),
+    onMutateOptimistic: (args) => ({
+      ids: args.photoId,
+      updater: (photo: Photo) => ({
+        ...photo,
+        isGroupCover: true,
+        isCover: true,
+      } as Photo),
+    }),
+    errorContext: 'setCover',
+    onSuccess: () => {
+      showToast.success(t('setCoverSuccess'));
+    },
+    onSettled: () => {
+      invalidateList();
+    }
+  });
+
+  const movePhotosMutation = useOptimisticPhotoMutation({
+    mutationFn: (args: { groupId: string; photoIds: string[] }) => GroupService.movePhotos(args.photoIds, args.groupId),
+    onMutateOptimistic: (args) => ({
+      ids: args.photoIds,
+      updater: (photo: Photo) => ({
+        ...photo,
+        groupId: args.groupId,
+        isGroupCover: false,
+        isCover: false,
+      } as Photo),
+    }),
+    errorContext: 'movePhotos',
+    onSuccess: (_, variables) => {
+      showToast.success(t('addPhotosSuccess', variables.photoIds.length));
+      clearSelection();
+    },
+    onSettled: () => {
+      invalidateList();
+    }
+  });
+
+  const dissolveMutation = useAppMutation({
+    mutationFn: (groupId: string) => GroupService.ungroup(groupId),
+    onSuccess: () => {
+      showToast.success(t('groupDissolved'));
+      invalidateList();
+    },
+  });
+
+  const combineMutation = useOptimisticPhotoMutation({
+    mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => GroupService.groupPhotos(args.photoIds, args.targetGroupId),
+    onMutateOptimistic: (args) => {
+      const targetGroupId = args.targetGroupId || generateId();
+      return {
+        ids: args.photoIds,
+        updater: (photo: Photo) => ({
+          ...photo,
+          groupId: targetGroupId,
+          isGroupCover: false,
+          isCover: false,
+        } as Photo),
+      };
+    },
+    errorContext: 'combinePhotos',
+    onSuccess: () => {
+      clearSelection();
+      invalidateList();
+    }
+  });
+
+  const removePhotosMutation = useOptimisticPhotoMutation({
+    mutationFn: (args: { photoIds: string[]; groupId: string }) => GroupService.removePhotos(args.photoIds, args.groupId),
+    onMutateOptimistic: (args) => ({
+      ids: args.photoIds,
+      updater: (photo: Photo) => ({
+        ...photo,
+        groupId: null,
+        isGroupCover: false,
+        isCover: false,
+      } as Photo),
+    }),
+    errorContext: 'removePhotos',
+    onSuccess: () => {
+      invalidateList();
+    },
+    onSettled: () => {
+      invalidateList();
+    }
+  });
+
+  return {
+    create: createMutation,
+    update: updateMutation,
+    remove: deleteMutation,
+    setCover: setCoverMutation,
+    combine: combineMutation,
+    movePhotos: movePhotosMutation,
+    dissolve: dissolveMutation,
+    removePhotos: removePhotosMutation,
+    isPending: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || 
+               setCoverMutation.isPending || combineMutation.isPending || movePhotosMutation.isPending || 
+               dissolveMutation.isPending || removePhotosMutation.isPending,
+  };
+}
+
+export function useGroupPhotosMutation() {
+  const { combine } = useGroupMutations();
+  return combine;
+}
+
+export function useRemoveFromGroupMutation() {
+  const { removePhotos } = useGroupMutations();
+  return removePhotos;
+}
