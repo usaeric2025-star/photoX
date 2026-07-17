@@ -15,7 +15,7 @@ export const APP_CONFIG = {
   NAME: 'PhotoX',
 } as const;
 
-export const PAGINATION = {
+const PAGINATION = {
   PUBLIC_PAGE_SIZE: 120,
   ADMIN_BATCH_SIZE: 120,
   BATCH_SIZE: 20,
@@ -25,21 +25,21 @@ export const PAGINATION = {
   DEFAULT_LIMIT: 100,
 } as const;
 
-export const PHOTO_QUERY_CONFIG = {
+const PHOTO_QUERY_CONFIG = {
   limit: PAGINATION.DEFAULT_LIMIT,
   sortBy: 'created_at',
   sortOrder: 'desc',
   secondarySort: 'id',
 } as const;
 
-export const EMPTY_ARRAY: never[] = [];
+const EMPTY_ARRAY: never[] = [];
 
 export const DB_CONFIG = {
   TABLE_NAME: 'furniture_items',
   BUCKET_NAME: 'furniture_images',
 } as const;
 
-export const CACHE_CONFIG = {
+const CACHE_CONFIG = {
   STALE_TIME_5M: 1000 * 60 * 5,
   GC_TIME_30M: 1000 * 60 * 30,
 } as const;

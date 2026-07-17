@@ -61,7 +61,7 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
   return processedUrl;
 }
 
-export const mapTranslationField = (value: unknown): { zh: string; en: string; ms: string } => {
+const mapTranslationField = (value: unknown): { zh: string; en: string; ms: string } => {
   if (!value) return { zh: '', en: '', ms: '' };
 
   let target: unknown = value;
@@ -166,7 +166,7 @@ export const mapTranslationField = (value: unknown): { zh: string; en: string; m
 /**
  * 泛用的欄位資料庫映射工具，減少多個 commands.ts 中的重複程式碼
  */
-export const mapFieldsToDb = (
+const mapFieldsToDb = (
   updates: Record<string, any>,
   allowedFields: string[],
   neverAllowed: string[],

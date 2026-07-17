@@ -18,7 +18,7 @@ const SETTINGS_COLUMNS = [
 /**
  * SettingsService: 處理設置相關的 API 邏輯。
  */
-export const SettingsService = {
+const SettingsService = {
   fetchPublic: async (): Promise<AppSettings> => {
     try {
       const settingsPromise = api.public.settings.$get();

@@ -9,7 +9,7 @@ import type {
   PhotoListItem as ApiPhotoListItem,
 } from '#shared/apiContractSchema.js';
 
-export interface PaginatedResponse<T> {
+interface PaginatedResponse<T> {
   data: T[];
   total: number;
   nextCursor?: string | null;
@@ -17,7 +17,7 @@ export interface PaginatedResponse<T> {
 
 export type PhotoListItem = ApiPhotoListItem;
 
-export interface FilterOptions {
+interface FilterOptions {
   q?: string;
   category?: string;
   groupId?: string;
@@ -27,17 +27,17 @@ export interface FilterOptions {
   batch?: string;
 }
 
-export interface GroupFilterOptions {
+interface GroupFilterOptions {
   userId?: string;
   isAdmin?: boolean;
 }
 
-export interface BatchEditPayload {
+interface BatchEditPayload {
   ids: string[];
   updates: Partial<Photo>;
 }
 
-export interface UpdatePhotoParams {
+interface UpdatePhotoParams {
   id: string;
   updates: Partial<Photo>;
 }

@@ -15,7 +15,7 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
  * 
  * 處理群組與照片關係的 API 呼叫。
  */
-export const GroupService = {
+const GroupService = {
   list: async () => {
     return ErrorFactory.unwrap<ProductGroup[]>(
       api.groups.$get(),
@@ -102,7 +102,7 @@ import { useTranslation } from '../core/index.js';
  * useGroupDetail
  * 獲取單個群組的詳細信息。
  */
-export function useGroupDetail(id: string | null, isAdmin = false) {
+function useGroupDetail(id: string | null, isAdmin = false) {
   const { data: group, isLoading, error } = useAppQuery(
     id ? queryKeys.groups.detail(id, isAdmin) : null,
     async () => {
@@ -238,42 +238,18 @@ export function useGroupMutations() {
     },
   });
 
-  const setCoverMutation = useOptimisticPhotoMutation({
-    mutationFn: (args: { groupId: string; photoId: string }) => GroupService.setCover(args.photoId, args.groupId),
-    onMutateOptimistic: (args) => ({
-      ids: args.photoId,
-      updater: (photo: Photo) => ({
-        ...photo,
-        isGroupCover: true,
-        isCover: true,
-      } as Photo),
-    }),
-    errorContext: 'setCover',
+  const setCoverMutation = useAppMutation({
+    mutationFn: (args: { groupId: string; photoId: string }) => GroupService.setCover(args.groupId, args.photoId),
     onSuccess: () => {
-      showToast.success(t('setCoverSuccess'));
-    },
-    onSettled: () => {
       invalidateList();
     }
   });
 
-  const movePhotosMutation = useOptimisticPhotoMutation({
+  const movePhotosMutation = useAppMutation({
     mutationFn: (args: { groupId: string; photoIds: string[] }) => GroupService.movePhotos(args.photoIds, args.groupId),
-    onMutateOptimistic: (args) => ({
-      ids: args.photoIds,
-      updater: (photo: Photo) => ({
-        ...photo,
-        groupId: args.groupId,
-        isGroupCover: false,
-        isCover: false,
-      } as Photo),
-    }),
-    errorContext: 'movePhotos',
     onSuccess: (_, variables) => {
       showToast.success(t('addPhotosSuccess', variables.photoIds.length));
       clearSelection();
-    },
-    onSettled: () => {
       invalidateList();
     }
   });
@@ -286,43 +262,18 @@ export function useGroupMutations() {
     },
   });
 
-  const combineMutation = useOptimisticPhotoMutation({
+  const combineMutation = useAppMutation({
     mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => GroupService.groupPhotos(args.photoIds, args.targetGroupId),
-    onMutateOptimistic: (args) => {
-      const targetGroupId = args.targetGroupId || generateId();
-      return {
-        ids: args.photoIds,
-        updater: (photo: Photo) => ({
-          ...photo,
-          groupId: targetGroupId,
-          isGroupCover: false,
-          isCover: false,
-        } as Photo),
-      };
-    },
-    errorContext: 'combinePhotos',
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      showToast.success(t('groupCreated', variables.photoIds.length));
       clearSelection();
       invalidateList();
     }
   });
 
-  const removePhotosMutation = useOptimisticPhotoMutation({
+  const removePhotosMutation = useAppMutation({
     mutationFn: (args: { photoIds: string[]; groupId: string }) => GroupService.removePhotos(args.photoIds, args.groupId),
-    onMutateOptimistic: (args) => ({
-      ids: args.photoIds,
-      updater: (photo: Photo) => ({
-        ...photo,
-        groupId: null,
-        isGroupCover: false,
-        isCover: false,
-      } as Photo),
-    }),
-    errorContext: 'removePhotos',
     onSuccess: () => {
-      invalidateList();
-    },
-    onSettled: () => {
       invalidateList();
     }
   });

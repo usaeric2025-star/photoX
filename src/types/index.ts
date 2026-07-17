@@ -6,18 +6,18 @@
 import * as v from 'valibot';
 
 // --- Existing Utility Types ---
-export type JsonValue = string | number | boolean | null | Record<string, unknown> | JsonValue[];
-export type AnyFunction = (...args: unknown[]) => unknown;
-export type AnyArray = unknown[];
+type JsonValue = string | number | boolean | null | Record<string, unknown> | JsonValue[];
+type AnyFunction = (...args: unknown[]) => unknown;
+type AnyArray = unknown[];
 
 export * from './photo.js';
 export * from './api.js';
 export * from './tasks.js';
 
 import { translations } from '#src/locales/index.js';
-export type TranslationType = typeof translations['en'];
+type TranslationType = typeof translations['en'];
 
-export interface Task {
+interface Task {
   id: string;
   name: string;
   status: 'running' | 'completed' | 'error' | 'cancelled' | 'warning';
@@ -53,7 +53,7 @@ export interface AppSettings {
   [key: string]: unknown;
 }
 
-export interface DialogData {
+interface DialogData {
   title: string;
   message?: string | React.ReactNode;
   onConfirm?: () => void | Promise<void>;
@@ -82,7 +82,7 @@ export interface Theme {
   popoverTrigger: string;
 }
 
-export interface AppState {
+interface AppState {
   photos: import('./photo.js').Photo[];
   categories: import('./photo.js').Category[];
   tags: import('./photo.js').Tag[];

@@ -18,7 +18,7 @@ const DimensionSchema = v.object({
   isAiEstimated: v.optional(v.nullable(v.boolean())),
 });
 
-export const getPhotoEditSchema = (t: TranslationType) => v.object({
+const getPhotoEditSchema = (t: TranslationType) => v.object({
   name: v.pipe(v.string(), v.minLength(1, t.titleRequired || 'Required'), v.maxLength(100, t.titleTooLong || 'Too long')),
   description: v.optional(v.nullable(v.union([TranslationSchema, v.string()]))),
   categoryId: v.optional(v.nullable(v.string())),

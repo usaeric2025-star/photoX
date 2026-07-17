@@ -18,13 +18,13 @@ import { logger } from '#lib/logger.js';
 import { usePhotoMutations, useAIBatchAnalysis } from '#src/hooks/photo/index.js';
 import { useSelectedIds } from '#src/hooks/selection/useSelection.js';
 
-export type UnifiedTaskStatus = TaskState['status'] | 'queued';
+type UnifiedTaskStatus = TaskState['status'] | 'queued';
 
 /**
  * AdminService
  * 處理管理員相關的複雜業務邏輯。
  */
-export const AdminService = {
+const AdminService = {
   getAllCachedPhotos: (queryClient: QueryClient) => {
     try {
       const cachedQueries = queryClient.getQueriesData({ queryKey: queryKeys.photos.all });
@@ -121,7 +121,7 @@ export function useAdminActions() {
  * usePerformanceAudit
  * 獲取並格式化前端性能審計結果。
  */
-export function usePerformanceAudit() {
+function usePerformanceAudit() {
   const { t } = useTranslation();
   const performanceIssues = useMemo(() => {
     const incidents = perfAudit.getIncidents();
@@ -161,7 +161,7 @@ export function usePerformanceAudit() {
  * useSystemMaintenance
  * 處理系統診斷、修復與維護任務。
  */
-export function useSystemMaintenance() {
+function useSystemMaintenance() {
   const { t, uiTranslations: labels } = useTranslation();
   const { invalidateList } = useInvalidatePhotos();
 
@@ -299,7 +299,7 @@ export function useMaintenanceExecution(issueId: string, title: string, onSucces
  * useGlobalTasks
  * 整合並追蹤所有全局任務（本地與遠端）。
  */
-export interface UnifiedTask {
+interface UnifiedTask {
   id: string;
   source: 'session' | 'maintenance';
   title: string;

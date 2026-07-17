@@ -9,7 +9,7 @@ interface AppFieldProps<TName extends string> {
     className?: string;
 }
 
-export function AppField<TName extends string>({ form, name, label, children, className }: AppFieldProps<TName>) {
+function AppField<TName extends string>({ form, name, label, children, className }: AppFieldProps<TName>) {
     const Field = form.Field as React.ComponentType<any>;
     return (
         <Field 

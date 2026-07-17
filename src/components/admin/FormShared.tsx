@@ -49,7 +49,7 @@ interface ManufacturerListProps {
   onDelete?: (mfr: Manufacturer) => void;
 }
 
-export function ManufacturerList({
+function ManufacturerList({
   manufacturers,
   selectedId,
   onSelect,

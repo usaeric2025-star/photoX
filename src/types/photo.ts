@@ -67,7 +67,7 @@ export interface Photo {
   [key: string]: unknown;
 }
 
-export interface SubCategory {
+interface SubCategory {
   id: number;
   name: string;
   aliases: string[];
@@ -141,7 +141,7 @@ export interface ProductFormData {
   uri?: string;
 }
 
-export interface PhotoAIResult {
+interface PhotoAIResult {
   photoId: string;
   rawResult?: string;
   parsedData?: Record<string, unknown>;

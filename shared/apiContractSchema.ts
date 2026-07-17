@@ -223,7 +223,7 @@ const TagSchema = v.object({
     hotScore: v.optional(v.number())
 });
 
-export const PhotoSchema = v.object({
+const PhotoSchema = v.object({
     id: v.optional(v.string()),
     name: v.string(),
     categoryId: v.optional(v.nullable(v.string())),

@@ -13,14 +13,14 @@ export interface LightboxSlide {
   original?: unknown; // 原始數據引用
 }
 
-export interface LightboxConfig {
+interface LightboxConfig {
   canDownload?: boolean;
   canZoom?: boolean;
   canThumbnails?: boolean;
   theme?: 'dark' | 'light';
 }
 
-export interface LightboxState {
+interface LightboxState {
   isOpen: boolean;
   slides: LightboxSlide[];
   currentIndex: number;

@@ -46,7 +46,7 @@ export const useManufacturers = (options?: { enabled?: boolean }) => {
  * useMetadataMutations
  * 整合所有元數據的寫操作。
  */
-export function useMetadataMutations() {
+function useMetadataMutations() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 

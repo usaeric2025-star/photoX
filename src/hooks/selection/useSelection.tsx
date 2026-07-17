@@ -10,7 +10,7 @@ const store = getDefaultStore();
 /**
  * SelectionService: 處理非 URL 的瞬態選擇狀態 (Jotai)
  */
-export const SelectionService = {
+const SelectionService = {
   setBatchEditing: (ids: string[] | null) => {
     store.set(batchEditingIdsAtom, ids);
   },

@@ -58,7 +58,7 @@ export const getTranslatedCategoryName = (
  * Simple helper to check if a category is "Uncategorized" based on various name variants.
  * Respects ID '7' as "Other" (valid category).
  */
-export const isUncategorizedName = (name: string, t: TranslationType, catId?: string | number): boolean => {
+const isUncategorizedName = (name: string, t: TranslationType, catId?: string | number): boolean => {
   if (catId && (String(catId) === '7' || String(catId) === 'Others' || String(catId) === 'other')) return false;
   const uncatValues = ['未分类', 'uncategorized', 'tiada kategori'];
   const nameLower = (name || '').toLowerCase().trim();

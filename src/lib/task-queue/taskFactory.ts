@@ -113,7 +113,7 @@ export function executeTask<T>(config: TaskConfig<T>): Promise<T> {
   });
 }
 
-export function createBatchTasks<T>(
+function createBatchTasks<T>(
   items: T[],
   config: Omit<TaskConfig<T>, 'execute' | 'meta'> & {
     createPayload: (item: T) => { meta?: Record<string, unknown>, execute: TaskConfig<T>['execute'] }

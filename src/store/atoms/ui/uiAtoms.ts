@@ -10,7 +10,7 @@ export const isSidebarOpenAtom = atom<boolean>(false) as PrimitiveAtom<boolean>;
 // --- Lightbox ---
 export const lightboxSlidesAtom = atom<LightboxSlide[]>([]);
 export const lightboxCurrentIndexAtom = atom<number>(0) as PrimitiveAtom<number>;
-export const lightboxOpenAtom = atom((get) => get(lightboxSlidesAtom).length > 0);
+const lightboxOpenAtom = atom((get) => get(lightboxSlidesAtom).length > 0);
 export const closeLightboxAtom = atom(null, (_get, set) => {
   set(lightboxSlidesAtom, []);
   set(lightboxCurrentIndexAtom, 0);

@@ -73,7 +73,7 @@ export function useAppQuery<TData = unknown, TError = Error>(
   });
 }
 
-export function useAppInfiniteQuery<TData = unknown, TError = Error, TPageParam = unknown>(
+function useAppInfiniteQuery<TData = unknown, TError = Error, TPageParam = unknown>(
   key: QueryKey | null,
   fetcherFn: (pageParam: TPageParam) => Promise<TData>,
   options: Omit<UseInfiniteQueryOptions<TData, TError, InfiniteData<TData>, QueryKey, TPageParam>, 'queryKey' | 'queryFn'>
