@@ -116,7 +116,7 @@ export const groups = new Hono()
   .post('/group-photos', async (c) => {
       const body = await c.req.json();
       const check = v.safeParse(v.object({
-          targetGroupId: v.string(),
+          targetGroupId: v.optional(v.string()),
           userId: v.string(),
           photoIds: v.optional(v.array(v.string())),
           groupData: v.record(v.string(), v.unknown()),
@@ -126,7 +126,7 @@ export const groups = new Hono()
       if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
       const { 
-          targetGroupId, 
+          targetGroupId: rawTargetGroupId, 
           userId, 
           groupData, 
           photoIds: rawPhotoIds,
@@ -135,6 +135,7 @@ export const groups = new Hono()
 
       const photoIds = Array.isArray(rawPhotoIds) ? rawPhotoIds : (rawPhotoIds ? [rawPhotoIds] : []);
       const sourceGroupIds = Array.isArray(rawSourceGroupIds) ? rawSourceGroupIds : (rawSourceGroupIds ? [rawSourceGroupIds] : []);
+      const targetGroupId = rawTargetGroupId || crypto.randomUUID();
       
       const mergedGroupData: any = { ...groupData, id: targetGroupId };
       
@@ -256,7 +257,7 @@ export const groups = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({ 
         photoIds: v.union([v.string(), v.array(v.string())]), 
-        targetGroupId: v.nullable(v.string()) 
+        targetGroupId: v.optional(v.nullable(v.string())) 
     }), body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
@@ -313,7 +314,7 @@ export const groups = new Hono()
   })
   .post('/set-cover', async (c) => {
     const body = await c.req.json();
-    const check = v.safeParse(v.object({ photoId: v.nullable(v.string()), groupId: v.string() }), body);
+    const check = v.safeParse(v.object({ photoId: v.optional(v.nullable(v.string())), groupId: v.string() }), body);
     if (!check.success) return errorResponse(c, check.issues[0].message, 400);
 
     const { photoId, groupId } = check.output;

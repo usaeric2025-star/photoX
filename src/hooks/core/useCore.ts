@@ -68,8 +68,10 @@ export function useAppInit() {
   const isReady = !isAppStoreLoading;
 
   useEffect(() => {
-    if (isReady && !isError && typeof window !== 'undefined') {
+    if (isReady && typeof window !== 'undefined') {
       (window as any).__APP_READY__ = true;
+      const btns = document.querySelectorAll("button");
+      btns.forEach(b => { if (b.innerText.includes("啟動過久")) b.remove(); });
     }
   }, [isReady, isError]);
 

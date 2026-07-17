@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
-import { toast } from 'sonner';
+import { showToast } from '#lib/ui/toast.js';
 import { Photo } from '#src/types/photo.js';
 import { usePermission, useAdminMode, useTranslation } from '#src/hooks/index.js';
 
@@ -43,7 +43,7 @@ export function LightboxHeader({
     if (key) {
       const url = key.startsWith('http') ? key : new URL(key, window.location.origin).toString();
       navigator.clipboard.writeText(url);
-      toast.success(t('imageLinkCopied'));
+      showToast.success(t('imageLinkCopied'));
     }
   };
 

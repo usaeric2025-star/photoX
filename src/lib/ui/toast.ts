@@ -88,7 +88,7 @@ export const showToast = {
       userMessage = String(messageOrError || userMessage);
     }
 
-    if (!traceId) traceId = Math.random().toString(36).substring(2, 10).toUpperCase();
+    if (!traceId) traceId = crypto.randomUUID();
     if (!timestamp) timestamp = new Date().toLocaleString('zh-CN');
 
     const diagnosticsText = [
