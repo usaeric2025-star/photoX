@@ -45,7 +45,7 @@ export function clearCountCache() {
 
 export async function getPhotosList(params: PhotoListParams) {
     const { 
-        limit = 100, cursor,
+        limit = 100, page = 1, cursor,
         categoryId, tagId, searchQuery,
         isAdminMode = false, 
         onlyUngrouped = false, onlyGroupsCover = false,
@@ -53,6 +53,7 @@ export async function getPhotosList(params: PhotoListParams) {
         isHidden, sortOrder
     } = params;
 
+    const offset = (page - 1) * limit;
     const whereClauses: (SQL | undefined)[] = [];
 
     // ... (rest of the logic for whereClauses remains same)
@@ -172,6 +173,7 @@ export async function getPhotosList(params: PhotoListParams) {
         .where(finalWhere)
         .orderBy(...orderByList)
         .limit(limit)
+        .offset(offset)
         .execute();
 
     // Run queries in parallel

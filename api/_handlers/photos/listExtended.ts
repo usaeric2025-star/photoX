@@ -86,7 +86,9 @@ export const listExtendedRoutes = new Hono()
 
     const { groupId, page = 1, pageSize = 100, isAdminMode = false } = check.output;
     try {
-        const offset = (page - 1) * pageSize;
+        const pageNum = Number(page) || 1;
+        const limitNum = Number(pageSize) || 100;
+        const offset = (pageNum - 1) * limitNum;
         const baseCondition = and(
             eq(furnitureItems.groupId, groupId),
             !isAdminMode ? or(eq(furnitureItems.isHidden, false), isNull(furnitureItems.isHidden)) : undefined
@@ -113,7 +115,7 @@ export const listExtendedRoutes = new Hono()
                 desc(furnitureItems.createdAt),
                 asc(furnitureItems.id)
             )
-            .limit(pageSize)
+            .limit(limitNum)
             .offset(offset);
 
         if (data.length > 0) {

@@ -108,8 +108,8 @@ export function usePhotos(options: UsePhotosOptions = {}) {
     queryFn: async ({ pageParam = 1 }) => {
       const res = await api.photos.list.$post({
         json: {
-          page: pageParam,
-          limit: pageSize,
+          page: Number(pageParam),
+          limit: Number(pageSize),
           categoryId: categoryId || undefined,
           tagId: tagId || undefined,
           groupId: groupId || undefined,
@@ -119,11 +119,15 @@ export function usePhotos(options: UsePhotosOptions = {}) {
           onlyGroupsCover: onlyGroupsCover,
         },
       });
-      return ErrorFactory.unwrap<ListPhotosResponse>(res, 'Failed to fetch photos');
+      const response = await ErrorFactory.unwrap<ListPhotosResponse>(res, 'Failed to fetch photos');
+      return {
+        ...response,
+        page: response.page || (typeof pageParam === 'number' ? pageParam : 1)
+      };
     },
     getNextPageParam: (lastPage) => {
       if (!lastPage || !lastPage.items || lastPage.items.length < pageSize) return undefined;
-      return lastPage.page + 1;
+      return (lastPage.page || 1) + 1;
     },
     staleTime: STALE_TIMES.MEDIUM,
   });

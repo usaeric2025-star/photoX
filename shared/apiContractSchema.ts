@@ -77,8 +77,8 @@ const ImportOrphansReqSchema = v.object({
 });
 
 export const PhotoListReqSchema = v.object({
-    page: v.optional(v.number()),
-    limit: v.optional(v.number()),
+    page: v.optional(v.union([v.number(), v.string()])),
+    limit: v.optional(v.union([v.number(), v.string()])),
     cursor: v.optional(v.nullable(v.string())),
     categoryId: v.optional(v.nullable(v.union([v.string(), v.number()]))),
     tagId: v.optional(v.nullable(v.union([v.string(), v.number()]))),
@@ -143,8 +143,8 @@ export const PhotoCheckHashReqSchema = v.object({
 export const ListByGroupReqSchema = v.object({
     groupId: v.string(),
     isAdminMode: v.optional(v.boolean()),
-    page: v.optional(v.number()),
-    pageSize: v.optional(v.number())
+    page: v.optional(v.union([v.number(), v.string()])),
+    pageSize: v.optional(v.union([v.number(), v.string()]))
 });
 
 const TagListItemSchema = v.object({
@@ -246,8 +246,8 @@ export const PhotoSchema = v.object({
 
 export const SearchReqSchema = v.object({
     query: v.string(),
-    limit: v.optional(v.number()),
-    offset: v.optional(v.number())
+    limit: v.optional(v.union([v.number(), v.string()])),
+    offset: v.optional(v.union([v.number(), v.string()]))
 });
 
 const MaintenanceJobSchema = v.object({

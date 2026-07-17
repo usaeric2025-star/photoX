@@ -9,12 +9,20 @@ import { getPhotosList, getGroupCounts } from '../../_lib/db/queries/photos.js';
 import { logger } from '../../_lib/logger.js';
 
 export const listRoutes = new Hono()
-  .post('/list', sValidator('json', PhotoListReqSchema), async (c) => {
-    const params = c.req.valid('json');
-    const { page = 0, limit = 100, isAdminMode = false } = params;
+  .post('/list', sValidator('json', PhotoListReqSchema, (result, c) => {
+    if (!result.success) {
+      const err = (result as any).error;
+      console.error("Validation failed:", JSON.stringify(err, null, 2));
+      return errorResponse(c, err?.[0]?.message || 'Validation error', 400);
+    }
+  }), async (c) => {
+    const params = c.req.valid('json'); console.log('POST /api/photos/list params:', params);
+    const { page = 1, limit = 100, isAdminMode = false } = params;
     
     try {
-      const { items, total, nextCursor } = await getPhotosList({ ...params, limit });
+      const pageNum = Number(page) || 1;
+      const limitNum = Number(limit) || 100;
+      const { items, total, nextCursor } = await getPhotosList({ ...params, page: pageNum, limit: limitNum });
 
       if (items.length > 0) {
         const gIds = Array.from(new Set(items.filter(d => d.groupId).map(d => d.groupId))) as string[];
@@ -62,11 +70,12 @@ export const listRoutes = new Hono()
         return successResponse(c, {
           items: formatted,
           nextCursor: finalNextCursor,
-          total
+          total,
+          page
         });
       }
 
-      return successResponse(c, { items: [], nextCursor: null, total: total || 0 });
+      return successResponse(c, { items: [], nextCursor: null, total: total || 0, page });
     } catch (error: unknown) {
       throw errorFactory.wrap(error, 'photos.list', 'QUERY_FAILURE');
     }
