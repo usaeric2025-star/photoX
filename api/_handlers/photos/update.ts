@@ -124,7 +124,11 @@ export const updateRoutes = new Hono()
                 }
             });
         } else {
-            results = await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id)).returning();
+            if (Object.keys(mappedUpdates).length > 0) {
+                results = await db.update(furnitureItems).set(mappedUpdates).where(eq(furnitureItems.id, id)).returning();
+            } else {
+                results = await db.select().from(furnitureItems).where(eq(furnitureItems.id, id)).limit(1);
+            }
         }
         const data = results[0] || null;
 

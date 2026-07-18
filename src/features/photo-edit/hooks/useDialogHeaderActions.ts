@@ -63,7 +63,7 @@ export function useDialogHeaderActions(onClose: () => void) {
   const onSave = async () => {
     try {
       await commit();
-      onClose();
+      // onClose is handled by onSuccess callback in PhotoEditSessionProvider
     } catch (e) {
       ErrorFactory.handle(e as Error, { context: '[PhotoEdit] Save error intercepted in header', silent: true });
     }

@@ -109,6 +109,18 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
     }
   };
 
+  const handleBatchToggleHide = async (hide: boolean) => {
+    if (selectedCount === 0 || isAnyPending) return;
+    const toastId = showToast.loading(t('processing') || '處理中...');
+    try {
+      await batchUpdate.mutateAsync({ ids: selectedIds, updates: { isHidden: hide } });
+      showToast.success(hide ? t('hideSuccess', selectedCount) || '已隱藏' : t('unhideSuccess', selectedCount) || '已取消隱藏', { id: toastId });
+      clearSelection();
+    } catch (err: unknown) {
+      showToast.dismiss(toastId);
+    }
+  };
+
   const handleBatchDeleteClick = async () => {
     const ok = await confirm({
       title: '確定要刪除選取的照片嗎？',
@@ -170,6 +182,8 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
           onManualGroup={handleManualGroup}
           onBatchEdit={handleBatchEdit}
           onBatchDelete={handleBatchDeleteClick}
+          onBatchToggleHide={handleBatchToggleHide}
+          isUpdating={batchUpdate.isPending}
         />
       </div>
     </div>

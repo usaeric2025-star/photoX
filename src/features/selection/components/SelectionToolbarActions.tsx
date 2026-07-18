@@ -16,6 +16,8 @@ interface SelectionToolbarActionsProps {
   onManualGroup: () => void;
   onBatchEdit: () => void;
   onBatchDelete: () => void;
+  onBatchToggleHide: (hide: boolean) => void;
+  isUpdating: boolean;
 }
 
 /**
@@ -36,6 +38,8 @@ export function SelectionToolbarActions({
   onManualGroup,
   onBatchEdit,
   onBatchDelete,
+  onBatchToggleHide,
+  isUpdating,
 }: SelectionToolbarActionsProps) {
   return (
     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -78,6 +82,24 @@ export function SelectionToolbarActions({
           </span>
         </button>
       )}
+
+      {/* 批量隱藏 */}
+      <button
+        id="batch-hide-btn"
+        onClick={() => onBatchToggleHide(true)}
+        disabled={selectedCount === 0 || isAnyPending}
+        className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
+        title="隱藏照片"
+      >
+        {isUpdating ? (
+          <LoadingSpinner size="xs" className="text-slate-600 shrink-0" />
+        ) : (
+          <Icon name="eye-off" size={14} className="text-slate-600 shrink-0" />
+        )}
+        <span className="hidden sm:inline shrink-0">
+          {isMd ? '隱藏' : '隱藏'}
+        </span>
+      </button>
 
       {/* 批量編輯 */}
       <button
