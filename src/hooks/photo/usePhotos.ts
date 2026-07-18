@@ -68,10 +68,7 @@ export async function updatePhoto(id: string, initialUpdates: Partial<Photo>): P
   }
   const dbUpdates = mapToDb(updates);
   const rawData = await ErrorFactory.unwrap<SupabasePhotoRaw>(
-    api.photos[':id'].$put({
-      param: { id },
-      json: { updates: dbUpdates }
-    }),
+    api.photos.update.$post({ json: { id, updates: dbUpdates } }),
     'Update photo failed'
   );
     
@@ -142,7 +139,7 @@ export function usePhoto(id: string | null) {
     id ? queryKeys.photos.detail(id) : null,
     async () => {
       if (!id) return null;
-      const res = await api.photos[':id'].$get({ param: { id } });
+      const res = await api.photos['by-ids'].$post({ json: { ids: [id] } }).then(async (res) => { if (res.ok) { const data = await res.json() as any; return { ...res, json: () => ({ ...data, data: data.success ? data.data[0] : null }) } as any; } return res; });
       return ErrorFactory.unwrap<Photo>(res, 'Failed to fetch photo detail');
     },
     {
@@ -229,7 +226,7 @@ export function usePhotoMutations() {
   const editMutation = useOptimisticPhotoMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
       return ErrorFactory.unwrap(
-        api.photos[':id'].$put({ param: { id }, json: { updates } }),
+        api.photos.update.$post({ json: { id, updates } }),
         t('updateFailed')
       );
     },
@@ -247,7 +244,7 @@ export function usePhotoMutations() {
   const batchEditMutation = useOptimisticPhotoMutation({
     mutationFn: async ({ ids, updates }: { ids: string[]; updates: Record<string, unknown> }) => {
       return ErrorFactory.unwrap(
-        api.photos['batch-update'].$post({ json: { ids, updates } }),
+        api.photos.batch.$post({ json: { ids, updates } }),
         t('updateFailed')
       );
     },
@@ -266,7 +263,7 @@ export function usePhotoMutations() {
     mutationFn: async (idOrIds: string | string[]) => {
       const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
       return ErrorFactory.unwrap(
-        api.photos['batch-delete'].$post({ json: { ids } }),
+        api.photos.delete.$post({ json: { ids } }),
         t('deleteFailed')
       );
     },
@@ -283,7 +280,7 @@ export function usePhotoMutations() {
   const togglePinMutation = useOptimisticPhotoMutation({
     mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
       return ErrorFactory.unwrap(
-        api.photos[':id'].$put({ param: { id }, json: { updates: { isPinned } } }),
+        api.photos.update.$post({ json: { id, updates: { isPinned } } }),
         t('updateFailed')
       );
     },

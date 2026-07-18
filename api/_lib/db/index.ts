@@ -35,7 +35,7 @@ function getDb(): PostgresJsDatabase<typeof schema> {
     connect_timeout: 10, // 10s to fail fast and let the client retry on transient connection failures
     prepare: false, // Required for PgBouncer/Supabase transaction pooling
     connection: {
-      statement_timeout: '15000'
+      statement_timeout: 15000
     },
     onnotice: () => {},
   };

@@ -1,7 +1,8 @@
 import { useAtomValue } from 'jotai';
 import { lightboxSlidesAtom, lightboxCurrentIndexAtom } from '#src/store/index.js';
 export * from './types.js';
-import { setLightboxData, clearLightboxData, setLightboxIndex } from '#lib/store/index.js';
+import { useSetAtom } from 'jotai';
+import { closeLightboxAtom } from '#src/store/index.js';
 import { LightboxSlide } from './types.js';
 import { } from '#lib/store/index.js';
 import { useFilters } from '#src/hooks/index.js';
@@ -10,6 +11,9 @@ import { useRoute } from 'wouter';
 export function useLightbox() {
   const slides = useAtomValue(lightboxSlidesAtom);
   const currentIndex = useAtomValue(lightboxCurrentIndexAtom);
+  const setLightboxData = useSetAtom(lightboxSlidesAtom);
+  const setLightboxIndex = useSetAtom(lightboxCurrentIndexAtom);
+  const clearLightboxData = useSetAtom(closeLightboxAtom);
   
   
   
