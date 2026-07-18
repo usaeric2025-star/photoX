@@ -146,10 +146,20 @@ export const groups = new Hono()
         const sourcePhotos = await db.select({
             id: furnitureItems.id,
             groupId: furnitureItems.groupId,
-            userId: furnitureItems.userId
+            userId: furnitureItems.userId,
+            isGroupCover: furnitureItems.isGroupCover
         })
         .from(furnitureItems)
         .where(inArray(furnitureItems.id, photoIds));
+        
+        // Auto-merge full groups if a group cover was selected
+        for (const p of sourcePhotos) {
+            if (p.isGroupCover && p.groupId) {
+                if (!sourceGroupIds.includes(p.groupId)) {
+                    sourceGroupIds.push(p.groupId);
+                }
+            }
+        }
 
         if (sourcePhotos.length > 0) {
            dbUserId = sourcePhotos[0].userId;

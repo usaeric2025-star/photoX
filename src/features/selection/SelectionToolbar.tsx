@@ -83,10 +83,10 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
       const result = await combineMutation.mutateAsync({ photoIds: idsToGroup });
       showToast.success(t('mergePhotosSuccess', idsToGroup.length), { id: toastId });
       
-      // Navigate to the target group
-      if (result?.targetGroupId) {
-        setLocation(`/admin/group/${result.targetGroupId}`);
-      }
+      // Commented out to prevent jumping to group, enabling multiple consecutive operations
+      // if (result?.targetGroupId) {
+      //   setLocation(`/admin/group/${result.targetGroupId}`);
+      // }
       
       clearSelection();
     } catch (err: unknown) {

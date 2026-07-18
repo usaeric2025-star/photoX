@@ -16,7 +16,11 @@ export function NotFoundPage() {
     else if (pathname.match(/\.(jpg|jpeg|png|gif|webp|svg|pdf)$/i)) type = 'resource.404';
     else if (pathname.startsWith('/admin/') || pathname.startsWith('/settings/') || pathname.startsWith('/diagnostics/')) type = 'admin.404';
     
-    ErrorCapture.capture(new Error(`[${type}] 404 Not Found: ${pathname}`));
+    const timer = setTimeout(() => {
+      ErrorCapture.capture(new Error(`[${type}] 404 Not Found: ${pathname}`));
+    }, 500); // 500ms delay to prevent false positives during route exit animations
+    
+    return () => clearTimeout(timer);
   }, [pathname]);
   
   // Decide what kind of 404 this is

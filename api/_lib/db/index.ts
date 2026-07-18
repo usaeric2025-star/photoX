@@ -29,33 +29,19 @@ function getDb(): PostgresJsDatabase<typeof schema> {
   const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
   const maxConnections = isServerless ? 3 : 10;
 
-  // Function to append query parameters to connection string
-  function appendDbParam(url: string, key: string, value: string) {
-    if (!url) return url;
-    try {
-      const u = new URL(url);
-      u.searchParams.set(key, value);
-      return u.toString();
-    } catch {
-      // Fallback for non-standard formats
-      const separator = url.includes('?') ? '&' : '?';
-      return `${url}${separator}${key}=${encodeURIComponent(value)}`;
-    }
-  }
-
-  // Ensure statement_timeout is set at the connection level
-  const finalConnectionString = appendDbParam(connectionString, 'options', '-c statement_timeout=15000');
-
   const clientOptions: postgres.Options<{}> = {
     max: maxConnections,
     idle_timeout: isServerless ? 5 : 10, // Close idle connections quickly within 10 seconds to avoid connection leaks
     connect_timeout: 10, // 10s to fail fast and let the client retry on transient connection failures
     prepare: false, // Required for PgBouncer/Supabase transaction pooling
+    connection: {
+      statement_timeout: '15000'
+    },
     onnotice: () => {},
   };
 
   if (!globalForDb.postgresClient) {
-    globalForDb.postgresClient = postgres(finalConnectionString, {
+    globalForDb.postgresClient = postgres(connectionString, {
       ...clientOptions,
       keep_alive: 30, // 30s keep-alive to prevent stale half-closed connections (unit is seconds in postgres.js)
     });

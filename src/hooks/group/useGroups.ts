@@ -265,7 +265,7 @@ export function useGroupMutations() {
   const combineMutation = useAppMutation({
     mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => GroupService.groupPhotos(args.photoIds, args.targetGroupId),
     onSuccess: (_, variables) => {
-      showToast.success(t('groupCreated', variables.photoIds.length));
+      // Toast is handled by the caller (e.g., SelectionToolbar) to allow replacing loading toasts
       clearSelection();
       invalidateList();
     }

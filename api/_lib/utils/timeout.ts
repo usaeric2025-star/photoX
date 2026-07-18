@@ -32,7 +32,7 @@ export async function pingDbWithRetry(db: any, sql: any, retries = 3, delayMs = 
       return;
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      logger.warn(`⚠️ [DB Connection Retry] Attempt ${i + 1}/${retries} to ping database failed: ${errMsg}`);
+      logger.warn(`⚠️ [DB Connection Retry] Attempt ${i + 1}/${retries} to ping database failed: ${errMsg} | Cause: ${(err as any).cause ? String((err as any).cause) : ""} | Code: ${(err as any).code || ""}`);
       if (i < retries - 1) {
         // Linear/exponential backoff to allow pooler/database to recover
         const actualDelay = delayMs * (i + 1);

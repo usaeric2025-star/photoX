@@ -62,6 +62,13 @@ export function RouterOrchestrator() {
                       <Route path="/group/:slug" component={PublicGroupDetailPage} />
                       <Route path="/category/:id" component={PublicPage} />
                       <Route path="/tag/:id" component={PublicPage} />
+                      {/* Prevent visual 404 during exit animations to admin routes */}
+                      <Route path="/admin" component={() => null} />
+                      <Route path="/admin/:any*" component={() => null} />
+                      <Route path="/settings" component={() => null} />
+                      <Route path="/settings/:any*" component={() => null} />
+                      <Route path="/diagnostics" component={() => null} />
+                      <Route path="/diagnostics/:any*" component={() => null} />
                       <Route component={NotFoundPage} />
                     </Switch>
                   </Suspense>
