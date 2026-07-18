@@ -33,7 +33,7 @@ export const executeBatchUpload = (
         }
       });
     } catch (err) {
-      logger.error('Failed to pre-create group', err);
+      ErrorFactory.handle(err, { context: 'Failed to pre-create group', silent: true });
     }
   }
 
@@ -102,7 +102,7 @@ export const executeBatchUpload = (
         return { ...result, name: task.file.name };
       } catch (err) {
         failedCount++;
-        logger.error('[TaskQueue] Upload processing error:', err);
+        ErrorFactory.handle(err, { context: 'Upload processing error', silent: true });
         return { success: false, error: String(err), name: task.file.name } as any;
       }
     },

@@ -1,7 +1,7 @@
 import { scheduler } from './scheduler.js';
 import { generateId } from '#lib/id.js';
 import { logger } from '#lib/logger.js';
-import { ErrorFactory } from '#lib/error/index.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { getDefaultStore } from "jotai";
 import { isTaskDrawerOpen } from '#lib/store/index.js';
 import { getErrorMessage } from '#lib/error/errorMessages.js';
@@ -71,7 +71,7 @@ export function createTask<T>(config: TaskConfig<T>): string {
         // 統一錯誤處理
         const wrappedError = error instanceof Error ? error : new Error(String(error));
         const userMessage = getErrorMessage(wrappedError);
-        logger.error(`[TaskFactory] ${type} 任務失敗: ${id}`, wrappedError);
+        ErrorFactory.handle(wrappedError, { context: `[TaskFactory] ${type} 任務失敗: ${id}`, silent: true });
         ErrorFactory.capture(wrappedError);
 
         // Pass original error or wrap it? Let's just create a new error with userMessage

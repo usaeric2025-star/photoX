@@ -6,6 +6,7 @@ import { savePhoto } from './savePhoto.js';
 import { rollbackUpload } from './rollback.js';
 import { generateId } from '#lib/id.js';
 import { logger } from '#lib/logger.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 /**
  * Orchestrate the upload process:
@@ -37,7 +38,7 @@ export async function processUpload(task: UploadTask, onStatus?: (status: string
   try {
     imageUrl = await uploadToR2(compressed.blob, photoId, hash);
   } catch (error) {
-    logger.error('[Upload] Storage failed:', error);
+    ErrorFactory.handle(error, { context: '[Upload] Storage failed', silent: true });
     return { success: false, error: error instanceof Error ? error.message : 'Storage upload failed' };
   }
 
@@ -60,7 +61,7 @@ export async function processUpload(task: UploadTask, onStatus?: (status: string
       fallback: compressed.fallback
     };
   } catch (error) {
-    logger.error('[Upload] Database save failed, rolling back storage:', error);
+    ErrorFactory.handle(error, { context: '[Upload] Database save failed, rolling back storage', silent: true });
     // Rollback: delete the uploaded R2 file to prevent orphans
     await rollbackUpload(imageUrl);
     

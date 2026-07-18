@@ -52,7 +52,7 @@ const AdminService = {
       }
       return Array.from(foundPhotos.values());
     } catch (err) {
-      logger.error('[AdminService] Failed to retrieve photos from cache:', err);
+      ErrorFactory.handle(err, { context: '[AdminService] Failed to retrieve photos from cache', silent: true });
       return [];
     }
   },

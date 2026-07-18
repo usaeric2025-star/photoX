@@ -30,7 +30,7 @@ export const ConfirmDialog = ({
     try {
       await onConfirm();
     } catch (e) {
-      logger.error("[ConfirmDialog] execution failed:", e);
+      ErrorFactory.handle(e, { context: 'ConfirmDialog execution failed' });
     } finally {
       onOpenChange(false);
     }

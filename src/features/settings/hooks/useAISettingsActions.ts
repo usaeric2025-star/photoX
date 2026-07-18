@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSettings, useTranslation } from '#src/hooks/index.js';
 import { AppSettings } from '#src/types/index.js';
 import { showToast } from '#lib/ui/toast.js';
@@ -51,7 +52,7 @@ export function useAISettingsActions() {
         setLocalAgnesKey('••••••••••••••••');
       }
     } catch (e) {
-      showToast.error(t('updateError') || '保存失敗');
+      ErrorFactory.handle(e, { context: t('updateError') || '保存失敗' });
     } finally {
       setIsSavingKey(null);
     }
@@ -82,7 +83,7 @@ export function useAISettingsActions() {
         showToast.error(t('aiConnectFailed') || '連接失敗');
       }
     } catch (e) {
-      showToast.error((t('aiConnectFailed') || '連接失敗') + ': ' + String(e));
+      ErrorFactory.handle(e, { context: t('aiConnectFailed') || '連接失敗' });
     } finally {
       setIsTestingProvider(null);
     }

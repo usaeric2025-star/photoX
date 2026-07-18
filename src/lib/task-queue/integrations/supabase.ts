@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '#lib/supabase.js';
 import { logger } from '#lib/logger.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { Task, TaskType } from '#lib/task-queue/types.js';
 
 export const taskTable = {
@@ -28,10 +29,7 @@ export const taskTable = {
     });
 
     if (error) {
-      logger.error('[Task] Insert error:', {
-        error,
-        task: { id: task.id, label: task.label, userId }
-      });
+      ErrorFactory.handle(error, { context: '[Task] Insert error', silent: true });
     } else {
       logger.debug('[Task] Insert success:', task.id);
     }
@@ -46,7 +44,7 @@ export const taskTable = {
       .from('tasks')
       .update(payload)
       .eq('id', id);
-    if (error) logger.error('[Task] Update error:', error);
+    if (error) ErrorFactory.handle(error, { context: '[Task] Update error', silent: true });
   },
 
   // 恢復未完成任務
@@ -66,7 +64,7 @@ export const taskTable = {
       .order('created_at', { ascending: true });
 
     if (error) {
-      logger.error('[Task] Restore error:', error);
+      ErrorFactory.handle(error, { context: '[Task] Restore error', silent: true });
       return [];
     }
 

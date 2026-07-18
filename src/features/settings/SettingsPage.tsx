@@ -15,6 +15,7 @@ import { testAiConnection } from "#src/features/ai/AICommands.js";
 import { executeTask } from '#lib/task-queue/index.js';
 import { uploadToR2 } from '#src/lib/upload/index.js';
 import { logger } from '#lib/logger.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 const GeneralSettings = React.lazy(() => import('./GeneralSettings.js').then(m => ({ default: m.GeneralSettings })));
 const AISettings = React.lazy(() => import('./AISettings.js').then(m => ({ default: m.AISettings })));
@@ -59,7 +60,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   };
 
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
-    updateSettings(newSettings).catch(e => logger.error('[SettingsPage] debouncedSave failed', e));
+    updateSettings(newSettings).catch(e => ErrorFactory.handle(e, { context: '[SettingsPage] debouncedSave failed', silent: true }));
     setHasChanges(false);
   }, 1500);
 

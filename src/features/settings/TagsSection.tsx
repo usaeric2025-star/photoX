@@ -6,6 +6,7 @@ import { Tag, AppSettings } from '#src/types/index.js';
 import { TagItem } from "./TagItem.js";
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 import { logger } from '#lib/logger.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { normalizeTagName } from "#lib/utils.js";
 import { api } from "#lib/api.js";
 import { queryClient } from '#lib/query/index.js';
@@ -46,7 +47,7 @@ export function TagsSection({
   const isRunning = Array.from(tasks.values()).some((t) => t.state?.status === "processing");
 
   const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
-    updateSettings(newSettings).catch(e => logger.error('[TagsSection] debouncedSave failed', e));
+    updateSettings(newSettings).catch(e => ErrorFactory.handle(e, { context: '[TagsSection] debouncedSave failed', silent: true }));
   }, 1500);
 
   const togglePin = (tagId: number) => {

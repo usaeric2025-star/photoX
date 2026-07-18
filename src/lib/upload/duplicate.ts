@@ -19,7 +19,7 @@ export async function checkDuplicate(hash: string): Promise<{ exists: boolean; e
       existingId: data.photo?.id 
     };
   } catch (error) {
-    logger.error('[Duplicate] Error during check:', error);
+    ErrorFactory.handle(error, { context: '[Duplicate] Error during check', silent: true });
     return { exists: false };
   }
 }

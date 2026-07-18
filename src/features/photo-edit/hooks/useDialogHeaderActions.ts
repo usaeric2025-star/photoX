@@ -65,7 +65,7 @@ export function useDialogHeaderActions(onClose: () => void) {
       await commit();
       onClose();
     } catch (e) {
-      logger.error('[PhotoEdit] Save error intercepted in header', e);
+      ErrorFactory.handle(e as Error, { context: '[PhotoEdit] Save error intercepted in header', silent: true });
     }
   };
 
