@@ -15,7 +15,7 @@ import { StandardModalLayout } from "#src/components/ui/StandardModalLayout.js";
 function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: boolean; handleClose: () => void; editPhotoId: string; }) {
   const { t } = useTranslation();
   const adminActions = useAdminActions();
-  const { data: photo, isPending } = usePhoto(editPhotoId);
+  const { data: photo, isPending, isError } = usePhoto(editPhotoId);
 
   const [showConfirm, setShowConfirm] = useState(false);
   const { isDirty, commit, discard, isSubmitting } = usePhotoEditSessionContext();
@@ -69,7 +69,14 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
               }
             }} />}
           >
-            {isPending ? (
+            {isError ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 text-red-500">
+                <p className="text-sm font-medium">{t('updateFailed') || '加载失败'}</p>
+                <button onClick={handleClose} className="mt-4 px-4 py-2 bg-slate-100 rounded-lg text-slate-700">
+                  {t('close')}
+                </button>
+              </div>
+            ) : isPending ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
                 <LoadingSpinner size="lg" />
                 <p className="text-sm font-medium text-slate-500">{t('loading')}...</p>

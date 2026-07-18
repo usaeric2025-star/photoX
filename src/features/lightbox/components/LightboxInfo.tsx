@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
 import { Icon } from '#src/components/ui/Icon.js';
-import { usePhotoAIResult, usePermission, useAdminMode, useTranslation } from '#src/hooks/index.js';
+import { usePhoto, usePhotoAIResult, usePermission, useAdminMode, useTranslation } from '#src/hooks/index.js';
 import { Photo } from '#src/types/photo.js';
 import { getLocalizedDisplay, translateDimensionLabelToEnglish } from '#src/utils/display.js';
 import { PLACEHOLDERS } from '#src/constants/config.js';
@@ -28,7 +28,9 @@ export function LightboxInfo({
   const [copied, setCopied] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
   
-  const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
+  const basePhotoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
+  const { data: fullPhotoData } = usePhoto(basePhotoData.id);
+  const photoData = fullPhotoData || basePhotoData;
   const descriptionObj = photoData?.description;
   const displayDescription = getLocalizedDisplay(descriptionObj, lang);
   const title = getLocalizedDisplay(photoData.name || t('unnamedItem'), lang);
@@ -97,7 +99,7 @@ export function LightboxInfo({
             </div>
             
             {/* Basic Info Section */}
-            {(photoData.manufacturerName || photoData.modelNumber || photoData.itemCode || photoData.price || (isAdmin && photoData.manualCode)) && (
+            {(photoData.manufacturerName || photoData.modelNumber || photoData.itemCode || photoData.price || photoData.note || (isAdmin && photoData.manualCode)) && (
               <div className="pt-2 border-t border-white/10 space-y-3">
                 <div className="flex items-center gap-2 text-white/30 text-[10px] font-black tracking-widest uppercase">
                   <Icon name="info" className="w-3.5 h-3.5" />
@@ -120,6 +122,12 @@ export function LightboxInfo({
                     <div className="flex items-center justify-between text-xs bg-white/5 px-4 py-2.5 rounded-xl border border-white/5">
                       <span className="text-white/40 font-bold uppercase tracking-tight text-[9px]">{t('price')}</span>
                       <span className="text-white/95 font-mono">{photoData.price}</span>
+                    </div>
+                  )}
+                  {photoData.note && (
+                    <div className="flex items-center justify-between text-xs bg-white/5 px-4 py-2.5 rounded-xl border border-white/5">
+                      <span className="text-white/40 font-bold uppercase tracking-tight text-[9px]">{t('note') || 'Note'}</span>
+                      <span className="text-white/95 font-sans">{photoData.note}</span>
                     </div>
                   )}
                   {photoData.itemCode && (
