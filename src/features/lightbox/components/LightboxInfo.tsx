@@ -96,8 +96,50 @@ export function LightboxInfo({
               </div>
             </div>
             
+            {/* Basic Info Section */}
+            {(photoData.manufacturerName || photoData.modelNumber || photoData.itemCode || photoData.price || (isAdmin && photoData.manualCode)) && (
+              <div className="pt-2 border-t border-white/10 space-y-3">
+                <div className="flex items-center gap-2 text-white/30 text-[10px] font-black tracking-widest uppercase">
+                  <Icon name="info" className="w-3.5 h-3.5" />
+                  <span>{t('basicInfo')}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {photoData.manufacturerName && (
+                    <div className="flex items-center justify-between text-xs bg-white/5 px-4 py-2.5 rounded-xl border border-white/5">
+                      <span className="text-white/40 font-bold uppercase tracking-tight text-[9px]">{t('manufacturer')}</span>
+                      <span className="text-white/95 font-medium">{photoData.manufacturerName}</span>
+                    </div>
+                  )}
+                  {photoData.modelNumber && (
+                    <div className="flex items-center justify-between text-xs bg-white/5 px-4 py-2.5 rounded-xl border border-white/5">
+                      <span className="text-white/40 font-bold uppercase tracking-tight text-[9px]">{t('model')}</span>
+                      <span className="text-white/95 font-mono">{photoData.modelNumber}</span>
+                    </div>
+                  )}
+                  {photoData.price && (
+                    <div className="flex items-center justify-between text-xs bg-white/5 px-4 py-2.5 rounded-xl border border-white/5">
+                      <span className="text-white/40 font-bold uppercase tracking-tight text-[9px]">{t('price')}</span>
+                      <span className="text-white/95 font-mono">{photoData.price}</span>
+                    </div>
+                  )}
+                  {photoData.itemCode && (
+                    <div className="flex items-center justify-between text-xs bg-white/5 px-4 py-2.5 rounded-xl border border-white/5">
+                      <span className="text-white/40 font-bold uppercase tracking-tight text-[9px]">{t('sysCode')}</span>
+                      <span className="text-white/95 font-mono">{photoData.itemCode}</span>
+                    </div>
+                  )}
+                  {isAdmin && photoData.manualCode && (
+                    <div className="flex items-center justify-between text-xs bg-white/5 px-4 py-2.5 rounded-xl border border-white/5">
+                      <span className="text-white/40 font-bold uppercase tracking-tight text-[9px]">{t('manualId')}</span>
+                      <span className="text-white/95 font-mono text-emerald-400">{photoData.manualCode}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
             {displayDescription && (
-              <div className="space-y-4 pt-2">
+              <div className="space-y-4 pt-4 border-t border-white/10">
                 <div className="flex items-center justify-between border-b border-white/5 pb-2">
                   <div className="flex items-center gap-2 text-white/30 text-[10px] font-black tracking-widest uppercase">
                     <Icon name="file-text" className="w-3 h-3" />
