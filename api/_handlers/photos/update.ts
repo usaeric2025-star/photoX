@@ -13,7 +13,7 @@ export const updateRoutes = new Hono()
   .post('/batch', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(PhotoBatchUpdateReqSchema, body);
-    if (!check.success) throw new Error(check.issues[0].message);
+    if (!check.success) throw errorFactory.validation(check.issues);
     
     const { ids, updates } = check.output;
     try {
@@ -64,7 +64,7 @@ export const updateRoutes = new Hono()
   .post('/update', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(PhotoUpdateReqSchema, body);
-    if (!check.success) throw new Error(check.issues[0].message);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const { id, updates } = check.output;
     try {

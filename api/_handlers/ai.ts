@@ -1,3 +1,4 @@
+import { errorFactory } from "../_lib/error/factory.js";
 import { Hono } from 'hono';
 import * as v from 'valibot';
 import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '../_lib/db/index.js';
@@ -63,7 +64,7 @@ export const ai = new Hono()
 .post("/run", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIRunReqSchema, body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
     
     const { task, imageUrl, prompt } = check.output;
     const provider = await getAIProvider('');
@@ -93,7 +94,7 @@ export const ai = new Hono()
 .post("/analyze", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIAnalyzeV1ReqSchema, body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const { photoId, imageUrl } = check.output;
     let finalImageUrl = imageUrl;
@@ -199,7 +200,7 @@ export const ai = new Hono()
 .post("/translate", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AITranslateReqSchema, body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const { customModel, promptText } = check.output;
     const provider = await getAIProvider(undefined, customModel);
@@ -227,7 +228,7 @@ export const ai = new Hono()
 .post("/analyze-base64", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIAnalyzeBase64ReqSchema, body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const { base64Image, promptText, provider: providerName } = check.output;
     const provider = await getAIProvider(providerName);
@@ -259,7 +260,7 @@ export const ai = new Hono()
 .post("/analyze-photo-v2", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIAnalyzePhotoV2ReqSchema, body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const prompt = AI_PROMPTS.REFINE_PHOTO(check.output.photoDetail);
     const provider = await getAIProvider();
@@ -287,7 +288,7 @@ export const ai = new Hono()
 .post("/cluster-photos", async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(AIClusterPhotosReqSchema, body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const user = c.get('user' as never) as HonoContextUser | undefined;
     const userId = user?.id;

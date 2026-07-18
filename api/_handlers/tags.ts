@@ -1,3 +1,4 @@
+import { errorFactory } from "../_lib/error/factory.js";
 import { Hono } from 'hono';
 import { sValidator } from '@hono/standard-validator';
 import * as v from 'valibot';
@@ -72,7 +73,7 @@ export const tags = new Hono()
   .post('/remove-from-photo', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(v.object({ photoId: v.string(), tagId: v.number() }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const { photoId, tagId } = check.output;
     await db.delete(photoTags).where(and(eq(photoTags.photoId, photoId), eq(photoTags.tagId, tagId)));
@@ -86,7 +87,7 @@ export const tags = new Hono()
       tagWeights: v.optional(v.record(v.string(), v.number())),
       tagSources: v.optional(v.record(v.string(), v.union([v.literal('ai'), v.literal('user'), v.literal('system')])))
     }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const { photoId, tagWeights, tagSources } = check.output;
     const tagIds = check.output.tagIds.map(id => Number(id)).filter(id => !isNaN(id));
@@ -142,7 +143,7 @@ export const tags = new Hono()
       tagWeights: v.optional(v.record(v.string(), v.number())),
       tagSources: v.optional(v.record(v.string(), v.union([v.literal('ai'), v.literal('user'), v.literal('system')])))
     }), body);
-    if (!check.success) return errorResponse(c, check.issues[0].message, 400);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const { photoIds, tagWeights, tagSources } = check.output;
     const tagIds = check.output.tagIds.map(id => Number(id)).filter(id => !isNaN(id));

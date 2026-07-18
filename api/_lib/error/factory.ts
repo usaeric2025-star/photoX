@@ -53,6 +53,20 @@ export const errorFactory = {
     });
   },
   
+  validation(issues: any[], operation?: string): AppError {
+    const issue = issues[0];
+    const path = issue?.path?.map((p: any) => p.key).join('.') || 'unknown_field';
+    const msg = `Validation Error on '${path}': ${issue?.message || 'Invalid format'}`;
+    const fullMessage = operation ? `[${operation}] ${msg}` : msg;
+    
+    return new AppError({
+      message: fullMessage,
+      code: ErrorCode.VALIDATION_FAILED,
+      statusCode: 400,
+      category: ErrorCategory.VALIDATION
+    });
+  },
+  
   create(params: { message: string, code?: ErrorCode | string, status?: number, operation?: string, category?: ErrorCategory }): AppError {
     const fullMessage = params.operation ? `[${params.operation}] ${params.message}` : params.message;
     return new AppError({

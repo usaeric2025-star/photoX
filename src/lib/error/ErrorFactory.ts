@@ -64,7 +64,9 @@ export class ErrorFactory {
     }
 
     let message = err.message || data.message || fallbackMessage || 'API Error';
-    if (typeof message === "string" && (message.includes("Invalid type:") || message.includes("Invalid key:") || message.includes("Expected "))) { message = "輸入數據格式不正確 (Validation Error)"; }
+    if (typeof message === "string" && (message.includes("Invalid type:") || message.includes("Invalid key:") || message.includes("Expected ") || message.includes("Validation "))) { 
+      message = `輸入數據格式不正確 (Validation Error): ${message}`; 
+    }
     const code = err.code || data.code || ErrorCode.UNKNOWN_ERROR;
     const traceId = err.traceId || data.traceId || generateTraceId();
 

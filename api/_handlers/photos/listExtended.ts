@@ -15,7 +15,7 @@ export const listExtendedRoutes = new Hono()
   .post('/list-by-group', async (c: Context) => {
     const body = await c.req.json();
     const check = v.safeParse(ListByGroupReqSchema, body);
-    if (!check.success) throw new Error(check.issues[0].message);
+    if (!check.success) throw errorFactory.validation(check.issues);
     
     const { groupId, isAdminMode = false } = check.output;
     try {
@@ -82,7 +82,7 @@ export const listExtendedRoutes = new Hono()
   .post('/list-by-group-paginated', async (c: Context) => {
     const body = await c.req.json();
     const check = v.safeParse(ListByGroupReqSchema, body);
-    if (!check.success) throw new Error(check.issues[0].message);
+    if (!check.success) throw errorFactory.validation(check.issues);
 
     const { groupId, page = 1, pageSize = 100, isAdminMode = false } = check.output;
     try {
