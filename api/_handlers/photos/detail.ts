@@ -11,7 +11,6 @@ export const detailRoutes = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(PhotoIdsReqSchema, body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { ids } = check.output;
     const results = await db.query.furnitureItems.findMany({
         where: inArray(furnitureItems.id, ids),

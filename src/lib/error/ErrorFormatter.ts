@@ -103,7 +103,7 @@ export class ErrorFormatter {
       return '数据已存在';
     }
     if (lowerMsg.includes('validation') || lowerMsg.includes('invalid argument') || lowerMsg.includes('bad request')) {
-      return '输入格式错误';
+      return `输入格式错误: ${rawMsg}`;
     }
 
     if (rawMsg === 'Network Error') return '网络错误';

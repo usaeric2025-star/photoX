@@ -73,7 +73,7 @@ export class ErrorFactory {
     const categoryMap: Record<string, ErrorCategory> = {
       UNAUTHORIZED: ErrorCategory.AUTH,
       FORBIDDEN: ErrorCategory.AUTH,
-      VALIDATION_ERROR: ErrorCategory.VALIDATION,
+      VALIDATION_FAILED: ErrorCategory.VALIDATION,
       NETWORK_ERROR: ErrorCategory.NETWORK,
     };
 

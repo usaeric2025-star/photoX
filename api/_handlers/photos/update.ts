@@ -14,7 +14,6 @@ export const updateRoutes = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(PhotoBatchUpdateReqSchema, body);
     if (!check.success) throw errorFactory.validation(check.issues);
-    
     const { ids, updates } = check.output;
     try {
         const mappedUpdates = sanitizePhotoPayload(updates as Record<string, unknown>);
@@ -65,7 +64,6 @@ export const updateRoutes = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(PhotoUpdateReqSchema, body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { id, updates } = check.output;
     try {
         // Fetch snapshot before update

@@ -16,7 +16,6 @@ export const listExtendedRoutes = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(ListByGroupReqSchema, body);
     if (!check.success) throw errorFactory.validation(check.issues);
-    
     const { groupId, isAdminMode = false } = check.output;
     try {
         const query = db
@@ -83,7 +82,6 @@ export const listExtendedRoutes = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(ListByGroupReqSchema, body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { groupId, page = 1, pageSize = 100, isAdminMode = false } = check.output;
     try {
         const pageNum = Number(page) || 1;

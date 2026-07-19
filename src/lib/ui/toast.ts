@@ -56,13 +56,15 @@ export const showToast = {
             details += ` [验证详情: ${JSON.stringify(ctx.fields)}]`;
           }
 
-          if (ctx.original) {
-            return extractSystemMsg(ctx.original) + details;
+          if (ctx.originalError) {
+            details += ' \n↳ 原因: ' + extractSystemMsg(ctx.originalError);
+          } else if (ctx.original) {
+            details += ' \n↳ 原因: ' + extractSystemMsg(ctx.original);
           }
         }
 
         if (obj.cause) {
-          return extractSystemMsg(obj.cause) + details;
+          details += ' \n↳ 内部原因: ' + extractSystemMsg(obj.cause);
         }
 
         if (obj.message) {
@@ -100,6 +102,7 @@ export const showToast = {
     ].join('\n');
 
     return toast.error(userMessage, {
+      id: options?.id || traceId,
       duration: options?.duration || 6000,
       action: {
         label: '复制诊断',

@@ -13,7 +13,6 @@ export const deleteRoutes = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(PhotoIdsReqSchema, body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { ids } = check.output;
     try {
         const photosData = await db.select({ groupId: furnitureItems.groupId })

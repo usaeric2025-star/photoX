@@ -3,20 +3,17 @@ import * as v from 'valibot';
 import { errorResponse, successResponse } from '../../_lib/response.js';
 import { errorFactory } from '../../_lib/error/factory.js';
 import { normalizeI18n } from '../../../shared/i18n.js';
-import { sValidator } from '@hono/standard-validator';
 import { PhotoListReqSchema, PhotoListItemSchema } from '../../../shared/apiContractSchema.js';
 import { getPhotosList, getGroupCounts } from '../../_lib/db/queries/photos.js';
 import { logger } from '../../_lib/logger.js';
 
 export const listRoutes = new Hono()
-  .post('/list', sValidator('json', PhotoListReqSchema, (result, c) => {
-    if (!result.success) {
-      const err = (result as any).error;
-      console.error("Validation failed:", JSON.stringify(err, null, 2));
-      return errorResponse(c, err?.[0]?.message || 'Validation error', 400);
-    }
-  }), async (c) => {
-    const params = c.req.valid('json'); console.log('POST /api/photos/list params:', params);
+  .post('/list', async (c) => {
+    const body = await c.req.json();
+    const check = v.safeParse(PhotoListReqSchema, body);
+    if (!check.success) throw errorFactory.validation(check.issues);
+    const params = check.output;
+    console.log('POST /api/photos/list params:', params);
     const { page = 1, limit = 100, isAdminMode = false } = params;
     
     try {

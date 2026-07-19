@@ -26,7 +26,6 @@ export const groups = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({ groupData: GroupReqSchema }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { groupData } = check.output;
     const inputUserId = (body.userId as string) || (body.user_id as string) || '8ec53131-a589-4b50-beb4-6b5308541e1b';
     
@@ -86,9 +85,7 @@ export const groups = new Hono()
         userId: v.optional(v.string()),
         coverPhotoId: v.optional(v.nullable(v.string()))
     }), body);
-    
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const input = check.output;
     const cleanUpdates: any = { ...input };
     
@@ -115,8 +112,8 @@ export const groups = new Hono()
     return successResponse(c, null);
   })
   .post('/group-photos', async (c) => {
-      const body = await c.req.json();
-      const check = v.safeParse(v.object({
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({
           targetGroupId: v.optional(v.string()),
           userId: v.string(),
           photoIds: v.optional(v.array(v.string())),
@@ -124,9 +121,8 @@ export const groups = new Hono()
           sourceGroupIds: v.optional(v.array(v.string())),
           ungroupedValidIds: v.optional(v.array(v.string()))
       }), body);
-      if (!check.success) throw errorFactory.validation(check.issues);
-
-      const { 
+    if (!check.success) throw errorFactory.validation(check.issues);
+    const { 
           targetGroupId: rawTargetGroupId, 
           userId, 
           groupData, 
@@ -271,7 +267,6 @@ export const groups = new Hono()
         targetGroupId: v.optional(v.nullable(v.string())) 
     }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { photoIds: rawPhotoIds, targetGroupId } = check.output;
     const photoIds = Array.isArray(rawPhotoIds) ? rawPhotoIds : [rawPhotoIds];
 
@@ -307,7 +302,6 @@ export const groups = new Hono()
         groupId: v.string() 
     }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { photoIds: rawPhotoIds, groupId } = check.output;
     const photoIds = Array.isArray(rawPhotoIds) ? rawPhotoIds : [rawPhotoIds];
 
@@ -327,7 +321,6 @@ export const groups = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({ photoId: v.optional(v.nullable(v.string())), groupId: v.string() }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { photoId, groupId } = check.output;
     await db.update(furnitureItems)
         .set({ isGroupCover: false })
@@ -353,7 +346,6 @@ export const groups = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({ groupId: v.string() }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { groupId } = check.output;
     await db.update(furnitureItems)
         .set({ groupId: null, isGroupCover: false })
@@ -377,7 +369,6 @@ export const groups = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({ groupId: v.string() }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { groupId } = check.output;
     if (!groupId) return successResponse(c, null);
     

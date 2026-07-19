@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { sValidator } from '@hono/standard-validator';
 import * as v from 'valibot';
 import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
 import { eq, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../../shared/apiContractSchema.js';
 import { errorResponse, successResponse } from '../_lib/response.js';
+import { errorFactory } from '../_lib/error/factory.js';
 import { getAllCategories } from '../_lib/db/queries/categories.js';
 
 interface FormattedCategory {
@@ -68,8 +68,11 @@ export const categories = new Hono()
     categoriesCache = null;
     return successResponse(c, { message: 'Database seeded successfully' });
   })
-  .post('/clear-photos', sValidator('json', v.object({ categoryId: v.number() })), async (c) => {
-    const { categoryId } = c.req.valid('json');
+  .post('/clear-photos', async (c) => {
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({ categoryId: v.number() }), body);
+    if (!check.success) throw errorFactory.validation(check.issues);
+    const { categoryId } = check.output;
     const updated = await db
         .update(furnitureItems)
         .set({ categoryId: null })
@@ -78,8 +81,11 @@ export const categories = new Hono()
     
     return successResponse(c, updated.map(i => i.id));
   })
-  .post('/', sValidator('json', v.object({ categoryData: CategoryReqSchema })), async (c) => {
-    const { categoryData } = c.req.valid('json');
+  .post('/', async (c) => {
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({ categoryData: CategoryReqSchema }), body);
+    if (!check.success) throw errorFactory.validation(check.issues);
+    const { categoryData } = check.output;
     const [data] = await db
         .insert(categoriesTable)
         .values([categoryData])
@@ -88,9 +94,12 @@ export const categories = new Hono()
     categoriesCache = null;
     return successResponse(c, data);
   })
-  .put('/:id{[0-9]+}', sValidator('json', v.object({ updates: v.omit(CategoryReqSchema, ["id"]) })), async (c) => {
+  .put('/:id{[0-9]+}', async (c) => {
     const id = parseInt(c.req.param('id'));
-    const { updates } = c.req.valid('json');
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({ updates: v.omit(CategoryReqSchema, ["id"]) }), body);
+    if (!check.success) throw errorFactory.validation(check.issues);
+    const { updates } = check.output;
     
     await db
         .update(categoriesTable)

@@ -1,6 +1,5 @@
 import { errorFactory } from "../_lib/error/factory.js";
 import { Hono } from 'hono';
-import { sValidator } from '@hono/standard-validator';
 import * as v from 'valibot';
 import { db, tags as tagsTable, photoTags } from '../_lib/db/index.js';
 import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
@@ -40,21 +39,30 @@ export const tags = new Hono()
     const data = await filteredQuery.limit(20);
     return successResponse(c, data);
   })
-  .put('/:id{[0-9]+}', sValidator('json', v.object({ updates: v.omit(TagReqSchema, ["id"]) })), async (c) => {
+  .put('/:id{[0-9]+}', async (c) => {
     const id = parseInt(c.req.param('id'));
-    const { updates } = c.req.valid('json');
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({ updates: v.omit(TagReqSchema, ["id"]) }), body);
+    if (!check.success) throw errorFactory.validation(check.issues);
+    const { updates } = check.output;
     await db.update(tagsTable).set(updates).where(eq(tagsTable.id, id));
     clearTagsCache();
     return successResponse(c, null);
   })
-  .post('/', sValidator('json', v.object({ tagData: TagReqSchema })), async (c) => {
-    const { tagData } = c.req.valid('json');
+  .post('/', async (c) => {
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({ tagData: TagReqSchema }), body);
+    if (!check.success) throw errorFactory.validation(check.issues);
+    const { tagData } = check.output;
     const [data] = await db.insert(tagsTable).values(tagData).returning();
     clearTagsCache();
     return successResponse(c, data);
   })
-  .post('/batch', sValidator('json', v.object({ tags: v.array(TagReqSchema) })), async (c) => {
-    const { tags: tagsData } = c.req.valid('json');
+  .post('/batch', async (c) => {
+    const body = await c.req.json();
+    const check = v.safeParse(v.object({ tags: v.array(TagReqSchema) }), body);
+    if (!check.success) throw errorFactory.validation(check.issues);
+    const { tags: tagsData } = check.output;
     const data = await db.insert(tagsTable).values(tagsData).returning({ id: tagsTable.id, name: tagsTable.name });
     clearTagsCache();
     return successResponse(c, data);
@@ -74,7 +82,6 @@ export const tags = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({ photoId: v.string(), tagId: v.number() }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { photoId, tagId } = check.output;
     await db.delete(photoTags).where(and(eq(photoTags.photoId, photoId), eq(photoTags.tagId, tagId)));
     return successResponse(c, null);
@@ -88,7 +95,6 @@ export const tags = new Hono()
       tagSources: v.optional(v.record(v.string(), v.union([v.literal('ai'), v.literal('user'), v.literal('system')])))
     }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { photoId, tagWeights, tagSources } = check.output;
     const tagIds = check.output.tagIds.map(id => Number(id)).filter(id => !isNaN(id));
     
@@ -144,7 +150,6 @@ export const tags = new Hono()
       tagSources: v.optional(v.record(v.string(), v.union([v.literal('ai'), v.literal('user'), v.literal('system')])))
     }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
-
     const { photoIds, tagWeights, tagSources } = check.output;
     const tagIds = check.output.tagIds.map(id => Number(id)).filter(id => !isNaN(id));
     

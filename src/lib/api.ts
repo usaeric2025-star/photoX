@@ -40,21 +40,8 @@ const client = hc<AppType>(getBaseUrl(), {
   fetch: async (input, init) => {
     const response = await fetch(input, init);
     
-    if (!response.ok) {
-      // Global error interceptor
-      let errorData = null;
-      try {
-        // Clone the response so it can still be consumed by the caller if needed
-        errorData = await response.clone().json();
-      } catch (e) {
-        // Not JSON
-      }
-      
-      const err = ErrorFactory.fromApiResponse(errorData, `${response.status} ${response.statusText}`);
-      
-      // Automatically pop up toast for all 4xx/5xx errors
-      ErrorFactory.handle(err, { context: 'API Request' });
-    }
+    // We removed the global ErrorFactory.handle() here to prevent duplicate error toasts,
+    // since ErrorFactory.unwrap() and query/mutation hooks already display the errors with better context.
 
     return response;
   }
