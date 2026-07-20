@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useFilters } from '#src/hooks/ui/useUI.js';
-import { usePhotos, type UsePhotosOptions } from '#src/hooks/photo/usePhotos.js';
+import { usePhotos } from '#src/hooks/photo/index.js';
 
 /**
  * usePhotoWall
@@ -10,7 +10,7 @@ import { usePhotos, type UsePhotosOptions } from '#src/hooks/photo/usePhotos.js'
 export function usePhotoWall(mode: 'public' | 'admin' = 'public') {
   const { search, category, tags, sort, showGroupsCollapsed } = useFilters();
 
-  const queryOptions: UsePhotosOptions = useMemo(() => ({
+  const queryOptions = useMemo(() => ({
     categoryId: category,
     tagId: tags?.[0],
     searchQuery: search,

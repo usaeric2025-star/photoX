@@ -1,4 +1,3 @@
-import React, { createContext, useContext, useMemo } from 'react';
 import { useQueryState } from 'nuqs';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { batchParser, selectedIdsParser } from '#lib/nuqs/parsers.js';
@@ -10,100 +9,17 @@ const store = getDefaultStore();
 /**
  * SelectionService: 處理非 URL 的瞬態選擇狀態 (Jotai)
  */
-const SelectionService = {
+export const SelectionService = {
   setAvoidingSelection: (avoid: boolean) => {
     store.set(isAvoidingSelectionAtom, avoid);
   },
-  clearTransient: () => {
+  reset: () => {
     store.set(isAvoidingSelectionAtom, false);
   }
 };
 
-interface SelectionActions {
-  toggleSelect: (id: string) => void;
-  clearSelection: () => void;
-  toggleMode: () => void;
-  patch: (updates: any) => void;
-}
-
-const SelectionActionsContext = createContext<SelectionActions | null>(null);
-
 /**
- * SelectionProvider: Exposes memoized, stable selection actions.
- */
-export function SelectionProvider({ children }: { children: React.ReactNode }) {
-  const [batch, setBatch] = useQueryState(QUERY_PARAMS.BATCH, { ...batchParser, history: 'replace', shallow: true });
-  const [selected, setSelected] = useQueryState(QUERY_PARAMS.SELECTED, { ...selectedIdsParser, history: 'replace', shallow: true });
-
-  const actions = useMemo(() => {
-    const toggleSelect = (id: string) => {
-      setSelected((prev) => {
-        const selectedIds = prev || [];
-        const isSelected = selectedIds.includes(id);
-        const newIds = isSelected
-          ? selectedIds.filter((i) => i !== id)
-          : [...selectedIds, id];
-        return newIds.length ? newIds : null;
-      });
-    };
-
-    const clearSelection = () => {
-      setSelected(null);
-      SelectionService.clearTransient();
-    };
-
-    const toggleMode = () => {
-      const nextMode = !batch;
-      if (!nextMode) setSelected(null);
-      setBatch(nextMode || null);
-    };
-
-    const patch = (updates: any) => {
-      if (updates.selectedIds !== undefined) {
-        setSelected(updates.selectedIds.length ? updates.selectedIds : null);
-      }
-      if (updates.isAvoidingSelection !== undefined) SelectionService.setAvoidingSelection(updates.isAvoidingSelection);
-    };
-
-    return { toggleSelect, clearSelection, toggleMode, patch };
-  }, [batch, setBatch, setSelected]);
-
-  return (
-    <SelectionActionsContext.Provider value={actions}>
-      {children}
-    </SelectionActionsContext.Provider>
-  );
-}
-
-/**
- * useSelectionActions: Returns actions that update URL via nuqs.
- */
-export function useSelectionActions() {
-  const context = useContext(SelectionActionsContext);
-  if (!context) {
-    throw new Error('useSelectionActions must be used within a SelectionProvider');
-  }
-  return context;
-}
-
-/**
- * useIsMultiSelect: Driven by URL state (batch=true)
- */
-export function useIsMultiSelect() {
-  const [batch] = useQueryState(QUERY_PARAMS.BATCH, batchParser);
-  return !!batch;
-}
-
-/**
- * useSelectionCount: Driven by URL state.
- */
-export function useSelectionCount() {
-  const [selected] = useQueryState(QUERY_PARAMS.SELECTED, selectedIdsParser);
-  return selected?.length || 0;
-}
-
-/**
- * useSelectedIds: Driven by URL state.
+ * useSelectedIds: 唯一真相來源 (URL)
  */
 export function useSelectedIds() {
   const [selected] = useQueryState(QUERY_PARAMS.SELECTED, selectedIdsParser);
@@ -111,11 +27,77 @@ export function useSelectedIds() {
 }
 
 /**
- * useIsPhotoSelected: Checks if a photo is selected via URL state.
+ * useIsMultiSelect: 是否處於多選模式
  */
-export function useIsPhotoSelected(id: string) {
-  const [selected] = useQueryState(QUERY_PARAMS.SELECTED, selectedIdsParser);
-  return selected?.includes(id) || false;
+export function useIsMultiSelect() {
+  const [batch] = useQueryState(QUERY_PARAMS.BATCH, batchParser);
+  return !!batch;
 }
 
-export { SelectionService };
+/**
+ * useSelectionCount: 返回選中數量
+ */
+export function useSelectionCount() {
+  const selected = useSelectedIds();
+  return selected.length;
+}
+
+/**
+ * useSelectionActions: 統一的操作接口
+ */
+export function useSelectionActions() {
+  const [selected, setSelected] = useQueryState(QUERY_PARAMS.SELECTED, { ...selectedIdsParser, history: 'replace', shallow: true });
+  const [batch, setBatch] = useQueryState(QUERY_PARAMS.BATCH, { ...batchParser, history: 'replace', shallow: true });
+
+  const toggleSelect = (id: string) => {
+    const current = selected || [];
+    const next = current.includes(id) 
+      ? current.filter(i => i !== id) 
+      : [...current, id];
+    setSelected(next.length ? next : null);
+  };
+
+  const clearSelection = () => {
+    setSelected(null);
+    SelectionService.reset();
+  };
+
+  const toggleMode = () => {
+    const nextMode = !batch;
+    if (!nextMode) setSelected(null);
+    setBatch(nextMode || null);
+  };
+
+  const patch = (updates: { 
+    selectedIds?: string[] | null; 
+    batch?: boolean; 
+    isAvoidingSelection?: boolean;
+  }) => {
+    if (updates.selectedIds !== undefined) {
+      setSelected(updates.selectedIds && updates.selectedIds.length ? updates.selectedIds : null);
+    }
+    if (updates.batch !== undefined) {
+      setBatch(updates.batch || null);
+    }
+    if (updates.isAvoidingSelection !== undefined) {
+      SelectionService.setAvoidingSelection(updates.isAvoidingSelection);
+    }
+  };
+
+  return {
+    toggleSelect,
+    clearSelection,
+    toggleMode,
+    patch,
+    selectedIds: selected || [],
+    isBatchMode: !!batch
+  };
+}
+
+/**
+ * useIsPhotoSelected: 輔助檢查單個 ID 是否被選中
+ */
+export function useIsPhotoSelected(id: string) {
+  const selected = useSelectedIds();
+  return selected.includes(id);
+}

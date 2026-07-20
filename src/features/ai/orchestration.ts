@@ -1,6 +1,6 @@
 import { analyzePhoto, analyzeSinglePhotoDetail as analyzeSinglePhoto } from './AICommands.js';
 import { translateFields } from './translationService.js';
-import { updatePhoto } from '#src/hooks/photo/usePhotos.js';
+import { updatePhoto } from '#src/hooks/photo/usePhotoMutations.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { resolveTagNamesToIds } from './tagCompletion.js';
 import { withTimeout } from '#lib/utils.js';

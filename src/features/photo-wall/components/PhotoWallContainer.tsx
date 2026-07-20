@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { photoWallStore } from '../signal.js';
 import { PhotoWallGrid } from './PhotoWallGrid.js';
 import { usePhotoWall } from '../hooks/usePhotoWall.js';
-import { type ListPhotosResponse } from '#src/hooks/photo/usePhotos.js';
 import { PhotoListItem } from '#shared/apiContractSchema.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -128,7 +127,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
 
     if (isAggregated) {
       try {
-        const result = await ErrorFactory.unwrap<ListPhotosResponse>(
+        const result = await ErrorFactory.unwrap<any>(
           api.photos.list.$post({ 
              json: { 
                ...props.filters as any,

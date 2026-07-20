@@ -70,7 +70,6 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
 
   const handleBatchEdit = () => {
     if (selectedCount === 0 || isAnyPending) return;
-    patch({ batchEditingIds: selectedIds });
     setLocation('/admin/batch-edit');
   };
 

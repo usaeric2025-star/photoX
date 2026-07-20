@@ -11,7 +11,6 @@ import { } from "#lib/store/index.js";
 
 import { useNormalizedLocation } from "#src/hooks/core/index.js";
 import { DialogContainer } from "./layout/DialogContainer.js";
-import { SelectionProvider } from "#src/hooks/selection/useSelection.js";
 import { getRouteGroupKey, isAdminRoute } from "#src/lib/routing.js";
 const PublicPage = lazy(() => import("#src/pages/PublicPage.js"));
 const AdminPage = lazy(() => import("#src/pages/AdminPage/index.js"));
@@ -30,7 +29,6 @@ export function RouterOrchestrator() {
       }}
     >
       <Router hook={useNormalizedLocation}>
-        <SelectionProvider>
           <AnimatePresence>
             {isCurrentAdmin ? (
               <motion.div 
@@ -77,7 +75,6 @@ export function RouterOrchestrator() {
             )}
           </AnimatePresence>
           <DialogContainer />
-        </SelectionProvider>
       </Router>
     </ErrorBoundary>
   );
