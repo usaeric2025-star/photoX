@@ -140,7 +140,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
               {copied ? (
                 <Icon name="check" className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
               ) : (
-                <Icon name="copy" className="w-2.5 h-2.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Icon name="copy" className="w-2.5 h-2.5 shrink-0" />
               )}
             </button>
           </div>

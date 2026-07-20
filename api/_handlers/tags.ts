@@ -132,7 +132,7 @@ export const tags = new Hono()
       return tagIds.indexOf(a) - tagIds.indexOf(b);
     });
 
-    const limitedTagIds = sortedTagIds.slice(0, 20);
+    const limitedTagIds = sortedTagIds.slice(0, 3);
 
     // 4. Update junction table
     await db.delete(photoTags).where(eq(photoTags.photoId, photoId));
@@ -179,7 +179,7 @@ export const tags = new Hono()
       return tagIds.indexOf(a) - tagIds.indexOf(b);
     });
 
-    const limitedTagIds = sortedTagIds.slice(0, 20);
+    const limitedTagIds = sortedTagIds.slice(0, 3);
 
     await db.delete(photoTags).where(inArray(photoTags.photoId, photoIds));
     if (limitedTagIds.length > 0) {

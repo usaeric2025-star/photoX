@@ -154,6 +154,11 @@ export const adminPhotos = new Hono()
 
         // Map updates to camelCase for furnitureItems
         const mappedUpdates = toCamelCaseKeys<Record<string, any>>(otherUpdates);
+        
+        // Remove createdAt to prevent accidental overwriting and date parsing errors
+        delete mappedUpdates.createdAt;
+        // Always force updatedAt to current server time
+        mappedUpdates.updatedAt = new Date();
 
         await db.transaction(async (tx) => {
             if (Object.keys(mappedUpdates).length > 0) {
@@ -262,6 +267,7 @@ export const adminPhotos = new Hono()
         if (!ids || !Array.isArray(ids)) return errorResponse(c, "ids array required", 400);
 
         const mappedUpdates = toCamelCaseKeys<Record<string, any>>(updates);
+        delete mappedUpdates.createdAt;
 
         if (Object.keys(mappedUpdates).length > 0) {
             await db.update(furnitureItems)
