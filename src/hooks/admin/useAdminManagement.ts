@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { userAtom } from '#src/store/atoms/auth/authAtoms.js';
+import { userAtom } from '#src/store/index.js';
 import { useAppQuery, useAppMutation, useQueryClient } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';

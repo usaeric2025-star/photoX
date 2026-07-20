@@ -18,7 +18,7 @@ import { hapticFeedback } from '#lib/ui/haptics.js';
 import { createTask } from '#lib/task-queue/index.js';
 import { executeBatchUpload } from '#lib/task-queue/adapters/upload.js';
 import { generateId } from '#lib/id.js';
-import { useSelectionActions, batchEditingIdsAtom } from '#src/hooks/selection/useSelection.js';
+import { useSelectionActions } from '#src/hooks/selection/useSelection.js';
 import { runBatchAnalysis } from '#src/features/ai/orchestration.js';
 import { PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { queryClient as globalQueryClient } from '#lib/query/index.js';
@@ -34,7 +34,7 @@ export interface ListPhotosResponse {
   page: number;
 }
 
-interface UsePhotosOptions {
+export interface UsePhotosOptions {
   categoryId?: string | null;
   tagId?: string | null;
   groupId?: string | null;
@@ -356,67 +356,6 @@ export function usePhotoUpload() {
   return { uploadFiles };
 }
 
-/**
- * useBatchEdit
- * 處理批量編輯。
- */
-export function useBatchEdit() {
-  const { t } = useTranslation();
-  const batchEditingIds = useAtomValue(batchEditingIdsAtom);
-  const { patch: patchSelection } = useSelectionActions();
-  const formState = useAtomValue(formStateAtom);
-  const { batchEditAsync, deletePhotoAsync, isBatchEditing, isDeleting } = usePhotoMutations();
-  const [location, setLocation] = useNormalizedLocation();
-
-  const handleSave = async (selectedIds: string[]) => {
-    const ids = batchEditingIds || selectedIds;
-    if (!ids || ids.length === 0) return;
-    
-    const updates = { ...formState } as Record<string, unknown>;
-    const cleanUpdates: Record<string, unknown> = {};
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value !== '' && value !== undefined) {
-        if (Array.isArray(value) && value.length === 0) return;
-        cleanUpdates[key] = value;
-      }
-    });
-
-    await batchEditAsync({ ids, updates: cleanUpdates });
-    patchSelection({ batchEditingIds: null });
-    resetForm();
-    if (location.startsWith('/admin/batch-edit')) {
-      setLocation('/admin');
-    }
-  };
-
-  const handleDelete = async (selectedIds: string[]) => {
-    const ids = batchEditingIds || selectedIds;
-    if (!ids || ids.length === 0) return;
-    await deletePhotoAsync(ids);
-    patchSelection({ batchEditingIds: null, selectedIds: [] });
-    if (location.startsWith('/admin/batch-edit')) {
-      setLocation('/admin');
-    }
-  };
-
-  const handleClose = () => {
-    patchSelection({ batchEditingIds: null });
-    resetForm();
-    if (location.startsWith('/admin/batch-edit')) {
-      setLocation('/admin');
-    }
-  };
-
-  return {
-    batchEditIds: batchEditingIds || [],
-    formState,
-    handleUpdateForm: updateForm,
-    handleSave,
-    handleDelete,
-    handleClose,
-    isSyncing: isBatchEditing || isDeleting,
-  };
-}
 
 /**
  * useAIBatchAnalysis
@@ -457,51 +396,3 @@ export function useAIBatchAnalysis() {
   return { handleBatchAiAnalyze };
 }
 
-/**
- * usePhotoWall
- */
-export function usePhotoWall(mode: 'public' | 'admin' = 'public') {
-  const { search, category, tags, sort, showGroupsCollapsed } = useFilters();
-
-  const queryOptions: UsePhotosOptions = useMemo(() => ({
-    categoryId: category,
-    tagId: tags?.[0],
-    searchQuery: search,
-    sortOrder: sort as any,
-    mode,
-    onlyGroupsCover: showGroupsCollapsed,
-  }), [category, tags, search, sort, mode, showGroupsCollapsed]);
-
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isPending,
-    isLoading,
-    error,
-    refetch
-  } = usePhotos(queryOptions);
-
-  const photos = useMemo(() => {
-    return data?.pages.flatMap((page) => page.items) || [];
-  }, [data]);
-
-  const total = data?.pages[0]?.total || 0;
-
-  return {
-    photos,
-    total,
-    fetchNextPage,
-    loadMore: fetchNextPage,
-    hasNextPage,
-    hasMore: hasNextPage,
-    isFetchingNextPage,
-    isLoadingMore: isFetchingNextPage,
-    isPending,
-    isLoading,
-    error,
-    refetch,
-    refresh: refetch
-  };
-}

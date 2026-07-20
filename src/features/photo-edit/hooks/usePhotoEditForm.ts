@@ -111,12 +111,31 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
     try {
       await form.handleSubmit();
       const state = form.state;
-      const hasErrors = Object.keys(state.errors).length > 0 || (state.fieldMeta && Object.values(state.fieldMeta).some(m => m?.errorMap?.onChange));
-      if (hasErrors) return;
+      
+      const errorList: string[] = [];
+      if (state.errors && state.errors.length > 0) {
+        state.errors.forEach(err => errorList.push(String(err)));
+      }
+      if (state.fieldMeta) {
+        Object.entries(state.fieldMeta).forEach(([fieldName, meta]) => {
+          if (meta?.errorMap) {
+            Object.values(meta.errorMap).forEach(err => {
+              if (err) {
+                errorList.push(`${fieldName}: ${String(err)}`);
+              }
+            });
+          }
+        });
+      }
+
+      if (errorList.length > 0) {
+        showToast.error(`${t('saveFailed') || '保存失败'}: ${errorList.join(', ')}`);
+        return;
+      }
     } catch (err) {
       ErrorFactory.handle(err as Error, { context: 'PhotoEdit.commit' });
     }
-  }, [form]);
+  }, [form, t]);
 
   const discard = useCallback(() => {
     form.reset();

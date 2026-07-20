@@ -5,7 +5,7 @@ import { useConfirm } from '#src/context/ConfirmContext.js';
 import { ConfirmDialog } from '#src/components/ui/ConfirmDialog.js';
 import { usePhotoMutations, useTranslation } from '#src/hooks/index.js';
 import { BatchEditForm } from './BatchEditForm.js';
-import { useBatchEdit } from '#src/hooks/index.js'; // fixed import path
+import { useBatchEdit } from './hooks/useBatchEdit.js';
 import { useSelectedIds, useSelectionActions } from '#src/hooks/index.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
@@ -67,7 +67,7 @@ export const BatchEditScreen = () => {
   const { submit: saveBatch, isLoading: isSaving } = useFormSubmit({
     schema: v.object({}),
     mutationFn: async () => {
-      await originalSave(selectedIds);
+      await originalSave();
       clearSelection();
       return true;
     },

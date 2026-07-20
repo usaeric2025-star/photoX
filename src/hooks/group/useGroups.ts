@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { userAtom } from '#src/store/atoms/auth/authAtoms.js';
+import { userAtom } from '#src/store/index.js';
 import { queryClient, useAppQuery, useAppMutation } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { STALE_TIMES } from '#lib/query/config.js';
@@ -293,12 +293,4 @@ export function useGroupMutations() {
   };
 }
 
-export function useGroupPhotosMutation() {
-  const { combine } = useGroupMutations();
-  return combine;
-}
 
-export function useRemoveFromGroupMutation() {
-  const { removePhotos } = useGroupMutations();
-  return removePhotos;
-}

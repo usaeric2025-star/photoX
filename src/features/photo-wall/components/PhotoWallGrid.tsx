@@ -71,17 +71,15 @@ export function PhotoWallGrid({
     const handleScroll = () => {
       if (!hasMore || isLoadingMore || isLoading) return;
       const { scrollHeight, scrollTop, clientHeight } = parent;
-      if (scrollHeight - scrollTop - clientHeight < 1200) {
+      if (scrollHeight - scrollTop - clientHeight < 400) {
         handleLoadMore();
       }
     };
 
     parent.addEventListener('scroll', handleScroll, { passive: true });
-    const timer = setTimeout(handleScroll, 500);
 
     return () => {
       parent.removeEventListener('scroll', handleScroll);
-      clearTimeout(timer);
     };
   }, [scrollParent, hasMore, isLoadingMore, isLoading, handleLoadMore]);
 

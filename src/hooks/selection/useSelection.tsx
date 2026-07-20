@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { useQueryState } from 'nuqs';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { batchParser, selectedIdsParser } from '#lib/nuqs/parsers.js';
-import { batchEditingIdsAtom, isAvoidingSelectionAtom } from '#src/store/atoms/ui/uiAtoms.js';
+import { isAvoidingSelectionAtom } from '#src/store/index.js';
 import { getDefaultStore } from 'jotai';
 
 const store = getDefaultStore();
@@ -11,14 +11,10 @@ const store = getDefaultStore();
  * SelectionService: 處理非 URL 的瞬態選擇狀態 (Jotai)
  */
 const SelectionService = {
-  setBatchEditing: (ids: string[] | null) => {
-    store.set(batchEditingIdsAtom, ids);
-  },
   setAvoidingSelection: (avoid: boolean) => {
     store.set(isAvoidingSelectionAtom, avoid);
   },
   clearTransient: () => {
-    store.set(batchEditingIdsAtom, null);
     store.set(isAvoidingSelectionAtom, false);
   }
 };
@@ -66,7 +62,6 @@ export function SelectionProvider({ children }: { children: React.ReactNode }) {
       if (updates.selectedIds !== undefined) {
         setSelected(updates.selectedIds.length ? updates.selectedIds : null);
       }
-      if (updates.batchEditingIds !== undefined) SelectionService.setBatchEditing(updates.batchEditingIds);
       if (updates.isAvoidingSelection !== undefined) SelectionService.setAvoidingSelection(updates.isAvoidingSelection);
     };
 
@@ -123,4 +118,4 @@ export function useIsPhotoSelected(id: string) {
   return selected?.includes(id) || false;
 }
 
-export { batchEditingIdsAtom };
+export { SelectionService };

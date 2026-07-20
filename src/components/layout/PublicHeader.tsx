@@ -1,12 +1,11 @@
 import { useAtomValue } from 'jotai';
-import { userAtom, authLoadingAtom, signOut, totalCountAtom } from '#src/store/index.js';
+import { userAtom, authLoadingAtom, signOut } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
 import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { useIsFetching } from '@tanstack/react-query';
 import { } from '#lib/store/index.js';
-import {  usePublicSettings, usePermission, useTranslation, useInvalidatePhotos, type UIStoreState } from '#src/hooks/index.js';
+import {  usePublicSettings, usePermission, useTranslation, type UIStoreState } from '#src/hooks/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
@@ -21,7 +20,7 @@ interface PublicHeaderProps {
   className?: string;
 }
 
-export function PublicHeader({ totalCount: propTotalCount, onRefresh: propOnRefresh, isRefreshing: propIsRefreshing, className }: PublicHeaderProps) {
+export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }: PublicHeaderProps) {
   const user = useAtomValue(userAtom);
   const isLoading = useAtomValue(authLoadingAtom);
   
@@ -33,14 +32,6 @@ export function PublicHeader({ totalCount: propTotalCount, onRefresh: propOnRefr
   const isGroupPage = location.startsWith('/group/') || location.startsWith(ADMIN_ROUTES.GROUP_DETAIL_BASE + '/');
 
   const { t } = useTranslation();
-
-  const { invalidateAll } = useInvalidatePhotos();
-  const globalTotalCount = useAtomValue(totalCountAtom);
-  const isGlobalFetching = useIsFetching({ queryKey: ['photos'] }) > 0;
-
-  const totalCount = propTotalCount !== undefined ? propTotalCount : globalTotalCount;
-  const isRefreshing = propIsRefreshing !== undefined ? propIsRefreshing : isGlobalFetching;
-  const onRefresh = propOnRefresh || (() => invalidateAll());
 
   const canAccessAdmin = can('admin:dashboard:access');
   const isStaff = canAccessAdmin;

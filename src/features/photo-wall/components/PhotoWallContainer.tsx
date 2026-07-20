@@ -2,7 +2,8 @@ import { patch } from '#lib/store/index.js';
 import React, { useEffect, useRef, useCallback } from 'react';
 import { photoWallStore } from '../signal.js';
 import { PhotoWallGrid } from './PhotoWallGrid.js';
-import { usePhotoWall, ListPhotosResponse } from '#src/hooks/index.js';
+import { usePhotoWall } from '../hooks/usePhotoWall.js';
+import { type ListPhotosResponse } from '#src/hooks/photo/usePhotos.js';
 import { PhotoListItem } from '#shared/apiContractSchema.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -93,23 +94,9 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   // 同步總數到全局 UI 狀態
   useEffect(() => {
     if (total !== undefined) {
-      // 只有在無篩選條件時，才更新全域的總存量，避免篩選時總存量變小，造成不準確
-      const hasActiveFilters = !!(
-        props.filters?.categoryId || 
-        props.filters?.tagId || 
-        props.filters?.searchQuery || 
-        props.filters?.groupId
-      );
-      if (!hasActiveFilters) {
-        patch({ totalCount: total });
-        try {
-          localStorage.setItem('photox_total_count', String(total));
-        } catch (e) {
-          // ignore
-        }
-      }
+      patch({ totalCount: total });
     }
-  }, [total, props.filters, patch]);
+  }, [total, patch]);
 
   const handlePhotoClickStable = useCallback(async (photo: PhotoListItem) => {
     if (onPhotoClickRef.current) {

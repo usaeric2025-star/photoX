@@ -1,17 +1,24 @@
-import { getDefaultStore } from 'jotai';
-import { logger } from '#lib/logger.js';
+import { atom, getDefaultStore, PrimitiveAtom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 import { User } from '#src/types/index.js';
+import { logger } from '#lib/logger.js';
 import { supabase } from '#lib/supabase.js';
 import { storage } from '#lib/storage.js';
 import { safeAsync } from '#lib/utils/safeAsync.js';
 import { withTimeout } from '#lib/utils.js';
-import { userAtom, authLoadingAtom, tokenAtom } from './atoms/auth/authAtoms.js';
+
+// --- Atoms ---
+export const userAtom = atom(null as User | null);
+export const tokenAtom = atom(null as string | null);
+export const authLoadingAtom = atom(true);
+export const passcodeAtom = atomWithStorage<string>('ais_mock_auth_passcode', '');
 
 const store = getDefaultStore();
 
-const setUser = (user: User | null) => store.set(userAtom as any, user);
-export const setLoading = (loading: boolean) => store.set(authLoadingAtom as any, loading);
-const setToken = (token: string | null) => store.set(tokenAtom as any, token);
+// --- Actions ---
+const setUser = (user: User | null) => store.set(userAtom, user);
+const setToken = (token: string | null) => store.set(tokenAtom, token);
+export const setAuthLoading = (loading: boolean) => store.set(authLoadingAtom, loading);
 
 export const initAuth = async () => {
   await safeAsync(async () => {
@@ -59,10 +66,10 @@ export const initAuth = async () => {
       }
     }
 
-    setLoading(false);
+    setAuthLoading(false);
   }, { 
       context: 'auth-init', 
-      onFinally: () => { setLoading(false); } 
+      onFinally: () => { setAuthLoading(false); } 
   });
 };
 
@@ -149,11 +156,11 @@ export const initAuthListener = () => {
         emailVerified: !!u.email_confirmed_at,
       };
       setUser(mapped);
-      setLoading(false);
+      setAuthLoading(false);
     } else {
       setUser(null);
       setToken(null);
-      setLoading(false);
+      setAuthLoading(false);
     }
   });
 

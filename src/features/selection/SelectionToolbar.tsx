@@ -6,7 +6,7 @@ import {  activeTaskCountAtom } from '#lib/store/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useMediaQuery } from '#src/hooks/index.js';
-import { useGroupPhotosMutation, useRemoveFromGroupMutation } from '#src/hooks/group/index.js';
+import { useGroupMutations } from '#src/hooks/group/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { SelectionToolbarActions } from './components/SelectionToolbarActions.js';
@@ -35,8 +35,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   
   const { deletePhoto, batchUpdate } = useAdminActions();
   const confirm = useConfirm();
-  const combineMutation = useGroupPhotosMutation();
-  const removeMutation = useRemoveFromGroupMutation();
+  const { combine: combineMutation, removePhotos: removeMutation } = useGroupMutations();
   const [location, setLocation] = useNormalizedLocation();
   const { t } = useTranslation();
 

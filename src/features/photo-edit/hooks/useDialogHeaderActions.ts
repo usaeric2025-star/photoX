@@ -1,5 +1,5 @@
 import { usePhotoEditSessionContext } from "./PhotoEditSession.js";
-import { usePhoto, useRemoveFromGroupMutation, useAdminActions, useFilters, useTranslation } from '#src/hooks/index.js';
+import { usePhoto, useAdminActions, useFilters, useTranslation } from '#src/hooks/index.js';
 import { usePhotoEditAI } from './usePhotoAI.js';
 import { useAtomValue } from "jotai";
 import {  tasksAtom } from '#lib/store/index.js';
@@ -22,8 +22,7 @@ export function useDialogHeaderActions(onClose: () => void) {
   const editPhotoId = modal === 'edit' ? filterPhotoId : null;
   
   const { data: detailPhoto } = usePhoto(editPhotoId || '');
-  const { mutateAsync: removeFromGroup } = useRemoveFromGroupMutation();
-  const { setCover } = useGroupMutations();
+  const { setCover, removePhotos } = useGroupMutations();
   const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
   
   const tasksMap = useAtomValue(tasksAtom) as Map<string, Task>;
@@ -38,7 +37,7 @@ export function useDialogHeaderActions(onClose: () => void) {
   const onRemoveFromGroup = async () => {
     if (editPhotoId && detailPhoto?.groupId) {
       try {
-        await removeFromGroup({ photoIds: [editPhotoId], groupId: detailPhoto.groupId });
+        await removePhotos.mutateAsync({ photoIds: [editPhotoId], groupId: detailPhoto.groupId });
         showToast.success(t('removedFromGroup') || 'Removed from group');
         onClose();
       } catch (e) {

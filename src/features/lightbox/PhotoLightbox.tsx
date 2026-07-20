@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { descLangAtom, isLightboxZoomedAtom } from '#src/store/index.js';
+import { descLangAtom } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -54,7 +54,6 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   
   const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
   const currentDescLang = useAtomValue(descLangAtom);
-  const isZoomed = useAtomValue(isLightboxZoomedAtom);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   // Native <dialog> visibility and body overflow locking
@@ -279,7 +278,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         </div>
       ) : (
         <div className="relative z-[120] flex flex-col w-full h-full">
-          {activePhoto && !isZoomed && (
+          {activePhoto && (
             <>
               {/* Header Controls */}
               <LightboxHeader
@@ -307,14 +306,12 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
           <LightboxStage />
 
           {/* Thumbnails */}
-          {!isZoomed && (
-            <LightboxThumbnails
-              photos={effectivePhotos}
-              isOpen={isOpen}
-              onSelect={handleSelect}
-              currentIndex={currentIndex}
-            />
-          )}
+          <LightboxThumbnails
+            photos={effectivePhotos}
+            isOpen={isOpen}
+            onSelect={handleSelect}
+            currentIndex={currentIndex}
+          />
         </div>
       )}
     </dialog>

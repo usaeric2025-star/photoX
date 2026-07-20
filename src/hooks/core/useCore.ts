@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useTransition } from 'react';
 import { useAtomValue } from 'jotai';
-import { initializeApp, appLoadingAtom, appErrorAtom } from '#src/store/appStore.js';
+import { initApp, appLoadingAtom, appErrorAtom } from '#src/store/index.js';
 import { usePublicSettings } from '#src/hooks/index.js';
 import { useAdminMode, usePermission } from './auth/useAuth.js';
 import { logger } from '#lib/logger.js';
@@ -60,7 +60,7 @@ export function useAppInit() {
   const { data: settings, error: settingsError, isLoading: isSettingsLoading } = usePublicSettings();
 
   useEffect(() => { 
-    initializeApp(); 
+    initApp(); 
   }, []);
 
   const error = appError || (settingsError as Error | null);

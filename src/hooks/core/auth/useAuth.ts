@@ -1,7 +1,7 @@
 import React, { createContext, useContext } from 'react';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useAtomValue } from 'jotai';
-import { userAtom, passcodeAtom } from '#src/store/atoms/auth/authAtoms.js';
+import { userAtom, passcodeAtom } from '#src/store/index.js';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '#src/config/permissions.js';
 import { useSettings } from '../../settings/useSettings.js';
 
