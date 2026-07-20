@@ -11,7 +11,7 @@ import { } from '#lib/store/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { AdminEmptyState } from '#src/pages/AdminPage/AdminEmptyState.js';
 import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
-import { useQueryState } from 'nuqs';
+import { useUI } from '#src/hooks/ui/useUI.js';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { parseAsPhotoId } from '#lib/nuqs/parsers.js';
 import { LocalErrorBoundary } from '#src/components/ui/feedback/LocalErrorBoundary.js';
@@ -78,7 +78,7 @@ function arrangePhotosWithGroups(allPhotos: PhotoListItem[]): PhotoListItem[] {
  */
 export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const { open: openLightbox, setLightboxData, setLightboxIndex } = useLightbox();
-  const [photoId] = useQueryState(QUERY_PARAMS.PHOTO_ID, parseAsPhotoId);
+  const { photoId } = useUI();
   const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.mode);
   
   const { uiTranslations: labels } = useTranslation();
