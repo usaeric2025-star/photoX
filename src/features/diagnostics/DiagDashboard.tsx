@@ -4,9 +4,7 @@ import { useAdminActions } from '#src/hooks/admin/index.js';
 import { Button } from '#src/components/ui/Button.js';
 import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
-import { useQueryState, parseAsString } from 'nuqs';
-import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
-import { useNormalizedLocation, useTranslation } from '#src/hooks/core/index.js';
+import { useNormalizedLocation, useTranslation, useUI } from '#src/hooks/index.js';
 import { ADMIN_ROUTES } from '#src/constants/config.js';
 
 import { ErrorLogViewer } from './ErrorLogViewer.js';
@@ -21,7 +19,7 @@ const StatisticsScreen = React.lazy(() => import('../statistics/components/Stati
  */
 export function DiagDashboard() {
   const { t } = useTranslation();
-  const [tab, setTab] = useQueryState(QUERY_PARAMS.TAB, parseAsString.withDefault('stats'));
+  const { tab, setTab } = useUI();
   const [location, setLocation] = useNormalizedLocation();
   
   const activeTab = (() => {

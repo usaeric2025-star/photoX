@@ -2,7 +2,7 @@ import { useQueryState } from 'nuqs';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { 
   batchParser, selectedIdsParser, showGroupsCollapsedParser, 
-  anchorParser, modalParser, parseAsPhotoId 
+  anchorParser, modalParser, parseAsPhotoId, columnsParser, tabParser
 } from '#lib/nuqs/parsers.js';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { PLACEHOLDERS } from '#src/constants/config.js';
@@ -39,6 +39,8 @@ export function useUI() {
   const [selected, setSelected] = useQueryState(QUERY_PARAMS.SELECTED, selectedIdsParser);
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useQueryState(QUERY_PARAMS.COLLAPSED, showGroupsCollapsedParser);
   const [anchor, setAnchor] = useQueryState(QUERY_PARAMS.ANCHOR, anchorParser);
+  const [columns, setColumns] = useQueryState(QUERY_PARAMS.COLS, columnsParser);
+  const [tab, setTab] = useQueryState(QUERY_PARAMS.TAB, tabParser);
 
   const { modal, photoId, setPhotoId, openModal, closeModal, setModal: setModalState } = useModalActions();
 
@@ -49,6 +51,8 @@ export function useUI() {
     selected, setSelected,
     showGroupsCollapsed, setShowGroupsCollapsed,
     anchor, setAnchor,
+    columns, setColumns,
+    tab, setTab,
     openModal,
     closeModal
   };

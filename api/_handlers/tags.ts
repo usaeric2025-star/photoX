@@ -36,7 +36,7 @@ export const tags = new Hono()
       ? query.where(ilike(tagsTable.name, `%${keyword}%`))
       : query;
 
-    const data = await filteredQuery.limit(20);
+    const data = await filteredQuery.limit(100);
     return successResponse(c, data);
   })
   .put('/:id{[0-9]+}', async (c) => {
@@ -132,7 +132,7 @@ export const tags = new Hono()
       return tagIds.indexOf(a) - tagIds.indexOf(b);
     });
 
-    const limitedTagIds = sortedTagIds.slice(0, 3);
+    const limitedTagIds = sortedTagIds.slice(0, 20);
 
     // 4. Update junction table
     await db.delete(photoTags).where(eq(photoTags.photoId, photoId));
@@ -179,7 +179,7 @@ export const tags = new Hono()
       return tagIds.indexOf(a) - tagIds.indexOf(b);
     });
 
-    const limitedTagIds = sortedTagIds.slice(0, 3);
+    const limitedTagIds = sortedTagIds.slice(0, 20);
 
     await db.delete(photoTags).where(inArray(photoTags.photoId, photoIds));
     if (limitedTagIds.length > 0) {

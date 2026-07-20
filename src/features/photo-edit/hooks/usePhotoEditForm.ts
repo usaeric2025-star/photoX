@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAppForm } from '#lib/forms/useAppForm.js';
 import { PhotoEditSchema, type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { Photo, Tag } from '#src/types/index.js';
@@ -23,27 +23,37 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   const { categories = [] } = useCategories();
   const { manufacturers = [] } = useManufacturers();
   const { tags: allTags = [] } = useTags();
+  const formRef = useRef<any>(null);
 
   const defaultValues = useMemo(() => PhotoEditFormService.getInitialValues(photo), [photo]);
 
   const onSubmit = useCallback(async (values: PhotoEditFormData) => {
-    // 驗證選擇
-    if (values.categoryId && !categories.find(c => String(c.id) === String(values.categoryId))) {
-      values.categoryId = null;
-    }
-    if (values.manufacturerId && !manufacturers.find(m => String(m.id) === String(values.manufacturerId))) {
-      values.manufacturerId = null;
-    }
+    try {
+      // 驗證選擇
+      if (values.categoryId && !categories.find(c => String(c.id) === String(values.categoryId))) {
+        values.categoryId = null;
+      }
+      if (values.manufacturerId && !manufacturers.find(m => String(m.id) === String(values.manufacturerId))) {
+        values.manufacturerId = null;
+      }
 
-    const saveData = PhotoEditFormService.prepareSaveData(values, photoId, photo);
-    
-    await editPhotoAsync({
-      id: photoId,
-      updates: saveData as unknown as Partial<Photo>
-    });
-    
-    showToast.success(t('saveSuccess') || 'Saved successfully');
-    onSuccess?.();
+      const saveData = PhotoEditFormService.prepareSaveData(values, photoId, photo);
+      
+      await editPhotoAsync({
+        id: photoId,
+        updates: saveData as unknown as Partial<Photo>
+      });
+      
+      // 強制重置表單到當前提交的值，清除 Dirty 狀態，確保「未保存」標籤立即消失
+      if (formRef.current) {
+        formRef.current.reset(values);
+      }
+      
+      showToast.success(t('saveSuccess') || '保存成功');
+      onSuccess?.();
+    } catch (error) {
+      ErrorFactory.handle(error as Error, { context: t('saveFailed') || '保存失敗' });
+    }
   }, [photoId, photo, editPhotoAsync, onSuccess, categories, manufacturers, t]);
 
   const formObj = useAppForm({
@@ -53,6 +63,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   });
 
   const { form } = formObj;
+  formRef.current = form;
   const isDirty = form.state.isDirty;
 
   // 自動保存邏輯 (Debounced Auto Save)
@@ -133,8 +144,9 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
       }
       if (state.fieldMeta) {
         Object.entries(state.fieldMeta).forEach(([fieldName, meta]) => {
-          if (meta?.errorMap) {
-            Object.values(meta.errorMap).forEach(err => {
+          const m = meta as any;
+          if (m?.errorMap) {
+            Object.values(m.errorMap).forEach(err => {
               if (err) {
                 errorList.push(`${fieldName}: ${String(err)}`);
               }

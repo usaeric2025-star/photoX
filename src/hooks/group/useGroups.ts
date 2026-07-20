@@ -44,7 +44,7 @@ const GroupService = {
     );
   },
 
-  setCover: async (photoId: string, groupId: string) => {
+  setCover: async (groupId: string, photoId: string | null) => {
     return ErrorFactory.unwrap<unknown>(
       api.groups['set-cover'].$post({ json: { photoId, groupId } }),
       '設置封面失敗'
@@ -239,8 +239,9 @@ export function useGroupMutations() {
   });
 
   const setCoverMutation = useAppMutation({
-    mutationFn: (args: { groupId: string; photoId: string }) => GroupService.setCover(args.groupId, args.photoId),
+    mutationFn: (args: { groupId: string; photoId: string | null }) => GroupService.setCover(args.groupId, args.photoId),
     onSuccess: () => {
+      showToast.success(t('setAsCoverSuccess') || 'Set as cover');
       invalidateList();
     }
   });
@@ -274,6 +275,7 @@ export function useGroupMutations() {
   const removePhotosMutation = useAppMutation({
     mutationFn: (args: { photoIds: string[]; groupId: string }) => GroupService.removePhotos(args.photoIds, args.groupId),
     onSuccess: () => {
+      showToast.success(t('removedFromGroup') || 'Removed from group');
       invalidateList();
     }
   });

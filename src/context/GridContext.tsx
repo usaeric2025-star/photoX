@@ -1,6 +1,5 @@
 import { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
-import { useQueryState, parseAsInteger } from 'nuqs';
-import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
+import { useUI } from '#src/hooks/ui/useUI.js';
 import { STORAGE_KEYS } from '#lib/storage.js';
 
 export type ColumnCount = 2 | 3 | 6;
@@ -13,8 +12,7 @@ interface GridContextValue {
 const GridContext = createContext<GridContextValue | null>(null);
 
 export function GridProvider({ children }: { children: ReactNode }) {
-  // Use 'cols' to match existing URL patterns
-  const [columns, setUrlColumns] = useQueryState(QUERY_PARAMS.COLS, parseAsInteger.withDefault(3));
+  const { columns, setColumns: setUrlColumns } = useUI();
 
   const setColumns = useCallback((newColumns: number) => {
     setUrlColumns(newColumns as ColumnCount, { shallow: true, history: 'replace' });

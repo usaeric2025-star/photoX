@@ -80,9 +80,13 @@ export function useDialogHeaderActions(onClose: () => void) {
     onSave,
     isCoverPending: setCover.isPending,
     setCover: async (newState: boolean) => {
-       if (newState && detailPhoto?.groupId && editPhotoId) {
-         await setCover.mutateAsync({ groupId: detailPhoto.groupId, photoId: editPhotoId });
-         showToast.success(t('setAsCoverSuccess') || 'Set as cover');
+       if (detailPhoto?.groupId && editPhotoId) {
+         try {
+           await setCover.mutateAsync({ groupId: detailPhoto.groupId, photoId: newState ? editPhotoId : null });
+           showToast.success(t('setAsCoverSuccess') || 'Set as cover');
+         } catch (e) {
+           ErrorFactory.handle(e as Error, { context: t('setAsCoverFailed') || '設置封面失敗' });
+         }
        }
     }
   };

@@ -64,5 +64,8 @@ export const anchorParser = parseAsBoolean.withDefault(false);
 // Show Groups Collapsed Parser
 export const showGroupsCollapsedParser = parseAsBoolean.withDefault(true);
 
+// Tab Parser
+export const tabParser = parseAsString.withDefault('stats');
+
 // Columns Parser
-const columnsParser = parseAsInteger.withDefault(3);
+export const columnsParser = parseAsInteger.withDefault(3);

@@ -73,20 +73,24 @@ export function TagEditor({
     return allTags.filter(t => selectedSet.has(String(t.id)));
   }, [allTags, selectedTagIds]);
 
-  // 2. Data Source & Deduplication
+  // 1. Data Source & Deduplication: Prefer local filtering for instant feedback
   const displayList = React.useMemo(() => {
-    const term = deferredSearchTerm.trim();
-    let list: Tag[] = [];
-    if (!term) {
-      list = allTags;
-    } else {
-      list = searchResults;
-      const searchIds = new Set(searchResults.map(t => String(t.id)));
-      const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !searchIds.has(String(t.id)));
-      list = [...list, ...missingSelected];
-    }
-    // Deduplicate by ID
-    return Array.from(new Map(list.map(t => [String(t.id), t])).values());
+    const term = deferredSearchTerm.trim().toLowerCase();
+    
+    // If no term, show all tags (pinned/hot logic handled by sorting)
+    if (!term) return allTags;
+
+    // Local search first (instant)
+    const localMatches = allTags.filter(t => t.name.toLowerCase().includes(term));
+    
+    // Server results (backup for missing local items if any)
+    const serverIds = new Set(searchResults.map(t => String(t.id)));
+    const uniqueServerMatches = searchResults.filter(t => !localMatches.some(m => String(m.id) === String(t.id)));
+    
+    // Always keep selected tags visible
+    const missingSelected = allTags.filter(t => selectedSet.has(String(t.id)) && !localMatches.some(m => String(m.id) === String(t.id)) && !serverIds.has(String(t.id)));
+    
+    return [...localMatches, ...uniqueServerMatches, ...missingSelected];
   }, [deferredSearchTerm, allTags, searchResults, selectedTagIds]);
 
   // 3. Sort Logic

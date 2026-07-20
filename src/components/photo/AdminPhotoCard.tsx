@@ -127,7 +127,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
         isGroupDetail={isGroupDetail}
       />
-      {(actualCanPin && !isMultiSelect) && (
+      {(actualCanPin && !isMultiSelect && !isGroupDetail) && (
         <PinButton photoId={photo.id} isPinned={!!photo.isPinned} />
       )}
       {isGroupDetail && photo.groupId && !isMultiSelect && (
@@ -135,7 +135,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
           photoId={photo.id} 
           groupId={photo.groupId} 
           isCover={!!photo.isGroupCover} 
-          offsetRight={actualCanPin}
+          offsetRight={false}
         />
       )}
       <PhotoCardInfo 
