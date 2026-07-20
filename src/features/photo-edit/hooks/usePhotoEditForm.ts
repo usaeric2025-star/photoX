@@ -53,6 +53,21 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   });
 
   const { form } = formObj;
+  const isDirty = form.state.isDirty;
+
+  // 自動保存邏輯 (Debounced Auto Save)
+  useEffect(() => {
+    if (!isDirty || !photoId) return;
+
+    const timer = setTimeout(() => {
+      // 僅在表單有效且標記為 dirty 時自動保存
+      if (form.state.isValid && form.state.isDirty) {
+        form.handleSubmit();
+      }
+    }, 2000); // 2秒延遲
+
+    return () => clearTimeout(timer);
+  }, [form, isDirty, photoId]);
 
   // 表單數據同步
   useEffect(() => {

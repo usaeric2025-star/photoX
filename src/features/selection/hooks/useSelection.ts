@@ -1,4 +1,5 @@
 import { useQueryState } from 'nuqs';
+import { useCallback, useMemo } from 'react';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { batchParser, selectedIdsParser } from '#lib/nuqs/parsers.js';
 import { isAvoidingSelectionAtom } from '#src/store/index.js';
@@ -49,26 +50,30 @@ export function useSelectionActions() {
   const [selected, setSelected] = useQueryState(QUERY_PARAMS.SELECTED, { ...selectedIdsParser, history: 'replace', shallow: true });
   const [batch, setBatch] = useQueryState(QUERY_PARAMS.BATCH, { ...batchParser, history: 'replace', shallow: true });
 
-  const toggleSelect = (id: string) => {
-    const current = selected || [];
-    const next = current.includes(id) 
-      ? current.filter(i => i !== id) 
-      : [...current, id];
-    setSelected(next.length ? next : null);
-  };
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const current = prev || [];
+      const next = current.includes(id) 
+        ? current.filter(i => i !== id) 
+        : [...current, id];
+      return next.length ? next : null;
+    });
+  }, [setSelected]);
 
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     setSelected(null);
     SelectionService.reset();
-  };
+  }, [setSelected]);
 
-  const toggleMode = () => {
-    const nextMode = !batch;
-    if (!nextMode) setSelected(null);
-    setBatch(nextMode || null);
-  };
+  const toggleMode = useCallback(() => {
+    setBatch((prev) => {
+      const nextMode = !prev;
+      if (!nextMode) setSelected(null);
+      return nextMode || null;
+    });
+  }, [setBatch, setSelected]);
 
-  const patch = (updates: { 
+  const patch = useCallback((updates: { 
     selectedIds?: string[] | null; 
     batch?: boolean; 
     isAvoidingSelection?: boolean;
@@ -82,7 +87,7 @@ export function useSelectionActions() {
     if (updates.isAvoidingSelection !== undefined) {
       SelectionService.setAvoidingSelection(updates.isAvoidingSelection);
     }
-  };
+  }, [setSelected, setBatch]);
 
   return {
     toggleSelect,

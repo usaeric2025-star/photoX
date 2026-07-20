@@ -48,17 +48,24 @@ export function useTranslation() {
 }
 
 /**
- * useNormalizedLocation
+ * useWouterLocation (Normalized version for wouter Router hook)
  */
-export const useNormalizedLocation = () => {
+export const useWouterLocation = () => {
   const [location, setLocation] = useBrowserLocation();
   const normalized = location === "/" ? "/" : location.replace(/\/$/, "");
-  const setNormalizedLocation = useCallback((to: string, options?: any) => {
-    const normalizedTo = to === "/" ? "/" : to.replace(/\/$/, "");
-    return setLocation(normalizedTo, options);
+  
+  const setNormalized = useCallback((to: string, options?: any) => {
+    const next = to === "/" ? "/" : to.replace(/\/$/, "");
+    return setLocation(next, options);
   }, [setLocation]);
-  return [normalized, setNormalizedLocation] as [string, typeof setNormalizedLocation];
+  
+  return [normalized, setNormalized] as [string, typeof setNormalized];
 };
+
+/**
+ * useNormalizedLocation
+ */
+export const useNormalizedLocation = useWouterLocation;
 
 /**
  * useAppInit

@@ -15,10 +15,9 @@ import { PhotoZoomOverlay } from './components/PhotoZoomOverlay.js';
  * 照片編輯對話框中的基礎信息分頁。
  */
 export function BasicInfoTab() {
-  const { form } = usePhotoEditSessionContext();
+  const { form, photoId } = usePhotoEditSessionContext();
   const { t } = useTranslation();
-  const { modal, photoId } = useFilters();
-  const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
+  const { data: detailPhoto } = usePhoto(photoId);
   
   const previewSrc = detailPhoto?.imageUrl;
   const [zoomed, { open: openZoom, close: closeZoom }] = useDisclosure(false);

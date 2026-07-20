@@ -16,11 +16,10 @@ import { copyToClipboard } from '#src/utils/clipboard.js';
  * 照片編輯對話框中的詳細信息（尺寸、描述）分頁。
  */
 export function DetailsTab() {
-  const { form } = usePhotoEditSessionContext();
-  const { modal, photoId } = useFilters();
+  const { form, photoId } = usePhotoEditSessionContext();
   const { t } = useTranslation();
   
-  const { data: detailPhoto } = usePhoto(modal === 'edit' ? photoId : '');
+  const { data: detailPhoto } = usePhoto(photoId);
   const { handleAiAnalyze, isAnalyzing } = usePhotoEditAI();
 
   const onAiAnalyze = async () => {

@@ -14,6 +14,7 @@ import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
 import { useQueryState } from 'nuqs';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { parseAsPhotoId } from '#lib/nuqs/parsers.js';
+import { LocalErrorBoundary } from '#src/components/ui/feedback/LocalErrorBoundary.js';
 
 interface PhotoWallContainerProps {
   mode?: 'admin' | 'public';
@@ -218,13 +219,15 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   }
 
   return (
-    <PhotoWallGrid
-      photos={photos}
-      hasMore={hasMore}
-      isLoading={isLoading}
-      isLoadingMore={isLoadingMore}
-      loadMore={loadMore}
-      isAggregated={isAggregated}
-    />
+    <LocalErrorBoundary name="PhotoWallGrid">
+      <PhotoWallGrid
+        photos={photos}
+        hasMore={hasMore}
+        isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
+        loadMore={loadMore}
+        isAggregated={isAggregated}
+      />
+    </LocalErrorBoundary>
   );
 }

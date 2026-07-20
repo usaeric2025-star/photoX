@@ -14,7 +14,7 @@ import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/index.js';
-import { AIService } from '../services/AIService.js';
+import { AIService } from '#src/lib/ai/AIService.js';
 
 export { usePhotoAIResult } from '#src/hooks/photo/index.js';
 

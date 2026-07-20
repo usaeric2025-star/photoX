@@ -18,10 +18,11 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   const { data: photo, isPending, isError } = usePhoto(editPhotoId);
 
   const [showConfirm, setShowConfirm] = useState(false);
-  const { isDirty, commit, discard, isSubmitting } = usePhotoEditSessionContext();
+  const { isDirty, commit, discard, isSubmitting, form } = usePhotoEditSessionContext();
+  const isSaving = isSubmitting;
   
   const handleInterceptClose = async () => {
-    if (isDirty) {
+    if (isDirty && !isSaving) {
       setShowConfirm(true);
     } else {
       handleClose();

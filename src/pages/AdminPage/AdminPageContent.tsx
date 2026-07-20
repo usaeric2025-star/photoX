@@ -1,15 +1,16 @@
 import { useAtomValue } from 'jotai';
 import { uploadModeDialogOpenAtom } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { } from '#lib/store/index.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
+import { LocalErrorBoundary } from '#src/components/ui/feedback/LocalErrorBoundary.js';
 
 import { UploadModeDialog } from '#src/features/upload/components/UploadModeDialog.js';
 
-import { usePhotoUpload } from '#src/hooks/index.js';
+import { usePhotoUpload, useSelectionActions } from '#src/hooks/index.js';
 import { UploadButton } from '#src/components/shared/UploadButton.js';
 import { SelectionToolbar } from '#src/features/selection/index.js';
 import { } from '#lib/store/index.js';
@@ -86,8 +87,22 @@ function AdminGroupDetailRoute() {
 export function AdminPageContent() {
   const { uploadFiles } = usePhotoUpload();
   const uploadModeDialogOpen = useAtomValue(uploadModeDialogOpenAtom);
-  
-  
+  const { clearSelection } = useSelectionActions();
+  const [location] = useNormalizedLocation();
+
+  // Clear selection on context change (navigation) to prevent "mysterious" photo inclusion
+  // This addresses the user concern that unselected photos occasionally enter groups
+  const lastPathname = React.useRef(location.split('?')[0]);
+  useEffect(() => {
+    const currentPathname = location.split('?')[0];
+    const isBatchEdit = currentPathname.includes('batch-edit');
+    
+    // 如果路徑發生重大變化（非進入批量編輯頁面），則清空選取
+    if (currentPathname !== lastPathname.current && !isBatchEdit) {
+      clearSelection();
+    }
+    lastPathname.current = currentPathname;
+  }, [location, clearSelection]);
 
   return (
     <div className="flex h-full bg-slate-50 overflow-hidden w-full relative">
@@ -100,21 +115,28 @@ export function AdminPageContent() {
             <Route path={ADMIN_ROUTES.DIAGNOSTICS} component={AdminDiagRoute} />
             <Route path="/admin/diagnose" component={AdminDiagRoute} />
             <Route path="/diagnostics/:subpath*" component={AdminDiagRoute} />
-            <Route path="/diagnostics" component={AdminDiagRoute} />
 
             <Route path={ADMIN_ROUTES.TASKS} component={AdminSettingsRoute} />
             <Route path={ADMIN_ROUTES.SETTINGS} component={AdminSettingsRoute} />
             <Route path={ADMIN_ROUTES.ERROR_LOGS} component={AdminSettingsRoute} />
             <Route path="/admin/system" component={AdminSettingsRoute} />
             <Route path="/settings/:subpath*" component={AdminSettingsRoute} />
-            <Route path="/settings" component={AdminSettingsRoute} />
 
             <Route path={ADMIN_ROUTES.GROUP_DETAIL} component={AdminGroupDetailRoute} />
 
-            <Route path="/admin/:subpath*" component={AdminGallery} />
-            <Route path="/admin" component={AdminGallery} />
+            {/* Admin Gallery as the default view for anything under /admin */}
+            <Route path="/admin/:subpath*">
+              <LocalErrorBoundary name="AdminGallery">
+                <AdminGallery />
+              </LocalErrorBoundary>
+            </Route>
+            <Route path="/admin">
+              <LocalErrorBoundary name="AdminGallery">
+                <AdminGallery />
+              </LocalErrorBoundary>
+            </Route>
             
-            <Route component={NotFoundPage} />
+            <Route component={() => <NotFoundPage />} />
           </Switch>
         </ErrorBoundary>
         <SelectionToolbar />

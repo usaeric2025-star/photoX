@@ -49,6 +49,25 @@ export function DialogHeader({
         <h2 className="font-black text-sm sm:text-base text-slate-800 tracking-tight leading-tight uppercase truncate">
           {editPhotoId ? l.editTitle : l.analyzeTitle}
         </h2>
+        <div className="flex items-center gap-2 mt-0.5">
+          {isSubmitting && (
+            <div className="flex items-center gap-1.5 text-[10px] text-blue-500 font-bold animate-pulse">
+              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+              {t('saving') || 'SAVING...'}
+            </div>
+          )}
+          {!isSubmitting && form.state.isDirty && (
+            <div className="text-[10px] text-amber-500 font-bold">
+              {t('unsaved') || 'UNSAVED CHANGES'}
+            </div>
+          )}
+          {!isSubmitting && !form.state.isDirty && (
+            <div className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+              <Icon name="check" size={10} />
+              {t('saved') || 'SAVED'}
+            </div>
+          )}
+        </div>
         {aiMessage && (
           <div className="mt-1 px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-[10px] font-semibold animate-in fade-in flex items-center gap-2 max-w-fit truncate">
             <LoadingSpinner size="xs" />

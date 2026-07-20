@@ -15,3 +15,4 @@
  */
 
 export * from './useUI.js';
+export { useFilters, useSearchTransition } from '../photo/useFilters.js';

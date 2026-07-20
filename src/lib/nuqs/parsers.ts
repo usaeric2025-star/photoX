@@ -13,15 +13,26 @@ export const searchParser = parseAsString.withDefault('');
 // Category Parser
 export const categoryParser = parseAsString.withDefault('');
 
+// Generic Array Parser (for URL compression via JSON)
+export function parseAsArray<T = string>(defaultValue: T[] = []) {
+  return parseAsJson<T[]>((value) => {
+    if (!Array.isArray(value)) return defaultValue;
+    // 精準定位：過濾掉非字符串（如果是 ID 數組）或空值，防止報錯
+    return value.filter(v => typeof v === 'string' && v.trim() !== '') as T[];
+  }).withDefault(defaultValue);
+}
+
 // Tags Parser (Array of strings)
-export const tagsParser = parseAsJson<string[]>((value) => 
-  (Array.isArray(value) && value.every(v => typeof v === 'string')) ? value : []
-).withDefault([]);
+export const tagsParser = parseAsArray<string>([]);
+
+// Categories Parser (Array of strings)
+export const categoriesParser = parseAsArray<string>([]);
+
+// Groups Parser (Array of strings)
+export const groupsParser = parseAsArray<string>([]);
 
 // Selected IDs Parser
-export const selectedIdsParser = parseAsJson<string[]>((value) => 
-  (Array.isArray(value) && value.every(v => typeof v === 'string')) ? value : []
-).withDefault([]);
+export const selectedIdsParser = parseAsArray<string>([]);
 
 // Sort Parser (使用 Valibot)
 export const sortParser = parseWithValibot(SortSchema).withDefault('newest');
