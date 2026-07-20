@@ -95,7 +95,7 @@ const GroupService = {
 };
 import { useFilters } from '../ui/useUI.js';
 import { usePhotos, useInvalidatePhotos } from '../photo/index.js';
-import { useSelectionActions } from '../selection/useSelection.js';
+import { useSelectionActions } from '#src/hooks/index.js';
 import { useTranslation } from '../core/index.js';
 
 /**

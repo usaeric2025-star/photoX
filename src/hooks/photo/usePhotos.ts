@@ -48,14 +48,17 @@ export function usePhotos(params: any = {}) {
     queryKey: queryKeys.photos.list(params),
     queryFn: async ({ pageParam = 1 }) => {
       // @ts-ignore - Hono client indexing
-      const res = await api.photo.$get({ 
-        query: { ...params, page: String(pageParam), limit: '24' } 
+      const res = await api.photos.list.$post({ 
+        json: { ...params, page: String(pageParam), limit: '24' } 
       });
       return ErrorFactory.unwrap<any>(res, labels.pullFail || 'Fetch Failed');
     },
     getNextPageParam: (lastPage) => {
-      if (!lastPage || !lastPage.pagination) return undefined;
-      const { page, totalPages } = lastPage.pagination;
+      if (!lastPage || !lastPage.items || lastPage.items.length === 0) return undefined;
+      const total = Number(lastPage.total) || 0;
+      const page = Number(lastPage.page) || 1;
+      const limit = 24; 
+      const totalPages = Math.ceil(total / limit);
       return page < totalPages ? page + 1 : undefined;
     },
     initialPageParam: 1,
@@ -74,7 +77,7 @@ export function usePhotoDetail(id: string | null) {
     async () => {
       if (!id) return null;
       // @ts-ignore - Hono client indexing
-      const res = await api.photo[':id'].$get({ param: { id } });
+      const res = await api.photos[':id'].$get({ param: { id } });
       return ErrorFactory.unwrap<any>(res, labels.pullFail || 'Fetch Failed');
     },
     { 

@@ -16,28 +16,59 @@ type Domain = 'categories' | 'tags' | 'manufacturers';
  * 整合所有元數據（分類、標籤、廠商）的查詢。
  */
 export const useCategories = (options?: { enabled?: boolean }) => {
+  const queryClient = useQueryClient();
+  const cachedData = queryClient.getQueryData<Category[]>(queryKeys.categories.all);
+  const hasCachedData = cachedData && cachedData.length > 0;
+
   const { data: categories = [], isLoading } = useAppQuery<Category[]>(
     queryKeys.categories.all,
-    async () => ErrorFactory.unwrap<Category[]>(api.categories.$get(), 'Fetch categories failed'),
-    options
+    async () => {
+      const res = await api.categories.$get();
+      const data = await ErrorFactory.unwrap<Category[]>(res, 'Fetch categories failed');
+      return data.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    },
+    {
+      staleTime: hasCachedData ? STALE_TIMES.MEDIUM : 0,
+      refetchOnWindowFocus: true,
+      ...options
+    }
   );
   return { categories, isLoading };
 };
 
 export const useTags = (options?: { enabled?: boolean }) => {
+  const queryClient = useQueryClient();
+  const cachedData = queryClient.getQueryData<Tag[]>(queryKeys.tags.all);
+  const hasCachedData = cachedData && cachedData.length > 0;
+
   const { data: tags = [], isLoading } = useAppQuery<Tag[]>(
     queryKeys.tags.all,
-    async () => ErrorFactory.unwrap<Tag[]>(api.tags.$get(), 'Fetch tags failed'),
-    options
+    async () => {
+      const res = await api.tags.$get();
+      return ErrorFactory.unwrap<Tag[]>(res, 'Fetch tags failed');
+    },
+    {
+      staleTime: hasCachedData ? STALE_TIMES.MEDIUM : 0,
+      refetchOnWindowFocus: true,
+      ...options
+    }
   );
   return { tags, isLoading };
 };
 
 export const useManufacturers = (options?: { enabled?: boolean }) => {
+  const queryClient = useQueryClient();
+  const cachedData = queryClient.getQueryData<Manufacturer[]>(queryKeys.manufacturers.all);
+  const hasCachedData = cachedData && cachedData.length > 0;
+
   const { data: manufacturers = [], isLoading } = useAppQuery<Manufacturer[]>(
     queryKeys.manufacturers.all,
     async () => ErrorFactory.unwrap<Manufacturer[]>(api.manufacturers.$get(), 'Fetch manufacturers failed'),
-    options
+    {
+      staleTime: hasCachedData ? STALE_TIMES.MEDIUM : 0,
+      refetchOnWindowFocus: true,
+      ...options
+    }
   );
   return { manufacturers, isLoading };
 };

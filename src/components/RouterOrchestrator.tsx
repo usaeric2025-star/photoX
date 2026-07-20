@@ -12,10 +12,12 @@ import { } from "#lib/store/index.js";
 import { useNormalizedLocation } from "#src/hooks/core/index.js";
 import { DialogContainer } from "./layout/DialogContainer.js";
 import { getRouteGroupKey, isAdminRoute } from "#src/lib/routing.js";
-const PublicPage = lazy(() => import("#src/pages/PublicPage.js"));
-const AdminPage = lazy(() => import("#src/pages/AdminPage/index.js"));
-const PublicGroupDetailPage = lazy(() => import("#src/features/group/PublicGroupDetail.js").then(m => ({ default: m.PublicGroupDetailPage })));
-const AdminAuthGate = lazy(() => import("./admin/AdminAuthGate.js").then(m => ({ default: m.AdminAuthGate })));
+
+import PublicPage from "#src/pages/PublicPage.js";
+import { PublicGroupDetailPage } from "#src/features/group/PublicGroupDetail.js";
+import { AdminAuthGate } from "./admin/AdminAuthGate.js";
+import AdminPage from "#src/pages/AdminPage/index.js";
+
 export function RouterOrchestrator() {
   const [location] = useNormalizedLocation();
   const groupKey = getRouteGroupKey(location);
@@ -38,11 +40,9 @@ export function RouterOrchestrator() {
                 className="flex-1 flex flex-col h-full w-full"
               >
                 <ErrorBoundary context="AdminLayout">
-                  <Suspense fallback={<LoadingScreen />}>
-                    <AdminAuthGate>
-                      <AdminPage />
-                    </AdminAuthGate>
-                  </Suspense>
+                  <AdminAuthGate>
+                    <AdminPage />
+                  </AdminAuthGate>
                 </ErrorBoundary>
               </motion.div>
             ) : (
@@ -53,23 +53,21 @@ export function RouterOrchestrator() {
                 className="flex-1 flex flex-col h-full w-full"
               >
                 <ErrorBoundary context="PublicLayout">
-                  <Suspense fallback={<LoadingScreen />}>
-                    <Switch>
-                      <Route path="/" component={PublicPage} />
-                      <Route path="/photo/:photoId" component={PublicPage} />
-                      <Route path="/group/:slug" component={PublicGroupDetailPage} />
-                      <Route path="/category/:id" component={PublicPage} />
-                      <Route path="/tag/:id" component={PublicPage} />
-                      {/* Prevent visual 404 during exit animations to admin routes */}
-                      <Route path="/admin" component={() => null} />
-                      <Route path="/admin/:any*" component={() => null} />
-                      <Route path="/settings" component={() => null} />
-                      <Route path="/settings/:any*" component={() => null} />
-                      <Route path="/diagnostics" component={() => null} />
-                      <Route path="/diagnostics/:any*" component={() => null} />
-                      <Route component={NotFoundPage} />
-                    </Switch>
-                  </Suspense>
+                  <Switch>
+                    <Route path="/" component={PublicPage} />
+                    <Route path="/photo/:photoId" component={PublicPage} />
+                    <Route path="/group/:slug" component={PublicGroupDetailPage} />
+                    <Route path="/category/:id" component={PublicPage} />
+                    <Route path="/tag/:id" component={PublicPage} />
+                    {/* Prevent visual 404 during exit animations to admin routes */}
+                    <Route path="/admin" component={() => null} />
+                    <Route path="/admin/:any*" component={() => null} />
+                    <Route path="/settings" component={() => null} />
+                    <Route path="/settings/:any*" component={() => null} />
+                    <Route path="/diagnostics" component={() => null} />
+                    <Route path="/diagnostics/:any*" component={() => null} />
+                    <Route component={NotFoundPage} />
+                  </Switch>
                 </ErrorBoundary>
               </motion.div>
             )}

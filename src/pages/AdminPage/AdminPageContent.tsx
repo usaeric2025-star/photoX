@@ -7,13 +7,7 @@ import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { } from '#lib/store/index.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 
-interface UploadModeDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSelectMode: (mode: 'single' | 'group') => void;
-}
-
-const UploadModeDialog = lazy(() => import('#src/features/upload/components/UploadModeDialog.js').then(m => ({ default: m.UploadModeDialog }))) as React.ComponentType<UploadModeDialogProps>;
+import { UploadModeDialog } from '#src/features/upload/components/UploadModeDialog.js';
 
 import { usePhotoUpload } from '#src/hooks/index.js';
 import { UploadButton } from '#src/components/shared/UploadButton.js';
@@ -30,10 +24,10 @@ interface SettingsPageProps {
   onClose?: () => void;
 }
 
-const BatchEditScreen = lazy(() => import('#src/features/batch-edit/BatchEditScreen.js').then(m => ({ default: m.BatchEditScreen })));
-const DiagDashboard = lazy(() => import('#src/features/diagnostics/DiagDashboard.js').then(m => ({ default: m.DiagDashboard })));
-const SettingsPage = lazy(() => import('#src/features/settings/SettingsPage.js').then(m => ({ default: m.SettingsPage }))) as React.ComponentType<SettingsPageProps>;
-const AdminGroupDetailPage = lazy(() => import('#src/features/group/AdminGroupDetail.js').then(m => ({ default: m.AdminGroupDetailPage })));
+import { BatchEditScreen } from '#src/features/batch-edit/BatchEditScreen.js';
+import { DiagDashboard } from '#src/features/diagnostics/DiagDashboard.js';
+import { SettingsPage } from '#src/features/settings/SettingsPage.js';
+import { AdminGroupDetailPage } from '#src/features/group/AdminGroupDetail.js';
 
 import { ScreenWrapper } from '#src/components/admin/ScreenWrapper.js';
 import { Switch, Route } from 'wouter';
@@ -99,39 +93,29 @@ export function AdminPageContent() {
     <div className="flex h-full bg-slate-50 overflow-hidden w-full relative">
       <div className="flex-1 flex flex-col min-w-0 relative h-full">
         <ErrorBoundary>
-          <Suspense fallback={<div className="h-full flex items-center justify-center bg-slate-50"><LoadingSpinner size="lg" /></div>}>
-            <Switch>
-              <Route path={ADMIN_ROUTES.BATCH_EDIT} component={AdminBatchEditRoute} />
-              <Route path={ADMIN_ROUTES.BATCH} component={AdminBatchEditRoute} />
-              
-              <Route path={ADMIN_ROUTES.DIAGNOSTICS} component={AdminDiagRoute} />
-              <Route path="/admin/diagnose" component={AdminDiagRoute} />
-              <Route path="/diagnostics" component={AdminDiagRoute} />
-              <Route path="/diagnostics/:any*" component={AdminDiagRoute} />
+          <Switch>
+            <Route path={ADMIN_ROUTES.BATCH_EDIT} component={AdminBatchEditRoute} />
+            <Route path={ADMIN_ROUTES.BATCH} component={AdminBatchEditRoute} />
+            
+            <Route path={ADMIN_ROUTES.DIAGNOSTICS} component={AdminDiagRoute} />
+            <Route path="/admin/diagnose" component={AdminDiagRoute} />
+            <Route path="/diagnostics/:subpath*" component={AdminDiagRoute} />
+            <Route path="/diagnostics" component={AdminDiagRoute} />
 
-              <Route path={ADMIN_ROUTES.TASKS} component={AdminSettingsRoute} />
-              <Route path={ADMIN_ROUTES.SETTINGS} component={AdminSettingsRoute} />
-              <Route path={ADMIN_ROUTES.ERROR_LOGS} component={AdminSettingsRoute} />
-              <Route path="/admin/system" component={AdminSettingsRoute} />
-              <Route path="/settings" component={AdminSettingsRoute} />
-              <Route path="/settings/:any*" component={AdminSettingsRoute} />
+            <Route path={ADMIN_ROUTES.TASKS} component={AdminSettingsRoute} />
+            <Route path={ADMIN_ROUTES.SETTINGS} component={AdminSettingsRoute} />
+            <Route path={ADMIN_ROUTES.ERROR_LOGS} component={AdminSettingsRoute} />
+            <Route path="/admin/system" component={AdminSettingsRoute} />
+            <Route path="/settings/:subpath*" component={AdminSettingsRoute} />
+            <Route path="/settings" component={AdminSettingsRoute} />
 
-              <Route path={ADMIN_ROUTES.GROUP_DETAIL} component={AdminGroupDetailRoute} />
+            <Route path={ADMIN_ROUTES.GROUP_DETAIL} component={AdminGroupDetailRoute} />
 
-              <Route path="/admin/groups" component={AdminGallery} />
-              <Route path="/admin/photos" component={AdminGallery} />
-              <Route path="/admin/tags" component={AdminGallery} />
-              <Route path="/admin/categories" component={AdminGallery} />
-              <Route path="/admin/manufacturer" component={AdminGallery} />
-              
-              <Route path={ADMIN_ROUTES.HOME} component={AdminGallery} />
-              <Route path="/admin/:any*">
-                <AdminGallery />
-              </Route>
-
-              <Route component={NotFoundPage} />
-            </Switch>
-          </Suspense>
+            <Route path="/admin/:subpath*" component={AdminGallery} />
+            <Route path="/admin" component={AdminGallery} />
+            
+            <Route component={NotFoundPage} />
+          </Switch>
         </ErrorBoundary>
         <SelectionToolbar />
       </div>
@@ -146,17 +130,15 @@ export function AdminPageContent() {
         }}
       />
 
-      <Suspense fallback={null}>
-        <UploadModeDialog 
-          open={uploadModeDialogOpen}
-          onOpenChange={(open) => patch({ uploadModeDialogOpen: open })}
-          onSelectMode={(mode) => {
-            patch({ uploadModeDialogOpen: false, uploadAsGroup: mode === 'group' });
-            const input = document.getElementById('admin-quick-add-input') as HTMLInputElement;
-            if (input) input.click();
-          }}
-        />
-      </Suspense>
+      <UploadModeDialog 
+        open={uploadModeDialogOpen}
+        onOpenChange={(open) => patch({ uploadModeDialogOpen: open })}
+        onSelectMode={(mode) => {
+          patch({ uploadModeDialogOpen: false, uploadAsGroup: mode === 'group' });
+          const input = document.getElementById('admin-quick-add-input') as HTMLInputElement;
+          if (input) input.click();
+        }}
+      />
     </div>
   );
 }

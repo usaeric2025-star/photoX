@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { showWhatsAppChoiceAtom } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, Suspense } from 'react';
 import { useFilters } from '#src/features/filters/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { PublicHeader } from '#src/components/layout/PublicHeader.js';
@@ -10,9 +10,7 @@ import { PhotoWall } from '#src/features/photo-wall/index.js';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import {  type UIStoreState } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { Suspense, lazy } from 'react';
-
-const WhatsAppDialog = lazy(() => import('#src/components/shared/WhatsAppDialog.js').then(m => ({ default: m.WhatsAppDialog })));
+import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
 
 export default function PublicPage() {
   const { 
@@ -61,7 +59,11 @@ export default function PublicPage() {
       id="public-view"
     >
       <PublicHeader />
-      <FilterBar mode="public" />
+      
+      {/* 頂部過濾區域 - 增加內邊距確保大搜索框模式下的視覺寬鬆度 */}
+      <div className="bg-white z-10">
+        <FilterBar mode="public" className="max-w-screen-2xl mx-auto" />
+      </div>
 
       <div 
         id="photo-wall-scroll-container"
@@ -101,12 +103,10 @@ export default function PublicPage() {
       </div>
 
       {showWhatsAppChoice && (
-        <Suspense fallback={null}>
-          <WhatsAppDialog 
-            open={showWhatsAppChoice} 
-            onOpenChange={(val) => patch({ showWhatsAppChoice: val })} 
-          />
-        </Suspense>
+        <WhatsAppDialog 
+          open={showWhatsAppChoice} 
+          onOpenChange={(val) => patch({ showWhatsAppChoice: val })} 
+        />
       )}
     </div>
   );

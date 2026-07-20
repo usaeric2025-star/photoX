@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useTransition } from 'react';
+import { useState, useEffect, useRef, useCallback, useTransition, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { initApp, appLoadingAtom, appErrorAtom } from '#src/store/index.js';
 import { usePublicSettings } from '#src/hooks/index.js';
@@ -19,12 +19,15 @@ type Translations = Record<string, string> | null | undefined;
  */
 export function useTranslation() {
   const appLang = useAppLang() as LanguageCode;
+
   const resolveString = useCallback((translations: Translations, fallback?: string) => {
     if (!translations) return fallback || '';
     return translations[appLang] || translations.en || fallback || '';
   }, [appLang]);
 
-  const uiTranslations = ((allTranslations || {})[appLang as keyof typeof allTranslations] || (allTranslations || {}).en || {}) as TranslationType;
+  const uiTranslations = useMemo(() => 
+    ((allTranslations || {})[appLang as keyof typeof allTranslations] || (allTranslations || {}).en || {}) as TranslationType
+  , [appLang]);
     
   const t = useCallback((key: string, ...args: unknown[]): string => {
     const val = (uiTranslations as unknown as Record<string, unknown>)[key];
@@ -35,7 +38,13 @@ export function useTranslation() {
     return String(val);
   }, [uiTranslations]);
 
-  return { resolveString, t, appLang, lang: appLang, uiTranslations };
+  return useMemo(() => ({ 
+    resolveString, 
+    t, 
+    appLang, 
+    lang: appLang, 
+    uiTranslations 
+  }), [resolveString, t, appLang, uiTranslations]);
 }
 
 /**

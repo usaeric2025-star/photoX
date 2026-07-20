@@ -39,4 +39,34 @@ export const detailRoutes = new Hono()
     });
 
     return successResponse(c, formatted);
+  })
+  .get('/:id', async (c) => {
+    const id = c.req.param('id');
+    const photo = await db.query.furnitureItems.findFirst({
+        where: eq(furnitureItems.id, id),
+        with: {
+            tags: {
+                with: {
+                    tag: true
+                }
+            },
+            category: true,
+            group: true
+        }
+    });
+
+    if (!photo) return errorResponse(c, 'Photo not found', 404);
+
+    const { tags, category, group, ...rest } = photo;
+    const formatted = {
+        ...rest,
+        category,
+        group,
+        photoTags: tags.map(t => ({ 
+            tagId: t.tagId,
+            tags: t.tag 
+        }))
+    };
+
+    return successResponse(c, formatted);
   });

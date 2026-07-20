@@ -47,6 +47,13 @@ export function PhotoWallGrid({
     if (scrollParent) return; 
     if (!containerRef.current) return;
     
+    // 優先尋找指定的滾動容器 ID，否則向上查找
+    const target = document.getElementById('photo-wall-scroll-container');
+    if (target) {
+      setScrollParent(target);
+      return;
+    }
+
     let parent = containerRef.current.parentElement;
     while (parent) {
       const overflowY = window.getComputedStyle(parent).overflowY;
@@ -59,9 +66,9 @@ export function PhotoWallGrid({
   }, [scrollParent]);
 
   const handleLoadMore = useCallback(async () => {
-    if (isLoadingMore || isLoading) return;
+    if (isLoadingMore || isLoading || !hasMore) return;
     loadMore();
-  }, [loadMore, isLoadingMore, isLoading]);
+  }, [loadMore, isLoadingMore, isLoading, hasMore]);
 
   // Scroll listener backup
   useEffect(() => {
@@ -71,7 +78,8 @@ export function PhotoWallGrid({
     const handleScroll = () => {
       if (!hasMore || isLoadingMore || isLoading) return;
       const { scrollHeight, scrollTop, clientHeight } = parent;
-      if (scrollHeight - scrollTop - clientHeight < 400) {
+      // 提高觸發靈敏度，剩餘 800px 時即觸發
+      if (scrollHeight - scrollTop - clientHeight < 800) {
         handleLoadMore();
       }
     };
@@ -133,8 +141,8 @@ export function PhotoWallGrid({
         renderItem={renderItem}
         renderLoader={renderLoader}
         renderEmpty={renderEmpty}
-        scrollThreshold={1000}
-        overscan={600}
+        scrollThreshold={1200}
+        overscan={800}
       />
       
       {isLoadingMore && photos.length > 0 && (

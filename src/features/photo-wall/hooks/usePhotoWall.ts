@@ -8,16 +8,17 @@ import { usePhotos } from '#src/hooks/photo/index.js';
  * 遵循「就近整合」與「反過度拆分」規範，作為 PhotoWall 特有的 Local Hook。
  */
 export function usePhotoWall(mode: 'public' | 'admin' = 'public') {
-  const { search, category, tags, sort, showGroupsCollapsed } = useFilters();
+  const { search, category, tags, sort, showGroupsCollapsed, groupId } = useFilters();
 
   const queryOptions = useMemo(() => ({
     categoryId: category,
     tagId: tags?.[0],
     searchQuery: search,
     sortOrder: sort as any,
-    mode,
-    onlyGroupsCover: showGroupsCollapsed,
-  }), [category, tags, search, sort, mode, showGroupsCollapsed]);
+    isAdminMode: mode === 'admin',
+    groupId,
+    onlyGroupsCover: groupId ? false : showGroupsCollapsed,
+  }), [category, tags, search, sort, mode, showGroupsCollapsed, groupId]);
 
   const {
     data,

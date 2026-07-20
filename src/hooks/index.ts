@@ -23,7 +23,7 @@ export * from './photo/index.js';
 export * from './group/index.js';
 export * from './metadata/index.js';
 export * from './settings/index.js';
-export * from './selection/index.js';
+export * from '#src/features/selection/index.js';
 
 // Utils
 export * from './ui/index.js';

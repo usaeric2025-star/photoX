@@ -1,2 +1,2 @@
 export * from './SelectionToolbar.js';
-export * from '#src/hooks/index.js';
+export * from './hooks/useSelection.js';

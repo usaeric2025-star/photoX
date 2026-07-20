@@ -55,6 +55,14 @@ export function TagGrid({ onClose }: { onClose?: () => void }) {
   // Resolve sorted, pinned, and hot tags
   const { tagsToRender, pinnedIds, hotIds } = useTagSorting(tags || [], settings);
 
+  console.log('[TagGrid DEBUG]', { 
+    tagsCount: tags?.length, 
+    isPending, 
+    hasSettings: !!settings, 
+    tagsToRenderCount: tagsToRender?.length,
+    tagsSample: tags?.slice(0, 3) 
+  });
+
   const toggleTag = (tagId: string) => {
     if (filters.tagIds.includes(tagId)) {
       updateFilters({ tagIds: filters.tagIds.filter((id: string) => id !== tagId) });

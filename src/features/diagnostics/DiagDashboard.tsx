@@ -3,14 +3,15 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { useAdminActions } from '#src/hooks/admin/index.js';
 import { Button } from '#src/components/ui/Button.js';
 import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
+import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { useQueryState, parseAsString } from 'nuqs';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { useNormalizedLocation, useTranslation } from '#src/hooks/core/index.js';
 import { ADMIN_ROUTES } from '#src/constants/config.js';
 
-const ErrorLogViewer = React.lazy(() => import('./ErrorLogViewer.js').then(m => ({ default: m.ErrorLogViewer })));
-const MaintenanceCenter = React.lazy(() => import('./MaintenanceCenter.js').then(m => ({ default: m.MaintenanceCenter })));
-const TasksContent = React.lazy(() => import('./TasksList.js').then(m => ({ default: m.TasksContent })));
+import { ErrorLogViewer } from './ErrorLogViewer.js';
+import { MaintenanceCenter } from './MaintenanceCenter.js';
+import { TasksContent } from './TasksList.js';
 const StatisticsScreen = React.lazy(() => import('../statistics/components/StatisticsScreen.js').then(m => ({ default: m.StatisticsScreen })));
 
 /**
@@ -105,30 +106,30 @@ export function DiagDashboard() {
       </div>
 
       <div className="relative">
-        <Suspense fallback={<LoadingScreen />}>
-          {activeTab === 'stats' && (
-            <div className="animate-in fade-in duration-500">
+        {activeTab === 'stats' && (
+          <div className="animate-in fade-in duration-500">
+            <Suspense fallback={<LoadingSpinner size="lg" className="mx-auto my-20" />}>
               <StatisticsScreen />
-            </div>
-          )}
-          {activeTab === 'diagnosis' && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-              <MaintenanceCenter 
-                onSuccess={refreshReport} 
-              />
-            </div>
-          )}
-          {activeTab === 'tasks' && (
-            <div className="animate-in fade-in slide-in-from-bottom-2">
-              <TasksContent />
-            </div>
-          )}
-          {activeTab === 'logs' && (
-            <div className="animate-in fade-in duration-500">
-              <ErrorLogViewer />
-            </div>
-          )}
-        </Suspense>
+            </Suspense>
+          </div>
+        )}
+        {activeTab === 'diagnosis' && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <MaintenanceCenter 
+              onSuccess={refreshReport} 
+            />
+          </div>
+        )}
+        {activeTab === 'tasks' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2">
+            <TasksContent />
+          </div>
+        )}
+        {activeTab === 'logs' && (
+          <div className="animate-in fade-in duration-500">
+            <ErrorLogViewer />
+          </div>
+        )}
       </div>
     </div>
   );

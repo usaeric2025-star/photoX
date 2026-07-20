@@ -8,10 +8,10 @@ import { errorFactory } from '../../_lib/error/factory.js';
 import { toCamelCaseKeys } from '../../_lib/utils.js';
 
 export const adminPhotos = new Hono()
-.get("/photo-ai-result/:photoId", async (c) => {
+.get("/:id/ai-result", async (c) => {
     try {
-        const { photoId } = c.req.param();
-        if (!photoId) return errorResponse(c, "photoId is required", 400);
+        const photoId = c.req.param('id');
+        if (!photoId) return errorResponse(c, "id is required", 400);
 
         // 1. Try querying ai_audit_logs first
         let auditLog = null;
@@ -144,9 +144,10 @@ export const adminPhotos = new Hono()
         throw errorFactory.wrap(e, 'admin.photo-ai-result', 'DB_ERROR');
     }
 })
-.post("/photo/update", async (c) => {
+.patch("/:id", async (c) => {
     try {
-        const { id, updates } = await c.req.json();
+        const id = c.req.param('id');
+        const updates = await c.req.json();
         if (!id) return errorResponse(c, "id is required", 400);
 
         const { tags: tagIds, ...otherUpdates } = updates;
@@ -185,7 +186,7 @@ export const adminPhotos = new Hono()
         throw errorFactory.wrap(e, 'admin.photo-update', 'DB_ERROR');
     }
 })
-.post("/delete-photos", async (c) => {
+.post("/batch/delete", async (c) => {
     try {
         const { ids } = await c.req.json();
         if (!ids || !Array.isArray(ids)) {
@@ -253,6 +254,40 @@ export const adminPhotos = new Hono()
         return successResponse(c, { count: ids.length });
     } catch (e: unknown) {
         throw errorFactory.wrap(e, 'admin.delete-photos', 'DB_ERROR');
+    }
+})
+.patch("/batch/edit", async (c) => {
+    try {
+        const { ids, updates } = await c.req.json();
+        if (!ids || !Array.isArray(ids)) return errorResponse(c, "ids array required", 400);
+
+        const mappedUpdates = toCamelCaseKeys<Record<string, any>>(updates);
+
+        if (Object.keys(mappedUpdates).length > 0) {
+            await db.update(furnitureItems)
+                .set({ ...mappedUpdates, updatedAt: new Date() })
+                .where(inArray(furnitureItems.id, ids));
+        }
+
+        await refreshPhotosView();
+        return successResponse(c, null);
+    } catch (e: unknown) {
+        throw errorFactory.wrap(e, 'admin.batch-edit', 'DB_ERROR');
+    }
+})
+.post("/:id/pin", async (c) => {
+    try {
+        const id = c.req.param('id');
+        const { isPinned } = await c.req.json();
+        const [data] = await db.update(furnitureItems)
+            .set({ isPinned, updatedAt: new Date() })
+            .where(eq(furnitureItems.id, id))
+            .returning();
+        
+        await refreshPhotosView();
+        return successResponse(c, data);
+    } catch (e: unknown) {
+        throw errorFactory.wrap(e, 'admin.pin-photo', 'DB_ERROR');
     }
 });
 

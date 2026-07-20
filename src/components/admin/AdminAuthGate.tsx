@@ -5,8 +5,8 @@ import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { RequirePermission } from '#src/components/auth/RequirePermission.js';
 import { AdminModeProvider } from '#src/hooks/index.js';
 import { useAtomValue } from 'jotai';
+import { LoginScreen } from './LoginScreen.js';
 
-const LoginScreen = lazy(() => import('./LoginScreen.js').then(m => ({ default: m.LoginScreen })));
 interface AdminAuthGateProps {
   children: React.ReactNode;
 }
@@ -53,13 +53,7 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
   if (!user && !isStaffMode) {
     return (
       <div className="h-screen w-full bg-slate-50">
-        <Suspense fallback={
-          <div className="flex h-screen w-full items-center justify-center">
-            <LoadingSpinner size="lg" />
-          </div>
-        }>
-          <LoginScreen signIn={signIn} />
-        </Suspense>
+        <LoginScreen signIn={signIn} />
       </div>
     );
   }
@@ -69,13 +63,7 @@ export function AdminAuthGate({ children }: AdminAuthGateProps) {
       permission="staff:workspace:access"
       fallback={
         <div className="h-screen w-full bg-slate-50">
-          <Suspense fallback={
-            <div className="flex h-screen w-full items-center justify-center">
-              <LoadingSpinner size="lg" />
-            </div>
-          }>
-            <LoginScreen signIn={signIn} />
-          </Suspense>
+          <LoginScreen signIn={signIn} />
         </div>
       }
     >

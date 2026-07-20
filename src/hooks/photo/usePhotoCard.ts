@@ -4,7 +4,7 @@ import { useLongPress } from '#src/hooks/core/index.js';
 import { PhotoListItem } from '#shared/apiContractSchema.js';
 import { useFilters } from '#src/hooks/ui/useUI.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
-import { useIsMultiSelect, useSelectionActions } from '#src/hooks/selection/useSelection.js';
+import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { usePermission } from '#src/hooks/index.js';
 import { logger } from '#lib/logger.js';
 

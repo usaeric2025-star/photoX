@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useQueryState, parseAsInteger } from 'nuqs';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { STORAGE_KEYS } from '#lib/storage.js';
@@ -24,8 +24,13 @@ export function GridProvider({ children }: { children: ReactNode }) {
   // Priority: URL > LocalStorage > Default (3)
   const effectiveColumns = (columns || Number(localStorage.getItem(STORAGE_KEYS.PHOTO_WALL_COLUMNS)) || 3) as ColumnCount;
 
+  const value = useMemo(() => ({ 
+    columns: effectiveColumns, 
+    setColumns 
+  }), [effectiveColumns, setColumns]);
+
   return (
-    <GridContext.Provider value={{ columns: effectiveColumns, setColumns }}>
+    <GridContext.Provider value={value}>
       {children}
     </GridContext.Provider>
   );

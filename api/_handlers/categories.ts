@@ -30,7 +30,7 @@ export const categories = new Hono()
     }
     
     const data = await getAllCategories();
-    const activeData = data.filter(c => c.isActive);
+    const activeData = data.filter(c => c.isActive !== false);
 
     const formatted: FormattedCategory[] = activeData.map((item) => {
         const desc = (item.description as any) || {};

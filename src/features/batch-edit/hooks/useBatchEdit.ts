@@ -3,7 +3,7 @@ import { formStateAtom } from '#src/store/index.js';
 import { resetForm, updateForm } from '#lib/store/index.js';
 import { useTranslation, useNormalizedLocation } from '#src/hooks/core/index.js';
 import { usePhotoMutations } from '#src/hooks/photo/index.js';
-import { useSelectionActions, useSelectedIds } from '#src/hooks/selection/useSelection.js';
+import { useSelectionActions, useSelectedIds } from '#src/hooks/index.js';
 
 /**
  * useBatchEdit

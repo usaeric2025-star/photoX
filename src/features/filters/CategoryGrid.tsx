@@ -46,8 +46,6 @@ export function CategoryGrid({ enabled = true }: { mode?: 'public' | 'admin', en
   const { appLang, uiTranslations } = useTranslation();
   const { categories, isLoading: isPending } = useCategories({ enabled });
 
-  logger.info('[CategoryGrid] Rendering', { isPending, categoriesCount: categories?.length });
-
   if (isPending) {
     return (
       <div className="grid grid-cols-4 gap-1.5">
@@ -58,14 +56,14 @@ export function CategoryGrid({ enabled = true }: { mode?: 'public' | 'admin', en
     );
   }
 
-  // 固定 8 個：全部 + 前 7 個分類
+  // 展示全部分類，不再限制為 7 個以確保數據可見性
   const displayCategories = [
     { id: null, code: 'all' },
-    ...(categories?.slice(0, 7) || [])
+    ...(categories || [])
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-1.5 select-none">
+    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 select-none">
       {displayCategories.map(cat => {
         const isSelected = (!filters.categoryId && cat.id === null) || 
                           (filters.categoryId !== null && cat.id !== null && String(filters.categoryId) === String(cat.id));

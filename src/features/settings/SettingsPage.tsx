@@ -17,12 +17,12 @@ import { uploadToR2 } from '#src/lib/upload/index.js';
 import { logger } from '#lib/logger.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
-const GeneralSettings = React.lazy(() => import('./GeneralSettings.js').then(m => ({ default: m.GeneralSettings })));
-const AISettings = React.lazy(() => import('./AISettings.js').then(m => ({ default: m.AISettings })));
-const TagsSection = React.lazy(() => import('./TagsSection.js').then(m => ({ default: m.TagsSection })));
-const CategoriesSection = React.lazy(() => import('./CategoriesSection.js').then(m => ({ default: m.CategoriesSection })));
-const ManufacturersSection = React.lazy(() => import('./ManufacturersSection.js').then(m => ({ default: m.ManufacturersSection })));
-const DiagDashboard = React.lazy(() => import('#src/features/diagnostics/DiagDashboard.js').then(m => ({ default: m.DiagDashboard })));
+import { GeneralSettings } from './GeneralSettings.js';
+import { AISettings } from './AISettings.js';
+import { TagsSection } from './TagsSection.js';
+import { CategoriesSection } from './CategoriesSection.js';
+import { ManufacturersSection } from './ManufacturersSection.js';
+import { DiagDashboard } from '#src/features/diagnostics/DiagDashboard.js';
 
 const BUTTON_STYLES = {
   primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
@@ -143,63 +143,55 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
         <div className="space-y-6 mt-6">
           {loadedTabs.includes('general') && (
             <div className={activeTab === 'general' ? 'block' : 'hidden'}>
-              <Suspense fallback={<LoadingScreen />}>
-                <GeneralSettings 
-                  settings={settings!}
-                  handleLogoUpload={handleLogoUpload}
-                  setSettingField={setSettingField}
-                  cardClass={cardClass}
-                  inputClass={inputClass}
-                  buttonStyles={BUTTON_STYLES}
-                />
-              </Suspense>
+              <GeneralSettings 
+                settings={settings!}
+                handleLogoUpload={handleLogoUpload}
+                setSettingField={setSettingField}
+                cardClass={cardClass}
+                inputClass={inputClass}
+                buttonStyles={BUTTON_STYLES}
+              />
             </div>
           )}
 
           {loadedTabs.includes('ai') && (
             <div className={activeTab === 'ai' ? 'block' : 'hidden'}>
-              <Suspense fallback={<LoadingScreen />}>
-                <AISettings 
-                  agnesApiKey={String(agnesApiKey || "")}
-                  setAgnesApiKey={(key) => setSettingField('agnesApiKey', key)}
-                  testConnection={testConnection}
-                  testResult={testResult}
-                  accessPasscode={String(accessPasscode || "")}
-                  setAccessPasscode={(code) => setSettingField('accessPasscode', code)}
-                  setSettingField={setSettingField}
-                  cardClass={cardClass}
-                  inputClass={inputClass}
-                />
-              </Suspense>
+              <AISettings 
+                agnesApiKey={String(agnesApiKey || "")}
+                setAgnesApiKey={(key) => setSettingField('agnesApiKey', key)}
+                testConnection={testConnection}
+                testResult={testResult}
+                accessPasscode={String(accessPasscode || "")}
+                setAccessPasscode={(code) => setSettingField('accessPasscode', code)}
+                setSettingField={setSettingField}
+                cardClass={cardClass}
+                inputClass={inputClass}
+              />
             </div>
           )}
 
           {loadedTabs.includes('assets') && (
             <div className={activeTab === 'assets' ? 'block' : 'hidden'}>
-              <Suspense fallback={<LoadingScreen />}>
-                <div className="space-y-6">
-                  <CategoriesSection 
-                    cardClass={cardClass}
-                    buttonStyles={BUTTON_STYLES}
-                  />
-                  <ManufacturersSection 
-                    cardClass={cardClass}
-                    buttonStyles={BUTTON_STYLES}
-                  />
-                  <TagsSection 
-                    cardClass={cardClass}
-                    buttonStyles={BUTTON_STYLES}
-                  />
-                </div>
-              </Suspense>
+              <div className="space-y-6">
+                <CategoriesSection 
+                  cardClass={cardClass}
+                  buttonStyles={BUTTON_STYLES}
+                />
+                <ManufacturersSection 
+                  cardClass={cardClass}
+                  buttonStyles={BUTTON_STYLES}
+                />
+                <TagsSection 
+                  cardClass={cardClass}
+                  buttonStyles={BUTTON_STYLES}
+                />
+              </div>
             </div>
           )}
 
           {loadedTabs.includes('status') && (
             <div className={activeTab === 'status' ? 'block' : 'hidden'}>
-              <Suspense fallback={<LoadingScreen />}>
-                <DiagDashboard />
-              </Suspense>
+              <DiagDashboard />
             </div>
           )}
         </div>

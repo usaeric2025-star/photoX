@@ -5,7 +5,7 @@ import {
   batchParser, selectedIdsParser, showGroupsCollapsedParser, 
   anchorParser, groupIdParser, modalParser, parseAsPhotoId 
 } from '#lib/nuqs/parsers.js';
-import { useCallback, useTransition, useState, useEffect, useRef } from 'react';
+import { useCallback, useTransition, useState, useEffect, useRef, useMemo } from 'react';
 import { PLACEHOLDERS, GESTURE_CONFIG } from '#src/constants/config.js';
 import { hapticFeedback } from '#lib/ui/haptics.js';
 
@@ -65,6 +65,13 @@ export function useFilters() {
     if (updates.sort !== undefined) setSort((updates.sort || null) as any);
   };
 
+  const filters = useMemo(() => ({ 
+    search, category, 
+    categoryId: category ? Number(category) : null, 
+    tags, tagIds: tags || [], 
+    sort: sort as any
+  }), [search, category, tags, sort]);
+
   return {
     search, setSearch,
     category, setCategory,
@@ -80,12 +87,7 @@ export function useFilters() {
     updateFilters,
     openModal,
     closeModal,
-    filters: { 
-      search, category, 
-      categoryId: category ? Number(category) : null, 
-      tags, tagIds: tags, 
-      sort: sort as any
-    }
+    filters
   };
 }
 
