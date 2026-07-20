@@ -116,6 +116,7 @@ export const PhotoListItemSchema = v.object({
     isHidden: v.optional(v.boolean()),
     isGroupCover: v.optional(v.boolean()),
     isCover: v.optional(v.boolean()),
+    groupOrder: v.optional(v.nullable(v.number())),
     createdAt: v.optional(v.nullable(v.string()))
 });
 

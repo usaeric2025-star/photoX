@@ -108,8 +108,9 @@ export class ErrorFactory {
           try {
             errorData = await res.json();
           } catch {
-            throw this.create(`${res.status} ${res.statusText || 'HTTP Error'}`, {
-              code: ErrorCode.NETWORK_ERROR,
+            const urlStr = res.url ? new URL(res.url).pathname : '';
+            throw this.create(`${res.status} ${res.statusText || 'HTTP Error'} ${urlStr}`.trim(), {
+              code: res.status === 404 ? ErrorCode.NOT_FOUND : ErrorCode.NETWORK_ERROR,
               statusCode: res.status,
               userMessage: fallbackMessage,
             });

@@ -21,6 +21,55 @@ interface PhotoWallContainerProps {
   onPhotoClick?: (photo: PhotoListItem) => void;
 }
 
+function arrangePhotosWithGroups(allPhotos: PhotoListItem[]): PhotoListItem[] {
+  const coverAndUngrouped: PhotoListItem[] = [];
+  const groupChildrenMap = new Map<string, PhotoListItem[]>();
+
+  // 1. Separate cover/ungrouped photos and other group photos
+  for (const photo of allPhotos) {
+    if (!photo.groupId) {
+      coverAndUngrouped.push(photo);
+    } else if (photo.isGroupCover) {
+      coverAndUngrouped.push(photo);
+    } else {
+      const children = groupChildrenMap.get(photo.groupId) || [];
+      children.push(photo);
+      groupChildrenMap.set(photo.groupId, children);
+    }
+  }
+
+  // 2. Sort group children by groupOrder, then by createdAt or ID
+  for (const [groupId, children] of groupChildrenMap.entries()) {
+    children.sort((a, b) => {
+      const orderA = a.groupOrder ?? 0;
+      const orderB = b.groupOrder ?? 0;
+      if (orderA !== orderB) return orderA - orderB;
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+  }
+
+  // 3. Reconstruct the full list, inserting children immediately after their cover
+  const result: PhotoListItem[] = [];
+  for (const parent of coverAndUngrouped) {
+    result.push(parent);
+    if (parent.groupId) {
+      const children = groupChildrenMap.get(parent.groupId);
+      if (children && children.length > 0) {
+        result.push(...children);
+        // Clear them so we don't double insert
+        groupChildrenMap.delete(parent.groupId);
+      }
+    }
+  }
+
+  // 4. If any children are left without a cover photo in the list, append them
+  for (const [groupId, children] of groupChildrenMap.entries()) {
+    result.push(...children);
+  }
+
+  return result;
+}
+
 /**
  * PhotoWallContainer
  * 
@@ -44,9 +93,23 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   // 同步總數到全局 UI 狀態
   useEffect(() => {
     if (total !== undefined) {
-      patch({ totalCount: total });
+      // 只有在無篩選條件時，才更新全域的總存量，避免篩選時總存量變小，造成不準確
+      const hasActiveFilters = !!(
+        props.filters?.categoryId || 
+        props.filters?.tagId || 
+        props.filters?.searchQuery || 
+        props.filters?.groupId
+      );
+      if (!hasActiveFilters) {
+        patch({ totalCount: total });
+        try {
+          localStorage.setItem('photox_total_count', String(total));
+        } catch (e) {
+          // ignore
+        }
+      }
     }
-  }, [total, patch]);
+  }, [total, props.filters, patch]);
 
   const handlePhotoClickStable = useCallback(async (photo: PhotoListItem) => {
     if (onPhotoClickRef.current) {
@@ -90,21 +153,21 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
           'Failed to load aggregated photos'
         );
         
-        const allPhotos = result.items;
-        expandedPhotosRef.current = allPhotos; 
-        if (allPhotos && allPhotos.length > 0) {
-            const expandedSlides = photosToLightboxSlides(allPhotos);
+        const arrangedPhotos = arrangePhotosWithGroups(result.items || []);
+        expandedPhotosRef.current = arrangedPhotos; 
+        if (arrangedPhotos && arrangedPhotos.length > 0) {
+            const expandedSlides = photosToLightboxSlides(arrangedPhotos);
             
-            let newIndex = allPhotos.findIndex((p: PhotoListItem) => p.id === photo.id);
+            let newIndex = arrangedPhotos.findIndex((p: PhotoListItem) => p.id === photo.id);
             if (newIndex === -1 && photo.groupId) {
-                newIndex = allPhotos.findIndex((p: PhotoListItem) => p.groupId === photo.groupId);
+                newIndex = arrangedPhotos.findIndex((p: PhotoListItem) => p.groupId === photo.groupId);
             }
             
             if (newIndex !== -1) {
               const currentPhotoId = photoId;
               let finalIndex = newIndex;
               if (currentPhotoId) {
-                const indexInNewList = allPhotos.findIndex((p: PhotoListItem) => p.id === currentPhotoId);
+                const indexInNewList = arrangedPhotos.findIndex((p: PhotoListItem) => p.id === currentPhotoId);
                 if (indexInNewList !== -1) {
                   finalIndex = indexInNewList;
                 }

@@ -1,16 +1,17 @@
 import { useAtomValue } from 'jotai';
-import { descLangAtom } from '#src/store/index.js';
+import { descLangAtom, isLightboxZoomedAtom } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { cn } from "#lib/utils.js";
 import { motion } from 'lite-sleek';
-import { useLightbox } from '#lib/lightbox/index.js';
+import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
-import { } from '#lib/store/index.js';
+import { useAppQuery } from '#lib/query/index.js';
+import { api } from '#lib/api.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 import { Photo } from '#src/types/photo.js';
-import { usePhoto } from '#src/hooks/index.js';
+import { usePhoto, useAdminMode } from '#src/hooks/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 
 // Components
@@ -40,6 +41,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     currentIndex: hookIndex, 
     close: hookClose,
     setLightboxIndex,
+    setLightboxData,
     next: hookNext,
     prev: hookPrev
   } = useLightbox();
@@ -52,6 +54,51 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   
   const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
   const currentDescLang = useAtomValue(descLangAtom);
+  const isZoomed = useAtomValue(isLightboxZoomedAtom);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // Native <dialog> visibility and body overflow locking
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+
+    if (isOpen && !isEditing) {
+      if (!el.open) {
+        try {
+          el.showModal();
+          document.body.style.overflow = 'hidden';
+        } catch (e) {
+          el.setAttribute('open', '');
+          document.body.style.overflow = 'hidden';
+        }
+      }
+    } else {
+      if (el.open) {
+        try {
+          el.close();
+        } catch (e) {}
+      }
+      const activeDialogs = document.querySelectorAll('dialog[open]');
+      if (activeDialogs.length === 0) {
+        document.body.style.overflow = '';
+      }
+    }
+
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onClose();
+    };
+
+    el.addEventListener('cancel', handleCancel);
+
+    return () => {
+      el.removeEventListener('cancel', handleCancel);
+      const activeDialogs = document.querySelectorAll('dialog[open]');
+      if (activeDialogs.length <= 1) { // includes this one before closing
+        document.body.style.overflow = '';
+      }
+    };
+  }, [isOpen, isEditing, onClose]);
   
 
   // Auto-fetch photo if we are deep-linked but have no slides loaded
@@ -135,12 +182,11 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
       if (!isOpen || isEditing) return;
       if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'ArrowLeft') handlePrev();
-      if (e.key === 'Escape') onClose();
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isEditing, handleNext, handlePrev, onClose]);
+  }, [isOpen, isEditing, handleNext, handlePrev]);
 
   const baseActivePhoto = useMemo(() => {
     if (effectivePhotos.length === 0) return null;
@@ -164,81 +210,113 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     if (photoData.id) setPhotoId(photoData.id);
   }, [effectivePhotos, setLightboxIndex, setPhotoId]);
 
+  const activePhoto = useMemo(() => {
+    return activePhotoDetails || (baseActivePhoto ? (('original' in baseActivePhoto)
+       ? (baseActivePhoto as { original: Photo }).original
+       : (baseActivePhoto as Photo)) : null);
+  }, [activePhotoDetails, baseActivePhoto]);
+
+  // If we open a single photo that belongs to a group (like a deep-link),
+  // dynamically fetch all group photos and expand the slides!
+  const isAdminMode = useAdminMode();
+  const groupPhotosQueryEnabled = !!(isOpen && sourcePhotos.length <= 1 && activePhoto?.groupId);
+  const { data: groupPhotos = [] } = useAppQuery<any[]>(
+    groupPhotosQueryEnabled ? ['photos', 'group-expand', activePhoto?.groupId] : null,
+    async () => {
+      if (!activePhoto?.groupId) return [];
+      const response = await api.photos.list.$post({
+        json: {
+          groupId: activePhoto.groupId,
+          onlyGroupsCover: false,
+          limit: 100,
+          isAdminMode: isAdminMode
+        }
+      });
+      const jsonRes = await response.json();
+      if (jsonRes.success && jsonRes.data) {
+        return jsonRes.data.items || [];
+      }
+      return [];
+    },
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+
+  useEffect(() => {
+    if (isOpen && sourcePhotos.length <= 1 && activePhoto?.groupId && groupPhotos.length > 1) {
+      // Make sure the group's photos are in the correct groupOrder
+      const sortedGroupPhotos = [...groupPhotos].sort((a, b) => {
+        const orderA = a.groupOrder ?? 0;
+        const orderB = b.groupOrder ?? 0;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+
+      const groupSlides = photosToLightboxSlides(sortedGroupPhotos);
+      setLightboxData(groupSlides);
+      const newIndex = sortedGroupPhotos.findIndex(p => p.id === activePhoto.id);
+      if (newIndex !== -1) {
+        setLightboxIndex(newIndex);
+      }
+    }
+  }, [isOpen, sourcePhotos.length, activePhoto?.groupId, groupPhotos, activePhoto?.id, setLightboxData, setLightboxIndex]);
+
   if (!isOpen || isEditing) return null;
 
-  if (isDeepLinkLoading) {
-    return (
-      <div className="fixed inset-0 z-[100] flex flex-col font-sans select-none items-center justify-center">
-        <motion.div 
-           initial={{ opacity: 0 }} 
-           animate={{ opacity: 1 }} 
-           exit={{ opacity: 0 }} 
-           transition="medium"
-          className="absolute inset-0 bg-black/98 z-[110]"
-         />
-        <div className="relative z-[120] text-white opacity-70 flex flex-col items-center gap-4">
+  return (
+    <dialog
+      ref={dialogRef}
+      className={cn(
+        "fixed inset-0 w-screen h-screen max-w-none max-h-none outline-none border-none overflow-hidden m-0 p-0 font-sans select-none bg-black/95 z-[100]",
+        "animate-in fade-in duration-200 ease-out"
+      )}
+    >
+      {isDeepLinkLoading ? (
+        <div className="relative z-[120] text-white opacity-70 flex flex-col items-center justify-center w-full h-full gap-4">
           <Icon name="loader-2" className="animate-spin" size={32} />
           <span>載入中...</span>
         </div>
-      </div>
-    );
-  }
+      ) : (
+        <div className="relative z-[120] flex flex-col w-full h-full">
+          {activePhoto && !isZoomed && (
+            <>
+              {/* Header Controls */}
+              <LightboxHeader
+                currentPhoto={activePhoto}
+                currentIndex={currentIndex}
+                totalPhotos={effectivePhotos.length}
+                showInfo={showInfo}
+                onToggleInfo={() => setShowInfo(!showInfo)}
+                onEdit={onEdit}
+                onClose={onClose}
+              />
 
-  if (effectivePhotos.length === 0) return null;
-  if (!baseActivePhoto) return null;
+              {/* Info Panel */}
+              <LightboxInfo
+                key={lang}
+                lang={lang}
+                onLangChange={handleLangChange}
+                showInfo={showInfo}
+                currentPhoto={activePhoto}
+              />
+            </>
+          )}
 
-  const activePhoto = activePhotoDetails || (('original' in baseActivePhoto)
-     ? (baseActivePhoto as { original: Photo }).original
-     : (baseActivePhoto as Photo));
+          {/* Main Stage */}
+          <LightboxStage />
 
-  return (
-    <div 
-      className={cn(
-        "fixed inset-0 z-[100] flex flex-col font-sans select-none transition-opacity duration-300",
-        "opacity-100 pointer-events-auto"
+          {/* Thumbnails */}
+          {!isZoomed && (
+            <LightboxThumbnails
+              photos={effectivePhotos}
+              isOpen={isOpen}
+              onSelect={handleSelect}
+              currentIndex={currentIndex}
+            />
+          )}
+        </div>
       )}
-    >
-      {/* Dynamic Backdrop */}
-      <motion.div 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        exit={{ opacity: 0 }} 
-        transition="medium"
-        className="absolute inset-0 bg-black/98 z-[110]"
-      />
-
-      <div className="relative z-[120] flex-1 flex flex-col h-full">
-        {/* Header Controls */}
-        <LightboxHeader
-          currentPhoto={activePhoto}
-          currentIndex={currentIndex}
-          totalPhotos={effectivePhotos.length}
-          showInfo={showInfo}
-          onToggleInfo={() => setShowInfo(!showInfo)}
-          onEdit={onEdit}
-          onClose={onClose}
-        />
-
-        {/* Info Panel */}
-        <LightboxInfo
-          key={lang}
-          lang={lang}
-          onLangChange={handleLangChange}
-          showInfo={showInfo}
-          currentPhoto={activePhoto!}
-        />
-
-        {/* Main Stage */}
-        <LightboxStage />
-
-        {/* Thumbnails */}
-        <LightboxThumbnails
-          photos={effectivePhotos}
-          isOpen={isOpen}
-          onSelect={handleSelect}
-          currentIndex={currentIndex}
-        />
-      </div>
-    </div>
+    </dialog>
   );
 }

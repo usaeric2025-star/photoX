@@ -140,11 +140,11 @@ export function usePhoto(id: string | null) {
     async () => {
       if (!id) return null;
       console.log("Fetching photo", id);
-      const res = await api.photos['by-ids'].$post({ json: { ids: [id] } });
-      if (!res.ok) throw new Error("Fetch failed");
-      const data = await res.json() as any;
-      console.log("Fetched photo data", data);
-      return data.success && data.data[0] ? mapSupabasePhoto(data.data[0]) : null;
+      const rawData = await ErrorFactory.unwrap<any>(
+        api.photos['by-ids'].$post({ json: { ids: [id] } }),
+        'Failed to fetch photo details'
+      );
+      return rawData && rawData[0] ? mapSupabasePhoto(rawData[0]) : null;
     },
     {
       staleTime: STALE_TIMES.LONG,

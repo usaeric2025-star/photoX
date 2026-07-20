@@ -10,10 +10,12 @@ export const isSidebarOpenAtom = atom<boolean>(false) as PrimitiveAtom<boolean>;
 // --- Lightbox ---
 export const lightboxSlidesAtom = atom<LightboxSlide[]>([]);
 export const lightboxCurrentIndexAtom = atom<number>(0) as PrimitiveAtom<number>;
+export const isLightboxZoomedAtom = atom<boolean>(false) as PrimitiveAtom<boolean>;
 const lightboxOpenAtom = atom((get) => get(lightboxSlidesAtom).length > 0);
 export const closeLightboxAtom = atom(null, (_get, set) => {
   set(lightboxSlidesAtom, []);
   set(lightboxCurrentIndexAtom, 0);
+  set(isLightboxZoomedAtom, false);
 });
 
 // --- Photo Picker ---
@@ -41,7 +43,15 @@ export const uploadModeDialogOpenAtom = atom<boolean>(false) as PrimitiveAtom<bo
 export const fatalErrorAtom = atom<Error | null>(null) as PrimitiveAtom<Error | null>;
 
 // --- Photo / Group ---
-export const totalCountAtom = atom<number>(0) as PrimitiveAtom<number>;
+const getInitialTotalCount = () => {
+  try {
+    const val = localStorage.getItem('photox_total_count');
+    return val ? parseInt(val, 10) : 0;
+  } catch (e) {
+    return 0;
+  }
+};
+export const totalCountAtom = atom<number>(getInitialTotalCount()) as PrimitiveAtom<number>;
 export const focusedGroupPhotoIdAtom = atom<string | null>(null) as PrimitiveAtom<string | null>;
 export const groupSettingsOpenAtom = atomWithStorage<boolean>(STORAGE_KEYS.GROUP_SETTINGS_OPEN, false) as unknown as PrimitiveAtom<boolean>;
 
