@@ -1,7 +1,8 @@
 import React from 'react';
 import { AppLink } from '#src/components/router/AppLink.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { ErrorCapture } from '#lib/error/ErrorCapture.js';
+import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { logger } from '#lib/logger.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
@@ -10,14 +11,15 @@ export function NotFoundPage() {
   const [pathname] = useNormalizedLocation();
   
   React.useEffect(() => {
-    // Categorize the 404 for better error tracking
-    let type = 'page.404';
-    if (pathname.startsWith('/api/')) type = 'api.404';
-    else if (pathname.match(/\.(jpg|jpeg|png|gif|webp|svg|pdf)$/i)) type = 'resource.404';
-    else if (pathname.startsWith('/admin/') || pathname.startsWith('/settings/') || pathname.startsWith('/diagnostics/')) type = 'admin.404';
-    
+    logger.error('[NotFoundPage] 404 被触发', {
+      pathname,
+      href: typeof window !== 'undefined' ? window.location.href : '',
+      referrer: typeof document !== 'undefined' ? (document.referrer || 'direct') : 'direct',
+      timestamp: new Date().toISOString(),
+    });
+
     const timer = setTimeout(() => {
-      ErrorCapture.capture(new Error(`[${type}] 404 Not Found: ${pathname}`));
+      ErrorFactory.capture(new Error(`404: ${pathname}`));
     }, 500); // 500ms delay to prevent false positives during route exit animations
     
     return () => clearTimeout(timer);

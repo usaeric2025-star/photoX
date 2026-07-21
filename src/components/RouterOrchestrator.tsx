@@ -1,26 +1,21 @@
 import { useAtomValue } from 'jotai';
-import { authLoadingAtom, signIn } from '#src/store/index.js';
-import React, { lazy, Suspense, useEffect } from "react";
+import { authLoadingAtom, userAtom, signIn } from '#src/store/index.js';
+import React from "react";
 import { ErrorBoundary } from "#src/components/shared/ErrorBoundary.js";
 import { ErrorCapture } from "#lib/error/ErrorCapture.js";
-import { motion, AnimatePresence } from "lite-sleek";
-import { Switch, Route, useLocation, Router } from "wouter";
+import { Switch, Route } from "wouter";
 import { NotFoundPage } from "#src/pages/NotFoundPage.js";
 import { LoadingScreen } from "./ui/LoadingScreen.js";
-import { } from "#lib/store/index.js";
-
-import { useNormalizedLocation } from "#src/hooks/core/index.js";
 import { DialogContainer } from "./layout/DialogContainer.js";
-import { getRouteGroupKey, isAdminRoute } from "#src/lib/routing.js";
 
 import PublicPage from "#src/pages/PublicPage.js";
 import { PublicGroupDetailPage } from "#src/features/group/PublicGroupDetail.js";
-import { useAdminAccess } from "#src/hooks/core/auth/useAuth.js";
 import { LoginScreen } from "./admin/LoginScreen.js";
 import AdminPage from "#src/pages/AdminPage/index.js";
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { isLoading, isAdmin, user } = useAdminAccess();
+  const user = useAtomValue(userAtom);
+  const isLoading = useAtomValue(authLoadingAtom);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -30,16 +25,6 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="h-screen w-full bg-slate-50">
         <LoginScreen signIn={signIn} />
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="h-screen w-full bg-slate-50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-lg shadow-sm border border-slate-100 max-w-md">
-          <p className="text-slate-600 font-medium mb-4">您沒有管理權限，無法進入管理後台。</p>
-        </div>
       </div>
     );
   }
@@ -56,6 +41,7 @@ export function RouterOrchestrator() {
       }}
     >
       <Switch>
+        {/* Admin 路由与包含子路径的统一捕获 */}
         <Route path="/admin/:subpath*">
           {() => (
             <AdminGuard>
@@ -98,11 +84,15 @@ export function RouterOrchestrator() {
             </AdminGuard>
           )}
         </Route>
+
+        {/* 公开页面路由 */}
         <Route path="/" component={PublicPage} />
         <Route path="/photo/:photoId" component={PublicPage} />
         <Route path="/group/:slug" component={PublicGroupDetailPage} />
         <Route path="/category/:id" component={PublicPage} />
         <Route path="/tag/:id" component={PublicPage} />
+
+        {/* 兜底 404 */}
         <Route component={NotFoundPage} />
       </Switch>
       <DialogContainer />

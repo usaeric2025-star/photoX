@@ -36,19 +36,13 @@ export function PhotoWallGrid({
   const { appLang } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const [scrollParent, setScrollParent] = useState<HTMLElement | null>(() => {
-    if (typeof document !== 'undefined') {
-      return document.getElementById('photo-wall-scroll-container');
-    }
-    return null;
-  });
+  const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (scrollParent) return; 
     if (!containerRef.current) return;
     
-    // 優先尋找指定的滾動容器 ID，否則向上查找
-    const target = document.getElementById('photo-wall-scroll-container');
+    // 優先尋找本組件內層的 closest #photo-wall-scroll-container，否則向上查找可滾動父元素
+    const target = containerRef.current.closest('#photo-wall-scroll-container') as HTMLElement | null;
     if (target) {
       setScrollParent(target);
       return;
@@ -63,7 +57,7 @@ export function PhotoWallGrid({
       }
       parent = parent.parentElement;
     }
-  }, [scrollParent]);
+  }, []);
 
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || isLoading || !hasMore) return;
@@ -72,7 +66,7 @@ export function PhotoWallGrid({
 
   // Scroll listener backup
   useEffect(() => {
-    const parent = scrollParent || document.getElementById('photo-wall-scroll-container');
+    const parent = scrollParent || (containerRef.current?.closest('#photo-wall-scroll-container') as HTMLElement | null);
     if (!parent) return;
 
     const handleScroll = () => {

@@ -79,7 +79,7 @@ function arrangePhotosWithGroups(allPhotos: PhotoListItem[]): PhotoListItem[] {
 export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const { open: openLightbox, setLightboxData, setLightboxIndex } = useLightbox();
   const { photoId } = useUI();
-  const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.mode);
+  const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.mode, props.filters);
   
   const { uiTranslations: labels } = useTranslation();
 
