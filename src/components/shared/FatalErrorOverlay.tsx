@@ -10,7 +10,7 @@ export const FatalErrorOverlay = () => {
   const error = useAtomValue(fatalError) as any;
   const { copy, copied } = useCopyToClipboard({ 
     successMessage: t('copySuccess'),
-    showToast: false // Toast feedback is often hidden behind native dialogs
+    feedback: false // Toast feedback is often hidden behind native dialogs
   });
   const dialogRef = useRef<HTMLDialogElement>(null);
 

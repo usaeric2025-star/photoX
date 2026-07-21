@@ -5,7 +5,7 @@ import { DimensionEditor } from './DimensionEditor.js';
 import { Dimension } from '#src/types/index.js';
 import { safeArray } from '#lib/utils.js';
 import { usePhoto, useFilters, useTranslation } from '#src/hooks/index.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { usePhotoEditAI } from './hooks/usePhotoAI.js';
 import { MultilingualInput } from '#src/components/shared/MultilingualInput.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
@@ -26,7 +26,7 @@ export function DetailsTab() {
     if (detailPhoto?.imageUrl) {
       try {
         await handleAiAnalyze(undefined, detailPhoto.imageUrl);
-        showToast.success(t('analysisSent') || '分析請求已發送');
+        feedback.success(t('analysisSent') || '分析請求已發送');
       } catch (e) {
         ErrorFactory.handle(e as Error, { context: t('aiRecognize') || 'AI 識別' });
       }
@@ -37,7 +37,7 @@ export function DetailsTab() {
     if (detailPhoto?.id) {
       const success = await copyToClipboard(detailPhoto.id);
       if (success) {
-        showToast.success(t('idCopied') || 'ID 已複製');
+        feedback.success(t('idCopied') || 'ID 已複製');
       }
     }
   };

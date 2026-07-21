@@ -6,7 +6,7 @@ import { queryKeys } from '#lib/query/keys.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { useOptimisticPhotoMutation } from '#lib/query/optimistic.js';
 import { generateId } from '#lib/id.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { ProductGroup, Photo } from '#src/types/index.js';
 import { api } from '#lib/api.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -217,7 +217,7 @@ export function useGroupMutations() {
   const createMutation = useAppMutation({
     mutationFn: (args: { name: string; userId: string }) => GroupService.create({ name: args.name, userId: args.userId }),
     onSuccess: () => {
-      showToast.success(t('groupCreated'));
+      feedback.success(t('groupCreated'));
       invalidateList();
     },
   });
@@ -225,7 +225,7 @@ export function useGroupMutations() {
   const updateMutation = useAppMutation({
     mutationFn: (args: { id: string; updates: Partial<ProductGroup> }) => GroupService.update(args.id, args.updates),
     onSuccess: () => {
-      showToast.success(t('groupUpdated'));
+      feedback.success(t('groupUpdated'));
       invalidateList();
     },
   });
@@ -233,7 +233,7 @@ export function useGroupMutations() {
   const deleteMutation = useAppMutation({
     mutationFn: (id: string) => GroupService.delete(id),
     onSuccess: () => {
-      showToast.success(t('groupDeleted'));
+      feedback.success(t('groupDeleted'));
       invalidateList();
     },
   });
@@ -266,7 +266,7 @@ export function useGroupMutations() {
       }
     },
     onSuccess: () => {
-      showToast.success(t('setAsCoverSuccess') || 'Set as cover');
+      feedback.success(t('setAsCoverSuccess') || 'Set as cover');
       invalidateList();
       queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
     }
@@ -275,7 +275,7 @@ export function useGroupMutations() {
   const movePhotosMutation = useAppMutation({
     mutationFn: (args: { groupId: string; photoIds: string[] }) => GroupService.movePhotos(args.photoIds, args.groupId),
     onSuccess: (_, variables) => {
-      showToast.success(t('addPhotosSuccess', variables.photoIds.length));
+      feedback.success(t('addPhotosSuccess', variables.photoIds.length));
       clearSelection();
       invalidateList();
     }
@@ -284,7 +284,7 @@ export function useGroupMutations() {
   const dissolveMutation = useAppMutation({
     mutationFn: (groupId: string) => GroupService.ungroup(groupId),
     onSuccess: () => {
-      showToast.success(t('groupDissolved'));
+      feedback.success(t('groupDissolved'));
       invalidateList();
     },
   });
@@ -301,7 +301,7 @@ export function useGroupMutations() {
   const removePhotosMutation = useAppMutation({
     mutationFn: (args: { photoIds: string[]; groupId: string }) => GroupService.removePhotos(args.photoIds, args.groupId),
     onSuccess: () => {
-      showToast.success(t('removedFromGroup') || 'Removed from group');
+      feedback.success(t('removedFromGroup') || 'Removed from group');
       invalidateList();
     }
   });

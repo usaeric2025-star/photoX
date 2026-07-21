@@ -6,3 +6,4 @@
 
 export * from './useCore.js';
 export * from './auth/index.js';
+export { useDebounce, useDebounceFn } from './useDebounce.js';

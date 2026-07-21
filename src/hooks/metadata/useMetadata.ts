@@ -5,7 +5,7 @@ import { queryKeys } from '#lib/query/keys.js';
 import { api } from '#lib/api.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { STALE_TIMES } from '#lib/query/config.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { useTranslation } from '../core/index.js';
 import { Category, Tag, Manufacturer } from '#src/types/index.js';
 
@@ -93,7 +93,7 @@ function useMetadataMutations() {
       return ErrorFactory.unwrap(api[domain].$post({ json: data }), t('createFailed'));
     },
     onSuccess: (_, variables) => {
-      showToast.success(t('createSuccess'));
+      feedback.success(t('createSuccess'));
       invalidate(variables.domain);
     }
   });
@@ -104,7 +104,7 @@ function useMetadataMutations() {
       return ErrorFactory.unwrap(api[domain][':id'].$put({ param: { id: String(id) }, json: { updates } }), t('updateFailed'));
     },
     onSuccess: (_, variables) => {
-      showToast.success(t('updateSuccess'));
+      feedback.success(t('updateSuccess'));
       invalidate(variables.domain);
     }
   });
@@ -115,7 +115,7 @@ function useMetadataMutations() {
       return ErrorFactory.unwrap(api[domain][':id'].$delete({ param: { id: String(id) } }), t('deleteFailed'));
     },
     onSuccess: (_, variables) => {
-      showToast.success(t('deleteSuccess'));
+      feedback.success(t('deleteSuccess'));
       invalidate(variables.domain);
     }
   });

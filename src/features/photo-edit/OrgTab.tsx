@@ -6,7 +6,7 @@ import { CategorySelect } from './CategorySelect.js';
 import { PhotoTagSelector } from './PhotoTagSelector.js';
 import { ManufacturerSelect } from '#src/components/admin/ManufacturerSelect.js';
 import { Icon } from '#src/components/ui/Icon.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { VisibilityToggle } from './components/VisibilityToggle.js';
 import { useTranslation } from '#src/hooks/index.js';
 
@@ -41,7 +41,7 @@ export function OrgTab() {
             value={!!state.value} 
             onChange={(val) => {
               handleChange(val);
-              showToast.success(val ? t('hidden') : t('visible'));
+              feedback.success(val ? t('hidden') : t('visible'));
             }} 
           />
         )}

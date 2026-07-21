@@ -1,4 +1,4 @@
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { logger } from '#lib/logger.js';
 import React, { useEffect } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
@@ -49,7 +49,7 @@ export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetr
                     type: error.name
                   };
                   navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-                  showToast.success(t('diagCopied'));
+                  feedback.success(t('diagCopied'));
                 }}
                 className="text-[10px] text-brand-navy font-bold hover:underline"
               >

@@ -9,7 +9,7 @@ import { useAppLang } from '#lib/store/index.js';
 import { translations as allTranslations, TranslationType, LanguageCode } from '#src/locales/index.js';
 import { ANIMATION_CONFIG } from '#src/constants/config.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
 type Translations = Record<string, string> | null | undefined;
@@ -169,7 +169,7 @@ export function useClickOutside<T extends HTMLElement = HTMLElement>(
  */
 interface UseCopyToClipboardOptions {
   timeout?: number;
-  showToast?: boolean;
+  feedback?: boolean;
   successMessage?: string;
   errorMessage?: string;
   onCopy?: (text: string) => void;
@@ -182,8 +182,8 @@ export const useCopyToClipboard = (options?: UseCopyToClipboardOptions) => {
       const success = await copyToClipboard(text, options);
       if (success) {
         setCopied(true);
-        if (options?.showToast !== false) {
-          showToast.success(options?.successMessage || t('copySuccess'));
+        if (options?.feedback !== false) {
+          feedback.success(options?.successMessage || t('copySuccess'));
         }
         options?.onCopy?.(text);
         setTimeout(() => setCopied(false), 2000);
@@ -290,29 +290,6 @@ export function useLongPress<T extends HTMLElement = HTMLDivElement>({
     onTouchCancel: handleLeave,
     ref: elementRef,
   };
-}
-
-/**
- * useDebouncedCallback
- */
-export function useDebouncedCallback<P extends unknown[], R>(callback: (...args: P) => R, delay: number) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const callbackRef = useRef(callback);
-  useEffect(() => { 
-     callbackRef.current = callback; 
-   }, [callback]);
-
-  const debouncedFn = (...args: P) => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => callbackRef.current(...args), delay);
-  };
-  (debouncedFn as any).cancel = () => { 
-     if (timeoutRef.current) { 
-       clearTimeout(timeoutRef.current); 
-       timeoutRef.current = null; 
-     } 
-   };
-  return debouncedFn as ((...args: P) => void) & { cancel: () => void };
 }
 
 /**

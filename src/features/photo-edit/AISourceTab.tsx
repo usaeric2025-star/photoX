@@ -2,7 +2,7 @@ import { useAtomValue } from 'jotai';
 import { appLangAtom } from '#src/store/index.js';
 import React from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { usePhotoEditAI, usePhotoAIResult } from './hooks/usePhotoAI.js';
 import { useCopyToClipboard } from '#src/hooks/index.js';
 import { } from '#lib/store/index.js';
@@ -27,7 +27,7 @@ export function AISourceTab() {
   const onReExtract = async (raw: unknown) => {
     try {
       await handleReExtract(raw);
-      showToast.success(appLang === 'zh' ? '二次提取成功' : 'Re-extraction successful');
+      feedback.success(appLang === 'zh' ? '二次提取成功' : 'Re-extraction successful');
     } catch (e) {
       ErrorFactory.handle(e as Error, { context: '二次提取' });
     }

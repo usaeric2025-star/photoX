@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Icon } from '#src/components/ui/Icon.js';
 import { Button } from '#src/components/ui/Button.js';
-import { useDisclosure, useDebouncedCallback } from '#src/hooks/core/index.js';
+import { useDisclosure, useDebounceFn } from '#src/hooks/core/index.js';
 import { Tag, AppSettings } from '#src/types/index.js';
 import { TagItem } from "./TagItem.js";
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
@@ -46,7 +46,7 @@ export function TagsSection({
   const tasks = useAtomValue(tasksAtom);
   const isRunning = Array.from(tasks.values()).some((t) => t.state?.status === "processing");
 
-  const debouncedSave = useDebouncedCallback((newSettings: AppSettings) => {
+  const { run: debouncedSave } = useDebounceFn((newSettings: AppSettings) => {
     updateSettings(newSettings).catch(e => ErrorFactory.handle(e, { context: '[TagsSection] debouncedSave failed', silent: true }));
   }, 1500);
 

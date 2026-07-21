@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import * as v from 'valibot';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 
@@ -57,13 +57,13 @@ export function useFormSubmit<T extends v.GenericSchema, R = void>({
             const result = await mutationFn(parsedValues);
             
             if (successMessage) {
-                showToast.success(successMessage);
+                feedback.success(successMessage);
             }
             onSuccess?.(result);
         } catch (error) {
             if (errorMessage) {
                 ErrorFactory.handle(error, { context: 'form-submit', silent: true });
-                showToast.error(errorMessage);
+                feedback.error(errorMessage);
             } else {
                 ErrorFactory.handle(error, { context: 'form-submit' });
             }

@@ -8,6 +8,7 @@ interface PhotoEditSessionContextValue {
   isDirty: boolean;
   isPending: boolean;
   isSubmitting: boolean;
+  isAutoSaving: boolean;
   commit: (data?: PhotoEditFormData) => Promise<boolean>;
   discard: () => void;
   form: ReturnType<typeof useAppForm<PhotoEditFormData>>['form'];
@@ -41,13 +42,14 @@ export const PhotoEditSessionProvider = ({
   onSuccess 
 }: PhotoEditSessionProps) => {
   const { data: photo, isPending } = usePhoto(photoId);
-  const { form, commit, discard } = usePhotoEditForm(photoId, photo || null, onSuccess);
+  const { form, commit, discard, isAutoSaving } = usePhotoEditForm(photoId, photo || null, onSuccess);
   
   return (
     <PhotoEditSessionContext.Provider value={{ 
       isDirty: form.state.isDirty,
       isPending,
       isSubmitting: form.state.isSubmitting,
+      isAutoSaving,
       commit, 
       discard,
       form,

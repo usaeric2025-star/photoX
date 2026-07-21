@@ -5,6 +5,8 @@ interface UseAppFormOptions<TData> {
     schema?: v.GenericSchema | v.GenericSchemaAsync;
     defaultValues: TData;
     onSubmit: (values: TData) => Promise<void> | void;
+    onSuccess?: () => void;
+    onError?: (error: Error) => void;
     onValueChange?: (values: TData) => void;
 }
 
@@ -12,6 +14,8 @@ export function useAppForm<TData>({
     schema,
     defaultValues,
     onSubmit,
+    onSuccess,
+    onError,
     onValueChange
 }: UseAppFormOptions<TData>) {
     const form = useForm({
@@ -26,7 +30,14 @@ export function useAppForm<TData>({
             }
         } : undefined,
         onSubmit: async ({ value }) => {
-            await onSubmit(value as TData);
+            try {
+                await onSubmit(value as TData);
+                onSuccess?.();
+            } catch (error) {
+                const err = error instanceof Error ? error : new Error(String(error));
+                onError?.(err);
+                throw err;
+            }
         },
     });
 

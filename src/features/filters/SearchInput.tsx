@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFilters } from '#src/hooks/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useTranslation } from '#src/hooks/index.js';
-import { useDebouncedCallback } from '#src/hooks/core/index.js';
+import { useDebounceFn } from '#src/hooks/core/index.js';
 
 /**
  * SearchInput
@@ -21,7 +21,7 @@ export function SearchInput() {
     }
   }, [search]);
 
-  const debouncedSetSearch = useDebouncedCallback((value: string) => {
+  const { run: debouncedSetSearch } = useDebounceFn((value: string) => {
     setSearch(value || null);
   }, 300);
 

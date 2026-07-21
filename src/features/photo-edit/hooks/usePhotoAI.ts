@@ -5,11 +5,10 @@ import { translateDimensionLabelToEnglish } from '#src/utils/display.js';
 import { usePhotoEditSessionContext } from "./PhotoEditSession.js";
 import { ErrorFactory } from '#lib/error/index.js';
 import { queryClient } from '#lib/query/index.js';
-import { executeTask } from '#lib/task-queue/index.js';
 import { useAdminActions, useCategories, useTags, useFilters, useTranslation } from '#src/hooks/index.js';
 import { Tag } from '#src/types/index.js';
 import { } from '#lib/store/index.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
@@ -88,11 +87,11 @@ export function usePhotoEditAI() {
       return rawResult;
     },
     onSuccess: () => {
-      showToast.success(t('aiAnalyzeSuccessSimple') || '識別成功');
+      feedback.success(t('aiAnalyzeSuccessSimple') || '識別成功');
     },
     onError: (err) => {
       ErrorFactory.handle(err as Error, { context: 'AI Analysis' });
-      showToast.error(t('aiAnalyzeFailed') || '識別失敗');
+      feedback.error(t('aiAnalyzeFailed') || '識別失敗');
     }
   });
 
@@ -132,10 +131,10 @@ export function usePhotoEditAI() {
       await updatePhoto.mutateAsync({ id: editPhotoId, updates });
       invalidateDetail(editPhotoId);
       invalidateList();
-      showToast.success(t('reExtractSuccess') || '重新提取成功');
+      feedback.success(t('reExtractSuccess') || '重新提取成功');
     } catch (e) {
       ErrorFactory.handle(e as Error, { context: 'AI Re-extraction' });
-      showToast.error(t('saveDataFailed') || '提取失敗');
+      feedback.error(t('saveDataFailed') || '提取失敗');
     } finally {
       setIsReExtracting(false);
     }

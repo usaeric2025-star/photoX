@@ -156,8 +156,8 @@ export function useAIBatchAnalysis() {
 
   const aiAnalyzeMutation = useAppMutation({
     mutationFn: async (photos: any[]) => {
-      const { executeTask } = await import('#lib/task-queue/index.js');
-      return executeTask({
+      const { createTask } = await import('#lib/task-queue/index.js');
+      return createTask({
         label: t('aiAnalyze') || 'AI 識別中',
         type: 'ai-analyze',
         userId: user?.id,

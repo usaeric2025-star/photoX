@@ -8,7 +8,7 @@ import { DialogHeader } from "./DialogHeader.js";
 import { LoadingSpinner } from "#src/components/ui/feedback/LoadingSpinner.js";
 import { logger } from "#lib/logger.js";
 import { useAdminActions, useFilters, useTranslation } from '#src/hooks/index.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { StandardModalLayout } from "#src/components/ui/StandardModalLayout.js";
 
@@ -32,7 +32,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   const handleDiscard = () => {
     discard();
     setShowConfirm(false);
-    showToast.success(t('cancel') || '已放弃修改');
+    feedback.success(t('cancel') || '已放弃修改');
     handleClose();
   };
   

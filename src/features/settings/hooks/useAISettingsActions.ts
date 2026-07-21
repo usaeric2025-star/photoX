@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSettings, useTranslation } from '#src/hooks/index.js';
 import { AppSettings } from '#src/types/index.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { testAiConnection } from "#src/features/ai/AICommands.js";
 
 /**
@@ -42,7 +42,7 @@ export function useAISettingsActions() {
     try {
       const field = provider === 'openrouter' ? 'openrouterApiKey' : 'agnesApiKey';
       await updateSettings({ [field]: key } as Partial<AppSettings>);
-      showToast.success(t('updateSuccess') || '保存成功');
+      feedback.success(t('updateSuccess') || '保存成功');
       
       if (provider === 'openrouter') {
         setIsEditingOpenRouter(false);
@@ -78,9 +78,9 @@ export function useAISettingsActions() {
       const apiKey = provider === 'openrouter' ? settings?.openrouterApiKey : settings?.agnesApiKey;
       const ok = await testAiConnection(String(apiKey || ""), provider);
       if (ok) {
-        showToast.success(t('aiConnectSuccess') || '連接成功');
+        feedback.success(t('aiConnectSuccess') || '連接成功');
       } else {
-        showToast.error(t('aiConnectFailed') || '連接失敗');
+        feedback.error(t('aiConnectFailed') || '連接失敗');
       }
     } catch (e) {
       ErrorFactory.handle(e, { context: t('aiConnectFailed') || '連接失敗' });

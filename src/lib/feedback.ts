@@ -1,21 +1,32 @@
 import { toast } from 'sonner';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+
 export interface ExternalToast {
   duration?: number;
   traceId?: string;
   id?: string | number;
 }
 
-export const showToast = {
+/**
+ * feedback
+ * 統一的 UI 反饋工具函數，封裝自 sonner。
+ */
+export const feedback = {
+  show: (type: ToastType, message: string, duration?: number) => {
+    const fn = toast[type];
+    fn(message, { duration: duration ?? 3000 });
+  },
+
   success: (message: string, options?: ExternalToast) => 
-    toast.success(message, {
+    toast.success(message, { 
       id: options?.id,
-      duration: options?.duration,
+      duration: options?.duration ?? 3000 
     }),
-    
+
   error: (messageOrError: string | Error | unknown, options?: ExternalToast) => {
-    let userMessage = '系统错误';
+    let userMessage = '系統錯誤';
     let systemMessage = '';
     let traceId = options?.traceId || '';
     let timestamp = '';
@@ -30,6 +41,7 @@ export const showToast = {
         timestamp?: string;
         error?: { message?: string; code?: string; traceId?: string } | string;
         context?: Record<string, unknown>;
+        cause?: unknown;
       }
       
       const err = messageOrError as AppErrorLike & Record<string, unknown>;
@@ -41,42 +53,29 @@ export const showToast = {
         const obj = e as Record<string, unknown>;
         
         let details = '';
-        // Extract diagnostic details from context (e.g. upload failures list or field validations)
         if (obj.context && typeof obj.context === 'object') {
           const ctx = obj.context as Record<string, unknown>;
           
           if (Array.isArray(ctx.failures)) {
             const failLines = ctx.failures
-              .map(f => `${f.name || '文件'}: ${f.error || '未知错误'}`)
+              .map(f => `${f.name || '文件'}: ${f.error || '未知錯誤'}`)
               .join(', ');
-            if (failLines) {
-              details += ` [详细失败原因: ${failLines}]`;
-            }
+            if (failLines) details += ` [詳細失敗原因: ${failLines}]`;
           } else if (ctx.fields && typeof ctx.fields === 'object') {
-            details += ` [验证详情: ${JSON.stringify(ctx.fields)}]`;
+            details += ` [驗證詳情: ${JSON.stringify(ctx.fields)}]`;
           }
 
-          if (ctx.originalError) {
-            details += ' \n↳ 原因: ' + extractSystemMsg(ctx.originalError);
-          } else if (ctx.original) {
-            details += ' \n↳ 原因: ' + extractSystemMsg(ctx.original);
-          }
+          if (ctx.originalError) details += ' \n↳ 原因: ' + extractSystemMsg(ctx.originalError);
+          else if (ctx.original) details += ' \n↳ 原因: ' + extractSystemMsg(ctx.original);
         }
 
-        if (obj.cause) {
-          details += ' \n↳ 内部原因: ' + extractSystemMsg(obj.cause);
-        }
-
-        if (obj.message) {
-          return String(obj.message) + details;
-        }
-
+        if (obj.cause) details += ' \n↳ 內部原因: ' + extractSystemMsg(obj.cause);
+        if (obj.message) return String(obj.message) + details;
         return JSON.stringify(e).substring(0, 500) + details;
       };
 
       systemMessage = extractSystemMsg(err);
 
-      // Extract code and traceId from either flat or nested backend formats
       if (err.error && typeof err.error === 'object') {
         const nested = err.error as Record<string, unknown>;
         code = String(nested.code || err.code || 'UNKNOWN_ERROR');
@@ -91,12 +90,12 @@ export const showToast = {
     }
 
     if (!traceId) traceId = crypto.randomUUID();
-    if (!timestamp) timestamp = new Date().toLocaleString('zh-CN');
+    if (!timestamp) timestamp = new Date().toLocaleString('zh-TW');
 
     const diagnosticsText = [
-      `--- 诊断报告 ---`,
-      `时间: ${timestamp}`,
-      `代码: ${code}`,
+      `--- 診斷報告 ---`,
+      `時間: ${timestamp}`,
+      `代碼: ${code}`,
       `ID: ${traceId}`,
       `信息: ${systemMessage || userMessage}`
     ].join('\n');
@@ -105,11 +104,11 @@ export const showToast = {
       id: options?.id || traceId,
       duration: options?.duration || 6000,
       action: {
-        label: '复制诊断',
+        label: '複製診斷',
         onClick: async () => {
-          const success = await copyToClipboard(diagnosticsText);
-          if (success) toast.success('已复制诊断信息');
-          else toast.error('复制失败');
+          const success = await feedback.copyDiagnostics(diagnosticsText);
+          if (success) feedback.success('已複製診斷信息');
+          else feedback.error('複製失敗');
         }
       }
     });
@@ -125,12 +124,43 @@ export const showToast = {
       duration: options?.duration || 4000,
     }),
 
+  /**
+   * promise
+   * 用於異步操作的反饋，會自動顯示 loading -> success/error 狀態切換。
+   */
+  promise: async <T>(
+    promise: Promise<T>,
+    messages: { loading: string; success: string; error?: string | ((err: any) => string) }
+  ): Promise<T> => {
+    toast.promise(promise, {
+      loading: messages.loading,
+      success: messages.success,
+      error: messages.error || '操作失敗',
+    });
+    return await promise;
+  },
+
   loading: (message: string, options?: ExternalToast) => 
     toast.loading(message, {
       id: options?.id,
     }),
 
-  dismiss: (toastId?: string | number) => {
-    toast.dismiss(toastId);
+  dismiss: (id?: string | number) => toast.dismiss(id),
+  
+  update: (id: string | number, message: string, type: ToastType = 'success') => {
+    const fn = toast[type];
+    fn(message, { id, duration: 3000 });
+  },
+
+  /**
+   * 內部輔助：複製診斷信息
+   */
+  async copyDiagnostics(text: string): Promise<boolean> {
+    try {
+      await copyToClipboard(text);
+      return true;
+    } catch {
+      return false;
+    }
   }
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Dimension } from '#src/types/index.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { DimensionItem } from './components/DimensionItem.js';
 
 interface DimensionEditorProps {
@@ -69,7 +69,7 @@ export function DimensionEditor({
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">{t('dimensionsTitle') || '尺寸 / DIMENSIONS'}</span>
           <button 
             type="button"
-            onClick={() => showToast.info('AI 识别可自动提取照片中的尺寸规格信息')}
+            onClick={() => feedback.info('AI 识别可自动提取照片中的尺寸规格信息')}
             className="text-slate-300 hover:text-slate-500 transition-colors"
           >
             <Icon name="info" size={12} />

@@ -5,9 +5,9 @@ import { Photo, Tag } from '#src/types/index.js';
 import { PhotoEditFormService } from '../services/PhotoEditFormService.js';
 import { usePhotoMutations } from '#src/hooks/photo/index.js';
 import { useTranslation } from '#src/hooks/index.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
-import { useCategories, useManufacturers, useTags } from '#src/hooks/index.js';
+import { useCategories, useManufacturers, useTags, useDebounce, useDebounceFn } from '#src/hooks/index.js';
 import { PhotoAIAdapterRegistry } from '#src/features/ai/types.js';
 import { resolveTagNamesToIds } from '#src/features/ai/tagCompletion.js';
 import { REGEX } from '#src/constants/config.js';
@@ -23,75 +23,72 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   const { categories = [] } = useCategories();
   const { manufacturers = [] } = useManufacturers();
   const { tags: allTags = [] } = useTags();
-  const formRef = useRef<any>(null);
 
+  const formRef = useRef<any>(null);
   const defaultValues = useMemo(() => PhotoEditFormService.getInitialValues(photo), [photo]);
 
-  const onSubmit = useCallback(async (values: PhotoEditFormData, submitOpts?: { silent?: boolean }) => {
-    try {
-      // 驗證選擇
-      if (values.categoryId && !categories.find(c => String(c.id) === String(values.categoryId))) {
-        values.categoryId = null;
-      }
-      if (values.manufacturerId && !manufacturers.find(m => String(m.id) === String(values.manufacturerId))) {
-        values.manufacturerId = null;
-      }
-
-      const saveData = PhotoEditFormService.prepareSaveData(values, photoId, photo);
-      
-      await editPhotoAsync({
-        id: photoId,
-        updates: saveData as unknown as Partial<Photo>
-      });
-      
-      // 強制重置表單到當前提交的值，清除 Dirty 狀態，確保「未保存」標籤立即消失
-      if (formRef.current) {
-        formRef.current.reset(values);
-      }
-      
-      if (!submitOpts?.silent) {
-        showToast.success(t('saveSuccess') || '保存成功');
-      }
-    } catch (error) {
-      ErrorFactory.handle(error as Error, { context: t('saveFailed') || '保存失敗' });
-      throw error; // Rethrow so commit can catch it
+  const doSave = useCallback(async (values: PhotoEditFormData) => {
+    // 驗證選擇
+    if (values.categoryId && !categories.find(c => String(c.id) === String(values.categoryId))) {
+      values.categoryId = null;
     }
-  }, [photoId, photo, editPhotoAsync, categories, manufacturers, t]);
+    if (values.manufacturerId && !manufacturers.find(m => String(m.id) === String(values.manufacturerId))) {
+      values.manufacturerId = null;
+    }
+
+    const saveData = PhotoEditFormService.prepareSaveData(values, photoId, photo);
+    
+    await editPhotoAsync({
+      id: photoId,
+      updates: saveData as unknown as Partial<Photo>
+    });
+  }, [photoId, photo, editPhotoAsync, categories, manufacturers]);
 
   const formObj = useAppForm({
     schema: PhotoEditSchema,
     defaultValues,
     onSubmit: async (values) => {
-       await onSubmit(values);
+      // 這是由 form.handleSubmit() 觸發的手動提交
+      await doSave(values);
+      // 手動儲存成功後，重置表單狀態以清除 isDirty
+      form.reset(values);
+      lastSavedValues.current = JSON.stringify(values);
+      feedback.success(t('saveSuccess') || '保存成功');
     }
   });
 
   const { form } = formObj;
   formRef.current = form;
-  const isDirty = form.state.isDirty;
 
-  // 自動保存邏輯 (Debounced Auto Save)
-  useEffect(() => {
-    if (!isDirty || !photoId) return;
+  // 自動保存邏輯 (Background Sync)
+  const lastSavedValues = useRef<string>(JSON.stringify(defaultValues));
 
-    const timer = setTimeout(async () => {
-      // 僅在表單有效且標記為 dirty 時自動保存
-      if (form.state.isValid && form.state.isDirty) {
-        try {
-          await onSubmit(form.state.values, { silent: true });
-        } catch (e) {
-          // Silent catch
-        }
+  const { run: debouncedAutoSave, isPending: isAutoSaving } = useDebounceFn(async (values: PhotoEditFormData) => {
+    // 僅在表單有效且資料確有變動時執行
+    const currentValuesStr = JSON.stringify(values);
+    if (currentValuesStr === lastSavedValues.current) return;
+
+    if (form.state.isValid) {
+      try {
+        await doSave(values);
+        lastSavedValues.current = currentValuesStr;
+        // 注意：這裡故意不呼叫 form.reset()，保留使用者介面的 isDirty 狀態
+      } catch (e) {
+        // 自動保存失敗靜默處理，不干擾使用者輸入
       }
-    }, 2000); // 2秒延遲
+    }
+  }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [form, isDirty, photoId, onSubmit]);
+  useEffect(() => {
+    if (!photoId) return;
+    debouncedAutoSave(form.state.values);
+  }, [form.state.values, photoId, debouncedAutoSave]);
 
   // 表單數據同步
   useEffect(() => {
     if (photo && !form.state.isDirty) {
       form.reset(defaultValues);
+      lastSavedValues.current = JSON.stringify(defaultValues);
     }
   }, [defaultValues, form, photo]);
 
@@ -132,6 +129,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
         // Silently fail
       }
     };
+
     resolveAITags();
   }, [photo, allTags, form, defaultValues.tags]);
 
@@ -150,6 +148,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
       if (state.errors && state.errors.length > 0) {
         state.errors.forEach(err => errorList.push(String(err)));
       }
+
       if (state.fieldMeta) {
         Object.entries(state.fieldMeta).forEach(([fieldName, meta]) => {
           const m = meta as any;
@@ -164,19 +163,21 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
       }
 
       if (errorList.length > 0) {
-        showToast.error(`${t('saveFailed') || '保存失败'}: ${errorList.join(', ')}`);
+        feedback.error(`${t('saveFailed') || '保存失敗'}: ${errorList.join(', ')}`);
         return false;
       }
+
+      onSuccess?.();
       return true;
     } catch (err) {
       ErrorFactory.handle(err as Error, { context: 'PhotoEdit.commit' });
       return false;
     }
-  }, [form, t]);
+  }, [form, t, onSuccess]);
 
   const discard = useCallback(() => {
     form.reset();
   }, [form]);
 
-  return { form, commit, discard };
+  return { form, commit, discard, isAutoSaving };
 }

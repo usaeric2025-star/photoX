@@ -3,7 +3,7 @@ import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useDisclosure } from '#src/hooks/core/index.js';
 import { useTranslation, useFilters, usePhoto } from '#src/hooks/index.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { Field } from '@tanstack/react-form';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { PhotoPreviewSection } from './components/PhotoPreviewSection.js';
@@ -79,7 +79,7 @@ export function BasicInfoTab() {
             onClick={async () => {
               if (detailPhoto?.id) {
                 const success = await copyToClipboard(detailPhoto.id);
-                if (success) showToast.success('ID 已复制');
+                if (success) feedback.success('ID 已复制');
               }
             }}
           >

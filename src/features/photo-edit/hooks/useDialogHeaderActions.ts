@@ -4,7 +4,7 @@ import { usePhotoEditAI } from './usePhotoAI.js';
 import { useAtomValue } from "jotai";
 import {  tasksAtom } from '#lib/store/index.js';
 import { Task } from '#lib/task-queue/types.js';
-import { showToast } from "#lib/ui/toast.js";
+import { feedback } from '#lib/feedback.js';
 import { ErrorFactory } from "#lib/error/ErrorFactory.js";
 import { useGroupMutations } from "#src/hooks/group/index.js";
 import { logger } from '#lib/logger.js';
@@ -17,7 +17,7 @@ import { useMemo } from 'react';
  */
 export function useDialogHeaderActions(onClose: () => void) {
   const { t } = useTranslation();
-  const { commit, isPending, isSubmitting } = usePhotoEditSessionContext();
+  const { commit, isPending, isSubmitting, isAutoSaving } = usePhotoEditSessionContext();
   const { modal, photoId: filterPhotoId } = useFilters();
   const editPhotoId = modal === 'edit' ? filterPhotoId : null;
   
@@ -36,26 +36,31 @@ export function useDialogHeaderActions(onClose: () => void) {
 
   const onRemoveFromGroup = async () => {
     if (editPhotoId && detailPhoto?.groupId) {
-      try {
-        await removePhotos.mutateAsync({ photoIds: [editPhotoId], groupId: detailPhoto.groupId });
-        showToast.success(t('removedFromGroup') || 'Removed from group');
-        onClose();
-      } catch (e) {
-        ErrorFactory.handle(e as Error, { context: t('removeFromGroupAction') || '移出合組' });
-      }
+      await feedback.promise(
+        removePhotos.mutateAsync({ photoIds: [editPhotoId], groupId: detailPhoto.groupId }),
+        { 
+          loading: t('removingFromGroup') || '正在移出合組...', 
+          success: t('removedFromGroup') || '已移出合組',
+          error: t('removeFromGroupFailed') || '移出失敗'
+        }
+      );
+      onClose();
     }
   };
 
   const onAiAnalyze = async () => {
     const finalImageUrl = detailPhoto?.imageUrl;
     if (finalImageUrl) {
-      try {
-        await handleAiAnalyze(finalImageUrl);
-      } catch (e) {
-        ErrorFactory.handle(e as Error, { context: t('aiAnalyzeAction') || 'AI 識別' });
-      }
+      await feedback.promise(
+        handleAiAnalyze(finalImageUrl),
+        {
+          loading: t('aiAnalyzing') || '正在 AI 識別...',
+          success: t('aiAnalyzeSuccess') || 'AI 識別完成',
+          error: (err: any) => `${t('aiAnalyzeFailed') || 'AI 識別失敗'}: ${err.message}`
+        }
+      );
     } else {
-      ErrorFactory.handle(new Error(t('photoDataMissing') || 'Photo data missing'), { context: t('aiAnalyzeAction') || 'AI 識別' });
+      feedback.error(t('photoDataMissing') || '照片數據缺失');
     }
   };
 
@@ -73,6 +78,7 @@ export function useDialogHeaderActions(onClose: () => void) {
   return {
     isPending,
     isSubmitting,
+    isAutoSaving,
     isAnalyzing,
     aiMessage,
     isPartOfGroup,

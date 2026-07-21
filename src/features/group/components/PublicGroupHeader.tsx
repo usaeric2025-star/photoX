@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Group } from '#src/types/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { useTranslation } from '#src/hooks/core/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
@@ -19,7 +19,7 @@ export function PublicGroupHeader({ group, photoCount }: PublicGroupHeaderProps)
   const handleCopyId = async () => {
     const success = await copyToClipboard(group.id);
     if (success) {
-      showToast.success(t('groupIdCopied') || 'ID Copied');
+      feedback.success(t('groupIdCopied') || 'ID Copied');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -29,7 +29,7 @@ export function PublicGroupHeader({ group, photoCount }: PublicGroupHeaderProps)
     const url = `${window.location.origin}/group/${group.id}`;
     const success = await copyToClipboard(url);
     if (success) {
-      showToast.success(t('shareLinkCopied'));
+      feedback.success(t('shareLinkCopied'));
     }
   };
 

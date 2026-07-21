@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import { TranslationType } from '#src/locales/index.js';
 
 const TranslationSchema = v.object({
-  zh: v.string(),
+  zh: v.optional(v.string()),
   en: v.optional(v.string()),
   ms: v.optional(v.string())
 });

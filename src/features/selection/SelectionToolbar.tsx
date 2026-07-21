@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
 import React, { memo, useMemo, useEffect } from 'react';
 import { useSelectionCount, useSelectedIds, useSelectionActions, useIsMultiSelect, usePermission, useAdminActions, useTranslation } from '#src/hooks/index.js';
-import { showToast } from '#src/lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import {  activeTaskCountAtom } from '#lib/store/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
@@ -75,48 +75,42 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
 
   const handleManualGroup = async () => {
     const idsToGroup = [...selectedIds];
-    const toastId = showToast.loading(t('processing') || '處理中...');
-    
-    try {
-      const result = await combineMutation.mutateAsync({ photoIds: idsToGroup });
-      showToast.success(t('mergePhotosSuccess', idsToGroup.length), { id: toastId });
-      
-      // Commented out to prevent jumping to group, enabling multiple consecutive operations
-      // if (result?.targetGroupId) {
-      //   setLocation(`/admin/group/${result.targetGroupId}`);
-      // }
-      
-      clearSelection();
-    } catch (err: unknown) {
-      showToast.dismiss(toastId);
-      // Errors are also handled by mutation hook's onError
-    }
+    await feedback.promise(
+      combineMutation.mutateAsync({ photoIds: idsToGroup }),
+      {
+        loading: t('processing') || '處理中...',
+        success: t('mergePhotosSuccess', idsToGroup.length),
+        error: t('mergePhotosFailed') || '合併失敗'
+      }
+    );
+    clearSelection();
   };
 
   const handleRemoveFromGroup = async () => {
     if (selectedCount === 0 || isAnyPending || !groupId) return;
     const idsToRemove = [...selectedIds];
-    const toastId = showToast.loading(t('processing') || '處理中...');
-    
-    try {
-      await removeMutation.mutateAsync({ photoIds: idsToRemove, groupId });
-      showToast.success(t('removePhotosSuccess', idsToRemove.length), { id: toastId });
-      clearSelection();
-    } catch (err: unknown) {
-      showToast.dismiss(toastId);
-    }
+    await feedback.promise(
+      removeMutation.mutateAsync({ photoIds: idsToRemove, groupId }),
+      {
+        loading: t('processing') || '處理中...',
+        success: t('removePhotosSuccess', idsToRemove.length),
+        error: t('removePhotosFailed') || '移出失敗'
+      }
+    );
+    clearSelection();
   };
 
   const handleBatchToggleHide = async (hide: boolean) => {
     if (selectedCount === 0 || isAnyPending) return;
-    const toastId = showToast.loading(t('processing') || '處理中...');
-    try {
-      await batchUpdate.mutateAsync({ ids: selectedIds, updates: { isHidden: hide } });
-      showToast.success(hide ? t('hideSuccess', selectedCount) || '已隱藏' : t('unhideSuccess', selectedCount) || '已取消隱藏', { id: toastId });
-      clearSelection();
-    } catch (err: unknown) {
-      showToast.dismiss(toastId);
-    }
+    await feedback.promise(
+      batchUpdate.mutateAsync({ ids: selectedIds, updates: { isHidden: hide } }),
+      {
+        loading: t('processing') || '處理中...',
+        success: hide ? t('hideSuccess', selectedCount) || '已隱藏' : t('unhideSuccess', selectedCount) || '已取消隱藏',
+        error: t('updateFailed') || '更新失敗'
+      }
+    );
+    clearSelection();
   };
 
   const handleBatchDeleteClick = async () => {
@@ -127,14 +121,15 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
       variant: 'destructive',
     });
     if (ok) {
-      const toastId = showToast.loading(t('processing') || '處理中...');
-      try {
-        await deletePhoto.mutateAsync(selectedIds);
-        showToast.success(t('deleteSuccess'), { id: toastId });
-        clearSelection();
-      } catch (err: unknown) {
-        showToast.dismiss(toastId);
-      }
+      await feedback.promise(
+        deletePhoto.mutateAsync(selectedIds),
+        {
+          loading: t('processing') || '處理中...',
+          success: t('deleteSuccess'),
+          error: t('deleteFailed') || '刪除失敗'
+        }
+      );
+      clearSelection();
     }
   };
 

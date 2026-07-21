@@ -5,7 +5,7 @@ import { useIsMultiSelect, useSelectionActions, usePermission } from '#src/hooks
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { useTranslation } from '#src/hooks/core/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
@@ -52,7 +52,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
   const handleCopyId = async () => {
     const success = await copyToClipboard(group.id);
     if (success) {
-      showToast.success(t('groupIdCopied') || 'ID copied');
+      feedback.success(t('groupIdCopied') || 'ID copied');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -62,7 +62,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
     const url = `${window.location.origin}/group/${group.id}`;
     const success = await copyToClipboard(url);
     if (success) {
-      showToast.success(t('shareLinkCopied') || 'Share link copied');
+      feedback.success(t('shareLinkCopied') || 'Share link copied');
     }
   };
 

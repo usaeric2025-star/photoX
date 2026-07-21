@@ -13,7 +13,7 @@ import {
 } from '@tanstack/react-query';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import * as idb from 'idb-keyval';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 
 export * from '@tanstack/react-query';
 export * from './keys.js';
@@ -121,7 +121,7 @@ export function useAppMutation<TData = unknown, TVariables = unknown, TContext =
     mutationFn,
     onSuccess: (...args) => {
       if (successMessage) {
-        showToast.success(successMessage);
+        feedback.success(successMessage);
       }
       
       if (invalidateKeys) {

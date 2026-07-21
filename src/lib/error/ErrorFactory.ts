@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import { ErrorCode } from '#shared/errorCodes.js';
 import { AppError, ErrorSeverity, isAppError, ErrorCategory } from '#shared/AppError.js';
-import { showToast } from '#lib/ui/toast.js';
+import { feedback } from '#lib/feedback.js';
 import { logger } from '#lib/logger.js';
 import { generateTraceId } from '#lib/utils.js';
 import { ErrorFormatter } from './ErrorFormatter.js';
@@ -298,7 +298,7 @@ export class ErrorFactory {
       : this.wrap(error, context);
     
     if (typeof window !== 'undefined') {
-      showToast.error(appError);
+      feedback.error(appError.userMessage || appError.message);
     }
   }
 

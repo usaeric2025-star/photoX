@@ -24,6 +24,7 @@ export function DialogHeader({
   const {
     isPending,
     isSubmitting,
+    isAutoSaving,
     isAnalyzing,
     aiMessage,
     isPartOfGroup,
@@ -52,12 +53,18 @@ export function DialogHeader({
               {t('saving') || 'SAVING...'}
             </div>
           )}
-          {!isSubmitting && form.state.isDirty && (
+          {!isSubmitting && isAutoSaving && (
+            <div className="flex items-center gap-1.5 text-[10px] text-purple-500 font-bold">
+              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" />
+              {t('syncing') || 'SYNCING...'}
+            </div>
+          )}
+          {!isSubmitting && !isAutoSaving && form.state.isDirty && (
             <div className="text-[10px] text-amber-500 font-bold">
               {t('unsaved') || 'UNSAVED CHANGES'}
             </div>
           )}
-          {!isSubmitting && !form.state.isDirty && (
+          {!isSubmitting && !isAutoSaving && !form.state.isDirty && (
             <div className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
               <Icon name="check" size={10} />
               {t('saved') || 'SAVED'}
@@ -111,13 +118,19 @@ export function DialogHeader({
           type="button"
           onClick={onSave}
           disabled={isSubmitting || isAnalyzing}
-          className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSubmitting || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
+          className={`h-10 px-3 flex-shrink-0 flex items-center justify-center gap-2 rounded-xl border border-blue-600 shadow-sm transition-all disabled:opacity-50 ${isSubmitting || isAnalyzing ? "bg-blue-400 text-white border-blue-400 cursor-wait" : "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700"}`}
           title={t('save') || '保存'}
         >
           {isSubmitting ? (
-            <LoadingSpinner size="xs" />
+            <>
+              <LoadingSpinner size="xs" variant="current" />
+              <span className="text-xs font-bold hidden sm:inline uppercase">{t('saving') || '保存中'}</span>
+            </>
           ) : (
-            <Icon name="save" size={18} />
+            <>
+              <Icon name="save" size={18} />
+              <span className="text-xs font-bold hidden sm:inline uppercase">{t('save') || '保存'}</span>
+            </>
           )}
         </button>
 

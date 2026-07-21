@@ -6,7 +6,7 @@ export interface CopyOptions {
   /** 失敗時顯示的提示訊息（預設：複製失敗，請手動複製） */
   errorMessage?: string;
   /** 是否顯示成功提示（預設：true） */
-  showToast?: boolean;
+  feedback?: boolean;
 }
 
 /**
