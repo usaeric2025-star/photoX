@@ -91,15 +91,17 @@ export function AdminGroupDetailPage() {
     }
   };
 
-  // Redirect to admin if group not found
+  // Redirect to admin only if group is truly not found (not just loading or errored)
   useEffect(() => {
-    if (!loading && !group && groupId) {
+    // Only redirect if loading is finished, group is null, we have an ID, 
+    // AND there isn't a transient error (like 401/500)
+    if (!loading && !group && groupId && !error) {
       const timer = setTimeout(() => {
         setLocation('/admin');
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [loading, group, groupId, setLocation]);
+  }, [loading, group, groupId, error, setLocation]);
 
   if (loading || !groupId) {
     return (

@@ -15,7 +15,6 @@ export type Capability =
   | 'system:settings'
   | 'group:view'
   | 'group:manage'
-  | 'staff:workspace:access' 
   | 'admin:dashboard:access'; 
 
 export const ROLE_PERMISSIONS: Record<string, Capability[]> = {
@@ -34,27 +33,14 @@ export const ROLE_PERMISSIONS: Record<string, Capability[]> = {
     'system:settings',
     'group:view',
     'group:manage',
-    'staff:workspace:access',
     'admin:dashboard:access',
-  ],
-  staff: [
-    'photo:view-hidden',
-    'photo:view-internal-info',
-    'photo:edit',
-    'photo:delete',
-    'photo:ai-analyze',
-    'photo:manage-groups',
-    'photo:toggle-pinned',
-    'group:view',
-    'staff:workspace:access',
   ],
   public: [
     'group:view',
   ],
 };
 
-export const getEffectiveRole = (user: User | null, isStaffMode: boolean): 'admin' | 'staff' | 'public' => {
+export const getEffectiveRole = (user: User | null): 'admin' | 'public' => {
   if (user) return 'admin';
-  if (isStaffMode) return 'staff';
   return 'public';
 };

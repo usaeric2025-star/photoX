@@ -1,9 +1,8 @@
 import React, { createContext, useContext } from 'react';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useAtomValue } from 'jotai';
-import { userAtom, passcodeAtom } from '#src/store/index.js';
+import { userAtom, authLoadingAtom } from '#src/store/index.js';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '#src/config/permissions.js';
-import { useSettings } from '../../settings/useSettings.js';
 
 /**
  * AdminMode Context & Provider
@@ -34,18 +33,7 @@ export function useAdminMode(): boolean {
  */
 export function usePermission() {
   const user = useAtomValue(userAtom);
-  const { settings } = useSettings();
-    
-  let passcode = useAtomValue(passcodeAtom);
-  try {
-    if (typeof passcode === 'string' && passcode.startsWith('"')) {
-      passcode = JSON.parse(passcode);
-    }
-  } catch (e) {}
-
-  const isStaffMode = String(passcode) === settings?.accessPasscode && !!settings?.accessPasscode;
-      
-  const role = getEffectiveRole(user || null, isStaffMode);
+  const role = getEffectiveRole(user || null);
   const permissions = ROLE_PERMISSIONS[role] || [];
 
   /**
@@ -59,5 +47,21 @@ export function usePermission() {
     role,
     can,
     userId: user?.id
+  };
+}
+
+/**
+ * useAdminAccess
+ * Unified hook for components checking for administrative dashboard/edit capabilities.
+ */
+export function useAdminAccess() {
+  const user = useAtomValue(userAtom);
+  const isLoading = useAtomValue(authLoadingAtom);
+  const { can } = usePermission();
+
+  return {
+    isLoading,
+    isAdmin: can('admin:dashboard:access'),
+    user,
   };
 }

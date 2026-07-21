@@ -63,6 +63,11 @@ apiApp.onError((err, c) => {
         return errorResponse(c, err, 500);
     }
 
+    // 針對特定的身份驗證錯誤提供更清晰的提示
+    if (err.message?.includes('Unauthorized') || err.message?.includes('No credentials')) {
+        return errorResponse(c, err, 401);
+    }
+
     if (!isAiPath && (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound'))) {
         return errorResponse(c, err, 404);
     }
@@ -72,14 +77,6 @@ apiApp.onError((err, c) => {
         return errorResponse(c, foreignKeyErr, 400);
     }
     return errorResponse(c, err, 500);
-});
-
-// ✅ 統一 404 路由不存在處理，紀錄至錯誤日誌並回傳標準 JSON
-apiApp.notFound((c) => {
-    const { method, path, url } = c.req;
-    logger.warn(`[API 404] Route Not Found: [${method}] ${path} (Full URL: ${url})`);
-    const err = new Error(`API 路由不存在 (Route Not Found): [${method}] ${path}`);
-    return errorResponse(c, err, 404);
 });
 
 apiApp.use('*', cors());
@@ -133,6 +130,14 @@ const routes = apiApp
   .route('/cron/refresh-view', cronRefreshView)
   .route('/system', system)
   .route('/storage', storage);
+
+// ✅ 統一 404 路由不存在處理 (必須放在所有路由定義之後)
+apiApp.notFound((c) => {
+    const { method, path, url } = c.req;
+    logger.warn(`[API 404] Route Not Found: [${method}] ${path} (Full URL: ${url})`);
+    const err = new Error(`API 路由不存在 (Route Not Found): [${method}] ${path}`);
+    return errorResponse(c, err, 404);
+});
 
 export const app = new Hono().route('/api', routes);
 

@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, getDefaultStore } from 'jotai';
 import { userAtom } from '#src/store/index.js';
 import { queryClient, useAppQuery, useAppMutation } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
@@ -52,8 +52,11 @@ const GroupService = {
   },
 
   movePhotos: async (photoIds: string[], groupId: string) => {
+    const store = getDefaultStore();
+    const currentUser = store.get(userAtom);
+    const userId = currentUser?.id || 'admin';
     return ErrorFactory.unwrap<unknown>(
-      api.groups['move-photos'].$post({ json: { photoIds, targetGroupId: groupId, userId: 'staff', groupData: {} } }),
+      api.groups['move-photos'].$post({ json: { photoIds, targetGroupId: groupId, userId, groupData: {} } }),
       '移動照片失敗'
     );
   },
@@ -87,8 +90,11 @@ const GroupService = {
   },
 
   groupPhotos: async (photoIds: string[], targetGroupId?: string) => {
+    const store = getDefaultStore();
+    const currentUser = store.get(userAtom);
+    const userId = currentUser?.id || 'admin';
     return ErrorFactory.unwrap<{ targetGroupId: string }>(
-      api.groups['group-photos'].$post({ json: { photoIds, targetGroupId, userId: 'staff', groupData: {} } }),
+      api.groups['group-photos'].$post({ json: { photoIds, targetGroupId, userId, groupData: {} } }),
       '組合照片失敗'
     );
   }

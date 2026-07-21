@@ -148,8 +148,8 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
       </div>
       
       {/* Right side: Action buttons */}
-      <div className="flex items-center gap-2 shrink-0">
-        <div className="hidden sm:flex items-center gap-2 mr-2 pr-2 border-r border-slate-200">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 mr-1 pr-1 sm:mr-2 sm:pr-2 border-r border-slate-200">
            <button
             onClick={handleShare}
             className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all border border-transparent hover:border-indigo-100 active:scale-95"

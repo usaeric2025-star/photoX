@@ -3,7 +3,7 @@ import { atomWithStorage } from 'jotai/utils';
 import { User } from '#src/types/index.js';
 import { logger } from '#lib/logger.js';
 import { supabase } from '#lib/supabase.js';
-import { storage } from '#lib/storage.js';
+import { jotaiStorage, storage } from '#lib/storage.js';
 import { safeAsync } from '#lib/utils/safeAsync.js';
 import { withTimeout } from '#lib/utils.js';
 
@@ -11,7 +11,6 @@ import { withTimeout } from '#lib/utils.js';
 export const userAtom = atom(null as User | null);
 export const tokenAtom = atom(null as string | null);
 export const authLoadingAtom = atom(true);
-export const passcodeAtom = atomWithStorage<string>('ais_mock_auth_passcode', '');
 
 const store = getDefaultStore();
 
@@ -131,7 +130,6 @@ export const signOut = async () => {
     setUser(null);
     setToken(null);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('ais_mock_auth_passcode');
       window.location.reload();
     }
   }, { context: 'auth-signout' });

@@ -30,7 +30,6 @@ export {
   userAtom, 
   authLoadingAtom, 
   tokenAtom, 
-  passcodeAtom, 
   initAuth, 
   initAuthListener, 
   signIn,

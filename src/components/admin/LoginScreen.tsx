@@ -1,17 +1,12 @@
-import { appLangAtom, userAtom, passcodeAtom } from '#src/store/index.js';
-import React, { useState } from 'react';
+import { appLangAtom, userAtom } from '#src/store/index.js';
+import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePublicSettings, useTranslation } from '#src/hooks/index.js';
 import { AppLink } from '#src/components/router/AppLink.js';
-import { storage } from '#lib/storage.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { Button } from '#src/components/ui/Button.js';
-import { useAtomValue, useSetAtom } from 'jotai';
-
-const StaffLoginSchema = v.object({
-  passcode: v.pipe(v.string(), v.minLength(1)),
-});
+import { useAtomValue } from 'jotai';
 
 interface LoginScreenProps {
   signIn: () => Promise<void>;
@@ -21,34 +16,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   const { data: settings } = usePublicSettings();
   const appLang = useAtomValue(appLangAtom);
   const { t } = useTranslation();
-  const [mode, setMode] = useState<'admin' | 'staff'>('admin');
-  const [passInput, setPassInput] = useState('');
-  const [passError, setPassError] = useState(false);
-  const setGlobalPasscode = useSetAtom(passcodeAtom);
-
-  // 1. Staff Login Submission
-  const { submit: submitStaff, isLoading: isStaffLoggingIn, fieldErrors, clearFieldError } = useFormSubmit({
-    schema: StaffLoginSchema,
-    mutationFn: async ({ passcode }) => {
-      if (!settings?.accessPasscode) {
-        throw new Error('Staff passcode not configured');
-      }
-      
-      if (passcode === settings.accessPasscode) {
-        setGlobalPasscode(JSON.stringify(passcode));
-        return true;
-      } else {
-        throw new Error(t('invalidCode'));
-      }
-    },
-    onSuccess: () => {
-      // Navigation/re-render will naturally happen because of passcodeAtom change
-    },
-    successMessage: 'Staff login successful',
-    errorMessage: 'Login failed'
-  });
-
-  // 2. Admin Login Submission
+  // Admin Login Submission
   const { submit: submitAdmin, isLoading: isAdminLoggingIn } = useFormSubmit({
     schema: v.unknown(),
     mutationFn: async () => {
@@ -57,11 +25,6 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
     },
     errorMessage: 'Authentication failed'
   });
-
-  const handlePasscodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    submitStaff({ passcode: passInput });
-  };
 
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center p-6 bg-slate-50 relative overflow-hidden">
@@ -104,101 +67,23 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
             </div>
           </div>
 
-          {/* Elegant Toggle */}
-          <div className="w-full grid grid-cols-2 p-1.5 rounded-2xl bg-slate-50 border border-slate-100 relative overflow-hidden">
-            <div 
-              className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-100 transition-transform duration-300 ease-out ${
-                mode === 'admin' ? 'translate-x-0' : 'translate-x-[100%]'
-              }`}
-            />
-            <button
-              onClick={() => { setMode('admin'); setPassError(false); }}
-              className={`relative py-3 rounded-xl text-xs font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${
-                mode === 'admin' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
-              }`}
+          {/* Action Area */}
+          <div className="w-full flex flex-col items-center space-y-6">
+            <Button 
+              onClick={async () => {
+                await submitAdmin({});
+              }}
+              loading={isAdminLoggingIn}
+              className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black group"
+              leftIcon={!isAdminLoggingIn && <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" />}
             >
-              <Icon name="shield" size={14} fill={mode === 'admin' ? 'currentColor' : 'none'} className={mode === 'admin' ? 'opacity-80' : 'opacity-40'} />
-              {t('loginTitleAdmin')}
-            </button>
-            <button
-              onClick={() => { setMode('staff'); setPassError(false); }}
-              className={`relative py-3 rounded-xl text-xs font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${
-                mode === 'staff' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              <Icon name="users" size={14} fill={mode === 'staff' ? 'currentColor' : 'none'} className={mode === 'staff' ? 'opacity-80' : 'opacity-40'} />
-              {t('loginTitleStaff')}
-            </button>
-          </div>
-
-          {/* Action Area with Smooth Switch Transitions (Zero Height Jank) */}
-          <div className="w-full relative h-[142px] overflow-hidden">
-            {/* Admin Action */}
-            <div
-              className={`w-full flex flex-col items-center space-y-6 transition-all duration-300 absolute inset-x-0 top-0 ${
-                mode === 'admin' 
-                  ? 'opacity-100 translate-y-0 pointer-events-auto' 
-                  : 'opacity-0 -translate-y-2 pointer-events-none'
-              }`}
-            >
-              <Button 
-                onClick={async () => {
-                  await submitAdmin({});
-                }}
-                loading={isAdminLoggingIn}
-                className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black group"
-                leftIcon={!isAdminLoggingIn && <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" />}
-              >
-                {t('login')}
-              </Button>
-              
-              <p className="text-[10px] text-slate-400 font-medium text-center leading-relaxed max-w-[240px]">
-                {t('agreeByConnecting')} <br/>
-                <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t('termsOfService')}</span> & <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t('privacyPolicy')}</span>
-              </p>
-            </div>
-
-            {/* Staff Action */}
-            <form
-              onSubmit={handlePasscodeSubmit}
-              className={`w-full space-y-4 transition-all duration-300 absolute inset-x-0 top-0 ${
-                mode === 'staff' 
-                  ? 'opacity-100 translate-y-0 pointer-events-auto' 
-                  : 'opacity-0 translate-y-2 pointer-events-none'
-              }`}
-            >
-              <div className="relative">
-                <input
-                  autoFocus
-                  type="password"
-                  placeholder={t('enterPasscode')}
-                  value={passInput}
-                  onChange={(e) => {
-                    setPassInput(e.target.value);
-                    setPassError(false);
-                    clearFieldError('passcode');
-                  }}
-                  className={`w-full bg-slate-50 border p-4 h-14 rounded-2xl text-center text-lg font-bold tracking-[0.2em] outline-none transition-all ${
-                    passError || fieldErrors.passcode
-                      ? 'border-red-200 bg-red-50 text-red-600' 
-                      : 'border-slate-100 focus:bg-white focus:border-slate-300 focus:shadow-sm'
-                  }`}
-                />
-                {fieldErrors.passcode && (
-                  <div className="absolute -bottom-5 left-0 right-0 text-center text-[10px] text-red-500 font-bold">
-                    {fieldErrors.passcode}
-                  </div>
-                )}
-              </div>
-              <Button
-                type="submit"
-                loading={isStaffLoggingIn}
-                className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black"
-                leftIcon={!isStaffLoggingIn && <Icon name="log-in" size={18} />}
-              >
-                {t('unlockAndAccess')}
-              </Button>
-            </form>
+              {t('login')}
+            </Button>
+            
+            <p className="text-[10px] text-slate-400 font-medium text-center leading-relaxed max-w-[240px]">
+              {t('agreeByConnecting')} <br/>
+              <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t('termsOfService')}</span> & <span className="text-slate-600 hover:text-slate-900 cursor-pointer font-semibold transition-colors">{t('privacyPolicy')}</span>
+            </p>
           </div>
         </div>
 

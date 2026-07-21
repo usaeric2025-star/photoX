@@ -1,6 +1,6 @@
 import { atom, getDefaultStore, PrimitiveAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { STORAGE_KEYS } from '#lib/storage.js';
+import { STORAGE_KEYS, jotaiStorage } from '#lib/storage.js';
 import { initAuthListener, initAuth, setAuthLoading } from './auth.js';
 import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
@@ -11,8 +11,8 @@ import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { Category, Tag } from '#src/types/index.js';
 
 // --- Atoms ---
-export const appLangAtom = atomWithStorage<'zh' | 'en' | 'ms'>(STORAGE_KEYS.LANG, 'en');
-export const descLangAtom = atomWithStorage<'zh' | 'en' | 'ms'>(STORAGE_KEYS.DESC_LANG, 'zh');
+export const appLangAtom = atomWithStorage<'zh' | 'en' | 'ms'>(STORAGE_KEYS.LANG, 'en', jotaiStorage);
+export const descLangAtom = atomWithStorage<'zh' | 'en' | 'ms'>(STORAGE_KEYS.DESC_LANG, 'zh', jotaiStorage);
 export const appLoadingAtom = atom(true);
 export const appErrorAtom = atom(null as Error | null);
 

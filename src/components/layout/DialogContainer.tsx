@@ -8,7 +8,7 @@ const PhotoEditDialog = lazy(() => import('#src/features/photo-edit/PhotoEditDia
 export function DialogContainer() {
   const [mounted, setMounted] = useState(false);
   const { can } = usePermission();
-  const canAccessStaffWorkspace = can('staff:workspace:access');
+  const canAccessAdminWorkspace = can('admin:dashboard:access');
   
   useEffect(() => {
     setMounted(true);
@@ -19,7 +19,7 @@ export function DialogContainer() {
   return (
     <>
       <Suspense fallback={null}>
-        {canAccessStaffWorkspace && (
+        {canAccessAdminWorkspace && (
           <>
             <TaskDrawer />
             <PhotoEditDialog />

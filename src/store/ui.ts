@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { STORAGE_KEYS } from '#lib/storage.js';
+import { STORAGE_KEYS, jotaiStorage } from '#lib/storage.js';
 import { ProductFormData } from '#src/types/index.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 
@@ -43,10 +43,10 @@ export const fatalErrorAtom = atom(null as Error | null);
 // --- Photo / Group ---
 export const totalCountAtom = atom(0);
 export const focusedGroupPhotoIdAtom = atom(null as string | null);
-export const groupSettingsOpenAtom = atomWithStorage(STORAGE_KEYS.GROUP_SETTINGS_OPEN, false);
+export const groupSettingsOpenAtom = atomWithStorage(STORAGE_KEYS.GROUP_SETTINGS_OPEN, false, jotaiStorage);
 
 // --- Upload ---
-export const uploadAsGroupAtom = atomWithStorage(STORAGE_KEYS.UPLOAD_AS_GROUP, false);
+export const uploadAsGroupAtom = atomWithStorage(STORAGE_KEYS.UPLOAD_AS_GROUP, false, jotaiStorage);
 export const pendingPhotoIdAtom = atom(null as string | null);
 export const pendingFilesAtom = atom(null as FileList | File[] | null);
 
@@ -71,4 +71,4 @@ export const defaultForm: ProductFormData = {
   price: '',
   isGroupCover: false
 };
-export const formStateAtom = atomWithStorage<ProductFormData>(STORAGE_KEYS.EDIT_FORM_CACHE, defaultForm);
+export const formStateAtom = atomWithStorage<ProductFormData>(STORAGE_KEYS.EDIT_FORM_CACHE, defaultForm, jotaiStorage);

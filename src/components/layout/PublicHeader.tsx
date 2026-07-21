@@ -33,8 +33,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
   const { t } = useTranslation();
 
-  const canAccessAdmin = can('admin:dashboard:access');
-  const isStaff = canAccessAdmin;
+  const hasAdminAccess = can('admin:dashboard:access');
 
   const cachedSettings = React.useMemo(() => {
     try {
@@ -118,11 +117,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
         )}
 
         {/* 3. 切换至管理后台/登录按钮 (Apple Style) - 僅員工及未登錄遊客可見 */}
-        {(!user || isStaff) && (
+        {(!user || hasAdminAccess) && (
           <button
             onClick={handleAuthAction}
             className={cn("w-9 h-9", theme.button)}
-            title={isStaff ? (isAdminRoute ? t('viewModePublic') : t('viewModeAdmin')) : t('adminPanel')}
+            title={hasAdminAccess ? (isAdminRoute ? t('viewModePublic') : t('viewModeAdmin')) : t('adminPanel')}
           >
             <Icon name="layout-dashboard" size={18} />
           </button>
@@ -138,7 +137,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
           }
         >
           <div className="flex flex-col min-w-[220px] p-1 gap-1">
-            {isStaff ? (
+            {hasAdminAccess ? (
               <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
                 <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px] shrink-0">
                   {user?.photoUrl && user.photoUrl.trim() !== '' ? (
@@ -147,7 +146,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                     <Icon name="user" size={10} />
                   )}
                 </div>
-                <span className="truncate">{user ? user.email?.split("@")[0] : t('loginTitleStaff')}</span>
+                <span className="truncate">{user?.email?.split("@")[0] || 'Admin'}</span>
               </div>
             ) : (
               <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">
@@ -161,7 +160,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               {(() => {
                 const items = [];
                 items.push({ id: 'gallery', icon: 'image' as const, label: t('gallery'), onClick: () => setLocation('/') });
-                if (isStaff) {
+                if (hasAdminAccess) {
                   items.push({ id: 'admin', icon: 'layout-dashboard' as const, label: t('viewModeAdmin'), onClick: () => setLocation(ADMIN_ROUTES.HOME) });
                   if (can('photo:batch-edit')) {
                     items.push({ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) });
@@ -200,7 +199,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               <LanguageSwitcher mode="segmented" />
             </div>
 
-            {isStaff && (
+            {hasAdminAccess && (
               <>
                 <div className="h-px bg-slate-100 my-1 mx-2" />
                 <button

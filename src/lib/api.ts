@@ -16,26 +16,16 @@ const store = getDefaultStore();
 // Create the type-safe client with custom fetch for auth headers and global error handling
 const client = hc<AppType>(getBaseUrl(), {
   headers: () => {
-    // 1. Check for mock passcode (Staff mode)
-    const raw = storage.getItem('ais_mock_auth_passcode');
-    if (raw) {
-      try {
-        const passcode = JSON.parse(raw);
-        if (passcode) {
-          return { Authorization: `Passcode ${passcode}` };
-        }
-      } catch (e) {
-        // Fall through
-      }
-    }
-    
-    // 2. Check for Supabase session token (Admin mode)
+    const headers: Record<string, string> = {};
+
+    // Check for Supabase session token (Admin mode)
     const token = store.get(tokenAtom);
     if (token) {
-      return { Authorization: `Bearer ${token}` };
+      headers.Authorization = `Bearer ${token}`;
+      return headers;
     }
 
-    return {};
+    return headers;
   },
   fetch: async (input, init) => {
     const response = await fetch(input, init);

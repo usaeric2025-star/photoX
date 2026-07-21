@@ -1,3 +1,5 @@
+import { createJSONStorage } from 'jotai/utils';
+
 const PREFIX = 'photox_';
 const memoryCache = new Map<string, unknown>();
 
@@ -121,3 +123,12 @@ export const storage = {
     }
   }
 };
+
+/**
+ * Jotai compatible storage using the photox_ prefix
+ */
+export const jotaiStorage = createJSONStorage<any>(() => ({
+  getItem: (key) => storage.getItem(key),
+  setItem: (key, value) => storage.setItem(key, value),
+  removeItem: (key) => storage.remove(key),
+}));

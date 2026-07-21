@@ -59,7 +59,7 @@ export function GroupDetailLayout({
             {header}
           </div>
           
-          <div className={`flex-1 bg-slate-50 transition-all duration-300 ${bottomPadding ? 'pb-16' : ''} overflow-y-auto p-1 sm:p-2 relative`}>
+          <div id="photo-wall-scroll-container" className={`flex-1 bg-slate-50 transition-all duration-300 ${bottomPadding ? 'pb-16' : ''} overflow-y-auto p-1 sm:p-2 relative`}>
             <ErrorBoundary>
               <PhotoWallGrid
                 photos={photos}
