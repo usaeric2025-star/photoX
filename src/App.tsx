@@ -4,19 +4,23 @@ import { AppErrorBoundary } from './components/layout/AppErrorBoundary.js';
 import { ConfirmProvider } from './context/ConfirmContext.js';
 import { GridProvider } from './context/GridContext.js';
 import { RouterOrchestrator } from './components/RouterOrchestrator.js';
-import { useAppInit } from './hooks/core/index.js';
 import { LoadingScreen } from './components/ui/LoadingScreen.js';
 import { Toaster } from 'sonner';
+import { useAtomValue } from 'jotai';
+import { authLoadingAtom, appErrorAtom } from './store/index.js';
 
-function AppContent({ status, error }: { status: string, error: Error | null }) {
+export default function App() {
+  const isAuthLoading = useAtomValue(authLoadingAtom);
+  const appError = useAtomValue(appErrorAtom) as Error | null;
+
   return (
     <AppErrorBoundary>
       <ConfirmProvider>
         <GridProvider>
-          {status === 'loading' ? (
+          {isAuthLoading ? (
             <LoadingScreen />
-          ) : status === 'error' ? (
-            <LoadingScreen error={error} />
+          ) : appError ? (
+            <LoadingScreen error={appError} />
           ) : (
             <motion.div 
               variant="fade"
@@ -32,13 +36,5 @@ function AppContent({ status, error }: { status: string, error: Error | null }) 
       </ConfirmProvider>
       <Toaster position="bottom-right" closeButton visibleToasts={3} />
     </AppErrorBoundary>
-  );
-}
-
-export default function App() {
-  const { status, error } = useAppInit();
-
-  return (
-    <AppContent status={status} error={error} />
   );
 }

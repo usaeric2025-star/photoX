@@ -40,9 +40,7 @@ export {
 export { 
   appLangAtom, 
   descLangAtom, 
-  appLoadingAtom, 
   appErrorAtom, 
   initApp, 
-  setAppLoading, 
   setAppError 
 } from './app.js';

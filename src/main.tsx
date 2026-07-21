@@ -43,9 +43,17 @@ import { initChunkHandler } from './lib/chunkErrorHandler.js';
 import { dailyWorker } from './features/diagnostics/DailyWorker.js';
 import { setFatalError } from './lib/store/index.js';
 import { setupQuerySync } from './lib/task-queue/querySync.js';
+import { initApp } from './store/index.js';
 
 async function init() {
   setupQuerySync();
+
+  // Await full application & auth initialization before rendering the tree
+  try {
+    await initApp();
+  } catch (err) {
+    logger.error("App and Auth initialization failed:", err);
+  }
 
   if (typeof window !== 'undefined') {
     // 1. Popup interception: if this is an OAuth popup callback, forward the query/hash results and close

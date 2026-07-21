@@ -28,7 +28,30 @@ const client = hc<AppType>(getBaseUrl(), {
     return headers;
   },
   fetch: async (input, init) => {
-    const response = await fetch(input, init);
+    const options = init || {};
+    let token = store.get(tokenAtom);
+
+    if (!token) {
+      try {
+        const { supabase } = await import('#lib/supabase.js');
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.access_token) {
+          token = data.session.access_token;
+        }
+      } catch (err) {
+        // ignore fallback errors
+      }
+    }
+
+    if (token) {
+      const headers = new Headers(options.headers);
+      if (!headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      options.headers = headers;
+    }
+
+    const response = await fetch(input, options);
     
     // We removed the global ErrorFactory.handle() here to prevent duplicate error toasts,
     // since ErrorFactory.unwrap() and query/mutation hooks already display the errors with better context.

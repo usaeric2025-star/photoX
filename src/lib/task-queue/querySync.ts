@@ -1,6 +1,8 @@
 import { queryClient } from '#lib/query/index.js';
 import { queryKeys } from '#lib/query/keys.js';
 import { scheduler } from './scheduler.js';
+import { ErrorFormatter } from '#lib/error/ErrorFormatter.js';
+import { feedback } from '#lib/feedback.js';
 
 type FlushableTimeout = ReturnType<typeof setTimeout> & { flushed?: boolean };
 let invalidateTimer: FlushableTimeout | null = null;
@@ -15,6 +17,34 @@ export function setupQuerySync(): () => void {
       case 'upload':
         pendingInvalidations.add('photos_list');
         scheduleInvalidation();
+        
+        try {
+          const results = (task.state as any).result;
+          if (Array.isArray(results)) {
+            const successCount = results.filter((r: any) => r.success && !r.duplicate).length;
+            const duplicateCount = results.filter((r: any) => r.success && r.duplicate).length;
+            const failCount = results.filter((r: any) => !r.success).length;
+
+            const t = ErrorFormatter.t;
+            const parts = [];
+            if (successCount > 0) parts.push(t.uploadSuccess(successCount));
+            if (duplicateCount > 0) parts.push(t.uploadSkipped(duplicateCount));
+            if (failCount > 0) parts.push(t.uploadFailed(failCount));
+
+            const msg = parts.join('，');
+            if (msg) {
+              if (failCount > 0) {
+                feedback.warning(msg);
+              } else if (successCount === 0 && duplicateCount > 0) {
+                feedback.info(msg);
+              } else {
+                feedback.success(msg);
+              }
+            }
+          }
+        } catch (e) {
+          // ignore notification error
+        }
         break;
       case 'ai-analyze':
         // ✅ 本地更新單條數據（不需防抖）

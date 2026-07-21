@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useTransition, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { initApp, appLoadingAtom, appErrorAtom } from '#src/store/index.js';
+import { initApp, authLoadingAtom, appErrorAtom } from '#src/store/index.js';
 import { usePublicSettings } from '#src/hooks/index.js';
 import { useAdminMode, usePermission } from './auth/useAuth.js';
 import { logger } from '#lib/logger.js';
@@ -71,7 +71,7 @@ export const useNormalizedLocation = useWouterLocation;
  * useAppInit
  */
 export function useAppInit() {
-  const isAppStoreLoading = useAtomValue(appLoadingAtom);
+  const isAppStoreLoading = useAtomValue(authLoadingAtom);
   const appError = useAtomValue(appErrorAtom) as Error | null;
   const { data: settings, error: settingsError, isLoading: isSettingsLoading } = usePublicSettings();
 

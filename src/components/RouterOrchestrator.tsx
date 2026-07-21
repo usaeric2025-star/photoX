@@ -60,48 +60,41 @@ export function RouterOrchestrator() {
       }}
     >
       <Router hook={useNormalizedLocation}>
-          <AnimatePresence>
-            {isCurrentAdmin ? (
-              <motion.div 
-                key="admin-dashboard"
-                variant="fade"
-                transition="easeOut"
-                className="flex-1 flex flex-col h-full w-full"
-              >
-                <ErrorBoundary context="AdminLayout">
-                  <AdminGuard>
-                    <AdminPage />
-                  </AdminGuard>
-                </ErrorBoundary>
-              </motion.div>
-            ) : (
-              <motion.div
-                key={groupKey}
-                variant="fade"
-                transition="easeOut"
-                className="flex-1 flex flex-col h-full w-full"
-              >
-                <ErrorBoundary context="PublicLayout">
-                  <Switch>
-                    <Route path="/" component={PublicPage} />
-                    <Route path="/photo/:photoId" component={PublicPage} />
-                    <Route path="/group/:slug" component={PublicGroupDetailPage} />
-                    <Route path="/category/:id" component={PublicPage} />
-                    <Route path="/tag/:id" component={PublicPage} />
-                    {/* Prevent visual 404 during exit animations to admin routes */}
-                    <Route path="/admin" component={() => null} />
-                    <Route path="/admin/:any*" component={() => null} />
-                    <Route path="/settings" component={() => null} />
-                    <Route path="/settings/:any*" component={() => null} />
-                    <Route path="/diagnostics" component={() => null} />
-                    <Route path="/diagnostics/:any*" component={() => null} />
-                    <Route component={NotFoundPage} />
-                  </Switch>
-                </ErrorBoundary>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <DialogContainer />
+        <AnimatePresence>
+          {isCurrentAdmin ? (
+            <motion.div 
+              key="admin-dashboard"
+              variant="fade"
+              transition="easeOut"
+              className="flex-1 flex flex-col h-full w-full"
+            >
+              <ErrorBoundary context="AdminLayout">
+                <AdminGuard>
+                  <AdminPage />
+                </AdminGuard>
+              </ErrorBoundary>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={groupKey}
+              variant="fade"
+              transition="easeOut"
+              className="flex-1 flex flex-col h-full w-full"
+            >
+              <ErrorBoundary context="PublicLayout">
+                <Switch>
+                  <Route path="/" component={PublicPage} />
+                  <Route path="/photo/:photoId" component={PublicPage} />
+                  <Route path="/group/:slug" component={PublicGroupDetailPage} />
+                  <Route path="/category/:id" component={PublicPage} />
+                  <Route path="/tag/:id" component={PublicPage} />
+                  <Route component={NotFoundPage} />
+                </Switch>
+              </ErrorBoundary>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <DialogContainer />
       </Router>
     </ErrorBoundary>
   );

@@ -35,8 +35,24 @@ function TaskItem({ task }: { task: Task }) {
 
   const progress = task.state.status === 'processing' ? task.state.progress : (task.state.status === 'completed' ? 1 : 0);
   const progressPercent = Math.min(100, Math.max(0, Math.round(progress * 100)));
-  const message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
   const results = (task.state.status === 'completed' || task.state.status === 'failed') ? (task.state as any).result : null;
+  let message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
+
+  if (task.state.status === 'completed' && task.type === 'upload' && Array.isArray(results)) {
+    const successCount = results.filter((r: any) => r.success && !r.duplicate).length;
+    const duplicateCount = results.filter((r: any) => r.success && r.duplicate).length;
+    const failCount = results.filter((r: any) => !r.success).length;
+
+    const parts = [];
+    if (successCount > 0) parts.push(t('uploadSuccess', successCount));
+    if (duplicateCount > 0) parts.push(t('uploadSkipped', duplicateCount));
+    if (failCount > 0) parts.push(t('uploadFailed', failCount));
+    
+    if (parts.length > 0) {
+      message = parts.join('，');
+    }
+  }
+
   const failedItems = Array.isArray(results) ? results.filter((r: any) => !r.success) : [];
   const [showDetails, setShowDetails] = React.useState(false);
 

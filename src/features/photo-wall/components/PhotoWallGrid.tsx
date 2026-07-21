@@ -96,6 +96,35 @@ export function PhotoWallGrid({
     return { current: scrollParent };
   }, [scrollParent]);
 
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+
+  // IntersectionObserver 雙重保障：當捲動到接近底部觸發器時，自動加載下一頁
+  useEffect(() => {
+    if (!hasMore || isLoading || isLoadingMore) return;
+
+    const trigger = loadMoreTriggerRef.current;
+    if (!trigger) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      {
+        root: scrollParent || null,
+        rootMargin: '400px', // 提前 400px 觸發加載，確保流暢度
+      }
+    );
+
+    observer.observe(trigger);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [scrollParent, hasMore, isLoading, isLoadingMore, handleLoadMore]);
+
   const renderItem = useCallback((photo: PhotoListItem, index?: number) => (
     <div className="w-full h-full" data-photo-id={photo.id}>
       <PhotoCard 
@@ -144,6 +173,11 @@ export function PhotoWallGrid({
         scrollThreshold={1200}
         overscan={800}
       />
+      
+      {/* 獨立、高可靠性之無限捲動觸發錨點 */}
+      {hasMore && !isLoading && !isLoadingMore && (
+        <div ref={loadMoreTriggerRef} className="h-4 w-full" id="infinite-scroll-trigger" />
+      )}
       
       {isLoadingMore && photos.length > 0 && (
         <div className="py-12 flex justify-center w-full">
