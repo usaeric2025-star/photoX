@@ -48,10 +48,6 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 }
 
 export function RouterOrchestrator() {
-  const [location] = useNormalizedLocation();
-  const groupKey = getRouteGroupKey(location);
-  const isCurrentAdmin = isAdminRoute(location);
-
   return (
     <ErrorBoundary 
       context="RouterOrchestrator"
@@ -59,57 +55,57 @@ export function RouterOrchestrator() {
         ErrorCapture.capture(error);
       }}
     >
-      <Router hook={useNormalizedLocation}>
-        <AnimatePresence>
-          {isCurrentAdmin ? (
-            <motion.div 
-              key="admin-dashboard"
-              variant="fade"
-              transition="easeOut"
-              className="flex-1 flex flex-col h-full w-full"
-            >
-              <ErrorBoundary context="AdminLayout">
-                <AdminGuard>
-                  <AdminPage />
-                </AdminGuard>
-              </ErrorBoundary>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={groupKey}
-              variant="fade"
-              transition="easeOut"
-              className="flex-1 flex flex-col h-full w-full"
-            >
-              <ErrorBoundary context="PublicLayout">
-                <Switch>
-                  <Route path="/admin/:subpath*">
-                    {() => (
-                      <AdminGuard>
-                        <AdminPage />
-                      </AdminGuard>
-                    )}
-                  </Route>
-                  <Route path="/admin">
-                    {() => (
-                      <AdminGuard>
-                        <AdminPage />
-                      </AdminGuard>
-                    )}
-                  </Route>
-                  <Route path="/" component={PublicPage} />
-                  <Route path="/photo/:photoId" component={PublicPage} />
-                  <Route path="/group/:slug" component={PublicGroupDetailPage} />
-                  <Route path="/category/:id" component={PublicPage} />
-                  <Route path="/tag/:id" component={PublicPage} />
-                  <Route component={NotFoundPage} />
-                </Switch>
-              </ErrorBoundary>
-            </motion.div>
+      <Switch>
+        <Route path="/admin/:subpath*">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
           )}
-        </AnimatePresence>
-        <DialogContainer />
-      </Router>
+        </Route>
+        <Route path="/admin">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
+          )}
+        </Route>
+        <Route path="/settings/:subpath*">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
+          )}
+        </Route>
+        <Route path="/settings">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
+          )}
+        </Route>
+        <Route path="/diagnostics/:subpath*">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
+          )}
+        </Route>
+        <Route path="/diagnostics">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
+          )}
+        </Route>
+        <Route path="/" component={PublicPage} />
+        <Route path="/photo/:photoId" component={PublicPage} />
+        <Route path="/group/:slug" component={PublicGroupDetailPage} />
+        <Route path="/category/:id" component={PublicPage} />
+        <Route path="/tag/:id" component={PublicPage} />
+        <Route component={NotFoundPage} />
+      </Switch>
+      <DialogContainer />
     </ErrorBoundary>
   );
 }

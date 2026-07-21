@@ -118,6 +118,7 @@ export function AdminPageContent() {
             <Route path={`${ADMIN_ROUTES.DIAGNOSTICS}/:subpath*`} component={AdminDiagRoute} />
             <Route path="/admin/diagnose" component={AdminDiagRoute} />
             <Route path="/admin/diagnose/:subpath*" component={AdminDiagRoute} />
+            <Route path="/diagnostics" component={AdminDiagRoute} />
             <Route path="/diagnostics/:subpath*" component={AdminDiagRoute} />
 
             <Route path={ADMIN_ROUTES.TASKS} component={AdminSettingsRoute} />
@@ -128,6 +129,7 @@ export function AdminPageContent() {
             <Route path={`${ADMIN_ROUTES.ERROR_LOGS}/:subpath*`} component={AdminSettingsRoute} />
             <Route path="/admin/system" component={AdminSettingsRoute} />
             <Route path="/admin/system/:subpath*" component={AdminSettingsRoute} />
+            <Route path="/settings" component={AdminSettingsRoute} />
             <Route path="/settings/:subpath*" component={AdminSettingsRoute} />
 
             <Route path={ADMIN_ROUTES.GROUP_DETAIL} component={AdminGroupDetailRoute} />
