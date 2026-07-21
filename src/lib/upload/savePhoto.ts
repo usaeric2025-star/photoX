@@ -5,7 +5,7 @@ import { ErrorFactory } from '#src/lib/error/ErrorFactory.js';
 /**
  * Save photo record to database
  */
-export async function savePhoto(record: PhotoRecord): Promise<string> {
+export async function savePhoto(record: Partial<PhotoRecord> & { id: string }): Promise<string> {
   const data = await ErrorFactory.unwrap<{ id: string }>(
     api.photos.upsert.$post({
       json: {

@@ -110,7 +110,8 @@ export const signIn = async () => {
         throw new Error('Failed to retrieve authorization URL from Supabase.');
       }
     } else {
-      const cleanRedirectUrl = window.location.origin + '/';
+      const currentPath = window.location.pathname + window.location.search + window.location.hash;
+      const cleanRedirectUrl = window.location.origin + (currentPath.startsWith('/') ? currentPath : '/' + currentPath);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { 

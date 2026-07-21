@@ -83,6 +83,20 @@ export function RouterOrchestrator() {
             >
               <ErrorBoundary context="PublicLayout">
                 <Switch>
+                  <Route path="/admin/:subpath*">
+                    {() => (
+                      <AdminGuard>
+                        <AdminPage />
+                      </AdminGuard>
+                    )}
+                  </Route>
+                  <Route path="/admin">
+                    {() => (
+                      <AdminGuard>
+                        <AdminPage />
+                      </AdminGuard>
+                    )}
+                  </Route>
                   <Route path="/" component={PublicPage} />
                   <Route path="/photo/:photoId" component={PublicPage} />
                   <Route path="/group/:slug" component={PublicGroupDetailPage} />

@@ -13,6 +13,12 @@ import { useAtomValue } from 'jotai';
 import { userAtom } from '#src/store/index.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { runBatchAnalysis } from '#src/features/ai/orchestration.js';
+import { feedback } from '#src/lib/feedback.js';
+
+export type UploadInput = 
+  | FileList 
+  | File[] 
+  | { files: FileList | File[]; asGroup?: boolean; groupId?: string };
 
 /**
  * updatePhoto (Standalone)
@@ -107,8 +113,26 @@ export function usePhotoMutations() {
   });
 
   const uploadMutation = useAppMutation({
-    mutationFn: async (files: FileList | File[]) => {
-      const fileList = Array.from(files);
+    mutationFn: async (input: UploadInput) => {
+      let rawFiles: FileList | File[];
+      let asGroup = false;
+      let targetGroupId: string | undefined = undefined;
+
+      if (input && typeof input === 'object' && 'files' in input && !Array.isArray(input)) {
+        rawFiles = input.files;
+        asGroup = !!input.asGroup;
+        targetGroupId = input.groupId;
+      } else {
+        rawFiles = input as FileList | File[];
+      }
+
+      const fileList = Array.from(rawFiles || []);
+      if (fileList.length === 0) return '';
+
+      if (asGroup && !targetGroupId) {
+        targetGroupId = generateId();
+      }
+
       const taskId = generateId();
       
       createTask({
@@ -116,10 +140,31 @@ export function usePhotoMutations() {
         type: 'upload',
         label: t('uploadingPhotos', fileList.length),
         execute: async (signal, onProgress) => {
-           return executeBatchUpload(fileList, user?.id || '')(signal, onProgress);
+           return executeBatchUpload(fileList, user?.id || '', { groupId: targetGroupId })(signal, onProgress);
         },
-        onComplete: () => {
+        onComplete: (results: any) => {
           invalidateAll();
+          
+          if (Array.isArray(results)) {
+            const total = fileList.length;
+            const successes = results.filter((r: any) => r.success && !r.duplicate);
+            const duplicates = results.filter((r: any) => r.duplicate);
+            const failures = results.filter((r: any) => !r.success);
+
+            if (duplicates.length === total) {
+              feedback.info(t('allPhotosDuplicated') || '所選照片在庫中均已存在（已自動排重跳過）');
+            } else if (failures.length === total) {
+              feedback.error(t('uploadFailed') || '照片上傳失敗');
+            } else {
+              let msg = `已完成 ${successes.length}/${total} 張照片上傳`;
+              if (duplicates.length > 0) {
+                msg += `（其中 ${duplicates.length} 張已有照片已自動排重）`;
+              }
+              feedback.success(msg);
+            }
+          } else {
+            feedback.success('照片上傳完成');
+          }
         }
       });
       return taskId;

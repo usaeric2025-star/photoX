@@ -84,10 +84,24 @@ export function useAppInit() {
   const isReady = !isAppStoreLoading;
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (typeof (window as any).__markAppReady === 'function') {
+        (window as any).__markAppReady();
+      } else {
+        (window as any).__APP_READY__ = true;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (isReady && typeof window !== 'undefined') {
-      (window as any).__APP_READY__ = true;
-      const btns = document.querySelectorAll("button");
-      btns.forEach(b => { if (b.innerText.includes("啟動過久")) b.remove(); });
+      if (typeof (window as any).__markAppReady === 'function') {
+        (window as any).__markAppReady();
+      }
+      const btns = document.querySelectorAll("button, div");
+      btns.forEach(b => { 
+        if (b.innerText && b.innerText.includes("啟動過久")) b.remove(); 
+      });
     }
   }, [isReady, isError]);
 

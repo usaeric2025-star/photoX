@@ -1,5 +1,5 @@
-import { useAtomValue } from 'jotai';
-import { uploadModeDialogOpenAtom } from '#src/store/index.js';
+import { useAtomValue, getDefaultStore } from 'jotai';
+import { uploadModeDialogOpenAtom, uploadAsGroupAtom } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
 import React, { Suspense, lazy, useEffect } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
@@ -110,19 +110,28 @@ export function AdminPageContent() {
         <ErrorBoundary>
           <Switch>
             <Route path={ADMIN_ROUTES.BATCH_EDIT} component={AdminBatchEditRoute} />
+            <Route path={`${ADMIN_ROUTES.BATCH_EDIT}/:subpath*`} component={AdminBatchEditRoute} />
             <Route path={ADMIN_ROUTES.BATCH} component={AdminBatchEditRoute} />
+            <Route path={`${ADMIN_ROUTES.BATCH}/:subpath*`} component={AdminBatchEditRoute} />
             
             <Route path={ADMIN_ROUTES.DIAGNOSTICS} component={AdminDiagRoute} />
+            <Route path={`${ADMIN_ROUTES.DIAGNOSTICS}/:subpath*`} component={AdminDiagRoute} />
             <Route path="/admin/diagnose" component={AdminDiagRoute} />
+            <Route path="/admin/diagnose/:subpath*" component={AdminDiagRoute} />
             <Route path="/diagnostics/:subpath*" component={AdminDiagRoute} />
 
             <Route path={ADMIN_ROUTES.TASKS} component={AdminSettingsRoute} />
+            <Route path={`${ADMIN_ROUTES.TASKS}/:subpath*`} component={AdminSettingsRoute} />
             <Route path={ADMIN_ROUTES.SETTINGS} component={AdminSettingsRoute} />
+            <Route path={`${ADMIN_ROUTES.SETTINGS}/:subpath*`} component={AdminSettingsRoute} />
             <Route path={ADMIN_ROUTES.ERROR_LOGS} component={AdminSettingsRoute} />
+            <Route path={`${ADMIN_ROUTES.ERROR_LOGS}/:subpath*`} component={AdminSettingsRoute} />
             <Route path="/admin/system" component={AdminSettingsRoute} />
+            <Route path="/admin/system/:subpath*" component={AdminSettingsRoute} />
             <Route path="/settings/:subpath*" component={AdminSettingsRoute} />
 
             <Route path={ADMIN_ROUTES.GROUP_DETAIL} component={AdminGroupDetailRoute} />
+            <Route path={`${ADMIN_ROUTES.GROUP_DETAIL_BASE}/:id/:subpath*`} component={AdminGroupDetailRoute} />
 
             {/* Admin Gallery as the default view for anything under /admin */}
             <Route path="/admin/:subpath*">
@@ -146,7 +155,11 @@ export function AdminPageContent() {
         type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
-            uploadFiles(e.target.files);
+            const isGroup = getDefaultStore().get(uploadAsGroupAtom);
+            uploadFiles({
+              files: e.target.files,
+              asGroup: isGroup
+            });
           }
           e.target.value = '';
         }}

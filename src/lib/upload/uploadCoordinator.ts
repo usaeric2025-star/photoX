@@ -24,6 +24,16 @@ export async function processUpload(task: UploadTask, onStatus?: (status: string
   const duplicate = await checkDuplicate(hash);
   if (duplicate.exists) {
     logger.info(`[Upload] Duplicate found for hash ${hash.substring(0, 8)}: ${duplicate.existingId}`);
+    if (task.groupId && duplicate.existingId) {
+      try {
+        await savePhoto({
+          id: duplicate.existingId,
+          groupId: task.groupId
+        });
+      } catch (err) {
+        logger.warn('[Upload] Failed to attach duplicate photo to group', err);
+      }
+    }
     return { success: true, duplicate: true, id: duplicate.existingId };
   }
 
