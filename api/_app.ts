@@ -58,7 +58,12 @@ apiApp.onError((err, c) => {
 
     const isAiPath = c.req.path.startsWith('/api/ai');
 
-    if (!isDbOrNetworkError && !isAiPath && (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound'))) {
+    if (isDbOrNetworkError) {
+        // 嚴格確保這類錯誤被標記為 500 或以上，不可回傳 404，以便前端觸發 Retry
+        return errorResponse(c, err, 500);
+    }
+
+    if (!isAiPath && (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound'))) {
         return errorResponse(c, err, 404);
     }
     if (err.message?.toLowerCase().includes('foreign key')) {

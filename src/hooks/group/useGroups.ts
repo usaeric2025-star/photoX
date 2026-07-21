@@ -240,9 +240,35 @@ export function useGroupMutations() {
 
   const setCoverMutation = useAppMutation({
     mutationFn: (args: { groupId: string; photoId: string | null }) => GroupService.setCover(args.groupId, args.photoId),
+    onMutate: async (args) => {
+      if (args.photoId) {
+        queryClient.setQueryData(queryKeys.photos.detail(args.photoId), (oldData: any) => {
+           if (!oldData) return oldData;
+           return { ...oldData, isGroupCover: true };
+        });
+        
+        // Optimitically update photo list
+        queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              items: page.items.map((item: any) => {
+                if (item.groupId === args.groupId) {
+                  return { ...item, isGroupCover: item.id === args.photoId };
+                }
+                return item;
+              })
+            }))
+          };
+        });
+      }
+    },
     onSuccess: () => {
       showToast.success(t('setAsCoverSuccess') || 'Set as cover');
       invalidateList();
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
     }
   });
 
