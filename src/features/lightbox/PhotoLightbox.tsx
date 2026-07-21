@@ -55,6 +55,20 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
   const currentDescLang = useAtomValue(descLangAtom);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [localToast, setLocalToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const handleShowFeedback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setLocalToast({ message, type });
+  }, []);
+
+  useEffect(() => {
+    if (localToast) {
+      const timer = setTimeout(() => {
+        setLocalToast(null);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [localToast]);
 
   // Native <dialog> visibility and body overflow locking
   useEffect(() => {
@@ -289,6 +303,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
                 onToggleInfo={() => setShowInfo(!showInfo)}
                 onEdit={onEdit}
                 onClose={onClose}
+                onShowFeedback={handleShowFeedback}
               />
 
               {/* Info Panel */}
@@ -298,6 +313,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
                 onLangChange={handleLangChange}
                 showInfo={showInfo}
                 currentPhoto={activePhoto}
+                onShowFeedback={handleShowFeedback}
               />
             </>
           )}
@@ -312,6 +328,18 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
             onSelect={handleSelect}
             currentIndex={currentIndex}
           />
+
+          {/* Local HUD Toast (Visible above native <dialog> top layer) */}
+          {localToast && (
+            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-[200] pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-200">
+              <div className={cn(
+                "px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl flex items-center gap-2 border select-none bg-black/90 text-white/90 border-white/10"
+              )}>
+                <Icon name={localToast.type === 'success' ? 'check' : 'alert-circle'} className={cn("w-3.5 h-3.5 shrink-0", localToast.type === 'success' ? 'text-emerald-400' : 'text-rose-400')} />
+                <span>{localToast.message}</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </dialog>

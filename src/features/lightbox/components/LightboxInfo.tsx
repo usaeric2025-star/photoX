@@ -5,12 +5,15 @@ import { usePhoto, usePhotoAIResult, usePermission, useAdminMode, useTranslation
 import { Photo } from '#src/types/photo.js';
 import { getLocalizedDisplay, translateDimensionLabelToEnglish } from '#src/utils/display.js';
 import { PLACEHOLDERS } from '#src/constants/config.js';
+import { copyToClipboard } from '#src/utils/clipboard.js';
+import { feedback } from '#lib/feedback.js';
 
 interface LightboxInfoProps {
   currentPhoto: Photo | { original: Photo };
   showInfo: boolean;
   lang: 'zh' | 'en' | 'ms';
   onLangChange: (lang: 'zh' | 'en' | 'ms') => void;
+  onShowFeedback?: (msg: string, type?: 'success' | 'error') => void;
 }
 
 /**
@@ -22,7 +25,8 @@ export function LightboxInfo({
   currentPhoto,
   showInfo,
   lang,
-  onLangChange
+  onLangChange,
+  onShowFeedback
 }: LightboxInfoProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -268,17 +272,32 @@ export function LightboxInfo({
                   <div className="flex items-center gap-3">
                      <span className="text-white/20">Ref: {photoData.itemCode || PLACEHOLDERS.EMPTY_VAL}</span>
                      <span className="text-white/20">|</span>
-                     <button 
-                       onClick={() => {
-                         navigator.clipboard.writeText(uuid);
-                         setCopied(true);
-                         setTimeout(() => setCopied(false), 2000);
-                       }}
-                       className="flex items-center gap-1.5 hover:text-white transition-colors"
-                     >
-                       <span>ID: {uuid.substring(uuid.length - 8)}</span>
-                       {copied ? <Icon name="check" className="w-2 h-2 text-emerald-400" /> : <Icon name="copy" className="w-2 h-2" />}
-                     </button>
+                      <button 
+                        onClick={async () => {
+                          const success = await copyToClipboard(uuid);
+                          if (success) {
+                            const msg = t('idCopied') || 'ID已複製';
+                            if (onShowFeedback) {
+                              onShowFeedback(msg, 'success');
+                            } else {
+                              feedback.success(msg);
+                            }
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                          } else {
+                            const msg = t('copyFailed') || '複製失敗';
+                            if (onShowFeedback) {
+                              onShowFeedback(msg, 'error');
+                            } else {
+                              feedback.error(msg);
+                            }
+                          }
+                        }}
+                        className="flex items-center gap-1.5 hover:text-white transition-colors"
+                      >
+                        <span>ID: {uuid.substring(uuid.length - 8)}</span>
+                        {copied ? <Icon name="check" className="w-2 h-2 text-emerald-400" /> : <Icon name="copy" className="w-2 h-2" />}
+                      </button>
                   </div>
                 </div>
               </div>

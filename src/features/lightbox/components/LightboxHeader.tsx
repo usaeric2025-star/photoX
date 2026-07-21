@@ -3,6 +3,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { feedback } from '#lib/feedback.js';
 import { Photo } from '#src/types/photo.js';
 import { usePermission, useAdminMode, useTranslation } from '#src/hooks/index.js';
+import { copyToClipboard } from '#src/utils/clipboard.js';
 
 interface LightboxHeaderProps {
   currentPhoto: Photo | { original: Photo };
@@ -12,6 +13,7 @@ interface LightboxHeaderProps {
   onToggleInfo: () => void;
   onEdit: (photoData: Photo) => void;
   onClose: () => void;
+  onShowFeedback?: (msg: string, type?: 'success' | 'error') => void;
 }
 
 /**
@@ -26,7 +28,8 @@ export function LightboxHeader({
   showInfo,
   onToggleInfo,
   onEdit,
-  onClose
+  onClose,
+  onShowFeedback
 }: LightboxHeaderProps) {
   const { t } = useTranslation();
   const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
@@ -37,13 +40,27 @@ export function LightboxHeader({
   const isAdminMode = useAdminMode();
   const canEdit = isAdminMode && can('photo:edit');
   
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const key = photoData.imageUrl || photoData.uri || '';
     if (key) {
       const url = key.startsWith('http') ? key : new URL(key, window.location.origin).toString();
-      navigator.clipboard.writeText(url);
-      feedback.success(t('imageLinkCopied'));
+      const success = await copyToClipboard(url);
+      if (success) {
+        const msg = t('imageLinkCopied') || '圖片連結已複製';
+        if (onShowFeedback) {
+          onShowFeedback(msg, 'success');
+        } else {
+          feedback.success(msg);
+        }
+      } else {
+        const msg = t('copyFailed') || '複製失敗';
+        if (onShowFeedback) {
+          onShowFeedback(msg, 'error');
+        } else {
+          feedback.error(msg);
+        }
+      }
     }
   };
 
