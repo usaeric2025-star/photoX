@@ -38,8 +38,10 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
   
   const handleSave = async () => {
     try {
-        await commit();
-        handleClose();
+        const success = await commit();
+        if (success) {
+          handleClose();
+        }
     } catch (e) {
         ErrorFactory.handle(e, { context: t('save') });
     }
@@ -59,16 +61,7 @@ function PhotoEditDialogInner({ isOpen, handleClose, editPhotoId }: { isOpen: bo
           <StandardModalLayout 
             onClose={handleInterceptClose}
             className="bg-surface-soft"
-            header={<DialogHeader onClose={handleInterceptClose} onDeleteClick={async () => {
-              logger.info('[PhotoEditDialog] Delete clicked for photo:', editPhotoId);
-              try {
-                await adminActions.deletePhoto.mutateAsync([editPhotoId]);
-                showToast.success(t('photoDeleted'));
-                handleClose();
-              } catch (e) {
-                ErrorFactory.handle(e, { context: t('deletePhotoAction') });
-              }
-            }} />}
+            header={<DialogHeader onClose={handleInterceptClose} />}
           >
             {isError ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 text-red-500">

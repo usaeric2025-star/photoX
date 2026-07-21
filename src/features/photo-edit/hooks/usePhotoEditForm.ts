@@ -27,7 +27,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
 
   const defaultValues = useMemo(() => PhotoEditFormService.getInitialValues(photo), [photo]);
 
-  const onSubmit = useCallback(async (values: PhotoEditFormData) => {
+  const onSubmit = useCallback(async (values: PhotoEditFormData, submitOpts?: { silent?: boolean }) => {
     try {
       // 驗證選擇
       if (values.categoryId && !categories.find(c => String(c.id) === String(values.categoryId))) {
@@ -49,17 +49,21 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
         formRef.current.reset(values);
       }
       
-      showToast.success(t('saveSuccess') || '保存成功');
-      onSuccess?.();
+      if (!submitOpts?.silent) {
+        showToast.success(t('saveSuccess') || '保存成功');
+      }
     } catch (error) {
       ErrorFactory.handle(error as Error, { context: t('saveFailed') || '保存失敗' });
+      throw error; // Rethrow so commit can catch it
     }
-  }, [photoId, photo, editPhotoAsync, onSuccess, categories, manufacturers, t]);
+  }, [photoId, photo, editPhotoAsync, categories, manufacturers, t]);
 
   const formObj = useAppForm({
     schema: PhotoEditSchema,
     defaultValues,
-    onSubmit
+    onSubmit: async ({ value }) => {
+       await onSubmit(value);
+    }
   });
 
   const { form } = formObj;
@@ -70,15 +74,19 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   useEffect(() => {
     if (!isDirty || !photoId) return;
 
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       // 僅在表單有效且標記為 dirty 時自動保存
       if (form.state.isValid && form.state.isDirty) {
-        form.handleSubmit();
+        try {
+          await onSubmit(form.state.values, { silent: true });
+        } catch (e) {
+          // Silent catch
+        }
       }
     }, 2000); // 2秒延遲
 
     return () => clearTimeout(timer);
-  }, [form, isDirty, photoId]);
+  }, [form, isDirty, photoId, onSubmit]);
 
   // 表單數據同步
   useEffect(() => {
@@ -127,7 +135,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
     resolveAITags();
   }, [photo, allTags, form, defaultValues.tags]);
 
-  const commit = useCallback(async (data?: PhotoEditFormData) => {
+  const commit = useCallback(async (data?: PhotoEditFormData): Promise<boolean> => {
     if (data) {
       Object.entries(data).forEach(([key, value]) => {
         form.setFieldValue(key as keyof PhotoEditFormData, value as never);
@@ -157,10 +165,12 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
 
       if (errorList.length > 0) {
         showToast.error(`${t('saveFailed') || '保存失败'}: ${errorList.join(', ')}`);
-        return;
+        return false;
       }
+      return true;
     } catch (err) {
       ErrorFactory.handle(err as Error, { context: 'PhotoEdit.commit' });
+      return false;
     }
   }, [form, t]);
 

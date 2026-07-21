@@ -8,17 +8,15 @@ import { useDialogHeaderActions } from "./hooks/useDialogHeaderActions.js";
 
 interface DialogHeaderProps {
   onClose: () => void;
-  onDeleteClick: () => void;
 }
 
 /**
  * DialogHeader
  * 
- * 照片編輯對話框的首部，包含 AI 識別、設為封面、移出合組、刪除與保存按鈕。
+ * 照片編輯對話框的首部，包含 AI 識別、移出合組與保存按鈕。
  */
 export function DialogHeader({
   onClose,
-  onDeleteClick,
 }: DialogHeaderProps) {
   const { t } = useTranslation();
   const { form } = usePhotoEditSessionContext();
@@ -32,9 +30,7 @@ export function DialogHeader({
     editPhotoId,
     onRemoveFromGroup,
     onAiAnalyze,
-    onSave,
-    isCoverPending,
-    setCover
+    onSave
   } = useDialogHeaderActions(onClose);
 
   const l = {
@@ -94,29 +90,7 @@ export function DialogHeader({
           </button>
         </div>
 
-        {/* 設為封面 */}
-        {isPartOfGroup && (
-          <form.Subscribe selector={(state: { values: PhotoEditFormData }) => state.values.isGroupCover}>
-            {(isGroupCover: boolean | undefined) => {
-              const active = !!isGroupCover;
-              return (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const newState = !active;
-                    form.setFieldValue('isGroupCover', newState);
-                    await setCover(newState);
-                  }}
-                  title={l.cover}
-                  disabled={isCoverPending}
-                  className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-amber-200 shadow-sm transition-all ${active ? "bg-amber-500 text-white border-amber-500 hover:bg-amber-600" : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50 active:scale-95"} ${isCoverPending ? "opacity-50 cursor-wait" : ""}`}
-                >
-                  <Icon name="star" size={20} className={active ? "fill-white" : "fill-transparent"} />
-                </button>
-              );
-            }}
-          </form.Subscribe>
-        )}
+
 
         {/* 移出合組 */}
         {isPartOfGroup && (
@@ -130,18 +104,7 @@ export function DialogHeader({
           </button>
         )}
 
-        {/* 刪除按鈕 */}
-        {editPhotoId && (
-          <button
-            type="button"
-            onClick={onDeleteClick}
-            disabled={isPending || isAnalyzing}
-            className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold disabled:opacity-50"
-            title={t('delete') || '刪除'}
-          >
-            <Icon name="trash-2" size={18} />
-          </button>
-        )}
+
 
         {/* 保存按鈕 */}
         <button

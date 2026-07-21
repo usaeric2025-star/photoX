@@ -61,8 +61,10 @@ export function useDialogHeaderActions(onClose: () => void) {
 
   const onSave = async () => {
     try {
-      await commit();
-      // onClose is handled by onSuccess callback in PhotoEditSessionProvider
+      const success = await commit();
+      if (success) {
+        onClose();
+      }
     } catch (e) {
       ErrorFactory.handle(e as Error, { context: '[PhotoEdit] Save error intercepted in header', silent: true });
     }
@@ -77,17 +79,6 @@ export function useDialogHeaderActions(onClose: () => void) {
     editPhotoId,
     onRemoveFromGroup,
     onAiAnalyze,
-    onSave,
-    isCoverPending: setCover.isPending,
-    setCover: async (newState: boolean) => {
-       if (detailPhoto?.groupId && editPhotoId) {
-         try {
-           await setCover.mutateAsync({ groupId: detailPhoto.groupId, photoId: newState ? editPhotoId : null });
-           showToast.success(t('setAsCoverSuccess') || 'Set as cover');
-         } catch (e) {
-           ErrorFactory.handle(e as Error, { context: t('setAsCoverFailed') || '設置封面失敗' });
-         }
-       }
-    }
+    onSave
   };
 }

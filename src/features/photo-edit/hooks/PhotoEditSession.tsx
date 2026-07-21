@@ -8,7 +8,7 @@ interface PhotoEditSessionContextValue {
   isDirty: boolean;
   isPending: boolean;
   isSubmitting: boolean;
-  commit: (data?: PhotoEditFormData) => Promise<void>;
+  commit: (data?: PhotoEditFormData) => Promise<boolean>;
   discard: () => void;
   form: ReturnType<typeof useAppForm<PhotoEditFormData>>['form'];
   photoId: string;
