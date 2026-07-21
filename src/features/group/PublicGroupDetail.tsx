@@ -19,7 +19,7 @@ import { useRoute } from 'wouter';
 export function PublicGroupDetailPage() {
   const [match, params] = useRoute<{ slug: string }>('/group/:slug');
   const { groupId: fGroupId, photoId } = useFilters();
-  const [location] = useNormalizedLocation();
+  const [location, setLocation] = useNormalizedLocation();
   
   const groupId = params?.slug || fGroupId;
   
@@ -75,6 +75,40 @@ export function PublicGroupDetailPage() {
       return () => clearTimeout(timer);
     }
   }, [anchor, photoId, loading, photos.length]);
+
+  if (loading || !groupId) {
+    return (
+      <GroupDetailLayout
+        loading={true}
+        error={null}
+        group={undefined}
+        photos={[]}
+        hasNextPage={false}
+        isFetchingNextPage={false}
+        fetchNextPage={() => {}}
+        onRetry={() => {}}
+        header={<div className="p-4 text-center text-slate-500 font-semibold bg-white border-b">{t('loading')}...</div>}
+      />
+    );
+  }
+
+  if (!group) {
+    return (
+      <GroupDetailLayout
+        loading={false}
+        error={error}
+        group={undefined}
+        photos={[]}
+        hasNextPage={false}
+        isFetchingNextPage={false}
+        fetchNextPage={() => {}}
+        emptyTitle={t('groupNotFound') || "分组不存在或已合并"}
+        emptyMessage={t('groupNotFoundDesc') || "该分组可能已被删除、解散或合并至其他分组。正在跳转回首頁..."}
+        onRetry={() => setLocation('/')}
+        header={<div className="p-4 text-center text-slate-500 font-semibold bg-white border-b">分组不存在</div>}
+      />
+    );
+  }
 
   return (
     <GroupDetailLayout
