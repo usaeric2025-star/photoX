@@ -151,21 +151,30 @@ export function usePhotoMutations() {
  * useAIBatchAnalysis
  */
 export function useAIBatchAnalysis() {
-  const { t, uiTranslations: labels } = useTranslation();
-  const { invalidateList } = useInvalidatePhotos();
+  const { t } = useTranslation();
+  const user = useAtomValue(userAtom);
 
   const aiAnalyzeMutation = useAppMutation({
     mutationFn: async (photos: any[]) => {
-      return runBatchAnalysis({
-        targetPhotos: photos,
-        onProgress: () => {} // Progress handled internally or ignored here
+      const { executeTask } = await import('#lib/task-queue/index.js');
+      return executeTask({
+        label: t('aiAnalyze') || 'AI 識別中',
+        type: 'ai-analyze',
+        userId: user?.id,
+        execute: async (signal, onProgress) => {
+          return runBatchAnalysis({
+            targetPhotos: photos,
+            onProgress,
+            signal
+          });
+        }
       });
     }
   });
 
   return {
     aiAnalyzeMutation,
-    handleBatchAiAnalyze: aiAnalyzeMutation.mutate,
+    handleBatchAiAnalyze: aiAnalyzeMutation.mutateAsync,
     isAiAnalyzing: aiAnalyzeMutation.isPending
   };
 }

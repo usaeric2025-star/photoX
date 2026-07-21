@@ -112,28 +112,11 @@ export const executeBatchUpload = (
   // 4. Summarize Results
   const successes = uploadResults.filter(r => r.success && !r.duplicate);
   
-  import('#lib/ui/toast.js').then(({ showToast }) => {
-    if (successes.length > 0) {
-      let msg = `成功上傳 ${successes.length} 張。`;
-      if (skippedCount > 0) msg += ` 跳過重複 ${skippedCount} 張。`;
-      showToast.success(msg);
-    } else if (skippedCount > 0) {
-      showToast.info(`已跳過 ${skippedCount} 張重複照片。`);
-    }
-
-    if (failedCount > 0) {
-      const failures = uploadResults.filter(r => !r.success);
-      const detailMsg = failures.map(f => `${f.name || '未知文件'}: ${f.error || '未知錯誤'}`).join('\n');
-      
-      const appError = ErrorFactory.create(`上傳失敗 ${failedCount} 張。`, {
-        code: 'UPLOAD_FAILED' as any,
-        userMessage: `上傳失敗 ${failedCount} 張。`,
-        originalError: new Error(detailMsg),
-        context: { failures }
-      });
-      showToast.error(appError);
-    }
-  });
+  if (failedCount > 0 && successes.length === 0) {
+    const failures = uploadResults.filter(r => !r.success);
+    const detailMsg = failures.map(f => `${f.name || '未知文件'}: ${f.error || '未知錯誤'}`).join('\n');
+    throw new Error(`上傳失敗 ${failedCount} 張: \n${detailMsg}`);
+  }
 
   // Final invalidate
   queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });

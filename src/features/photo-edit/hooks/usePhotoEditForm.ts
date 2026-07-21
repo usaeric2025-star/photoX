@@ -61,8 +61,8 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   const formObj = useAppForm({
     schema: PhotoEditSchema,
     defaultValues,
-    onSubmit: async ({ value }) => {
-       await onSubmit(value);
+    onSubmit: async (values) => {
+       await onSubmit(values);
     }
   });
 

@@ -45,56 +45,47 @@ export function usePhotoEditAI() {
     mutationFn: async ({ imageUrl }: { imageUrl: string }) => {
       if (!editPhotoId) throw new Error('Missing editPhotoId');
       
-      return executeTask({
-        label: t('aiAnalyze') || 'AI 識別中',
-        type: 'ai-analyze',
-        userId: user?.id,
-        execute: async (signal, onProgress) => {
-          onProgress(0.3, t('aiAnalyzingAttributes') || '正在識別屬性');
-          const rawResult = await AIService.analyze({ id: editPhotoId, thumbnailUrl: imageUrl } as any);
-          
-          onProgress(0.7, t('aiParsingResult') || '正在解析結果');
-          const updates = await AIService.parseToUpdates(rawResult, allTags, categories);
+      const rawResult = await AIService.analyze({ id: editPhotoId, thumbnailUrl: imageUrl } as any);
+      
+      const updates = await AIService.parseToUpdates(rawResult, allTags, categories);
 
-          // AI 標籤解析與回填
-          if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
-            const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
-            const finalTags = Array.from(new Set([
-              ...(updates.resolvedTagIds as number[]).map(id => allTags.find(t => Number(t.id) === id)),
-              ...resolvedTags
-            ])).filter(Boolean) as Tag[];
-            updates.tags = finalTags.slice(0, 10);
-            invalidateTags();
-          }
+      // AI 標籤解析與回填
+      if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
+        const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
+        const finalTags = Array.from(new Set([
+          ...(updates.resolvedTagIds as number[]).map(id => allTags.find(t => Number(t.id) === id)),
+          ...resolvedTags
+        ])).filter(Boolean) as Tag[];
+        updates.tags = finalTags.slice(0, 10);
+        invalidateTags();
+      }
 
-          // 尺寸翻譯處理
-          if (Array.isArray(updates.dimensions)) {
-            updates.dimensions = updates.dimensions.map((d: any) => ({
-              ...d,
-              label: translateDimensionLabelToEnglish(String(d.label || t('dimensions'))),
-              unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
-              isAi: true,
-              isAiEstimated: true
-            }));
-          }
+      // 尺寸翻譯處理
+      if (Array.isArray(updates.dimensions)) {
+        updates.dimensions = updates.dimensions.map((d: any) => ({
+          ...d,
+          label: translateDimensionLabelToEnglish(String(d.label || t('dimensions'))),
+          unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
+          isAi: true,
+          isAiEstimated: true
+        }));
+      }
 
-          // 回填表單
-          Object.entries(updates).forEach(([key, value]) => {
-            if (!['unresolvedTagNames', 'resolvedTagIds'].includes(key)) {
-              form.setFieldValue(key as keyof PhotoEditFormData, value as never);
-            }
-          });
-
-          // 自動保存到後端
-          await updatePhoto.mutateAsync({ id: editPhotoId, updates });
-          
-          invalidateDetail(editPhotoId);
-          invalidateList();
-          queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
-          
-          return rawResult;
+      // 回填表單
+      Object.entries(updates).forEach(([key, value]) => {
+        if (!['unresolvedTagNames', 'resolvedTagIds'].includes(key)) {
+          form.setFieldValue(key as keyof PhotoEditFormData, value as never);
         }
       });
+
+      // 自動保存到後端
+      await updatePhoto.mutateAsync({ id: editPhotoId, updates });
+      
+      invalidateDetail(editPhotoId);
+      invalidateList();
+      queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
+      
+      return rawResult;
     },
     onSuccess: () => {
       showToast.success(t('aiAnalyzeSuccessSimple') || '識別成功');

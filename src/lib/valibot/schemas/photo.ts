@@ -19,7 +19,7 @@ const DimensionSchema = v.object({
 });
 
 const getPhotoEditSchema = (t: TranslationType) => v.object({
-  name: v.pipe(v.string(), v.minLength(1, t.titleRequired || 'Required'), v.maxLength(100, t.titleTooLong || 'Too long')),
+  name: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(100, t.titleTooLong || 'Too long')))),
   description: v.optional(v.nullable(v.union([TranslationSchema, v.string()]))),
   categoryId: v.optional(v.nullable(v.union([v.string(), v.number()]))),
   manufacturerId: v.optional(v.nullable(v.union([v.string(), v.number()]))),

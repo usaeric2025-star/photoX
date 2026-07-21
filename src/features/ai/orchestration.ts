@@ -91,15 +91,20 @@ const analyzeAndSavePhoto = async (
 
 export async function runBatchAnalysis({
   targetPhotos,
-  onProgress
+  onProgress,
+  signal
 }: {
   targetPhotos: Photo[];
   onProgress: (progress: number, message?: string) => void;
+  signal?: AbortSignal;
 }) {
   const totalPhotosToProcess = targetPhotos.length;
   let successCount = 0;
 
   for (let i = 0; i < targetPhotos.length; i++) {
+    if (signal?.aborted) {
+      throw new Error('User cancelled AI analysis');
+    }
     const p = targetPhotos[i];
     const currentProgress = ((i) / totalPhotosToProcess);
 

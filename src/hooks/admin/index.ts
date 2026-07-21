@@ -77,7 +77,7 @@ export function useAdminActions() {
   const { t } = useTranslation();
   const { invalidateAll } = useInvalidatePhotos();
   const { editMutation, deleteMutation, batchEditMutation, togglePinMutation } = usePhotoMutations();
-  const { handleBatchAiAnalyze } = useAIBatchAnalysis();
+  const { handleBatchAiAnalyze, isAiAnalyzing } = useAIBatchAnalysis();
   const selectedIds = useSelectedIds();
   const queryClient = useQueryClient();
   const { auditResult, isAuditing, runAudit, deduplicate, runDailyCleanup } = useSystemMaintenance();
@@ -91,7 +91,12 @@ export function useAdminActions() {
       return;
     }
     const filteredPhotos = AdminService.filterPhotosWithGroups(photosToProcess, targetIds);
-    handleBatchAiAnalyze(filteredPhotos as any);
+    
+    try {
+      await handleBatchAiAnalyze(filteredPhotos as any);
+    } catch (e) {
+      ErrorFactory.handle(e as Error, { context: 'AI Batch Analysis' });
+    }
   };
 
   return {
@@ -101,6 +106,7 @@ export function useAdminActions() {
     togglePin: togglePinMutation,
     handleBatchAiIdentifyTrigger,
     handleBatchAiAnalyze,
+    isAiAnalyzing,
     auditResult,
     isAuditing,
     runAudit,

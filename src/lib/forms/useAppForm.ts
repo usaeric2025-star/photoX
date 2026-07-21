@@ -1,5 +1,5 @@
 import { useForm } from '@tanstack/react-form';
-import type * as v from 'valibot';
+import * as v from 'valibot';
 
 interface UseAppFormOptions<TData> {
     schema?: v.GenericSchema | v.GenericSchemaAsync;
@@ -16,9 +16,15 @@ export function useAppForm<TData>({
 }: UseAppFormOptions<TData>) {
     const form = useForm({
         defaultValues: defaultValues as any,
-        validators: {
-            onChange: schema as any,
-        },
+        validators: schema ? {
+            onChange: ({ value }) => {
+                const result = v.safeParse(schema as v.GenericSchema, value);
+                if (!result.success) {
+                    return result.issues.map(i => i.message).join(', ');
+                }
+                return undefined;
+            }
+        } : undefined,
         onSubmit: async ({ value }) => {
             await onSubmit(value as TData);
         },

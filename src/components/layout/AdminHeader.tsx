@@ -15,7 +15,7 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ className }: AdminHeaderProps) {
-  const { handleBatchAiIdentifyTrigger } = useAdminActions();
+  const { handleBatchAiIdentifyTrigger, isAiAnalyzing } = useAdminActions();
   const user = useAtomValue(userAtom);
   
   const { settings } = useSettings();
@@ -67,6 +67,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           multiSelect={isMultiSelect}
           toggleMode={toggleMode}
           batchAiIdentify={handleBatchAiIdentifyTrigger}
+          isAiAnalyzing={isAiAnalyzing}
           taskCount={taskCount}
           handleAuthAction={() => setLocation('/')}
           t={t}

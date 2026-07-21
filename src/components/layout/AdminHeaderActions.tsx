@@ -14,6 +14,7 @@ interface AdminHeaderActionsProps {
   multiSelect: boolean;
   toggleMode: () => void;
   batchAiIdentify: () => void;
+  isAiAnalyzing?: boolean;
   taskCount: number;
   handleAuthAction: () => void;
   theme: Theme;
@@ -26,7 +27,8 @@ interface AdminHeaderActionsProps {
 export function AdminHeaderActions({ 
   multiSelect, 
   toggleMode, 
-  batchAiIdentify, 
+  batchAiIdentify,
+  isAiAnalyzing,
   taskCount, 
   handleAuthAction, 
   theme, 
@@ -69,10 +71,15 @@ export function AdminHeaderActions({
       <button
         type="button"
         onClick={() => batchAiIdentify()}
-        className={cn("w-9 h-9", theme.button)}
+        disabled={isAiAnalyzing}
+        className={cn("w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed", theme.button)}
         title={t('aiSmartIdentify')}
       >
-        <Icon name="sparkles" size={18} className="animate-pulse" />
+        {isAiAnalyzing ? (
+          <Icon name="loader" size={18} className="animate-spin text-blue-600" />
+        ) : (
+          <Icon name="sparkles" size={18} className="animate-pulse" />
+        )}
       </button>
 
       <button
