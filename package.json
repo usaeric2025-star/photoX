@@ -56,14 +56,13 @@
     "jotai": "^2.20.2",
     "lite-sleek": "1.1.0",
     "lucide-react": "^1.23.0",
-    "nuqs": "^2.9.0",
     "postgres": "3.4.9",
     "react": "19.2.7",
     "react-dom": "19.2.7",
+    "react-router-dom": "^7.18.1",
     "sonner": "2.0.7",
     "tailwind-merge": "3.6.0",
-    "valibot": "^1.4.2",
-    "wouter": "^3.10.0"
+    "valibot": "^1.4.2"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",

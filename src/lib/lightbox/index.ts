@@ -6,7 +6,7 @@ import { closeLightboxAtom } from '#src/store/index.js';
 import { LightboxSlide } from './types.js';
 import { } from '#lib/store/index.js';
 import { useFilters } from '#src/hooks/index.js';
-import { useRoute } from 'wouter';
+import { useParams } from 'react-router-dom';
 
 export function useLightbox() {
   const slides = useAtomValue(lightboxSlidesAtom);
@@ -19,11 +19,9 @@ export function useLightbox() {
   
   
   const { photoId: queryPhotoId, setPhotoId, modal } = useFilters();
-  const [isPhotoRoute, params] = useRoute<{ photoId: string }>('/photo/:photoId');
-  const [isAdminPhotoRoute, adminParams] = useRoute<{ photoId: string }>('/admin/photo/:photoId');
+  const routeParams = useParams<{ photoId?: string }>();
   
-  const photoId = queryPhotoId || 
-    (isPhotoRoute ? params?.photoId : (isAdminPhotoRoute ? adminParams?.photoId : null));
+  const photoId = queryPhotoId || routeParams?.photoId || null;
 
   const isOpen = !!photoId;
   const isEditing = modal === 'edit';

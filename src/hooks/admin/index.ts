@@ -14,7 +14,7 @@ import { api } from '#lib/api.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { executeTask, createTask } from '#lib/task-queue/index.js';
 import { ISSUE_ACTIONS, PreviewResult } from "#src/features/diagnostics/issueActions.js";
-import { useLocation } from 'wouter';
+import { useLocation } from 'react-router-dom';
 import { tasksAtom } from '#src/lib/task-queue/taskStore.js';
 import { Task, TaskState } from '#lib/task-queue/index.js';
 
@@ -317,7 +317,8 @@ export interface UnifiedTask {
  */
 export function useGlobalTasks() {
   const { t } = useTranslation();
-  const [location] = useLocation();
+  const locationObj = useLocation();
+  const location = locationObj.pathname;
   const sessionTasksMap = useAtomValue(tasksAtom);
 
   const { data: remoteJobs, isPending: isPendingJobs, refetch: refetchJobs } = useAppQuery(

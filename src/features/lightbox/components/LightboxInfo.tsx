@@ -100,6 +100,27 @@ export function LightboxInfo({
                   );
                 })}
               </div>
+
+              <button
+                onClick={() => {
+                  const url = photoData.image_url || photoData.url;
+                  if (url) {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${title || 'photo'}.jpg`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    feedback.success(t('downloadSuccess') || '下載成功');
+                  } else {
+                    feedback.error(t('downloadFailed') || '下載失敗');
+                  }
+                }}
+                className="w-full py-2.5 px-4 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all border border-white/10 shadow-sm"
+              >
+                <Icon name="download" className="w-4 h-4 text-white/80" />
+                <span>{t('download') || '下載照片'}</span>
+              </button>
             </div>
             
             {/* Basic Info Section */}

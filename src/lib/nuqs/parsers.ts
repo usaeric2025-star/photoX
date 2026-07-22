@@ -1,71 +1,84 @@
-import { parseAsString, parseAsJson, parseAsBoolean, parseAsInteger } from 'nuqs';
-import * as v from 'valibot';
-import { parseWithValibot } from '#lib/valibot/adapters/nuqs.js';
-import { SortSchema } from '#lib/valibot/schemas/filters.js';
-import { PageSchema, LimitSchema } from '#lib/valibot/schemas/pagination.js';
+export const parseAsString = {
+  parse: (val: string | null) => val || '',
+  serialize: (val: string) => val,
+};
 
-// Photo ID Parser
-export const parseAsPhotoId = parseWithValibot(v.string()).withDefault('');
+export const searchParser = {
+  parse: (val: string | null) => val || '',
+  serialize: (val: string) => val,
+};
 
-// Search Query Parser
-export const searchParser = parseAsString.withDefault('');
+export const categoryParser = {
+  parse: (val: string | null) => val || '',
+  serialize: (val: string) => val,
+};
 
-// Category Parser
-export const categoryParser = parseAsString.withDefault('');
+export const categoriesParser = {
+  parse: (val: string | null) => (val ? val.split(',').filter(Boolean) : null),
+  serialize: (val: string[]) => val.join(','),
+};
 
-// Generic Array Parser (for URL compression via JSON)
-export function parseAsArray<T = string>(defaultValue: T[] = []) {
-  return parseAsJson<T[]>((value) => {
-    if (!Array.isArray(value)) return defaultValue;
-    // 精準定位：過濾掉非字符串（如果是 ID 數組）或空值，防止報錯
-    return value.filter(v => typeof v === 'string' && v.trim() !== '') as T[];
-  }).withDefault(defaultValue);
-}
+export const tagsParser = {
+  parse: (val: string | null) => (val ? val.split(',').filter(Boolean) : null),
+  serialize: (val: string[]) => val.join(','),
+};
 
-// Tags Parser (Array of strings)
-export const tagsParser = parseAsArray<string>([]);
+export const sortParser = {
+  parse: (val: string | null) => val || 'newest',
+  serialize: (val: string) => val,
+};
 
-// Categories Parser (Array of strings)
-export const categoriesParser = parseAsArray<string>([]);
+export const groupIdParser = {
+  parse: (val: string | null) => val || '',
+  serialize: (val: string) => val,
+};
 
-// Groups Parser (Array of strings)
-export const groupsParser = parseAsArray<string>([]);
+export const groupsParser = {
+  parse: (val: string | null) => (val ? val.split(',').filter(Boolean) : null),
+  serialize: (val: string[]) => val.join(','),
+};
 
-// Selected IDs Parser
-export const selectedIdsParser = parseAsArray<string>([]);
+export const batchParser = {
+  parse: (val: string | null) => val === 'true' || val === '1',
+  serialize: (val: boolean) => (val ? 'true' : ''),
+};
 
-// Sort Parser (使用 Valibot)
-export const sortParser = parseWithValibot(SortSchema).withDefault('newest');
+export const selectedIdsParser = {
+  parse: (val: string | null) => (val ? val.split(',').filter(Boolean) : null),
+  serialize: (val: string[]) => val.join(','),
+};
 
-// Status Parser
-const statusParser = parseAsString.withDefault('all');
+export const showGroupsCollapsedParser = {
+  parse: (val: string | null) => (val === null ? true : val === 'true'),
+  serialize: (val: boolean) => (val ? 'true' : 'false'),
+};
 
-// Batch Parser
-export const batchParser = parseAsBoolean.withDefault(false);
+export const anchorParser = {
+  parse: (val: string | null) => val || '',
+  serialize: (val: string) => val,
+};
 
-// Modal Parser
-export const modalParser = parseAsString.withDefault('none');
+export const modalParser = {
+  parse: (val: string | null) => val || 'none',
+  serialize: (val: string) => val,
+};
 
-// Page Parser (使用 Valibot)
-const pageParser = parseWithValibot(PageSchema).withDefault(1);
+export const parseAsPhotoId = {
+  parse: (val: string | null) => val || '',
+  serialize: (val: string) => val,
+};
 
-// Limit Parser (使用 Valibot)
-const limitParser = parseWithValibot(LimitSchema).withDefault(20);
+export const columnsParser = {
+  parse: (val: string | null) => val || '',
+  serialize: (val: string) => val,
+};
 
-// Group ID Parser
-export const groupIdParser = parseAsString.withDefault('');
+export const tabParser = {
+  parse: (val: string | null) => val || '',
+  serialize: (val: string) => val,
+};
 
-// View Parser (grid | list)
-const viewParser = parseAsString.withDefault('grid');
-
-// Anchor Parser (for scrolling to photo)
-export const anchorParser = parseAsBoolean.withDefault(false);
-
-// Show Groups Collapsed Parser
-export const showGroupsCollapsedParser = parseAsBoolean.withDefault(true);
-
-// Tab Parser
-export const tabParser = parseAsString.withDefault('stats');
-
-// Columns Parser
-export const columnsParser = parseAsInteger.withDefault(3);
+export const parseAsArray = {
+  parse: (val: string | null) => (val ? val.split(',').filter(Boolean) : []),
+  serialize: (val: string[]) => val.join(','),
+};

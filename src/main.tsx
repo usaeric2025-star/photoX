@@ -24,14 +24,9 @@ if (typeof window !== 'undefined') {
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Analytics } from '@vercel/analytics/react';
-import { NuqsAdapter } from 'nuqs/adapters/react';
-import { Router } from 'wouter';
-import { useWouterLocation } from '#src/hooks/core/index.js';
-import { syncHistoryWithWouter } from '#src/lib/routing/history-sync.js';
+
 import App from './App.js';
 
-// Sync history before app initialization to ensure all pushState/replaceState calls are tracked
-syncHistoryWithWouter();
 import { queryClient, asyncPersister } from '#src/lib/query/index.js';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { ErrorFactory } from './lib/error/ErrorFactory.js';
@@ -125,15 +120,11 @@ async function init() {
             maxAge: 1000 * 60 * 60 * 24 * 7,
           }}
         >
-          <NuqsAdapter>
-            <Router hook={useWouterLocation}>
-              <ErrorBoundary>
-                <App />
-                <FatalErrorOverlay />
-                <Analytics />
-              </ErrorBoundary>
-            </Router>
-          </NuqsAdapter>
+          <ErrorBoundary>
+              <App />
+              <FatalErrorOverlay />
+              <Analytics />
+            </ErrorBoundary>
         </PersistQueryClientProvider>
       </StrictMode>
     );

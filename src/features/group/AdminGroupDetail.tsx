@@ -12,7 +12,7 @@ import { AdminGroupHeader } from './components/AdminGroupHeader.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 import { GroupDetailLayout } from './components/GroupDetailLayout.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
-import { useRoute } from 'wouter';
+import { useParams } from 'react-router-dom';
 
 /**
  * AdminGroupDetailPage
@@ -20,11 +20,11 @@ import { useRoute } from 'wouter';
  * 管理員合組詳情頁面。
  */
 export function AdminGroupDetailPage() {
-  const [, params] = useRoute<{ id: string }>('/admin/group/:id');
+  const routeParams = useParams<{ id?: string }>();
   const { groupId: fGroupId, photoId } = useFilters();
   const [, setLocation] = useNormalizedLocation();
   
-  const groupId = params?.id || fGroupId;
+  const groupId = routeParams?.id || fGroupId;
   const { 
     group, 
     photos: rawPhotos, 
@@ -66,7 +66,7 @@ export function AdminGroupDetailPage() {
           element.classList.add('ring-4', 'ring-blue-500', 'scale-95');
           setTimeout(() => { 
              element.classList.remove('ring-4', 'ring-blue-500', 'scale-95');
-             setAnchor(false);
+             setAnchor(null);
           }, 2000);
         }
       }, 500);

@@ -1,15 +1,16 @@
 import React from "react";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 
-interface AppLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+interface AppLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
   to: string;
   children: React.ReactNode;
 }
 
 export function AppLink({ to, children, className, ...props }: AppLinkProps) {
   return (
-    <Link href={to} className={className} {...props}>
+    <Link to={to} className={className} {...props}>
       {children}
     </Link>
   );
 }
+

@@ -1,24 +1,17 @@
-/**
- * URL Query Parameters Constants
- */
 export const QUERY_PARAMS = {
-  SEARCH: 'search',
+  SEARCH: 'q',
   CATEGORY: 'category',
   CATEGORIES: 'categories',
   TAGS: 'tags',
   SORT: 'sort',
+  GROUP_ID: 'groupId',
+  GROUPS: 'groups',
   BATCH: 'batch',
   SELECTED: 'selected',
   COLLAPSED: 'collapsed',
   ANCHOR: 'anchor',
-  GROUP_ID: 'groupId',
-  GROUPS: 'groups',
   MODAL: 'modal',
   PHOTO_ID: 'photoId',
-  PAGE: 'page',
-  LIMIT: 'limit',
-  STATUS: 'status',
-  VIEW: 'view',
-  TAB: 'tab',
   COLS: 'cols',
+  TAB: 'tab',
 } as const;

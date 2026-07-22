@@ -3,7 +3,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { buttonStyles } from '#src/styles/buttonStyles.js';
 import { usePermission } from '#src/hooks/index.js';
 import { useIsMultiSelect } from '#src/hooks/index.js';
-import { useLocation } from 'wouter';
+import { useLocation } from 'react-router-dom';
 
 interface UploadButtonProps {
   onAdd?: () => void;
@@ -13,7 +13,8 @@ export function UploadButton({
   onAdd
 }: UploadButtonProps) {
   const { can } = usePermission();
-  const [location] = useLocation();
+  const locationObj = useLocation();
+  const location = locationObj.pathname;
   const isManagementHome = location === '/admin';
   const isMultiSelect = useIsMultiSelect();
   const isBatch = isMultiSelect;

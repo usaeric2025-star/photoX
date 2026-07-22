@@ -2,7 +2,7 @@ import { createContext, useContext, ReactNode, useCallback, useMemo } from 'reac
 import { useUI } from '#src/hooks/ui/useUI.js';
 import { STORAGE_KEYS } from '#lib/storage.js';
 
-export type ColumnCount = 2 | 3 | 6;
+export type ColumnCount = 2 | 3 | 4 | 6;
 
 interface GridContextValue {
   columns: ColumnCount;
@@ -15,12 +15,22 @@ export function GridProvider({ children }: { children: ReactNode }) {
   const { columns, setColumns: setUrlColumns } = useUI();
 
   const setColumns = useCallback((newColumns: number) => {
-    setUrlColumns(newColumns as ColumnCount, { shallow: true, history: 'replace' });
+    setUrlColumns(newColumns.toString());
     localStorage.setItem(STORAGE_KEYS.PHOTO_WALL_COLUMNS, newColumns.toString());
   }, [setUrlColumns]);
 
-  // Priority: URL > LocalStorage > Default (3)
-  const effectiveColumns = (columns || Number(localStorage.getItem(STORAGE_KEYS.PHOTO_WALL_COLUMNS)) || 3) as ColumnCount;
+  // Priority: URL > LocalStorage > Default (Mobile < 768px -> 3, Desktop -> 4)
+  const effectiveColumns = useMemo(() => {
+    if (columns && ['2', '3', '4', '6'].includes(columns)) {
+      return Number(columns) as ColumnCount;
+    }
+    const stored = localStorage.getItem(STORAGE_KEYS.PHOTO_WALL_COLUMNS);
+    if (stored && ['2', '3', '4', '6'].includes(stored)) {
+      return Number(stored) as ColumnCount;
+    }
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    return (isMobile ? 3 : 4) as ColumnCount;
+  }, [columns]);
 
   const value = useMemo(() => ({ 
     columns: effectiveColumns, 

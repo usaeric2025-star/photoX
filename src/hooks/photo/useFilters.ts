@@ -1,4 +1,4 @@
-import { useQueryState } from 'nuqs';
+import { useQueryState } from '#lib/nuqs/index.js';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { 
   searchParser, categoryParser, categoriesParser, tagsParser, sortParser, 

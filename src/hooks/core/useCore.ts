@@ -4,7 +4,7 @@ import { initApp, authLoadingAtom, appErrorAtom } from '#src/store/index.js';
 import { usePublicSettings } from '#src/hooks/index.js';
 import { useAdminMode, usePermission } from './auth/useAuth.js';
 import { logger } from '#lib/logger.js';
-import { useBrowserLocation } from "wouter/use-browser-location";
+import { useLocation as useRRLocation, useNavigate } from "react-router-dom";
 import { useAppLang } from '#lib/store/index.js';
 import { translations as allTranslations, TranslationType, LanguageCode } from '#src/locales/index.js';
 import { ANIMATION_CONFIG } from '#src/constants/config.js';
@@ -48,16 +48,18 @@ export function useTranslation() {
 }
 
 /**
- * useWouterLocation (Normalized version for wouter Router hook)
+ * useWouterLocation (Normalized version for react-router)
  */
 export const useWouterLocation = () => {
-  const [location, setLocation] = useBrowserLocation();
-  const normalized = location === "/" ? "/" : location.replace(/\/$/, "");
+  const location = useRRLocation();
+  const navigate = useNavigate();
+  const pathname = location.pathname;
+  const normalized = pathname === "/" ? "/" : pathname.replace(/\/$/, "");
   
   const setNormalized = useCallback((to: string, options?: any) => {
     const next = to === "/" ? "/" : to.replace(/\/$/, "");
-    return setLocation(next, options);
-  }, [setLocation]);
+    navigate(next, options);
+  }, [navigate]);
   
   return [normalized, setNormalized] as [string, typeof setNormalized];
 };

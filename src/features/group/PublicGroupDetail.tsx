@@ -14,14 +14,14 @@ import { GroupDetailLayout } from './components/GroupDetailLayout.js';
 
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 
-import { useRoute } from 'wouter';
+import { useParams } from 'react-router-dom';
 
 export function PublicGroupDetailPage() {
-  const [match, params] = useRoute<{ slug: string }>('/group/:slug');
+  const routeParams = useParams<{ slug?: string }>();
   const { groupId: fGroupId, photoId } = useFilters();
   const [location, setLocation] = useNormalizedLocation();
   
-  const groupId = params?.slug || fGroupId;
+  const groupId = routeParams?.slug || fGroupId;
   
   const [anchor, setAnchor] = React.useState(true);
   const { t } = useTranslation();

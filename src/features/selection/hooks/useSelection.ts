@@ -1,4 +1,4 @@
-import { useQueryState } from 'nuqs';
+import { useQueryState } from '#lib/nuqs/index.js';
 import { useCallback, useMemo } from 'react';
 import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
 import { batchParser, selectedIdsParser } from '#lib/nuqs/parsers.js';
