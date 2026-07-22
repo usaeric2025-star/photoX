@@ -103,13 +103,25 @@ export class ErrorFactory {
       
       // Handle standard browser/node fetch Response object
       if (res && typeof res === 'object' && 'json' in res && typeof res.json === 'function') {
+        const contentType = res.headers?.get('content-type') || '';
+        const isJson = contentType.includes('application/json');
+
         if (!res.ok) {
           let errorData: any = null;
-          try {
-            errorData = await res.json();
-          } catch {
+          if (isJson) {
+            try {
+              errorData = await res.json();
+            } catch {
+              // Ignore parse error and fallback to status message
+            }
+          }
+          
+          if (!errorData) {
             const urlStr = res.url ? new URL(res.url).pathname : '';
-            throw this.create(`${res.status} ${res.statusText || 'HTTP Error'} ${urlStr}`.trim(), {
+            const statusText = res.statusText || 'HTTP Error';
+            const bodyHint = !isJson ? ' (Received HTML/Non-JSON response, possible timeout or server error)' : '';
+            
+            throw this.create(`${res.status} ${statusText}${bodyHint} ${urlStr}`.trim(), {
               code: res.status === 404 ? ErrorCode.NOT_FOUND : ErrorCode.NETWORK_ERROR,
               statusCode: res.status,
               userMessage: fallbackMessage,
@@ -118,6 +130,24 @@ export class ErrorFactory {
           throw this.fromApiResponse(errorData, fallbackMessage);
         }
         
+        if (!isJson) {
+           const text = await res.text().catch(() => 'No body');
+           logger.warn('[ErrorFactory] Received non-JSON successful response:', { 
+             status: res.status, 
+             contentType,
+             bodyPrefix: text.substring(0, 100) 
+           });
+           // If it's HTML but status is 200, it's likely a proxy redirect or SPA fallback
+           if (text.trim().toLowerCase().startsWith('<!doctype')) {
+              throw this.create(`Received HTML instead of JSON for ${res.url}. Possible server misconfiguration or auth redirect.`, {
+                code: ErrorCode.NETWORK_ERROR,
+                statusCode: 500,
+                userMessage: '伺服器回應格式錯誤 (Unexpected HTML response)',
+              });
+           }
+           return text as any;
+        }
+
         const json = await res.json();
         if (json && typeof json === 'object') {
           if (json.success === false) {

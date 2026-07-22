@@ -2,7 +2,7 @@
 
 ## 1. 核心技术栈
 - **状态管理**: 
-  - URL 状态 (唯一真相来源): `nuqs`
+  - URL 状态 (唯一真相来源): `react-router-dom` (`useSearchParams`)
   - 全局/UI 状态: `Jotai` (Atom)
   - Server State: `TanStack Query` (`useAppQuery`), 写入通过 `queryClient` 处理。
   - 选择状态: `SelectionService` (使用 `useIsMultiSelect`, `useSelectionActions` 等)
@@ -78,7 +78,7 @@
 - **减少包装转发层级**：避免为了包装而包装。例如：`useSettingsManagement` 直接包装 `useAdminCategory`，而 `useAdminCategory` 又包装了多个微型的 `useCategory*` / `useTag*` 钩子，这导致了极深的调用栈和碎片化。未来应将相近领域的逻辑在适当的领域 Hook（如 `useSettingsManagement`）内直接进行扁平化整合。
 
 ### 规则 2：三大状态体系的严格边界
-- **URL 状态 (唯一的视图真相来源 - `nuqs`)**：
+- **URL 状态 (唯一的视图真相来源 - `react-router-dom`)**：
   - 适用场景：搜寻、筛选、分页、多选 IDs (`selected`)、批量模式开关 (`batch`)。
   - 核心原则：禁止使用 `useEffect` 将 URL 状态与本地 State / Store 进行二次同步。
 - **UI 瞬态 (跨组件临时交互 - `Jotai` Atoms)**：

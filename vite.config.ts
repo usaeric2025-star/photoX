@@ -109,9 +109,12 @@ export default defineConfig(({mode}) => {
       'process': '({ env: { NODE_ENV: ' + JSON.stringify(mode) + ' } })',
     },
     resolve: {
-      alias: [
-        
-      ],
+      alias: {
+        '#shared': fileURLToPath(new URL('./shared', import.meta.url)),
+        '#api': fileURLToPath(new URL('./api', import.meta.url)),
+        '#src': fileURLToPath(new URL('./src', import.meta.url)),
+        '#lib': fileURLToPath(new URL('./src/lib', import.meta.url)),
+      },
     },
     server: {
       port: 3000,

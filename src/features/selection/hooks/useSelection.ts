@@ -1,9 +1,12 @@
-import { useQueryState } from '#lib/url/index.js';
-import { useCallback, useMemo } from 'react';
-import { QUERY_PARAMS } from '#lib/url/constants.js';
-import { batchParser, selectedIdsParser } from '#lib/url/parsers.js';
+import { useSearchParams } from 'react-router-dom';
+import { useCallback } from 'react';
 import { isAvoidingSelectionAtom } from '#src/store/index.js';
 import { getDefaultStore } from 'jotai';
+
+const QUERY_PARAMS = {
+  BATCH: 'batch',
+  SELECTED: 'selected',
+} as const;
 
 const store = getDefaultStore();
 
@@ -23,16 +26,16 @@ export const SelectionService = {
  * useSelectedIds: 唯一真相來源 (URL)
  */
 export function useSelectedIds() {
-  const [selected] = useQueryState(QUERY_PARAMS.SELECTED, selectedIdsParser);
-  return selected || [];
+  const [searchParams] = useSearchParams();
+  return searchParams.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean) || [];
 }
 
 /**
  * useIsMultiSelect: 是否處於多選模式
  */
 export function useIsMultiSelect() {
-  const [batch] = useQueryState(QUERY_PARAMS.BATCH, batchParser);
-  return !!batch;
+  const [searchParams] = useSearchParams();
+  return searchParams.get(QUERY_PARAMS.BATCH) === 'true';
 }
 
 /**
@@ -47,55 +50,79 @@ export function useSelectionCount() {
  * useSelectionActions: 統一的操作接口
  */
 export function useSelectionActions() {
-  const [selected, setSelected] = useQueryState(QUERY_PARAMS.SELECTED, { ...selectedIdsParser, history: 'replace', shallow: true });
-  const [batch, setBatch] = useQueryState(QUERY_PARAMS.BATCH, { ...batchParser, history: 'replace', shallow: true });
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const toggleSelect = useCallback((id: string) => {
-    setSelected((prev) => {
-      const current = prev || [];
-      const next = current.includes(id) 
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      const current = prev.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean) || [];
+      const nextIds = current.includes(id) 
         ? current.filter(i => i !== id) 
         : [...current, id];
-      return next.length ? next : null;
-    });
-  }, [setSelected]);
+      
+      if (nextIds.length) next.set(QUERY_PARAMS.SELECTED, nextIds.join(','));
+      else next.delete(QUERY_PARAMS.SELECTED);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const clearSelection = useCallback(() => {
-    setSelected(null);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete(QUERY_PARAMS.SELECTED);
+      return next;
+    }, { replace: true });
     SelectionService.reset();
-  }, [setSelected]);
+  }, [setSearchParams]);
 
   const toggleMode = useCallback(() => {
-    setBatch((prev) => {
-      const nextMode = !prev;
-      if (!nextMode) setSelected(null);
-      return nextMode || null;
-    });
-  }, [setBatch, setSelected]);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      const prevMode = prev.get(QUERY_PARAMS.BATCH) === 'true';
+      const nextMode = !prevMode;
+      
+      if (nextMode) next.set(QUERY_PARAMS.BATCH, 'true');
+      else {
+        next.delete(QUERY_PARAMS.BATCH);
+        next.delete(QUERY_PARAMS.SELECTED);
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const patch = useCallback((updates: { 
     selectedIds?: string[] | null; 
     batch?: boolean; 
     isAvoidingSelection?: boolean;
   }) => {
-    if (updates.selectedIds !== undefined) {
-      setSelected(updates.selectedIds && updates.selectedIds.length ? updates.selectedIds : null);
-    }
-    if (updates.batch !== undefined) {
-      setBatch(updates.batch || null);
-    }
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (updates.selectedIds !== undefined) {
+        if (updates.selectedIds && updates.selectedIds.length) next.set(QUERY_PARAMS.SELECTED, updates.selectedIds.join(','));
+        else next.delete(QUERY_PARAMS.SELECTED);
+      }
+      if (updates.batch !== undefined) {
+        if (updates.batch) next.set(QUERY_PARAMS.BATCH, 'true');
+        else next.delete(QUERY_PARAMS.BATCH);
+      }
+      return next;
+    }, { replace: true });
+
     if (updates.isAvoidingSelection !== undefined) {
       SelectionService.setAvoidingSelection(updates.isAvoidingSelection);
     }
-  }, [setSelected, setBatch]);
+  }, [setSearchParams]);
+
+  const selectedIds = searchParams.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean) || [];
+  const isBatchMode = searchParams.get(QUERY_PARAMS.BATCH) === 'true';
 
   return {
     toggleSelect,
     clearSelection,
     toggleMode,
     patch,
-    selectedIds: selected || [],
-    isBatchMode: !!batch
+    selectedIds,
+    isBatchMode
   };
 }
 
