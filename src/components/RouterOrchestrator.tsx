@@ -18,7 +18,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   const isLoading = useAtomValue(authLoadingAtom);
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="驗證身份中..." />;
   }
 
   if (!user) {
@@ -42,6 +42,13 @@ export function RouterOrchestrator() {
     >
       <Switch>
         {/* Admin 路由与包含子路径的统一捕获 */}
+        <Route path="/admin/">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
+          )}
+        </Route>
         <Route path="/admin/:subpath*">
           {() => (
             <AdminGuard>
@@ -56,6 +63,13 @@ export function RouterOrchestrator() {
             </AdminGuard>
           )}
         </Route>
+        <Route path="/settings/">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
+          )}
+        </Route>
         <Route path="/settings/:subpath*">
           {() => (
             <AdminGuard>
@@ -64,6 +78,13 @@ export function RouterOrchestrator() {
           )}
         </Route>
         <Route path="/settings">
+          {() => (
+            <AdminGuard>
+              <AdminPage />
+            </AdminGuard>
+          )}
+        </Route>
+        <Route path="/diagnostics/">
           {() => (
             <AdminGuard>
               <AdminPage />

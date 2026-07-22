@@ -135,8 +135,8 @@ export function AdminPageContent() {
             <Route path={ADMIN_ROUTES.GROUP_DETAIL} component={AdminGroupDetailRoute} />
             <Route path={`${ADMIN_ROUTES.GROUP_DETAIL_BASE}/:id/:subpath*`} component={AdminGroupDetailRoute} />
 
-            {/* Admin Gallery as the default view for anything under /admin */}
-            <Route path="/admin/:subpath*">
+            {/* Admin Gallery as the default view for anything under /admin or unrecognized admin subpaths */}
+            <Route path="/admin/">
               <LocalErrorBoundary name="AdminGallery">
                 <AdminGallery />
               </LocalErrorBoundary>
@@ -146,8 +146,18 @@ export function AdminPageContent() {
                 <AdminGallery />
               </LocalErrorBoundary>
             </Route>
+            <Route path="/admin/:subpath*">
+              <LocalErrorBoundary name="AdminGallery">
+                <AdminGallery />
+              </LocalErrorBoundary>
+            </Route>
             
-            <Route component={() => <NotFoundPage />} />
+            {/* Default fallback for AdminPageContent is AdminGallery */}
+            <Route>
+              <LocalErrorBoundary name="AdminGallery">
+                <AdminGallery />
+              </LocalErrorBoundary>
+            </Route>
           </Switch>
         </ErrorBoundary>
         <SelectionToolbar />

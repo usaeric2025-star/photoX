@@ -22,6 +22,22 @@ export const getDisplayGroupCode = (groupId?: string | null): string => {
 };
 
 /**
+ * Normalize dimension unit strings (inch, in, ", ″, cm, mm) without forcing conversion
+ */
+export function normalizeUnit(rawUnit?: string | null, rawDim?: any): 'cm' | 'inch' | 'mm' {
+  const u = (rawUnit || '').toLowerCase().trim();
+  if (['inch', 'in', 'inches', '"', '″', "''"].includes(u)) return 'inch';
+  if (['mm', 'millimeter', 'millimetres'].includes(u)) return 'mm';
+  if (['cm', 'centimeter', 'centimetres'].includes(u)) return 'cm';
+
+  const str = (JSON.stringify(rawDim || {}) + ' ' + (rawUnit || '')).toLowerCase();
+  if (str.includes('"') || str.includes('″') || str.includes('inch') || str.includes("''")) {
+    return 'inch';
+  }
+  return 'cm';
+}
+
+/**
  * Validate and normalize photo dimensions
  */
 export function validateDimension(dim: Dimension | null | undefined): Dimension | null {
@@ -29,11 +45,7 @@ export function validateDimension(dim: Dimension | null | undefined): Dimension 
   const rawDim = dim as unknown as Record<string, unknown>;
   const value = rawDim.value ?? dim.height ?? dim.width ?? rawDim.length ?? 0;
   
-  const u = (rawDim.unit as string | undefined)?.toLowerCase().trim();
-  let unit: 'cm' | 'inch' | 'mm' = 'cm';
-  if (u === 'in' || u === 'inches' || u === 'inch') unit = 'inch';
-  else if (u === 'cm' || u === 'centimeter' || u === 'centimetres') unit = 'cm';
-  else if (u === 'mm' || u === 'millimeter' || u === 'millimetres') unit = 'mm';
+  const unit = normalizeUnit(rawDim.unit as string | undefined, rawDim);
 
   return {
     ...dim,

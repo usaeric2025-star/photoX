@@ -11,6 +11,7 @@ import { withTimeout } from '#lib/utils.js';
 export const userAtom = atom(null as User | null);
 export const tokenAtom = atom(null as string | null);
 export const authLoadingAtom = atom(true);
+export const authInitializedAtom = atom(false);
 
 const store = getDefaultStore();
 
@@ -66,9 +67,13 @@ export const initAuth = async () => {
     }
 
     setAuthLoading(false);
+    store.set(authInitializedAtom, true);
   }, { 
       context: 'auth-init', 
-      onFinally: () => { setAuthLoading(false); } 
+      onFinally: () => { 
+        setAuthLoading(false); 
+        store.set(authInitializedAtom, true);
+      } 
   });
 };
 

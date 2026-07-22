@@ -30,6 +30,7 @@ const SetCoverButton = memo(function SetCoverButton({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     setCover.mutate({ groupId, photoId });
   };
 

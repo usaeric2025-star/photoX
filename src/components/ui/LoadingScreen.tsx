@@ -6,7 +6,7 @@ import { PhotoGridSkeleton } from '#src/components/photo/PhotoSkeleton.js';
 import { useTranslation } from '#src/hooks/core/index.js';
 import { APP_CONFIG } from '#src/constants/config.js';
 
-export const LoadingScreen = ({ error, onRetry }: { error?: Error | null, onRetry?: () => void }) => {
+export const LoadingScreen = ({ error, onRetry, message }: { error?: Error | null, onRetry?: () => void, message?: string }) => {
   const { t } = useTranslation();
   logger.debug('🔄 [LoadingScreen] Rendered');
 

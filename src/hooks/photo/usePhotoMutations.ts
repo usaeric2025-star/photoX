@@ -106,8 +106,70 @@ export function usePhotoMutations() {
       });
       return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.photos.detail(data.id) });
+    onMutate: async ({ id, isPinned }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.photos.all });
+      const previousDetail = queryClient.getQueryData(queryKeys.photos.detail(id));
+
+      if (previousDetail) {
+        queryClient.setQueryData(queryKeys.photos.detail(id), (old: any) => 
+          old ? { ...old, isPinned } : old
+        );
+      }
+
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const updateItem = (item: any) => (item && item.id === id ? { ...item, isPinned } : item);
+
+        if (Array.isArray(oldData.pages)) {
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => {
+              if (Array.isArray(page)) {
+                return page.map(updateItem);
+              }
+              if (page && Array.isArray(page.items)) {
+                return { ...page, items: page.items.map(updateItem) };
+              }
+              if (page && Array.isArray(page.data)) {
+                return { ...page, data: page.data.map(updateItem) };
+              }
+              return page;
+            })
+          };
+        }
+
+        if (Array.isArray(oldData)) {
+          return oldData.map(updateItem);
+        }
+
+        if (Array.isArray(oldData.items)) {
+          return { ...oldData, items: oldData.items.map(updateItem) };
+        }
+        if (Array.isArray(oldData.data)) {
+          return { ...oldData, data: oldData.data.map(updateItem) };
+        }
+
+        return oldData;
+      });
+
+      return { previousDetail };
+    },
+    onError: (err, { id }, context) => {
+      if (context?.previousDetail) {
+        queryClient.setQueryData(queryKeys.photos.detail(id), context.previousDetail);
+      }
+      invalidateList();
+      feedback.error(labels.mutationFailed);
+    },
+    onSuccess: (data, { isPinned }) => {
+      const msg = isPinned ? '已置頂' : '已取消置頂';
+      feedback.success(msg);
+    },
+    onSettled: (data) => {
+      if (data?.id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.photos.detail(data.id) });
+      }
       invalidateList();
     }
   });

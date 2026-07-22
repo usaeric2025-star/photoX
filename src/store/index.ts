@@ -29,6 +29,7 @@ export {
 export { 
   userAtom, 
   authLoadingAtom, 
+  authInitializedAtom,
   tokenAtom, 
   initAuth, 
   initAuthListener, 

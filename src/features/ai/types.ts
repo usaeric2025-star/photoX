@@ -13,6 +13,7 @@
  */
 
 import { Dimension } from '#src/types/index.js';
+import { normalizeUnit } from '#src/utils/photo.js';
 
 /**
  * 1. 統一的 AI 照片識別輸出契約 (Normalized AI Analysis Contract)
@@ -127,7 +128,7 @@ class GeminiPhotoAIAdapter implements IPhotoAIAgentAdapter {
             width: typeof d.width === 'number' ? d.width : parseFloat(d.width) || 0,
             length: typeof d.length === 'number' ? d.length : (typeof d.depth === 'number' ? d.depth : parseFloat(d.length || d.depth) || 0),
             height: typeof d.height === 'number' ? d.height : parseFloat(d.height) || 0,
-            unit: (['cm', 'inch', 'mm'].includes(safeTrim(d.unit)) ? safeTrim(d.unit) : 'cm') as 'cm' | 'inch' | 'mm',
+            unit: normalizeUnit(d.unit, d),
             isAi: true,
           });
         }

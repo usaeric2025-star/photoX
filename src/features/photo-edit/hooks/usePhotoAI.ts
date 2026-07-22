@@ -14,6 +14,7 @@ import * as v from 'valibot';
 import { type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/index.js';
 import { AIService } from '#src/lib/ai/AIService.js';
+import { normalizeUnit } from '#src/utils/photo.js';
 
 export { usePhotoAIResult } from '#src/hooks/photo/index.js';
 
@@ -64,7 +65,7 @@ export function usePhotoEditAI() {
         updates.dimensions = updates.dimensions.map((d: any) => ({
           ...d,
           label: translateDimensionLabelToEnglish(String(d.label || t('dimensions'))),
-          unit: (d.unit === 'inch' || d.unit === 'mm') ? d.unit : 'cm',
+          unit: normalizeUnit(d.unit, d),
           isAi: true,
           isAiEstimated: true
         }));

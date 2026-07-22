@@ -72,7 +72,8 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
       try {
         await doSave(values);
         lastSavedValues.current = currentValuesStr;
-        // 注意：這裡故意不呼叫 form.reset()，保留使用者介面的 isDirty 狀態
+        // 同步 reset 表單狀態，消除 isDirty
+        form.reset(values);
       } catch (e) {
         // 自動保存失敗靜默處理，不干擾使用者輸入
       }
@@ -134,6 +135,8 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   }, [photo, allTags, form, defaultValues.tags]);
 
   const commit = useCallback(async (data?: PhotoEditFormData): Promise<boolean> => {
+    const valuesToSave = data || form.state.values;
+
     if (data) {
       Object.entries(data).forEach(([key, value]) => {
         form.setFieldValue(key as keyof PhotoEditFormData, value as never);
@@ -141,39 +144,18 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
     }
 
     try {
-      await form.handleSubmit();
-      const state = form.state;
-      
-      const errorList: string[] = [];
-      if (state.errors && state.errors.length > 0) {
-        state.errors.forEach(err => errorList.push(String(err)));
-      }
-
-      if (state.fieldMeta) {
-        Object.entries(state.fieldMeta).forEach(([fieldName, meta]) => {
-          const m = meta as any;
-          if (m?.errorMap) {
-            Object.values(m.errorMap).forEach(err => {
-              if (err) {
-                errorList.push(`${fieldName}: ${String(err)}`);
-              }
-            });
-          }
-        });
-      }
-
-      if (errorList.length > 0) {
-        feedback.error(`${t('saveFailed') || '保存失敗'}: ${errorList.join(', ')}`);
-        return false;
-      }
-
+      await doSave(valuesToSave);
+      lastSavedValues.current = JSON.stringify(valuesToSave);
+      form.reset(valuesToSave);
+      feedback.success(t('saveSuccess') || '保存成功');
       onSuccess?.();
       return true;
     } catch (err) {
+      feedback.error(`${t('saveFailed') || '保存失敗'}: ${(err as Error)?.message || String(err)}`);
       ErrorFactory.handle(err as Error, { context: 'PhotoEdit.commit' });
       return false;
     }
-  }, [form, t, onSuccess]);
+  }, [form, doSave, t, onSuccess]);
 
   const discard = useCallback(() => {
     form.reset();
