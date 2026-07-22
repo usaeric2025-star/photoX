@@ -1,15 +1,15 @@
-import { useQueryState } from '#lib/nuqs/index.js';
-import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
+import { useQueryState } from '#lib/url/index.js';
+import { QUERY_PARAMS } from '#lib/url/constants.js';
 import { 
   searchParser, categoryParser, categoriesParser, tagsParser, sortParser, 
   groupIdParser, groupsParser, batchParser, selectedIdsParser, showGroupsCollapsedParser, anchorParser
-} from '#lib/nuqs/parsers.js';
+} from '#lib/url/parsers.js';
 import { useCallback, useMemo, useTransition } from 'react';
 import { useModalActions } from '../ui/useUI.js';
 
 /**
  * useFilters
- * Manages photo gallery filtering state synced with URL (nuqs)
+ * Manages photo gallery filtering state synced with URL
  */
 export function useFilters() {
   const [search, setSearch] = useQueryState(QUERY_PARAMS.SEARCH, searchParser);

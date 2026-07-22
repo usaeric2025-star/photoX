@@ -12,8 +12,8 @@ import { useTranslation } from '#src/hooks/index.js';
 import { AdminEmptyState } from '#src/pages/AdminPage/AdminEmptyState.js';
 import { PhotoErrorDisplay } from '#src/components/photo/PhotoErrorDisplay.js';
 import { useUI } from '#src/hooks/ui/useUI.js';
-import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
-import { parseAsPhotoId } from '#lib/nuqs/parsers.js';
+import { QUERY_PARAMS } from '#lib/url/constants.js';
+import { parseAsPhotoId } from '#lib/url/parsers.js';
 import { LocalErrorBoundary } from '#src/components/ui/feedback/LocalErrorBoundary.js';
 
 interface PhotoWallContainerProps {

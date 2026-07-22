@@ -1,7 +1,7 @@
-import { useQueryState } from '#lib/nuqs/index.js';
+import { useQueryState } from '#lib/url/index.js';
 import { useCallback, useMemo } from 'react';
-import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
-import { batchParser, selectedIdsParser } from '#lib/nuqs/parsers.js';
+import { QUERY_PARAMS } from '#lib/url/constants.js';
+import { batchParser, selectedIdsParser } from '#lib/url/parsers.js';
 import { isAvoidingSelectionAtom } from '#src/store/index.js';
 import { getDefaultStore } from 'jotai';
 

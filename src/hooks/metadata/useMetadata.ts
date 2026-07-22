@@ -131,7 +131,7 @@ function useMetadataMutations() {
 export function useCategoryMutations() {
   const { create, update, remove, isPending } = useMetadataMutations();
   return {
-    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'categories', data }) },
+    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'categories', data: { categoryData: data } }) },
     edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'categories', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'categories', id }) },
     isPending
@@ -141,7 +141,7 @@ export function useCategoryMutations() {
 export function useTagMutations() {
   const { create, update, remove, isPending } = useMetadataMutations();
   return {
-    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'tags', data }) },
+    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'tags', data: { tagData: data } }) },
     edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'tags', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'tags', id }) },
     isPending
@@ -151,7 +151,7 @@ export function useTagMutations() {
 export function useManufacturerMutations() {
   const { create, update, remove, isPending } = useMetadataMutations();
   return {
-    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'manufacturers', data }) },
+    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'manufacturers', data: { manufacturerData: data } }) },
     edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'manufacturers', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'manufacturers', id }) },
     isPending

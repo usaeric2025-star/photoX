@@ -7,7 +7,7 @@
  * 1. 核心工具層 (Core Hooks)     -> 📂 src/hooks/core/
  *    - 通用不變的底層工具，如語系、本端儲存、點擊外部關閉、尺寸/多媒體監聽。
  * 2. 狀態路由控制層 (UI & URL)    -> 📂 src/hooks/ui/
- *    - 負責 URL 狀態 (nuqs) 及 UI 瞬態 (Jotai) 控制。
+ *    - 負責 URL 狀態及 UI 瞬態 (Jotai) 控制。
  * 3. 領域業務層 (Domain Hooks)   -> 📂 src/hooks/[domain]/
  *    - 管理特定的 API (Server State) 與業務流程。
  *    - 嚴禁在全域目錄隨意散落微型檔案！同領域的 hooks 請整合在該領域目錄下。

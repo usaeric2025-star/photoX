@@ -1,9 +1,9 @@
-import { useQueryState } from '#lib/nuqs/index.js';
-import { QUERY_PARAMS } from '#lib/nuqs/constants.js';
+import { useQueryState } from '#lib/url/index.js';
+import { QUERY_PARAMS } from '#lib/url/constants.js';
 import { 
   batchParser, selectedIdsParser, showGroupsCollapsedParser, 
   anchorParser, modalParser, parseAsPhotoId, columnsParser, tabParser
-} from '#lib/nuqs/parsers.js';
+} from '#lib/url/parsers.js';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { PLACEHOLDERS } from '#src/constants/config.js';
 
