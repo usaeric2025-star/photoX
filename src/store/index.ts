@@ -34,6 +34,7 @@ export {
   initAuth, 
   initAuthListener, 
   signIn,
+  staffLogin,
   signOut, 
   setAuthLoading 
 } from './auth.js';

@@ -76,7 +76,7 @@ export function TopLayer({
         ref={ref} 
         onClose={onClose}
         className={cn(
-          "fixed inset-0 m-0 p-0 w-full h-full max-w-none max-h-none bg-transparent border-none overflow-visible outline-none backdrop:bg-black/40",
+          "fixed m-0 p-0 overflow-visible outline-none bg-transparent border-none backdrop:bg-black/40",
           className
         )}
       >

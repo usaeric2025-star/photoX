@@ -37,6 +37,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 }
 
 import { TopLayer } from './components/ui/TopLayer.js';
+import { DialogContainer } from './components/layout/DialogContainer.js';
 
 function AdminGallery() {
   return (
@@ -61,6 +62,7 @@ function RootLayout() {
   return (
     <GridProvider>
       <Outlet />
+      <DialogContainer />
     </GridProvider>
   );
 }

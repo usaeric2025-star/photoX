@@ -130,7 +130,7 @@ export const LoadingScreen = ({ error, onRetry, message }: { error?: Error | nul
   );
 
   return (
-    <TopLayer type="dialog" open={true} className="backdrop:bg-white">
+    <TopLayer type="dialog" open={true} className="inset-0 w-full h-full backdrop:bg-white">
       {content}
     </TopLayer>
   );

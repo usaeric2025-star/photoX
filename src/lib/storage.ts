@@ -5,6 +5,7 @@ const memoryCache = new Map<string, unknown>();
 
 export const STORAGE_KEYS = {
   AUTH: 'auth',
+  STAFF_USER: 'staff_user',
   SETTINGS: 'cached_settings',
   THEME: 'theme',
   PREFERENCE: 'preferences',

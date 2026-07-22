@@ -3,7 +3,7 @@ import { atomWithStorage } from 'jotai/utils';
 import { User } from '#src/types/index.js';
 import { logger } from '#lib/logger.js';
 import { supabase } from '#lib/supabase.js';
-import { jotaiStorage, storage } from '#lib/storage.js';
+import { jotaiStorage, storage, STORAGE_KEYS } from '#lib/storage.js';
 import { safeAsync } from '#lib/utils/safeAsync.js';
 import { withTimeout } from '#lib/utils.js';
 
@@ -39,7 +39,14 @@ export const initAuth = async () => {
       };
       setUser(mapped);
     } else {
-      setUser(null);
+      // Check for persisted staff user
+      const savedStaff = storage.get<User | null>(STORAGE_KEYS.STAFF_USER, null);
+      if (savedStaff) {
+        setUser(savedStaff);
+        setToken('staff-token');
+      } else {
+        setUser(null);
+      }
     }
 
     if (typeof window !== 'undefined') {
@@ -133,12 +140,31 @@ export const signIn = async () => {
 export const signOut = async () => {
   await safeAsync(async () => {
     await supabase.auth.signOut();
+    storage.remove(STORAGE_KEYS.STAFF_USER);
     setUser(null);
     setToken(null);
     if (typeof window !== 'undefined') {
       window.location.reload();
     }
   }, { context: 'auth-signout' });
+};
+
+export const staffLogin = (passcode: string, correctPasscode: string) => {
+  if (passcode === correctPasscode) {
+    const staffUser: User = {
+      id: 'staff-user',
+      email: 'staff@photox.com',
+      displayName: 'Staff (員工)',
+      photoUrl: null,
+      avatarUrl: null,
+      emailVerified: true,
+    };
+    storage.set(STORAGE_KEYS.STAFF_USER, staffUser);
+    setUser(staffUser);
+    setToken('staff-token');
+    return true;
+  }
+  return false;
 };
 
 let authListenerInitialized = false;

@@ -1,5 +1,5 @@
-import { appLangAtom, userAtom } from '#src/store/index.js';
-import React from 'react';
+import { appLangAtom, userAtom, staffLogin } from '#src/store/index.js';
+import React, { useState } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePublicSettings, useTranslation } from '#src/hooks/index.js';
 import { AppLink } from '#src/components/router/AppLink.js';
@@ -7,6 +7,7 @@ import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { Button } from '#src/components/ui/Button.js';
 import { useAtomValue } from 'jotai';
+import { feedback } from '#lib/feedback.js';
 
 interface LoginScreenProps {
   signIn: () => Promise<void>;
@@ -16,6 +17,10 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   const { data: settings } = usePublicSettings();
   const appLang = useAtomValue(appLangAtom);
   const { t } = useTranslation();
+  
+  const [showStaffLogin, setShowStaffLogin] = useState(false);
+  const [passcode, setPasscode] = useState('');
+
   // Admin Login Submission
   const { submit: submitAdmin, isLoading: isAdminLoggingIn } = useFormSubmit({
     schema: v.unknown(),
@@ -25,6 +30,21 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
     },
     errorMessage: 'Authentication failed'
   });
+
+  const handleStaffLogin = () => {
+    const correctPasscode = (settings as any)?.accessPasscode;
+    
+    if (!correctPasscode) {
+      feedback.error(t('staffPasscodeRequired'));
+      return;
+    }
+
+    if (staffLogin(passcode, correctPasscode)) {
+      feedback.success(t('staffLoginSuccess'));
+    } else {
+      feedback.error(t('wrongPassword'));
+    }
+  };
 
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center p-6 bg-slate-50 relative overflow-hidden">
@@ -62,23 +82,70 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
                 <span className="font-light text-blue-600">X</span>
               </h1>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] pl-[0.3em]">
-                Suite Control
+                {showStaffLogin ? t('loginTitleStaff') : 'Suite Control'}
               </p>
             </div>
           </div>
 
           {/* Action Area */}
           <div className="w-full flex flex-col items-center space-y-6">
-            <Button 
-              onClick={async () => {
-                await submitAdmin({});
-              }}
-              loading={isAdminLoggingIn}
-              className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black group"
-              leftIcon={!isAdminLoggingIn && <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" />}
-            >
-              {t('login')}
-            </Button>
+            {!showStaffLogin ? (
+              <>
+                <Button 
+                  onClick={async () => {
+                    await submitAdmin({});
+                  }}
+                  loading={isAdminLoggingIn}
+                  className="w-full bg-slate-950 text-white h-14 rounded-2xl text-[13px] hover:shadow-2xl hover:shadow-slate-900/20 hover:bg-black group"
+                  leftIcon={!isAdminLoggingIn && <Icon name="log-in" size={18} className="transition-transform group-hover:translate-x-1" />}
+                >
+                  {t('login')}
+                </Button>
+                
+                <button 
+                  onClick={() => setShowStaffLogin(true)}
+                  className="text-xs font-bold text-slate-400 hover:text-slate-950 transition-colors uppercase tracking-widest"
+                >
+                  {t('staffUnlock')}
+                </button>
+              </>
+            ) : (
+              <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+                    {t('staffUnlockSub')}
+                  </label>
+                  <input 
+                    autoFocus
+                    type="password"
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleStaffLogin()}
+                    placeholder={t('enterPasscode')}
+                    className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950/5 transition-all shadow-sm"
+                  />
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    variant="ghost"
+                    onClick={() => {
+                      setShowStaffLogin(false);
+                      setPasscode('');
+                    }}
+                    className="flex-1 h-12 rounded-xl text-xs font-bold text-slate-500"
+                  >
+                    {t('cancel')}
+                  </Button>
+                  <Button 
+                    onClick={handleStaffLogin}
+                    className="flex-[2] h-12 rounded-xl bg-slate-950 text-white text-xs font-bold shadow-lg shadow-slate-900/10"
+                  >
+                    {t('unlockAndAccess')}
+                  </Button>
+                </div>
+              </div>
+            )}
             
             <p className="text-[10px] text-slate-400 font-medium text-center leading-relaxed max-w-[240px]">
               {t('agreeByConnecting')} <br/>
