@@ -67,13 +67,6 @@
   --color-brand-navy: var(--color-text-main);
   --color-brand-gold: var(--color-warning);
   --color-brand-purple: #7A00E6;
-
-  /* Z-index positions */
-  --z-sticky: 40;
-  --z-header: 50;
-  --z-modal: 60;
-  --z-toast: 70;
-  --z-loading: 100;
 }
 
 @layer base {
@@ -169,7 +162,7 @@
 
   /* --- Global Scaffolding --- */
   .glass-header {
-    @apply sticky top-0 z-20 bg-white/95 border-b border-slate-100 flex items-center px-4 py-3 shrink-0;
+    @apply sticky top-0 bg-white/95 border-b border-slate-100 flex items-center px-4 py-3 shrink-0;
   }
 
   .page-container {
@@ -233,17 +226,6 @@ li[data-sonner-toast] {
   --color-text-mute: #636366;
   --color-border-soft: #3a3a3c;
   --color-border-bold: #48484a;
-}
-
-/* Ensure portal-root forms a stacking context on top of everything else while allowing clicks to pass through */
-#portal-root {
-  position: fixed;
-  inset: 0;
-  z-index: 20000;
-  pointer-events: none;
-}
-#portal-root > * {
-  pointer-events: auto;
 }
 
 

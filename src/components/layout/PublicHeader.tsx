@@ -73,7 +73,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   return (
     <header className={cn("h-14 shrink-0 border-b px-4 flex items-center justify-between transition-all duration-300 relative", theme.bg, className)}>
       {/* 左侧：Logo & 计数 */}
-      <div className="flex items-center gap-4 shrink-0 flex-nowrap z-10">
+      <div className="flex items-center gap-4 shrink-0 flex-nowrap">
         {logoUrl && logoUrl.trim() !== '' ? (
           <img 
             src={logoUrl} 
@@ -103,7 +103,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
       </div>
 
       {/* 右侧：刷新 & 管理/登录入口 */}
-      <div className="flex items-center gap-2 flex-nowrap shrink-0 z-10">
+      <div className="flex items-center gap-2 flex-nowrap shrink-0">
         
         {onRefresh && (
           <button 

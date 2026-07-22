@@ -92,10 +92,19 @@ export function useAdminActions() {
     }
     const filteredPhotos = AdminService.filterPhotosWithGroups(photosToProcess, targetIds);
     
+    if (filteredPhotos.length === 0) {
+      feedback.info(t('noPhotosToAnalyze') || '沒有需要識別的照片');
+      return;
+    }
+
     try {
-      await handleBatchAiAnalyze(filteredPhotos as any);
+      await feedback.promise(handleBatchAiAnalyze(filteredPhotos as any), {
+        loading: t('aiAnalyzing') || '正在啟動 AI 識別...',
+        success: t('aiAnalyzeSuccess') || 'AI 識別任務已啟動',
+        error: (err: any) => `${t('aiAnalyzeFailed') || 'AI 識別失敗'}: ${err.message}`
+      });
     } catch (e) {
-      ErrorFactory.handle(e as Error, { context: 'AI Batch Analysis' });
+      // handled by feedback.promise
     }
   };
 

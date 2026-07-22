@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { cn } from '#src/lib/utils.js';
 
 interface NativePopoverProps {
   trigger: React.ReactNode;
@@ -15,103 +16,84 @@ export function NativePopover({
   className = '', 
   onOpenChange 
 }: NativePopoverProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
 
-  const openPopover = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    setIsOpen(true);
-    setIsExiting(false);
-    onOpenChange?.(true);
-    
-    // Position after open state is true
-    requestAnimationFrame(() => {
-      dialogRef.current?.showModal();
-    });
-  };
-
-  const closePopover = (e?: React.MouseEvent) => {
+  // Use the modern 'popover' API
+  const togglePopover = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     
-    if (isExiting) return;
-    
-    setIsExiting(true);
-    onOpenChange?.(false);
+    if (!popoverRef.current) return;
 
-    // Wait for animation out (duration-150)
-    setTimeout(() => {
-      dialogRef.current?.close();
-      setIsOpen(false);
-      setIsExiting(false);
-    }, 150);
-  };
-
-  const handleTriggerClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isOpen) {
-      closePopover(e);
-    } else {
-      openPopover(e);
+    try {
+      if (isOpen) {
+        popoverRef.current.hidePopover();
+      } else {
+        popoverRef.current.showPopover();
+      }
+    } catch (err) {
+      // Fallback if browser doesn't support popover API fully
+      setIsOpen(!isOpen);
     }
   };
 
-  // Logic to position modal near trigger
   useEffect(() => {
-    if (!isOpen || !dialogRef.current || !triggerRef.current) return;
-    
-    const rect = triggerRef.current.getBoundingClientRect();
-    const top = rect.bottom + window.scrollY + 6;
-    let left = rect.left + window.scrollX;
-    
-    if (align === 'center') left = rect.left + window.scrollX + rect.width / 2;
-    else if (align === 'end') left = rect.right + window.scrollX;
-    
-    dialogRef.current.style.position = 'absolute';
-    dialogRef.current.style.margin = '0';
-    dialogRef.current.style.top = `${top}px`;
-    dialogRef.current.style.left = `${left}px`;
-    dialogRef.current.style.transform = align === 'center' ? 'translateX(-50%)' : align === 'end' ? 'translateX(-100%)' : 'none';
-  }, [isOpen, align]);
+    const popover = popoverRef.current;
+    if (!popover) return;
+
+    const handleToggle = (e: any) => {
+      const newState = e.newState === 'open';
+      setIsOpen(newState);
+      onOpenChange?.(newState);
+      
+      if (newState && triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect();
+        const top = rect.bottom + window.scrollY + 6;
+        let left = rect.left + window.scrollX;
+        
+        if (align === 'center') left = rect.left + window.scrollX + rect.width / 2;
+        else if (align === 'end') left = rect.right + window.scrollX;
+        
+        popover.style.position = 'absolute';
+        popover.style.margin = '0';
+        popover.style.top = `${top}px`;
+        popover.style.left = `${left}px`;
+        popover.style.transform = align === 'center' ? 'translateX(-50%)' : align === 'end' ? 'translateX(-100%)' : 'none';
+      }
+    };
+
+    popover.addEventListener('toggle', handleToggle);
+    return () => popover.removeEventListener('toggle', handleToggle);
+  }, [align, onOpenChange]);
 
   return (
     <>
-      <div ref={triggerRef} onClick={handleTriggerClick} className="inline-block cursor-pointer">
+      <div 
+        ref={triggerRef} 
+        onClick={togglePopover} 
+        className="inline-block cursor-pointer"
+      >
         {trigger}
       </div>
-      {isOpen && (
-        <dialog
-          ref={dialogRef}
-          className={`
-            absolute m-0 bg-card rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-2 border border-border/60 
-            backdrop:bg-transparent outline-none
-            ${isExiting 
-              ? 'animate-out fade-out zoom-out-95 duration-150 ease-in fill-mode-forwards' 
-              : 'animate-in fade-in zoom-in-95 duration-200 ease-out'}
-          `}
-          style={{ right: 'auto', bottom: 'auto' }}
-          onClose={() => setIsOpen(false)}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closePopover(e);
-          }}
-        >
-          <div onClick={(e) => {
-            e.stopPropagation();
-            // Delay closing slightly so user sees click effect
-            setTimeout(closePopover, 80);
-          }}>
-            {children}
-          </div>
-        </dialog>
-      )}
+      
+      <div
+        ref={popoverRef}
+        popover="auto"
+        className={cn(
+          "bg-white rounded-2xl shadow-xl p-2 border border-slate-100 outline-none m-0",
+          "animate-in fade-in zoom-in-95 duration-150 ease-out",
+          className
+        )}
+        style={{ inset: 'auto' }}
+      >
+        <div onClick={() => popoverRef.current?.hidePopover()}>
+          {children}
+        </div>
+      </div>
     </>
   );
 }

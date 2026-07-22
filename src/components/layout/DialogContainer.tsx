@@ -1,8 +1,8 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { usePermission } from '#src/hooks/index.js';
 import { PhotoLightbox } from '#src/features/lightbox/PhotoLightbox.js';
+import { TaskDrawer } from '#lib/task-queue/components/index.js';
 
-const TaskDrawer = lazy(() => import('#lib/task-queue/components/index.js').then(m => ({ default: m.TaskDrawer })));
 const PhotoEditDialog = lazy(() => import('#src/features/photo-edit/PhotoEditDialog.js').then(m => ({ default: m.PhotoEditDialog })));
 
 export function DialogContainer() {

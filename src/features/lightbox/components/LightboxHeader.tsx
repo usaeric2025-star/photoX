@@ -65,7 +65,7 @@ export function LightboxHeader({
   };
 
   return (
-    <div className="absolute top-0 inset-x-0 p-4 sm:p-6 flex items-start justify-between z-[150] pointer-events-none">
+    <div className="absolute top-0 inset-x-0 p-4 sm:p-6 flex items-start justify-between pointer-events-none">
       {/* Left: Counter */}
       <div className="flex items-center gap-3">
         <div className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-black/80 border border-white/10 flex items-center gap-2 shadow-2xl pointer-events-auto transition-transform">

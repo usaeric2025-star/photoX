@@ -281,17 +281,17 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     <dialog
       ref={dialogRef}
       className={cn(
-        "fixed inset-0 w-screen h-screen max-w-none max-h-none outline-none border-none overflow-hidden m-0 p-0 font-sans select-none bg-black/95 z-[100]",
+        "fixed inset-0 w-screen h-screen max-w-none max-h-none outline-none border-none overflow-hidden m-0 p-0 font-sans select-none bg-black/95",
         "animate-in fade-in duration-200 ease-out"
       )}
     >
       {isDeepLinkLoading ? (
-        <div className="relative z-[120] text-white opacity-70 flex flex-col items-center justify-center w-full h-full gap-4">
+        <div className="relative text-white opacity-70 flex flex-col items-center justify-center w-full h-full gap-4">
           <Icon name="loader-2" className="animate-spin" size={32} />
           <span>載入中...</span>
         </div>
       ) : (
-        <div className="relative z-[120] flex flex-col w-full h-full">
+        <div className="relative flex flex-col w-full h-full">
           {activePhoto && (
             <>
               {/* Header Controls */}
@@ -331,7 +331,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
 
           {/* Local HUD Toast (Visible above native <dialog> top layer) */}
           {localToast && (
-            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-[200] pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-200">
+            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-200">
               <div className={cn(
                 "px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl flex items-center gap-2 border select-none bg-black/90 text-white/90 border-white/10"
               )}>

@@ -55,7 +55,7 @@ export function GroupDetailLayout({
     >
       {group && (
         <div className="bg-slate-50 flex flex-col relative w-full h-[100dvh] overflow-hidden overscroll-none text-base">
-          <div className="flex-shrink-0 bg-white border-b border-slate-100 shadow-sm relative z-10">
+          <div className="flex-shrink-0 bg-white border-b border-slate-100 shadow-sm relative">
             {header}
           </div>
           

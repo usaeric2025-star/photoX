@@ -36,20 +36,22 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { TopLayer } from './components/ui/TopLayer.js';
+
 function AdminGallery() {
   return (
     <>
       <AdminHeader className="border-b bg-white shadow-none" />
       <div className="flex-1 relative overflow-hidden flex flex-col">
-        <FilterBar mode="admin" className="bg-white border-b shadow-none z-10" />
+        <FilterBar mode="admin" className="bg-white border-b shadow-none" />
         <div className="flex-1 relative animate-fade-in translate-z-0 overflow-hidden flex flex-col">
           <AdminContainer />
         </div>
-        <div className="absolute bottom-8 right-8 z-[9999]">
+        <TopLayer type="popover" className="bottom-8 right-8 top-auto left-auto">
           <UploadButton 
             onAdd={() => patch({ uploadModeDialogOpen: true })}
           />
-        </div>
+        </TopLayer>
       </div>
     </>
   );

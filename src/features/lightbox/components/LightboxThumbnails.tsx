@@ -42,7 +42,7 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
   if (photos.length <= 1) return null;
 
   return (
-    <div className="h-[84px] bg-black/95 border-t border-white/5 flex items-center justify-center z-[130] shrink-0">
+    <div className="h-[84px] bg-black/95 border-t border-white/5 flex items-center justify-center shrink-0">
       <div 
         ref={thumbnailContainerRef} 
         className="relative flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full px-4 py-2"

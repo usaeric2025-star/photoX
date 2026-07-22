@@ -96,7 +96,7 @@ export function LightboxStage() {
             e.stopPropagation();
             resetZoom();
           }}
-          className="absolute top-6 right-6 z-[300] px-4 py-2.5 bg-slate-950/90 hover:bg-black text-white rounded-2xl flex items-center gap-2 border border-white/10 active:scale-95 shadow-2xl transition-all select-none"
+          className="absolute top-6 right-6 px-4 py-2.5 bg-slate-950/90 hover:bg-black text-white rounded-2xl flex items-center gap-2 border border-white/10 active:scale-95 shadow-2xl transition-all select-none"
           title="關閉放大"
         >
           <Icon name="minimize-2" size={16} />

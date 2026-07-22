@@ -154,7 +154,7 @@ export function Modal({
               e.stopPropagation();
               onClose();
             }}
-            className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all active:scale-95 z-[60]"
+            className="absolute right-4 top-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all active:scale-95"
             aria-label="关闭"
           >
             <Icon name="x" size={20} className="opacity-70 hover:opacity-100 transition-opacity" />

@@ -29,7 +29,7 @@ export const executeBatchUpload = (
           id: options.groupId,
           name: 'GROUP',
           status: 'confirmed',
-          userId: userId || '8ec53131-a589-4b50-beb4-6b5308541e1b'
+          userId: userId
         }
       });
     } catch (err) {

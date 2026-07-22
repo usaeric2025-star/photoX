@@ -13,12 +13,11 @@ export const PhotoSkeleton = ({ className, isGroup }: PhotoSkeletonProps) => {
       <div className="relative aspect-square w-full">
         {isGroup && (
           <>
-            {/* Stack effect mimic for group - offset slightly to match card feel */}
-            <div className="absolute -top-[4px] -right-[4px] w-full h-full bg-slate-200/40 rounded-[4px] -z-10 animate-pulse border border-slate-200/20" />
-            <div className="absolute -top-[8px] -right-[8px] w-full h-full bg-slate-100/30 rounded-[4px] -z-20 animate-pulse border border-slate-100/10" />
+            {/* Stack effect mimic for group - Placed BEFORE main content to be BEHIND it without z-index */}
+            <div className="absolute -top-[8px] -right-[8px] w-full h-full bg-slate-100/30 rounded-[4px] animate-pulse border border-slate-100/10" />
+            <div className="absolute -top-[4px] -right-[4px] w-full h-full bg-slate-200/40 rounded-[4px] animate-pulse border border-slate-200/20" />
           </>
         )}
-        
         <div className={cn(
           "aspect-square w-full rounded-[4px] bg-slate-200 animate-pulse relative overflow-hidden",
           "before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent"

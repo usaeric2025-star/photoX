@@ -17,7 +17,7 @@ export function AdminHeaderLogo({ logoUrl, totalCount, theme }: AdminHeaderLogoP
   const showDefaultLogo = !logoUrl || logoUrl.trim() === '' || imgError;
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap z-10">
+    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
       {!showDefaultLogo ? (
         <img 
           src={logoUrl!} 

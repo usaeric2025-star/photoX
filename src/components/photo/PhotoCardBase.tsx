@@ -64,7 +64,7 @@ export const PhotoCardBase = ({
           "transition-all duration-300 hover:shadow-md hover:border-slate-200 hover:-translate-y-0.5",
           "active:scale-[0.98]",
           isHidden && "opacity-80 grayscale-[0.3] ring-1 ring-danger",
-          isSelected && "ring-2 ring-primary bg-primary/10 z-10 shadow-lg",
+          isSelected && "ring-2 ring-primary bg-primary/10 shadow-lg",
           className
         )}
         {...props}

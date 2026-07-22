@@ -12,6 +12,8 @@ import {  type UIStoreState } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
 
+import { TopLayer } from '#src/components/ui/TopLayer.js';
+
 export default function PublicPage() {
   const { 
     category, 
@@ -61,7 +63,7 @@ export default function PublicPage() {
       <PublicHeader />
       
       {/* 頂部過濾區域 - 增加內邊距確保大搜索框模式下的視覺寬鬆度 */}
-      <div className="bg-white z-10">
+      <div className="bg-white">
         <FilterBar mode="public" className="max-w-screen-2xl mx-auto" />
       </div>
 
@@ -79,7 +81,7 @@ export default function PublicPage() {
         </ErrorBoundary>
       </div>
 
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+      <TopLayer type="popover" className="bottom-6 right-6 flex flex-col gap-3 top-auto left-auto">
         {showScrollTop && (
           <button
             onClick={handleScrollToTop}
@@ -100,7 +102,7 @@ export default function PublicPage() {
         >
           <Icon name="whatsapp" size={26} />
         </button>
-      </div>
+      </TopLayer>
 
       {showWhatsAppChoice && (
         <WhatsAppDialog 

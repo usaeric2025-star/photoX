@@ -10,6 +10,8 @@ import { useConfirm } from '#src/context/ConfirmContext.js';
 import { motion, AnimatePresence } from 'lite-sleek';
 import { useCategories, useCategoryMutations, useTranslation } from '#src/hooks/index.js';
 
+import { NativePopover } from '#src/components/ui/NativePopover.js';
+
 interface CategoriesSectionProps {
   cardClass: string;
   buttonStyles: { [key in "primary" | "secondary" | "accent"]: string };
@@ -24,85 +26,57 @@ function CategoryItem({
   onUpdate: (cat: Category) => void;
   onDelete: (id: string | number) => void;
 }) {
-  const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
   const [isEditOpen, editDialog] = useDisclosure(false);
   const confirm = useConfirm();
   const { appLang, t } = useTranslation();
   
-  const menuRef = useClickOutside<HTMLDivElement>(() => {
-    if (activeMenuId === cat.id) setActiveMenuId(null);
-  });
-
-  const longPress = useLongPress<HTMLDivElement>({
-    delay: 800,
-    onLongPress: () => {
-      setActiveMenuId(cat.id);
-    }
-  });
-
   const displayName = (cat.description as any)?.[appLang] || cat.name || '未命名分类';
 
   return (
-    <div
-      id={`cat-item-${cat.id}`}
-      ref={longPress.ref}
-      onMouseDown={longPress.onMouseDown}
-      onMouseMove={longPress.onMouseMove}
-      onMouseUp={longPress.onMouseUp}
-      onMouseLeave={longPress.onMouseLeave}
-      onTouchStart={longPress.onTouchStart}
-      onTouchMove={longPress.onTouchMove}
-      onTouchEnd={longPress.onTouchEnd}
-      onTouchCancel={longPress.onTouchCancel}
-      className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === cat.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
+    <NativePopover
+      align="center"
+      trigger={
+        <div
+          id={`cat-item-${cat.id}`}
+          className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative cursor-pointer hover:bg-brand-navy/[0.02]`}
+        >
+          <div className="flex flex-col">
+            <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
+              {displayName}
+            </span>
+          </div>
+        </div>
+      }
     >
-      <div className="flex flex-col">
-        <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
-          {displayName}
-        </span>
+      <div className="flex flex-col gap-0.5 min-w-[120px] bg-brand-navy rounded-xl p-1">
+        <button
+          id={`edit-cat-${cat.id}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            editDialog.open();
+          }}
+          className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2 w-full text-left"
+        >
+          <Icon name="pencil" size={12} /> {t('edit')}
+        </button>
+        <button
+          id={`delete-cat-${cat.id}`}
+          onClick={async (e) => {
+            e.stopPropagation();
+            if (await confirm({
+              title: t('confirmDelete') || "确认删除",
+              description: t('confirmDeleteCategoryMsg', { name: displayName }) || `确定要删除「${displayName}」吗？此操作不可恢复。`,
+              confirmText: t('delete') || "删除",
+              variant: "destructive"
+            })) {
+              onDelete(cat.id);
+            }
+          }}
+          className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2 w-full text-left"
+        >
+          <Icon name="trash-2" size={12} /> {t('delete')}
+        </button>
       </div>
-
-      <AnimatePresence>
-        {activeMenuId === cat.id && (
-          <motion.div 
-            ref={menuRef}
-            variant="scale"
-            transition="easeOut"
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 min-w-[120px] z-50"
-          >
-            <button
-              id={`edit-cat-${cat.id}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                editDialog.open();
-                setActiveMenuId(null);
-              }}
-              className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
-            >
-              <Icon name="pencil" size={12} /> {t('edit')}
-            </button>
-            <button
-              id={`delete-cat-${cat.id}`}
-              onClick={async (e) => {
-                e.stopPropagation();
-                if (await confirm({
-                  title: t('confirmDelete') || "确认删除",
-                  description: t('confirmDeleteCategoryMsg', { name: displayName }) || `确定要删除「${displayName}」吗？此操作不可恢复。`,
-                  confirmText: t('delete') || "删除",
-                  variant: "destructive"
-                })) {
-                  onDelete(cat.id);
-                }
-                setActiveMenuId(null);
-              }}
-              className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
-            >
-              <Icon name="trash-2" size={12} /> {t('delete')}
-            </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1" />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <PromptDialog
         open={isEditOpen}
@@ -117,7 +91,7 @@ function CategoryItem({
           }
         }}
       />
-    </div>
+    </NativePopover>
   );
 }
 

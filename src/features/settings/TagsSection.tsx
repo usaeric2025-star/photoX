@@ -38,7 +38,6 @@ export function TagsSection({
   const tagMutations = useTagMutations();
   const { t } = useTranslation();
   
-  const [activeTagMenuId, setActiveTagMenuId] = useState<number | null>(null);
   const [isAddOpen, addDialog] = useDisclosure(false);
   const [isEditOpen, editDialog] = useDisclosure(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
@@ -189,8 +188,6 @@ export function TagsSection({
           <TagItem
             key={tag.id}
             tag={tag}
-            activeTagMenuId={activeTagMenuId}
-            setActiveTagMenuId={setActiveTagMenuId}
             handleUpdateTagName={(t) => {
               setEditingTag(t);
               editDialog.open();

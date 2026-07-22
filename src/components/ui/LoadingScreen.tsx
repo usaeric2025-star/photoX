@@ -5,6 +5,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { PhotoGridSkeleton } from '#src/components/photo/PhotoSkeleton.js';
 import { useTranslation } from '#src/hooks/core/index.js';
 import { APP_CONFIG } from '#src/constants/config.js';
+import { TopLayer } from '#src/components/ui/TopLayer.js';
 
 export const LoadingScreen = ({ error, onRetry, message }: { error?: Error | null, onRetry?: () => void, message?: string }) => {
   const { t } = useTranslation();
@@ -21,7 +22,7 @@ export const LoadingScreen = ({ error, onRetry, message }: { error?: Error | nul
   }, []);
 
   const content = error ? (
-    <div className="flex items-center justify-center bg-white select-none min-h-screen">
+    <div className="flex items-center justify-center bg-white select-none min-h-screen w-full">
       <div className="text-center max-w-md p-8 bg-white rounded-3xl shadow-2xl border border-red-100 animate-in fade-in zoom-in duration-300">
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <Icon name="alert-triangle" className="w-10 h-10 text-red-500" />
@@ -129,9 +130,9 @@ export const LoadingScreen = ({ error, onRetry, message }: { error?: Error | nul
   );
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-slate-50 select-none overflow-hidden h-screen w-screen">
+    <TopLayer type="dialog" open={true} className="backdrop:bg-white">
       {content}
-    </div>
+    </TopLayer>
   );
 };
 

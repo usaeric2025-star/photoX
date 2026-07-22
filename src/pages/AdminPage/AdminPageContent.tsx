@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { uploadModeDialogOpenAtom } from '#src/store/index.js';
+import { uploadModeDialogOpenAtom, uploadAsGroupAtom } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
@@ -12,6 +12,7 @@ import { SelectionToolbar } from '#src/features/selection/index.js';
 export function AdminPageContent({ children }: { children?: React.ReactNode }) {
   const { uploadFiles } = usePhotoUpload();
   const uploadModeDialogOpen = useAtomValue(uploadModeDialogOpenAtom);
+  const uploadAsGroup = useAtomValue(uploadAsGroupAtom);
   const { clearSelection } = useSelectionActions();
   const [location] = useNormalizedLocation();
 
@@ -39,7 +40,10 @@ export function AdminPageContent({ children }: { children?: React.ReactNode }) {
         type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
-            uploadFiles(Array.from(e.target.files));
+            uploadFiles({
+              files: Array.from(e.target.files),
+              asGroup: uploadAsGroup
+            });
             e.target.value = '';
           }
         }}

@@ -15,4 +15,5 @@
  */
 
 export * from './useUI.js';
+export * from './useTopLayer.js';
 export { useFilters, useSearchTransition } from '../photo/useFilters.js';

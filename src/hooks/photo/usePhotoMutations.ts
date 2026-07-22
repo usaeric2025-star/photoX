@@ -208,6 +208,27 @@ export function usePhotoMutations() {
           invalidateAll();
           
           if (Array.isArray(results)) {
+            // Trigger AI analysis for successful new uploads
+            const successfulIds = results
+              .filter((r: any) => r.success && !r.duplicate && r.id)
+              .map((r: any) => r.id);
+            
+            if (successfulIds.length > 0) {
+              createTask({
+                id: generateId(),
+                type: 'ai-analyze',
+                label: t('aiAnalyze') || 'AI 識別中',
+                userId: user?.id,
+                execute: async (signal, onProgress) => {
+                  return runBatchAnalysis({
+                    targetPhotos: successfulIds.map(id => ({ id })) as any,
+                    onProgress,
+                    signal
+                  });
+                }
+              });
+            }
+
             const total = fileList.length;
             const successes = results.filter((r: any) => r.success && !r.duplicate);
             const duplicates = results.filter((r: any) => r.duplicate);
@@ -263,7 +284,6 @@ export function useAIBatchAnalysis() {
 
   const aiAnalyzeMutation = useAppMutation({
     mutationFn: async (photos: any[]) => {
-      const { createTask } = await import('#lib/task-queue/index.js');
       return createTask({
         label: t('aiAnalyze') || 'AI 識別中',
         type: 'ai-analyze',

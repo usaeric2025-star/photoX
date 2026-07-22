@@ -69,20 +69,10 @@ export function Image({
             !containerClassName?.includes('bg-') && "bg-surface-mute",
             containerClassName
         )}>
-            {/* 1. Error Placeholder */}
-            {hasError && (
-                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-surface-soft text-text-soft p-4 text-center">
-                    <svg className="w-8 h-8 opacity-40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
-                    <span className="text-xs opacity-50 font-sans line-clamp-2 select-none">{alt || '图片加载失败'}</span>
-                </div>
-            )}
-
-            {/* 2. Loading Placeholder / LQIP */}
+            {/* 1. Loading Placeholder / LQIP */}
             {!isLoaded && !hasError && (
                 <div className={cn(
-                    "absolute inset-0 z-10",
+                    "absolute inset-0",
                     !priority && "bg-surface-mute"
                 )}>
                     {lqipSrc ? (
@@ -110,7 +100,7 @@ export function Image({
                 </div>
             )}
 
-            {/* 3. Final Image */}
+            {/* 2. Final Image */}
             {!hasError && (
                 <img
                     ref={imgRef}
@@ -119,7 +109,7 @@ export function Image({
                     onLoad={handleLoad}
                     onError={handleError}
                     className={cn(
-                        "absolute inset-0 w-full h-full object-cover object-center z-20",
+                        "absolute inset-0 w-full h-full object-cover object-center",
                         !disableFade && !priority && "transition-opacity duration-200 ease-out",
                         (isLoaded || disableFade || priority) ? "opacity-100" : "opacity-0",
                         className
@@ -128,6 +118,16 @@ export function Image({
                     {...(priority ? { fetchPriority: "high" } : {})}
                     {...props}
                 />
+            )}
+
+            {/* 3. Error Placeholder */}
+            {hasError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-soft text-text-soft p-4 text-center">
+                    <svg className="w-8 h-8 opacity-40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+                    <span className="text-xs opacity-50 font-sans line-clamp-2 select-none">{alt || '图片加载失败'}</span>
+                </div>
             )}
         </div>
     );
