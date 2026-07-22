@@ -14,27 +14,12 @@ import { userAtom } from '#src/store/index.js';
 import { STALE_TIMES } from '#lib/query/config.js';
 import { runBatchAnalysis } from '#src/features/ai/orchestration.js';
 import { feedback } from '#src/lib/feedback.js';
+export { updatePhoto } from './api.js';
 
 export type UploadInput = 
   | FileList 
   | File[] 
   | { files: FileList | File[]; asGroup?: boolean; groupId?: string };
-
-/**
- * updatePhoto (Standalone)
- * 用於非組件環境（如 AI Orchestration）直接調用 API。
- */
-export async function updatePhoto(id: string, updates: any) {
-  const res = await api.admin.photos[':id'].$patch({
-    param: { id },
-    // @ts-ignore
-    json: updates
-  });
-  const data = await ErrorFactory.unwrap<any>(res, 'Update Failed');
-  globalQueryClient.invalidateQueries({ queryKey: queryKeys.photos.detail(id) });
-  globalQueryClient.invalidateQueries({ queryKey: queryKeys.photos.lists() });
-  return data;
-}
 
 /**
  * usePhotoUpload (Standalone alias)

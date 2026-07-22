@@ -4,6 +4,7 @@ import { storage } from '#lib/storage.js';
 import { tokenAtom } from '#src/store/index.js';
 import { ErrorFactory } from '#src/lib/error/index.js';
 import { getDefaultStore } from 'jotai';
+import { supabase } from '#lib/supabase.js';
 
 // Get base URL for the API
 const getBaseUrl = () => {
@@ -33,7 +34,6 @@ const client = hc<AppType>(getBaseUrl(), {
 
     if (!token) {
       try {
-        const { supabase } = await import('#lib/supabase.js');
         const { data } = await supabase.auth.getSession();
         if (data?.session?.access_token) {
           token = data.session.access_token;

@@ -1,3 +1,5 @@
+import { perfAudit } from './perfAudit.js';
+
 const isBrowser = typeof window !== 'undefined';
 const isDev = process.env.NODE_ENV !== 'production';
 const isTest = process.env.NODE_ENV === 'test';
@@ -47,9 +49,7 @@ class Logger {
       console.warn(`[PERF] ${label} exceeded threshold (${threshold}ms): ${duration.toFixed(2)}ms`);
       // Record incident for diagnostics - skip if in worker (no localStorage)
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-        import('./perfAudit.js').then(({ perfAudit }) => {
-          perfAudit.record({ label, duration, threshold });
-        }).catch(() => {});
+        perfAudit.record({ label, duration, threshold });
       }
     } else if (this.enabled) {
       this.debug(`${label} took ${duration.toFixed(2)}ms`);

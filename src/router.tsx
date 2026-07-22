@@ -85,139 +85,49 @@ export const router = createBrowserRouter([
         path: '/admin',
         element: (
           <AdminGuard>
-            <AdminPageContent>
-              <AdminGallery />
-            </AdminPageContent>
+            <AdminPageContent />
           </AdminGuard>
         ),
-      },
-      {
-        path: '/admin/dashboard',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <AdminGallery />
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/admin/batch',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
-                <BatchEditScreen />
-              </ScreenWrapper>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/admin/batch-edit',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
-                <BatchEditScreen />
-              </ScreenWrapper>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/admin/diagnostics',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
-                <DiagDashboard />
-              </ScreenWrapper>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/admin/diagnose',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
-                <DiagDashboard />
-              </ScreenWrapper>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/admin/settings',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <div className="h-full bg-slate-50 animate-scale-in w-full">
-                <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
-              </div>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/admin/tasks',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <div className="h-full bg-slate-50 animate-scale-in w-full">
-                <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
-              </div>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/admin/error-logs',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <div className="h-full bg-slate-50 animate-scale-in w-full">
-                <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
-              </div>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/admin/group/:id',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <AdminGroupDetailPage />
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/settings',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <div className="h-full bg-slate-50 animate-scale-in w-full">
-                <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
-              </div>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
-      },
-      {
-        path: '/diagnostics',
-        element: (
-          <AdminGuard>
-            <AdminPageContent>
-              <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
-                <DiagDashboard />
-              </ScreenWrapper>
-            </AdminPageContent>
-          </AdminGuard>
-        ),
+        children: [
+          { index: true, element: <AdminGallery /> },
+          { path: 'dashboard', element: <AdminGallery /> },
+          { path: 'batch', element: (
+            <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
+              <BatchEditScreen />
+            </ScreenWrapper>
+          )},
+          { path: 'batch-edit', element: (
+            <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
+              <BatchEditScreen />
+            </ScreenWrapper>
+          )},
+          { path: 'diagnostics', element: (
+            <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
+              <DiagDashboard />
+            </ScreenWrapper>
+          )},
+          { path: 'diagnose', element: (
+            <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
+              <DiagDashboard />
+            </ScreenWrapper>
+          )},
+          { path: 'settings', element: (
+            <div className="h-full bg-slate-50 animate-scale-in w-full">
+              <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
+            </div>
+          )},
+          { path: 'tasks', element: (
+            <div className="h-full bg-slate-50 animate-scale-in w-full">
+              <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
+            </div>
+          )},
+          { path: 'error-logs', element: (
+            <div className="h-full bg-slate-50 animate-scale-in w-full">
+              <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
+            </div>
+          )},
+          { path: 'group/:id', element: <AdminGroupDetailPage /> },
+        ]
       },
       {
         path: '*',

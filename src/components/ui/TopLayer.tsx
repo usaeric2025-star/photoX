@@ -91,7 +91,7 @@ export function TopLayer({
       ref={ref} 
       popover="manual" 
       className={cn(
-        "fixed bg-transparent border-none p-0 m-0 overflow-visible outline-none inset-auto", 
+        "fixed bg-transparent border-none p-0 m-0 overflow-visible outline-none", 
         className
       )}
     >
