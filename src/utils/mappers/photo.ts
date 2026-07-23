@@ -39,7 +39,7 @@ export function mapSupabasePhoto(raw: any, allTags?: Tag[]): Photo {
     modelNumber: String(raw.model_number || raw.modelNumber || ''),
     imageHash,
     name: raw.name || '',
-    categoryId: (raw.category_id || raw.categoryId !== undefined ? Number(raw.category_id || raw.categoryId) : null) as number | null,
+    categoryId: (raw.category_id || raw.categoryId !== undefined ? Number(raw.category_id || raw.categoryId) : (raw.category?.id ? Number(raw.category.id) : null)) as number | null,
     manufacturerId: (raw.manufacturer_id || raw.manufacturerId || null) as string | null,
     description: raw.description || raw.description_translations || null,
     imageUrl,
@@ -58,8 +58,8 @@ export function mapSupabasePhoto(raw: any, allTags?: Tag[]): Photo {
     price: String(raw.price || ''),
     tags,
     dimensions: Array.isArray(raw.dimensions) ? raw.dimensions.map((d: any) => validateDimension(d)) : [],
-    categoryName: raw.categoryName || '',
-    categoryDescription: raw.categoryDescription || null,
+    categoryName: raw.categoryName || raw.category?.name || '',
+    categoryDescription: raw.categoryDescription || raw.category?.description || null,
     manufacturerName: raw.manufacturerName || ''
   };
 }

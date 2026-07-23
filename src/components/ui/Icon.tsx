@@ -12,7 +12,7 @@ import {
   ShoppingCart, Hash, History, Type, Palette, Smartphone, Laptop, Tablet,
   CheckSquare, ExternalLink, Factory, MoreVertical, Shield, ChevronLeft, 
   ChevronRight, ChevronsLeft, ChevronsRight, ArrowLeftRight, Download, 
-  RotateCcw, Maximize, Minimize, Bell, Calendar, Mail, Phone, MapPin,
+  RotateCcw, RefreshCcw, Maximize, Minimize, Bell, Calendar, Mail, Phone, MapPin,
   HeartOff, StarHalf, Play, Pause, Square, Circle, Triangle, LucideIcon
 } from 'lucide-react';
 import { cn } from '#lib/utils.js';
@@ -115,6 +115,7 @@ const iconMap: Record<string, LucideIcon> = {
   'shield': Shield,
   'download': Download,
   'rotate-ccw': RotateCcw,
+  'refresh-ccw': RefreshCcw,
   'bell': Bell,
   'calendar': Calendar,
   'mail': Mail,

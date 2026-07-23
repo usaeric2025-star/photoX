@@ -2,8 +2,8 @@ import React, { memo } from 'react';
 import { Category, Tag } from '#src/types/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCardBase } from './PhotoCardBase.js';
-import { PhotoStatusBadges, PhotoCardInfo } from './PhotoCardParts.js';
-import { usePerformance, useTranslation } from '#src/hooks/index.js';
+import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts.js';
+import { usePerformance, useTranslation, useIsMultiSelect, useIsPhotoSelected } from '#src/hooks/index.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
 import { useGrid } from '#src/context/GridContext.js';
 import { Icon } from '#src/components/ui/Icon.js';
@@ -36,11 +36,13 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   const { columns } = useGrid();
   const { appLang: hookLang } = useTranslation();
   const appLang = (lang as any) || hookLang;
+  const isMultiSelect = useIsMultiSelect();
+  const isPhotoSelected = useIsPhotoSelected(photo.id);
   
   const { cardRef, handleClick, longPressHandlers } = usePhotoCard({
     photo,
     isManagement: false,
-    isMultiSelect: false,
+    isMultiSelect,
     showGroupsCollapsed,
     hasSearchQuery,
     onClick
@@ -52,8 +54,8 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   return (
     <PhotoCardBase
       item={photo}
-      isSelected={false}
-      isMultiSelect={false}
+      isSelected={isPhotoSelected}
+      isMultiSelect={isMultiSelect}
       imgVariant={columns <= 4 ? 'md' : 'sm'}
       priority={priority}
       onClick={handleClick}
@@ -67,11 +69,14 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       onTouchEnd={longPressHandlers.onTouchEnd}
       onTouchCancel={longPressHandlers.onTouchCancel}
     >
+      {isMultiSelect && (
+        <PhotoSelectionIndicator isSelected={isPhotoSelected} />
+      )}
       <PhotoStatusBadges 
         photo={photo} 
         hideGroupBadge={hideGroupBadge || !showGroupsCollapsed} 
       />
-      {photo.isPinned && (
+      {photo.isPinned && !isMultiSelect && (
         <div className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-full border border-white/20 bg-black/80 text-white shadow-lg pointer-events-none select-none">
           <Icon name="heart" size={14} className="fill-current text-red-500" />
         </div>

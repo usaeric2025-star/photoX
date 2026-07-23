@@ -4,14 +4,13 @@ import { patch } from '#lib/store/index.js';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { cn } from "#lib/utils.js";
-import { motion } from 'lite-sleek';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { useFilters } from '#src/features/filters/index.js';
 import { useAppQuery } from '#lib/query/index.js';
 import { api } from '#lib/api.js';
 import { LightboxSlide } from '#lib/lightbox/types.js';
 import { Photo } from '#src/types/photo.js';
-import { usePhoto, useAdminMode } from '#src/hooks/index.js';
+import { usePhoto, useAdminMode, useTranslation } from '#src/hooks/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 
 // Components
@@ -79,21 +78,10 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
       if (!el.open) {
         try {
           el.showModal();
-          document.body.style.overflow = 'hidden';
         } catch (e) {
           el.setAttribute('open', '');
-          document.body.style.overflow = 'hidden';
         }
-      }
-    } else {
-      if (el.open) {
-        try {
-          el.close();
-        } catch (e) {}
-      }
-      const activeDialogs = document.querySelectorAll('dialog[open]');
-      if (activeDialogs.length === 0) {
-        document.body.style.overflow = '';
+        document.body.style.overflow = 'hidden';
       }
     }
 
@@ -106,8 +94,11 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
 
     return () => {
       el.removeEventListener('cancel', handleCancel);
+      if (el.open) {
+        try { el.close(); } catch (e) {}
+      }
       const activeDialogs = document.querySelectorAll('dialog[open]');
-      if (activeDialogs.length <= 1) { // includes this one before closing
+      if (activeDialogs.length <= 1) {
         document.body.style.overflow = '';
       }
     };
@@ -131,7 +122,19 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
 
   const [showInfo, setShowInfo] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const lang = currentDescLang;
+  const { appLang } = useTranslation();
+
+  const prevAppLangRef = useRef(appLang);
+
+  // Sync info card language with website language ONLY when appLang changes
+  useEffect(() => {
+    if (appLang && prevAppLangRef.current !== appLang) {
+      prevAppLangRef.current = appLang;
+      patch({ descLang: appLang });
+    }
+  }, [appLang, patch]);
+
+  const lang = currentDescLang || appLang;
 
   const handleStageTap = useCallback(() => {
     if (showInfo) {
@@ -299,8 +302,8 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     <dialog
       ref={dialogRef}
       className={cn(
-        "fixed inset-0 w-screen h-screen max-w-none max-h-none outline-none border-none overflow-hidden m-0 p-0 font-sans select-none bg-black/95",
-        "animate-in fade-in duration-200 ease-out"
+        "fixed inset-0 w-screen h-screen max-w-none max-h-none outline-none border-none overflow-hidden m-0 p-0 font-sans select-none bg-black/95 w-full h-full backdrop:bg-black/95",
+        "animate-in fade-in duration-150 ease-out"
       )}
     >
       {isDeepLinkLoading ? (

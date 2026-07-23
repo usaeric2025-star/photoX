@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useSetAtom } from "jotai";
@@ -7,7 +7,7 @@ import { User, Theme } from '#src/types/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
-import { usePermission } from '#src/hooks/index.js';
+import { usePermission, useInvalidatePhotos } from '#src/hooks/index.js';
 import { ADMIN_ROUTES } from '#src/constants/config.js';
 
 interface AdminHeaderActionsProps {
@@ -43,6 +43,19 @@ export function AdminHeaderActions({
   const canManageSystem = can('system:settings');
   const canAccessDiagnostics = can('admin:dashboard:access');
   
+  const { invalidateAll } = useInvalidatePhotos();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCooldown, setIsCooldown] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    if (isRefreshing || isCooldown) return;
+    setIsCooldown(true);
+    setIsRefreshing(true);
+    invalidateAll();
+    setTimeout(() => setIsRefreshing(false), 600);
+    setTimeout(() => setIsCooldown(false), 1500);
+  }, [isRefreshing, isCooldown, invalidateAll]);
+
   const menuItems = [
     { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation(ADMIN_ROUTES.HOME) },
     ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) }] : []),
@@ -94,6 +107,18 @@ export function AdminHeaderActions({
             {taskCount > 99 ? '99+' : taskCount}
           </span>
         )}
+      </button>
+
+      <LanguageSwitcher />
+
+      <button
+        type="button"
+        onClick={handleRefresh}
+        disabled={isRefreshing || isCooldown}
+        className={cn("w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed", theme.button)}
+        title={t('refresh', '刷新')}
+      >
+        {isRefreshing ? <Icon name="loader" size={18} className="animate-spin text-slate-600" /> : <Icon name="refresh-cw" size={18} />}
       </button>
 
       <NativePopover

@@ -9,7 +9,7 @@ export const getTranslatedCategoryName = (
   catId: string | number | undefined,
   categories: Category[],
   lang: string,
-  t: TranslationType,
+  t?: TranslationType | any,
   categoryMap?: Map<string, Category>
 ): string => {
   if (!catId) return "";

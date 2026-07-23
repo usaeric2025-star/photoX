@@ -34,13 +34,11 @@ export function LightboxStage({ onTap }: LightboxStageProps = {}) {
     minSwipeDistance: GESTURE_CONFIG.SWIPE_THRESHOLD,
   });
 
-  if (!currentPhoto) return null;
-
   // Derive photo data
-  const photoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
-  const title = photoData.name || 'Photo';
-  const key = photoData.imageUrl || photoData.uri || '';
-  const hash = photoData.imageHash;
+  const photoData = currentPhoto ? (('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo) : null;
+  const title = photoData?.name || 'Photo';
+  const key = photoData?.imageUrl || photoData?.uri || '';
+  const hash = photoData?.imageHash;
   
   // Use standardized thumb helper
   const src = getPhotoThumb(key, 'LG', hash);
@@ -53,6 +51,8 @@ export function LightboxStage({ onTap }: LightboxStageProps = {}) {
     return getPhotoThumb(photo.imageUrl || photo.uri, 'LG', photo.imageHash);
   });
   usePhotoPrefetch(prefetchUrls, lightboxCurrentIndex, 2);
+
+  if (!currentPhoto || !photoData) return null;
 
   return (
     <div 
@@ -104,7 +104,7 @@ export function LightboxStage({ onTap }: LightboxStageProps = {}) {
 
       {/* Floating Reset Zoom Button in Bottom Right */}
       {isZoomed && (
-        <div className="absolute bottom-24 right-6 z-50">
+        <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-50">
           <button
             type="button"
             onPointerDown={(e) => e.stopPropagation()}
@@ -113,10 +113,10 @@ export function LightboxStage({ onTap }: LightboxStageProps = {}) {
               e.stopPropagation();
               resetZoom();
             }}
-            className="p-3 bg-black/90 hover:bg-black text-white rounded-full border border-white/20 active:scale-95 shadow-2xl transition-all select-none cursor-pointer flex items-center justify-center"
+            className="w-11 h-11 sm:w-12 sm:h-12 bg-white hover:bg-zinc-100 text-zinc-900 rounded-full border border-white/50 shadow-2xl ring-2 ring-black/40 active:scale-90 transition-all select-none cursor-pointer flex items-center justify-center"
             title="恢復默認"
           >
-            <Icon name="refresh-ccw" size={20} className="stroke-[2.5]" />
+            <Icon name="refresh-ccw" size={22} className="stroke-[2.5] text-zinc-900" />
           </button>
         </div>
       )}

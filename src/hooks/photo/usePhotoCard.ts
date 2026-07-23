@@ -65,6 +65,8 @@ export function usePhotoCard({
 
     if (isMultiSelect) {
       logger.debug('[usePhotoCard] SELECTING photo:', photo.id);
+      e.stopPropagation();
+      e.preventDefault();
       toggleSelect(photo.id);
       return;
     }

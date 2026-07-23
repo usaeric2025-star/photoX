@@ -295,5 +295,26 @@ export const adminPhotos = new Hono()
     } catch (e: unknown) {
         throw errorFactory.wrap(e, 'admin.pin-photo', 'DB_ERROR');
     }
+})
+.post("/photo-ai-reextract", async (c) => {
+    try {
+        const { photoId } = await c.req.json();
+        if (!photoId) return errorResponse(c, "photoId is required", 400);
+
+        const auditLog = await db.query.aiAuditLogs.findFirst({
+            where: eq(aiAuditLogs.photoId, photoId),
+            orderBy: [desc(aiAuditLogs.createdAt)]
+        });
+
+        if (!auditLog) return errorResponse(c, "No AI audit log found", 404);
+
+        return successResponse(c, {
+            photoId,
+            rawResult: auditLog.rawOutput || auditLog.cleanedOutput || '',
+            parsedData: auditLog.cleanedOutput || null
+        });
+    } catch (e: unknown) {
+        throw errorFactory.wrap(e, 'admin.photo-ai-reextract', 'DB_ERROR');
+    }
 });
 

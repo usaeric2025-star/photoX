@@ -1,7 +1,8 @@
 import { useAtomValue } from 'jotai';
-import { showWhatsAppChoiceAtom } from '#src/store/index.js';
+import { showWhatsAppChoiceAtom, userAtom, authLoadingAtom } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
-import React, { useMemo, useState, useRef, Suspense } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useFilters } from '#src/features/filters/index.js';
 import { useTranslation } from '#src/hooks/index.js';
 import { PublicHeader } from '#src/components/layout/PublicHeader.js';
@@ -15,6 +16,17 @@ import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
 import { TopLayer } from '#src/components/ui/TopLayer.js';
 
 export default function PublicPage() {
+  const user = useAtomValue(userAtom);
+  const isAuthLoading = useAtomValue(authLoadingAtom);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isExplicitPublic = searchParams.get('mode') === 'public';
+
+  useEffect(() => {
+    if (!isAuthLoading && user && !isExplicitPublic) {
+      navigate('/admin', { replace: true });
+    }
+  }, [isAuthLoading, user, isExplicitPublic, navigate]);
   const { 
     category, 
     tags, 

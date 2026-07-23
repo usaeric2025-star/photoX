@@ -5,7 +5,7 @@ import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { } from '#lib/store/index.js';
-import {  usePublicSettings, usePermission, useTranslation, type UIStoreState } from '#src/hooks/index.js';
+import { usePublicSettings, usePermission, useTranslation, useInvalidatePhotos } from '#src/hooks/index.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
@@ -32,8 +32,26 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const isGroupPage = location.startsWith('/group/') || location.startsWith(ADMIN_ROUTES.GROUP_DETAIL_BASE + '/');
 
   const { t } = useTranslation();
-
   const hasAdminAccess = can('admin:dashboard:access');
+
+  const { invalidateAll } = useInvalidatePhotos();
+  const [internalRefreshing, setInternalRefreshing] = React.useState(false);
+  const [isCooldown, setIsCooldown] = React.useState(false);
+
+  const handleRefresh = React.useCallback(() => {
+    if (isRefreshing || internalRefreshing || isCooldown) return;
+    setIsCooldown(true);
+    if (onRefresh) {
+      onRefresh();
+    } else {
+      setInternalRefreshing(true);
+      invalidateAll();
+      setTimeout(() => setInternalRefreshing(false), 600);
+    }
+    setTimeout(() => setIsCooldown(false), 1500);
+  }, [onRefresh, invalidateAll, isRefreshing, internalRefreshing, isCooldown]);
+
+  const activeRefreshing = isRefreshing || internalRefreshing;
 
   const cachedSettings = React.useMemo(() => {
     try {
@@ -105,16 +123,14 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
       {/* 右侧：刷新 & 管理/登录入口 */}
       <div className="flex items-center gap-2 flex-nowrap shrink-0">
         
-        {onRefresh && (
-          <button 
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className={cn("w-9 h-9", theme.button)}
-            title={t('refresh')}
-          >
-            {isRefreshing ? <LoadingSpinner size="xs" /> : <Icon name="refresh-cw" size={18} />}
-          </button>
-        )}
+        <button 
+          onClick={handleRefresh}
+          disabled={activeRefreshing || isCooldown}
+          className={cn("w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed", theme.button)}
+          title={t('refresh')}
+        >
+          {activeRefreshing ? <LoadingSpinner size="xs" /> : <Icon name="refresh-cw" size={18} />}
+        </button>
 
         {/* 3. 切换至管理后台/登录按钮 (Apple Style) - 僅員工及未登錄遊客可見 */}
         {(!user || hasAdminAccess) && (
