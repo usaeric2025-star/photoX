@@ -54,7 +54,10 @@ export function useSelectedSet() {
  */
 export function useIsMultiSelect() {
   const [searchParams] = useSearchParams();
-  return searchParams.get(QUERY_PARAMS.BATCH) === 'true';
+  const isBatch = searchParams.get(QUERY_PARAMS.BATCH) === 'true';
+  const raw = searchParams.get(QUERY_PARAMS.SELECTED) || '';
+  const hasSelected = raw.split(',').filter(Boolean).length > 0;
+  return isBatch || hasSelected;
 }
 
 /**
@@ -74,6 +77,7 @@ export function useSelectionActions() {
   const toggleSelect = useCallback((id: string) => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
+      next.set(QUERY_PARAMS.BATCH, 'true');
       const current = prev.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean) || [];
       const isAlreadySelected = current.includes(id);
       
@@ -98,6 +102,7 @@ export function useSelectionActions() {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
       next.delete(QUERY_PARAMS.SELECTED);
+      next.delete(QUERY_PARAMS.BATCH);
       return next;
     }, { replace: true });
     SelectionService.reset();
@@ -106,11 +111,13 @@ export function useSelectionActions() {
   const toggleMode = useCallback(() => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
-      const prevMode = prev.get(QUERY_PARAMS.BATCH) === 'true';
-      const nextMode = !prevMode;
+      const isBatch = prev.get(QUERY_PARAMS.BATCH) === 'true';
+      const hasSelected = (prev.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean).length || 0) > 0;
+      const isCurrentlyMulti = isBatch || hasSelected;
       
-      if (nextMode) next.set(QUERY_PARAMS.BATCH, 'true');
-      else {
+      if (!isCurrentlyMulti) {
+        next.set(QUERY_PARAMS.BATCH, 'true');
+      } else {
         next.delete(QUERY_PARAMS.BATCH);
         next.delete(QUERY_PARAMS.SELECTED);
       }

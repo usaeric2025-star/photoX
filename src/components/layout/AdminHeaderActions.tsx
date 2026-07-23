@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { useSetAtom } from "jotai";
@@ -7,7 +7,7 @@ import { User, Theme } from '#src/types/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
-import { usePermission, useInvalidatePhotos } from '#src/hooks/index.js';
+import { usePermission } from '#src/hooks/index.js';
 import { ADMIN_ROUTES } from '#src/constants/config.js';
 
 interface AdminHeaderActionsProps {
@@ -40,21 +40,9 @@ export function AdminHeaderActions({
   const setTaskDrawerOpen = useSetAtom(isTaskDrawerOpen);
   const { can } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
+  const canAiAnalyze = can('photo:ai-analyze');
   const canManageSystem = can('system:settings');
   const canAccessDiagnostics = can('admin:dashboard:access');
-  
-  const { invalidateAll } = useInvalidatePhotos();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isCooldown, setIsCooldown] = useState(false);
-
-  const handleRefresh = useCallback(() => {
-    if (isRefreshing || isCooldown) return;
-    setIsCooldown(true);
-    setIsRefreshing(true);
-    invalidateAll();
-    setTimeout(() => setIsRefreshing(false), 600);
-    setTimeout(() => setIsCooldown(false), 1500);
-  }, [isRefreshing, isCooldown, invalidateAll]);
 
   const menuItems = [
     { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation(ADMIN_ROUTES.HOME) },
@@ -81,19 +69,21 @@ export function AdminHeaderActions({
           <Icon name="check-square" size={18} />
         </button>
       )}
-      <button
-        type="button"
-        onClick={() => batchAiIdentify()}
-        disabled={isAiAnalyzing}
-        className={cn("w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed", theme.button)}
-        title={t('aiSmartIdentify')}
-      >
-        {isAiAnalyzing ? (
-          <Icon name="loader" size={18} className="animate-spin text-blue-600" />
-        ) : (
-          <Icon name="sparkles" size={18} className="animate-pulse" />
-        )}
-      </button>
+      {canAiAnalyze && (
+        <button
+          type="button"
+          onClick={() => batchAiIdentify()}
+          disabled={isAiAnalyzing}
+          className={cn("w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed", theme.button)}
+          title={t('aiSmartIdentify')}
+        >
+          {isAiAnalyzing ? (
+            <Icon name="loader" size={18} className="animate-spin text-blue-600" />
+          ) : (
+            <Icon name="sparkles" size={18} className="animate-pulse" />
+          )}
+        </button>
+      )}
 
       <button
         type="button"
@@ -107,18 +97,6 @@ export function AdminHeaderActions({
             {taskCount > 99 ? '99+' : taskCount}
           </span>
         )}
-      </button>
-
-      <LanguageSwitcher />
-
-      <button
-        type="button"
-        onClick={handleRefresh}
-        disabled={isRefreshing || isCooldown}
-        className={cn("w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed", theme.button)}
-        title={t('refresh', '刷新')}
-      >
-        {isRefreshing ? <Icon name="loader" size={18} className="animate-spin text-slate-600" /> : <Icon name="refresh-cw" size={18} />}
       </button>
 
       <NativePopover

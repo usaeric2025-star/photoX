@@ -155,6 +155,7 @@ export const staffLogin = (passcode: string, correctPasscode: string) => {
       id: 'staff-user',
       email: 'staff@photox.com',
       displayName: 'Staff (員工)',
+      role: 'staff',
       photoUrl: null,
       avatarUrl: null,
       emailVerified: true,

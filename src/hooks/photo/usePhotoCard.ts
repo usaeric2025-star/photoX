@@ -32,11 +32,10 @@ export function usePhotoCard({
 }: UsePhotoCardInteractionProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const longPressTriggered = useRef(false);
-  const resetTimerRef = useRef<number | null>(null);
   const { can } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
   
-  const { toggleSelect, toggleMode } = useSelectionActions();
+  const { toggleSelect } = useSelectionActions();
   
   const [location, setLocation] = useNormalizedLocation();
 
@@ -57,7 +56,8 @@ export function usePhotoCard({
     logger.debug('[usePhotoCard] CLICKED photo:', photo.id, { isManagement, isMultiSelect, hasSearchQuery });
     
     if (longPressTriggered.current) {
-      logger.debug('[usePhotoCard] BLOCKED by long press');
+      logger.debug('[usePhotoCard] BLOCKED click by long press');
+      longPressTriggered.current = false;
       e.stopPropagation();
       e.preventDefault();
       return;
@@ -94,16 +94,9 @@ export function usePhotoCard({
     delay: 450,
     onLongPress: () => {
       longPressTriggered.current = true;
-      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-      resetTimerRef.current = window.setTimeout(() => {
-        longPressTriggered.current = false;
-      }, 300);
 
       if (canBatchEdit) {
-        if (!isMultiSelect) {
-          toggleMode();
-          toggleSelect(photo.id);
-        }
+        toggleSelect(photo.id);
         if ('vibrate' in navigator) navigator.vibrate(50);
       } else {
         patch({ showWhatsAppChoice: true, pendingPhotoId: photo.id });

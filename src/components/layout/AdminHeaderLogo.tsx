@@ -38,6 +38,10 @@ export function AdminHeaderLogo({ logoUrl, totalCount, theme }: AdminHeaderLogoP
             <span className="text-[8px] sm:text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
               Admin
             </span>
+          ) : role === 'staff' ? (
+            <span className="text-[8px] sm:text-[9px] font-black bg-emerald-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
+              Staff
+            </span>
           ) : (
             <span className="text-[8px] sm:text-[9px] font-black bg-slate-600 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 select-none">
               Guest

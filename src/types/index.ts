@@ -34,6 +34,7 @@ export interface User {
   photoUrl: string | null;
   avatarUrl?: string | null;
   emailVerified: boolean;
+  role?: 'admin' | 'staff' | 'public';
 }
 
 export interface AppSettings {
