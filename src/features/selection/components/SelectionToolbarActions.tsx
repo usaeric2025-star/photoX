@@ -68,14 +68,18 @@ export function SelectionToolbarActions({
         <button
           id="combine-photos-btn"
           onClick={onManualGroup}
-          disabled={selectedCount < 2 || isAnyPending}
-          className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
+          disabled={isAnyPending}
+          className={`flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all border active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm outline-none ${
+            selectedCount < 2
+              ? "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+              : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+          }`}
           title={selectedCount < 2 ? "請至少選取兩張照片以進行合組" : "手動將照片合併為一組"}
         >
           {isCombining ? (
             <LoadingSpinner size="xs" className="text-blue-600 shrink-0" />
           ) : (
-            <Icon name="folder-plus" size={14} className="text-blue-600 shrink-0" />
+            <Icon name="folder-plus" size={14} className={selectedCount < 2 ? "text-slate-500 shrink-0" : "text-blue-600 shrink-0"} />
           )}
           <span className="shrink-0">
             {isMd ? '手動合組' : '合組'}

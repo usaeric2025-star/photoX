@@ -66,7 +66,9 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const { can } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
 
-  if (!canBatchEdit) {
+  const isBatchEditPage = location.startsWith('/admin/batch-edit');
+
+  if (!canBatchEdit || !isVisible || isBatchEditPage) {
     return null;
   }
 
@@ -76,16 +78,16 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   };
 
   const handleManualGroup = async () => {
+    if (selectedCount < 2) {
+      feedback.info(t('selectAtLeastTwoToGroup') || '請至少選取 2 張照片以進行合組');
+      return;
+    }
     const idsToGroup = [...selectedIds];
-    await feedback.promise(
-      combineMutation.mutateAsync({ photoIds: idsToGroup }),
-      {
-        loading: t('processing') || '處理中...',
-        success: t('mergePhotosSuccess', idsToGroup.length),
-        error: t('mergePhotosFailed') || '合併失敗'
-      }
-    );
-    clearSelection();
+    try {
+      await combineMutation.mutateAsync({ photoIds: idsToGroup });
+    } catch (err) {
+      // Handled by combineMutation
+    }
   };
 
   const handleRemoveFromGroup = async () => {
@@ -139,6 +141,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
     <TopLayer
       type="popover"
       open={isVisible}
+      onClose={clearSelection}
       className={cn(
         "bottom-0 left-0 right-0 top-auto w-full bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] pb-safe animate-in fade-in slide-in-from-bottom-4 duration-300",
         className

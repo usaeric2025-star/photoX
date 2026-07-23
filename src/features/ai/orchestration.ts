@@ -106,20 +106,24 @@ export async function runBatchAnalysis({
       throw new Error('User cancelled AI analysis');
     }
     const p = targetPhotos[i];
-    const currentProgress = ((i) / totalPhotosToProcess);
+    // Progress for starting analysis of photo i
+    const photoStartProgress = Math.min(0.85, (i / totalPhotosToProcess) * 0.85 + 0.05);
 
     try {
-      onProgress(currentProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
+      onProgress(photoStartProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
       await analyzeAndSavePhoto(p);
       successCount++;
+      // Progress after finishing analysis of photo i
+      const photoEndProgress = Math.min(0.85, ((i + 1) / totalPhotosToProcess) * 0.85);
+      onProgress(photoEndProgress, `已完成 ${i + 1}/${totalPhotosToProcess} 張照片分析`);
     } catch (err) {
       ErrorFactory.handle(err, { context: `[AI Batch] Photo ${p.id} error` });
     }
   }
 
-  onProgress(0.9, '分析完成');
+  onProgress(0.92, '正在刷新相冊數據...');
   await queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
-  onProgress(1, '分析流程完成');
+  onProgress(1, 'AI 識別流程完成');
   
   return { successCount, groupSuccess: false };
 }

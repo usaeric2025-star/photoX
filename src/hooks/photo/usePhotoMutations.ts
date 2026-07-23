@@ -64,7 +64,45 @@ export function usePhotoMutations() {
       });
       return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
     },
-    onSuccess: () => {
+    onMutate: async (ids: string[]) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
+      const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
+
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+        if (!oldData) return oldData;
+        const filterItem = (item: any) => item && !ids.includes(item.id);
+
+        if (Array.isArray(oldData.pages)) {
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => {
+              if (Array.isArray(page)) return page.filter(filterItem);
+              if (page && Array.isArray(page.items)) return { ...page, items: page.items.filter(filterItem) };
+              if (page && Array.isArray(page.data)) return { ...page, data: page.data.filter(filterItem) };
+              return page;
+            })
+          };
+        }
+        if (Array.isArray(oldData)) return oldData.filter(filterItem);
+        if (Array.isArray(oldData.items)) return { ...oldData, items: oldData.items.filter(filterItem) };
+        if (Array.isArray(oldData.data)) return { ...oldData, data: oldData.data.filter(filterItem) };
+        return oldData;
+      });
+
+      return { previousPhotosData };
+    },
+    onError: (_err, _ids, context: any) => {
+      if (context?.previousPhotosData) {
+        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      feedback.error(labels.mutationFailed || '刪除失敗');
+    },
+    onSuccess: (_, ids) => {
+      feedback.success(t('deleteSuccessCount', ids.length) || `已成功刪除 ${ids.length} 張照片`);
+    },
+    onSettled: () => {
       invalidateAll();
     }
   });
@@ -77,7 +115,45 @@ export function usePhotoMutations() {
       });
       return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
     },
+    onMutate: async ({ ids, updates }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
+      const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
+
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+        if (!oldData) return oldData;
+        const updateItem = (item: any) => (item && ids.includes(item.id) ? { ...item, ...updates } : item);
+
+        if (Array.isArray(oldData.pages)) {
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => {
+              if (Array.isArray(page)) return page.map(updateItem);
+              if (page && Array.isArray(page.items)) return { ...page, items: page.items.map(updateItem) };
+              if (page && Array.isArray(page.data)) return { ...page, data: page.data.map(updateItem) };
+              return page;
+            })
+          };
+        }
+        if (Array.isArray(oldData)) return oldData.map(updateItem);
+        if (Array.isArray(oldData.items)) return { ...oldData, items: oldData.items.map(updateItem) };
+        if (Array.isArray(oldData.data)) return { ...oldData, data: oldData.data.map(updateItem) };
+        return oldData;
+      });
+
+      return { previousPhotosData };
+    },
+    onError: (_err, _vars, context: any) => {
+      if (context?.previousPhotosData) {
+        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      feedback.error(labels.mutationFailed || '修改失敗');
+    },
     onSuccess: () => {
+      feedback.success(t('batchUpdateSuccess') || '批量修改成功');
+    },
+    onSettled: () => {
       invalidateAll();
     }
   });
