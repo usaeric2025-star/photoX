@@ -131,7 +131,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
              json: { 
                ...props.filters as any,
                onlyGroupsCover: false,
-               limit: 1000,
+               limit: 500,
                isAdminMode: props.mode === 'admin'
             } 
           }),
@@ -162,7 +162,11 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
             }
         }
       } catch (e) {
-        ErrorFactory.handle(e as Error, { context: 'Failed to background expand groups for lightbox' });
+        logger.error('[Aggregation] Error:', e);
+        ErrorFactory.handle(e as Error, { 
+          context: 'Failed to background expand groups for lightbox',
+          code: 'AGGREGATION_FAILURE'
+        });
       }
     }
   }, [openLightbox, setLightboxData, isAggregated, props.mode, props.filters, photoId]);

@@ -103,7 +103,7 @@ export function usePhotoMutations() {
       feedback.success(t('deleteSuccessCount', ids.length) || `已成功刪除 ${ids.length} 張照片`);
     },
     onSettled: () => {
-      invalidateAll();
+      invalidateList();
     }
   });
 
@@ -154,7 +154,7 @@ export function usePhotoMutations() {
       feedback.success(t('batchUpdateSuccess') || '批量修改成功');
     },
     onSettled: () => {
-      invalidateAll();
+      invalidateList();
     }
   });
 
@@ -214,7 +214,8 @@ export function usePhotoMutations() {
       feedback.success('合併分組成功');
     },
     onSettled: () => {
-      invalidateAll();
+      invalidateList();
+      invalidateGroups();
     }
   });
 

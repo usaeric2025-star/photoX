@@ -42,15 +42,15 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
 
     const groupMap = new Map(allGroups.map(g => [g.id, g]));
 
-    // 2. Process groups in parallel
-    await Promise.all(uniqueGroupIds.map(async (groupId) => {
+    // 2. Process groups sequentially or with minimal concurrency to respect connection pool limits (max 3 in serverless)
+    for (const groupId of uniqueGroupIds) {
       try {
         const items = photosByGroup.get(groupId) || [];
         const actualCount = items.length;
 
         // Rule: Group must have at least 2 members.
         if (actualCount <= 1) {
-          const dbGroup = groupMap.get(groupId) as { id: string; name: unknown; status: string; coverPhotoId: string | null; createdAt: Date };
+          const dbGroup = groupMap.get(groupId) as any;
           const createdAt = dbGroup?.createdAt ? new Date(dbGroup.createdAt) : null;
           const isRecentlyCreated = createdAt && (Date.now() - createdAt.getTime() < 5 * 60 * 1000); // 5 minutes
 
@@ -61,11 +61,11 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
                 .where(eq(furnitureItems.id, items[0].id));
             }
             await db.delete(groupsTable).where(eq(groupsTable.id, groupId));
-            return;
+            continue;
           }
         }
 
-        const dbGroup = groupMap.get(groupId) as { id: string; name: unknown; status: string; coverPhotoId: string | null; createdAt: Date };
+        const dbGroup = groupMap.get(groupId) as any;
         const dbCoverPhotoId = dbGroup?.coverPhotoId;
         
         const currentCover = items.find(p => p.isGroupCover === true);
@@ -75,48 +75,45 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
           let targetCoverId = items.find(p => p.id === dbCoverPhotoId)?.id;
           
           if (!targetCoverId) {
+            // Pick the latest photo as cover
             const sorted = [...items].sort((a, b) => {
-              return new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime();
+              return new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
             });
             targetCoverId = sorted[0]?.id;
           }
 
-          // Batch update cover status for this group
-          const updatePromises = [];
-          const toSetFalse = items.filter(p => p.isGroupCover && p.id !== targetCoverId);
-          if (toSetFalse.length > 0) {
-              updatePromises.push(
-                  db.update(furnitureItems)
-                    .set({ isGroupCover: false })
-                    .where(inArray(furnitureItems.id, toSetFalse.map(p => p.id)))
-              );
-          }
-          
-          const toSetTrue = items.filter(p => !p.isGroupCover && p.id === targetCoverId);
-          if (toSetTrue.length > 0) {
-              updatePromises.push(
-                  db.update(furnitureItems)
-                    .set({ isGroupCover: true })
-                    .where(eq(furnitureItems.id, targetCoverId!))
-              );
-          }
-          
-          if (updatePromises.length > 0) {
-            await Promise.all(updatePromises);
+          if (targetCoverId) {
+            // Update photo table: set this one as cover and others as non-cover
+            await db.update(furnitureItems)
+              .set({ isGroupCover: false })
+              .where(and(eq(furnitureItems.groupId, groupId), sql`${furnitureItems.id} != ${targetCoverId}`));
+            
+            await db.update(furnitureItems)
+              .set({ isGroupCover: true })
+              .where(eq(furnitureItems.id, targetCoverId));
           }
 
           // Update group table
           await db.update(groupsTable)
             .set({
+              memberCount: actualCount,
               coverPhotoId: targetCoverId || null,
+              updatedAt: new Date()
+            })
+            .where(eq(groupsTable.id, groupId));
+        } else {
+          // Just update member count if cover is still valid
+          await db.update(groupsTable)
+            .set({
+              memberCount: actualCount,
               updatedAt: new Date()
             })
             .where(eq(groupsTable.id, groupId));
         }
       } catch (err) {
-        ErrorFactory.handle(err, { context: `[GroupSync] Error in group ${groupId}` });
+        logger.error(`[GroupSync] Error processing group ${groupId}:`, err);
       }
-    }));
+    }
   } catch (err) {
     ErrorFactory.handle(err, { context: '[GroupSync] Bulk fetch failed' });
   }

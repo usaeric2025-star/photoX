@@ -100,15 +100,6 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const handleManualGroup = async () => {
     if (selectedCount < 2 || isAnyPending) return;
     
-    const confirmResult = await confirm({
-      title: '合併分組',
-      description: `確定要將選中的 ${selectedCount} 張照片合併為一組嗎？`,
-      confirmText: '確定合併',
-      variant: 'default'
-    });
-
-    if (!confirmResult) return;
-
     try {
       const targetGroupId = crypto.randomUUID();
       const idsToGroup = [...selectedIds]; // 捕捉当前的内存 ID 快照

@@ -316,7 +316,8 @@ export function useGroupMutations() {
       feedback.success(t('addPhotosSuccess', variables.photoIds.length));
     },
     onSettled: () => {
-      invalidateAll();
+      invalidateList();
+      invalidateGroups();
     }
   });
 
@@ -381,7 +382,8 @@ export function useGroupMutations() {
       }
     },
     onSettled: () => {
-      invalidateAll();
+      invalidateList();
+      invalidateGroups();
     }
   });
 
@@ -422,7 +424,8 @@ export function useGroupMutations() {
       feedback.success(t('removedFromGroup') || '已成功移出照片群組');
     },
     onSettled: () => {
-      invalidateAll();
+      invalidateList();
+      invalidateGroups();
     }
   });
 

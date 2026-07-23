@@ -49,6 +49,12 @@ export default function PublicPage() {
   
   const { t } = useTranslation();
 
+  useEffect(() => {
+    if (user && !isAuthLoading && searchParams.get('mode') !== 'public') {
+      navigate('/admin', { replace: true });
+    }
+  }, [user, isAuthLoading, searchParams, navigate]);
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
     setShowScrollTop(scrollTop > 400);

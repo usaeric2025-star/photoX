@@ -31,13 +31,6 @@ export function useSelectedIds(): string[] {
 }
 
 /**
- * useSelectedSet: 返回选中的 ID 集合 Set<string> (O(1) 查找)
- */
-export function useSelectedSet(): Set<string> {
-  return useAtomValue(selectedIdsSetAtom);
-}
-
-/**
  * useIsMultiSelect: 是否处于多选模式
  */
 export function useIsMultiSelect(): boolean {

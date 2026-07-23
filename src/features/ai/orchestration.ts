@@ -99,31 +99,40 @@ export async function runBatchAnalysis({
   signal?: AbortSignal;
 }) {
   const totalPhotosToProcess = targetPhotos.length;
-  let successCount = 0;
+  let finishedCount = 0;
+  const CONCURRENCY = 3; // Process 3 photos at a time to avoid overwhelming the API/DB
 
-  for (let i = 0; i < targetPhotos.length; i++) {
-    if (signal?.aborted) {
-      throw new Error('User cancelled AI analysis');
-    }
-    const p = targetPhotos[i];
-    // Progress for starting analysis of photo i
-    const photoStartProgress = Math.min(0.85, (i / totalPhotosToProcess) * 0.85 + 0.05);
+  onProgress(0.05, `正在準備分析 ${totalPhotosToProcess} 張照片...`);
 
+  // Simple concurrency pool
+  const processPhoto = async (photo: Photo, index: number) => {
+    if (signal?.aborted) return;
+    
     try {
-      onProgress(photoStartProgress, `正在分析照片 ${i + 1}/${totalPhotosToProcess}`);
-      await analyzeAndSavePhoto(p);
-      successCount++;
-      // Progress after finishing analysis of photo i
-      const photoEndProgress = Math.min(0.85, ((i + 1) / totalPhotosToProcess) * 0.85);
-      onProgress(photoEndProgress, `已完成 ${i + 1}/${totalPhotosToProcess} 張照片分析`);
+      await analyzeAndSavePhoto(photo);
     } catch (err) {
-      ErrorFactory.handle(err, { context: `[AI Batch] Photo ${p.id} error` });
+      ErrorFactory.handle(err, { context: `[AI Batch] Photo ${photo.id} error` });
+    } finally {
+      finishedCount++;
+      const progress = Math.min(0.85, (finishedCount / totalPhotosToProcess) * 0.85);
+      onProgress(progress, `已完成 ${finishedCount}/${totalPhotosToProcess} 張照片分析`);
     }
+  };
+
+  // Run in chunks
+  for (let i = 0; i < targetPhotos.length; i += CONCURRENCY) {
+    if (signal?.aborted) break;
+    const chunk = targetPhotos.slice(i, i + CONCURRENCY);
+    await Promise.all(chunk.map((p, idx) => processPhoto(p, i + idx)));
+  }
+
+  if (signal?.aborted) {
+    throw new Error('User cancelled AI analysis');
   }
 
   onProgress(0.92, '正在刷新相冊數據...');
   await queryClient.invalidateQueries({ queryKey: queryKeys.photos.all });
   onProgress(1, 'AI 識別流程完成');
   
-  return { successCount, groupSuccess: false };
+  return { successCount: finishedCount, groupSuccess: false };
 }
