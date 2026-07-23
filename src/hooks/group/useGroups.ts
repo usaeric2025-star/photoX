@@ -219,6 +219,9 @@ export const useGroupEditState = (
 export function useGroupMutations() {
   const { clearSelection } = useSelectionActions();
   const { invalidateList, invalidateAll } = useInvalidatePhotos();
+  const invalidateGroups = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+  }, [queryClient]);
   const { t } = useTranslation();
 
   const createMutation = useAppMutation({

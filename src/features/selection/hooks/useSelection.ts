@@ -24,6 +24,13 @@ const SelectionService = {
 };
 
 /**
+ * useSelectedSet: 直接返回选中的 Set (内部使用或高级场景)
+ */
+export function useSelectedSet(): Set<string> {
+  return useAtomValue(selectedIdsSetAtom);
+}
+
+/**
  * useSelectedIds: 返回选中的 ID 数组 (来自于 Jotai 原子)
  */
 export function useSelectedIds(): string[] {

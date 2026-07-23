@@ -121,6 +121,13 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   });
 
   const [showInfo, setShowInfo] = useState(false);
+  
+  // Reset info panel when lightbox closes or opens to ensure it's closed by default
+  useEffect(() => {
+    if (!isOpen) {
+      setShowInfo(false);
+    }
+  }, [isOpen]);
   const [showControls, setShowControls] = useState(true);
   const { appLang } = useTranslation();
 

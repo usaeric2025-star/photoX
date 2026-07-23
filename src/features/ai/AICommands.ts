@@ -63,14 +63,14 @@ export async function analyzeSinglePhotoDetail(photo: Photo): Promise<Record<str
   return parsed as Record<string, unknown>;
 }
 
-export const analyzePhoto = async (photoId: string, signal?: AbortSignal): Promise<unknown> => {
+export const analyzePhoto = async (photoId: string, imageUrl?: string, signal?: AbortSignal): Promise<unknown> => {
   const maxRetries = 2;
   let lastError: unknown = null;
 
   for (let i = 0; i <= maxRetries; i++) {
     try {
       const data = await ErrorFactory.unwrap<Record<string, any>>(
-        api.ai.analyze.$post({ json: { photoId } }, { init: { signal } }),
+        api.ai.analyze.$post({ json: { photoId, imageUrl } }, { init: { signal } }),
         'AI 服務響應異常'
       );
       

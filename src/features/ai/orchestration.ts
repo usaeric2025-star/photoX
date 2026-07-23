@@ -31,7 +31,8 @@ const analyzeAndSavePhoto = async (
   photo: Photo
 ): Promise<unknown> => {
   try {
-    const analysisData = (await analyzePhoto(photo.id)) as PhotoAnalysisResponse;
+    // Speed up by using thumbnail for AI analysis if available
+    const analysisData = (await analyzePhoto(photo.id, photo.thumbnailUrl as string)) as PhotoAnalysisResponse;
     
     // Validate that we have something to update
     if (!analysisData.name && !analysisData.description && (!analysisData.tagNames || analysisData.tagNames.length === 0)) {
@@ -119,12 +120,18 @@ export async function runBatchAnalysis({
     }
   };
 
-  // Run in chunks
-  for (let i = 0; i < targetPhotos.length; i += CONCURRENCY) {
-    if (signal?.aborted) break;
-    const chunk = targetPhotos.slice(i, i + CONCURRENCY);
-    await Promise.all(chunk.map((p, idx) => processPhoto(p, i + idx)));
-  }
+  // Simple concurrency pool using a sliding window
+  const queue = [...targetPhotos];
+  const workers = Array(Math.min(CONCURRENCY, queue.length)).fill(null).map(async () => {
+    while (queue.length > 0 && !signal?.aborted) {
+      const photo = queue.shift();
+      if (photo) {
+        await processPhoto(photo, 0); // index doesn't matter here
+      }
+    }
+  });
+
+  await Promise.all(workers);
 
   if (signal?.aborted) {
     throw new Error('User cancelled AI analysis');

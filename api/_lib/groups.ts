@@ -1,7 +1,7 @@
 import { logger } from './logger.js';
 import { ErrorFactory } from '../../src/lib/error/ErrorFactory.js';
 import { db, furnitureItems, groups as groupsTable } from './db/index.js';
-import { eq, inArray, and, isNull } from 'drizzle-orm';
+import { eq, inArray, and, isNull, sql } from 'drizzle-orm';
 
 /**
  * Robust Group Integrity and Cover Photos Synchronization (長期維護機制)
@@ -96,16 +96,14 @@ export async function syncGroupCoversAndCount(groupIds: string[]): Promise<void>
           // Update group table
           await db.update(groupsTable)
             .set({
-              memberCount: actualCount,
               coverPhotoId: targetCoverId || null,
               updatedAt: new Date()
             })
             .where(eq(groupsTable.id, groupId));
         } else {
-          // Just update member count if cover is still valid
+          // Just update updatedAt if cover is still valid
           await db.update(groupsTable)
             .set({
-              memberCount: actualCount,
               updatedAt: new Date()
             })
             .where(eq(groupsTable.id, groupId));

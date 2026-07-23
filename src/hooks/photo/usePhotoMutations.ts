@@ -40,6 +40,9 @@ export function usePhotoMutations() {
   const { t, uiTranslations: labels } = useTranslation();
   const { invalidateList, invalidateAll } = useInvalidatePhotos();
   const queryClient = useQueryClient();
+  const invalidateGroups = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+  };
 
   const editMutation = useAppMutation({
     mutationFn: async ({ id, updates }: { id: string, updates: any }) => {

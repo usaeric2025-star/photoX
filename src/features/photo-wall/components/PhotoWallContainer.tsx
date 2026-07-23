@@ -6,6 +6,7 @@ import { usePhotoWall } from '../hooks/usePhotoWall.js';
 import { PhotoListItem } from '#shared/apiContractSchema.js';
 import { useLightbox, photosToLightboxSlides } from '#lib/lightbox/index.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
+import { logger } from '#lib/logger.js';
 import { api } from '#lib/api.js';
 import { } from '#lib/store/index.js';
 import { useTranslation } from '#src/hooks/index.js';
@@ -164,8 +165,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
       } catch (e) {
         logger.error('[Aggregation] Error:', e);
         ErrorFactory.handle(e as Error, { 
-          context: 'Failed to background expand groups for lightbox',
-          code: 'AGGREGATION_FAILURE'
+          context: 'Failed to background expand groups for lightbox'
         });
       }
     }

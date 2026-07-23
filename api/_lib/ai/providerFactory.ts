@@ -52,7 +52,7 @@ export abstract class BaseAIProvider {
         return this.config;
     }
 
-    protected async fetchWithTimeout(url: string, options: RequestInit, timeout = 35000) {
+    protected async fetchWithTimeout(url: string, options: RequestInit, timeout = 60000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
         try {

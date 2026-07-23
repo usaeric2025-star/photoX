@@ -96,10 +96,11 @@ export const ai = new Hono()
     const check = v.safeParse(AIAnalyzeV1ReqSchema, body);
     if (!check.success) throw errorFactory.validation(check.issues);
 
-    const { photoId, imageUrl } = check.output;
-    let finalImageUrl = imageUrl;
+    const { photoId, imageUrl: clientImageUrl } = check.output;
+    let finalImageUrl = clientImageUrl;
 
-    if (photoId && !photoId.startsWith('temp-')) {
+    // Only lookup in DB if no image URL was provided by client
+    if (photoId && !photoId.startsWith('temp-') && !finalImageUrl) {
         const photo = await db.query.furnitureItems.findFirst({
             columns: { imageUrl: true },
             where: eq(furnitureItems.id, photoId)
