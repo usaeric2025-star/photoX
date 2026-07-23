@@ -76,7 +76,7 @@ export function TopLayer({
         ref={ref} 
         onClose={onClose}
         className={cn(
-          "fixed m-0 p-0 overflow-visible outline-none bg-transparent border-none backdrop:bg-black/40",
+          "fixed inset-0 m-0 p-0 w-full h-full max-w-none max-h-none overflow-visible outline-none bg-transparent border-none backdrop:bg-black/40",
           className
         )}
       >
@@ -91,11 +91,13 @@ export function TopLayer({
       ref={ref} 
       popover="manual" 
       className={cn(
-        "fixed bg-transparent border-none p-0 m-0 overflow-visible outline-none", 
+        "fixed bg-transparent border-none p-0 m-0 overflow-visible outline-none pointer-events-none", 
         className
       )}
     >
-      {children}
+      <div className="pointer-events-auto">
+        {children}
+      </div>
     </div>
   );
 }

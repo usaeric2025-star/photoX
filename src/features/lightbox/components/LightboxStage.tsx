@@ -2,11 +2,16 @@ import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
 import { Photo } from '#src/types/photo.js';
 import { useLightboxInteractions } from '../hooks/useLightboxInteractions.js';
+import { usePhotoPrefetch } from '../hooks/usePhotoPrefetch.js';
 import { useLightbox } from '#lib/lightbox/index.js';
 import { GESTURE_CONFIG, ANIMATION_CONFIG } from '#src/constants/config.js';
 import { Icon } from '#src/components/ui/Icon.js';
 
-export function LightboxStage() {
+interface LightboxStageProps {
+  onTap?: () => void;
+}
+
+export function LightboxStage({ onTap }: LightboxStageProps = {}) {
   const { slides: lightboxSlides, currentIndex: lightboxCurrentIndex, next, prev, clearLightboxData } = useLightbox();
   
   const currentPhoto = lightboxSlides[lightboxCurrentIndex];
@@ -18,7 +23,6 @@ export function LightboxStage() {
     isSwiping,
     swipeDirection,
     handlers,
-    handleToggleZoom,
     resetZoom,
   } = useLightboxInteractions({
     currentIndex: lightboxCurrentIndex,
@@ -26,6 +30,7 @@ export function LightboxStage() {
     onNext: next,
     onPrev: prev,
     onClose: clearLightboxData,
+    onTap,
     minSwipeDistance: GESTURE_CONFIG.SWIPE_THRESHOLD,
   });
 
@@ -41,9 +46,17 @@ export function LightboxStage() {
   const src = getPhotoThumb(key, 'LG', hash);
   const lqipSrc = getPhotoThumb(key, 'MD', hash);
 
+  // Preload adjacent photos (2 before and 2 after) for seamless slide transitions
+  const prefetchUrls = lightboxSlides.map(slide => {
+    if (!slide) return '';
+    const photo = ('original' in slide ? slide.original : slide) as Photo;
+    return getPhotoThumb(photo.imageUrl || photo.uri, 'LG', photo.imageHash);
+  });
+  usePhotoPrefetch(prefetchUrls, lightboxCurrentIndex, 2);
+
   return (
     <div 
-      className="flex-1 relative flex items-center justify-center overflow-hidden touch-none"
+      className="flex-1 relative flex items-center justify-center overflow-hidden touch-none z-10"
       style={{
         backgroundColor: isSwiping && swipeDirection === 'vertical'
           ? `rgba(0, 0, 0, ${Math.max(0.2, 0.9 - Math.abs(position.y) / GESTURE_CONFIG.OPACITY_DIVISOR * 0.7)})`
@@ -51,8 +64,8 @@ export function LightboxStage() {
         transition: isSwiping ? 'none' : `background-color ${ANIMATION_CONFIG.LITE_SLEEK_DEFAULT}ms ease-out`,
       }}
       {...handlers}
-      onClick={clearLightboxData} // Clicking the background closes it
     >
+
       <div
         key={photoData.id}
         className="absolute inset-0 flex items-center justify-center p-4 sm:p-12 md:p-16 transition-all duration-150"
@@ -71,11 +84,11 @@ export function LightboxStage() {
               ? Math.max(0.3, 1 - Math.abs(position.y) / 250)
               : 1,
             transition: isSwiping || isZoomed ? 'none' : `transform ${ANIMATION_CONFIG.LITE_SLEEK_DEFAULT}ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity ${ANIMATION_CONFIG.LITE_SLEEK_DEFAULT}ms ease-out`,
+            willChange: isSwiping || isZoomed ? 'transform' : 'auto',
           }}
         >
           <div 
-            className="w-full h-full flex items-center justify-center cursor-pointer"
-            onClick={handleToggleZoom}
+            className="w-full h-full flex items-center justify-center"
           >
             <Image
               src={src}
@@ -83,25 +96,29 @@ export function LightboxStage() {
               lqipSrc={lqipSrc}
               priority={true}
               containerClassName="bg-transparent"
-              className={`object-contain max-w-full max-h-full drop-shadow-2xl select-none ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+              className={`object-contain max-w-full max-h-full drop-shadow-2xl select-none ${isZoomed ? 'cursor-default' : 'cursor-default'}`}
             />
           </div>
         </div>
       </div>
 
-      {/* Floating Exit Zoom Button in Top Right */}
+      {/* Floating Reset Zoom Button in Bottom Right */}
       {isZoomed && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            resetZoom();
-          }}
-          className="absolute top-6 right-6 px-4 py-2.5 bg-slate-950/90 hover:bg-black text-white rounded-2xl flex items-center gap-2 border border-white/10 active:scale-95 shadow-2xl transition-all select-none"
-          title="關閉放大"
-        >
-          <Icon name="minimize-2" size={16} />
-          <span className="text-xs font-semibold tracking-wider font-sans">關閉放大</span>
-        </button>
+        <div className="absolute bottom-24 right-6 z-50">
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              resetZoom();
+            }}
+            className="p-3 bg-black/90 hover:bg-black text-white rounded-full border border-white/20 active:scale-95 shadow-2xl transition-all select-none cursor-pointer flex items-center justify-center"
+            title="恢復默認"
+          >
+            <Icon name="refresh-ccw" size={20} className="stroke-[2.5]" />
+          </button>
+        </div>
       )}
     </div>
   );

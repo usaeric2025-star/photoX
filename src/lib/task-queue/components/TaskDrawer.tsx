@@ -4,6 +4,7 @@ import {  isTaskDrawerOpen, useTranslation } from '#src/hooks/index.js';
 import { tasksAtom, clearAll, addTask } from '#src/lib/task-queue/taskStore.js';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
+import { TopLayer } from '#src/components/ui/TopLayer.js';
 import { Progress } from '#src/components/shared/Progress.js';
 import { Task } from '#lib/task-queue/types.js';
 import { scheduler } from '#lib/task-queue/scheduler.js';
@@ -147,7 +148,6 @@ function TaskItem({ task }: { task: Task }) {
 export function TaskDrawer() {
   const { t } = useTranslation();
   const [mounted, setMounted] = React.useState(false);
-  const ref = React.useRef<HTMLDialogElement>(null);
   
   React.useEffect(() => {
     setMounted(true);
@@ -157,101 +157,67 @@ export function TaskDrawer() {
   const tasks = React.useMemo(() => Array.from(tasksMap.values() as IterableIterator<Task>), [tasksMap]);
   const [isOpen, setTaskDrawerOpen] = useAtom(isTaskDrawerOpen);
 
-  React.useEffect(() => {
-    const el = ref.current;
-    if (!el || !mounted) return;
-
-    if (isOpen) {
-      if (!el.open) {
-        try {
-          el.showModal();
-        } catch (e) {
-          el.setAttribute('open', '');
-        }
-      }
-    } else {
-      if (el.open) {
-        try {
-          el.close();
-        } catch (e) {
-          el.removeAttribute('open');
-        }
-      }
-    }
-  }, [isOpen, mounted]);
-
-  React.useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const handleCancel = (e: Event) => {
-      e.preventDefault();
-      setTaskDrawerOpen(false);
-    };
-
-    el.addEventListener('cancel', handleCancel);
-    return () => el.removeEventListener('cancel', handleCancel);
-  }, [setTaskDrawerOpen]);
-
   if (!mounted) return null;
 
   return (
-    <dialog
-      ref={ref}
-      onClick={(e) => {
-        if (e.target === ref.current) {
-          setTaskDrawerOpen(false);
-        }
-      }}
+    <TopLayer
+      type="dialog"
+      open={isOpen}
+      onClose={() => setTaskDrawerOpen(false)}
       className={cn(
         'h-full w-85 bg-white border-l border-slate-100 shadow-2xl transition-all duration-300 flex flex-col m-0 ml-auto outline-none p-0 max-h-none',
         'backdrop:bg-black/40 backdrop:backdrop-blur-none',
-        !isOpen ? 'translate-x-full pointer-events-none' : 'translate-x-0'
+        !isOpen ? 'translate-x-full' : 'translate-x-0'
       )}
     >
-      <div className="p-4 border-b border-slate-100 h-16 flex items-center justify-between shrink-0">
-        <span className="font-extrabold text-sm text-slate-800 uppercase tracking-tight">{t('taskQueue')}</span>
-        <div className="flex items-center gap-1.5">
-          {tasks.some(t => t.state.status === 'completed' || t.state.status === 'failed') && (
+      <div 
+        className="flex flex-col h-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-4 border-b border-slate-100 h-16 flex items-center justify-between shrink-0">
+          <span className="font-extrabold text-sm text-slate-800 uppercase tracking-tight">{t('taskQueue')}</span>
+          <div className="flex items-center gap-1.5">
+            {tasks.some(t => t.state.status === 'completed' || t.state.status === 'failed') && (
+              <button 
+                type="button"
+                onClick={() => {
+                  const remaining = (Array.from(tasksMap.values()) as Task[]).filter(t => t.state?.status === 'queued' || t.state?.status === 'processing');
+                  clearAll();
+                  remaining.forEach(t => addTask(t));
+                }}
+                className="text-xs text-blue-500 hover:text-blue-600 font-bold px-2 py-1 select-none active:scale-95 transition-all"
+              >
+                {t('clearHistory')}
+              </button>
+            )}
             <button 
-              type="button"
-              onClick={() => {
-                const remaining = (Array.from(tasksMap.values()) as Task[]).filter(t => t.state?.status === 'queued' || t.state?.status === 'processing');
-                clearAll();
-                remaining.forEach(t => addTask(t));
-              }}
-              className="text-xs text-blue-500 hover:text-blue-600 font-bold px-2 py-1 select-none active:scale-95 transition-all"
+              onClick={() => setTaskDrawerOpen(false)}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
+              aria-label={t('close')}
             >
-              {t('clearHistory')}
+              <Icon name="x" size={18} />
             </button>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar pb-24">
+          {tasks.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
+              <div className="p-3 bg-slate-50 rounded-2xl text-slate-400 animate-pulse">
+                <Icon name="inbox" size={32} />
+              </div>
+              <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('noTasks')}</h4>
+              <p className="text-[10px] text-slate-400 max-w-[200px] leading-normal font-medium">
+                {t('noTasksDesc')}
+              </p>
+            </div>
+          ) : (
+            tasks.map(task => (
+              <TaskItem key={task.id} task={task} />
+            ))
           )}
-          <button 
-            onClick={() => setTaskDrawerOpen(false)}
-            className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
-            aria-label={t('close')}
-          >
-            <Icon name="x" size={18} />
-          </button>
         </div>
       </div>
-      
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar h-[calc(100vh-64px)] pb-24">
-        {tasks.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-            <div className="p-3 bg-slate-50 rounded-2xl text-slate-400 animate-pulse">
-              <Icon name="inbox" size={32} />
-            </div>
-            <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('noTasks')}</h4>
-            <p className="text-[10px] text-slate-400 max-w-[200px] leading-normal font-medium">
-              {t('noTasksDesc')}
-            </p>
-          </div>
-        ) : (
-          tasks.map(task => (
-            <TaskItem key={task.id} task={task} />
-          ))
-        )}
-      </div>
-    </dialog>
+    </TopLayer>
   );
 }

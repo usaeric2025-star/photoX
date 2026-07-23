@@ -7,9 +7,11 @@ import { useNormalizedLocation } from '#src/hooks/core/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useMediaQuery } from '#src/hooks/index.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
+import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { SelectionToolbarActions } from './components/SelectionToolbarActions.js';
+import { TopLayer } from '#src/components/ui/TopLayer.js';
 
 /**
  * SelectionCounter
@@ -25,7 +27,7 @@ function SelectionCounter({ count }: { count: number }) {
 /**
  * SelectionToolbar
  * 
- * 批量操作工具欄，僅在多選模式或有選取項目時顯示。
+ * 批量操作工具欄，利用 TopLayer 確保始終在最上層且不參與 z-index 競爭。
  */
 export function SelectionToolbar({ className = '', groupId: propGroupId }: { className?: string; groupId?: string }) {
   const selectedCount = useSelectionCount();
@@ -64,7 +66,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const { can } = usePermission();
   const canBatchEdit = can('photo:batch-edit');
 
-  if (!canBatchEdit || !isVisible) {
+  if (!canBatchEdit) {
     return null;
   }
 
@@ -134,7 +136,14 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   };
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 w-full bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] pb-safe animate-in fade-in slide-in-from-bottom-4 duration-300 ${className}`}>
+    <TopLayer
+      type="popover"
+      open={isVisible}
+      className={cn(
+        "bottom-0 left-0 right-0 top-auto w-full bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] pb-safe animate-in fade-in slide-in-from-bottom-4 duration-300",
+        className
+      )}
+    >
       <div className="max-w-[1920px] mx-auto relative flex items-center justify-between gap-1.5 sm:gap-4 py-3 px-3 sm:px-6">
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <button
@@ -179,6 +188,6 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
           isUpdating={batchUpdate.isPending}
         />
       </div>
-    </div>
+    </TopLayer>
   );
 }

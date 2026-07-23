@@ -27,6 +27,7 @@ export function usePhotoWall(mode: 'public' | 'admin' = 'public', customFilters?
     isFetchingNextPage,
     isPending,
     isLoading,
+    isFetching,
     error,
     refetch
   } = usePhotos(queryOptions);
@@ -36,6 +37,8 @@ export function usePhotoWall(mode: 'public' | 'admin' = 'public', customFilters?
   }, [data]);
 
   const total = data?.pages[0]?.total || 0;
+
+  const isInitialLoading = isPending || isLoading || (isFetching && photos.length === 0);
 
   return {
     photos,
@@ -47,7 +50,8 @@ export function usePhotoWall(mode: 'public' | 'admin' = 'public', customFilters?
     isFetchingNextPage,
     isLoadingMore: isFetchingNextPage,
     isPending,
-    isLoading,
+    isLoading: isInitialLoading,
+    isFetching,
     error,
     refetch,
     refresh: refetch

@@ -10,6 +10,7 @@ interface LightboxHeaderProps {
   currentIndex: number;
   totalPhotos: number;
   showInfo: boolean;
+  showControls?: boolean;
   onToggleInfo: () => void;
   onEdit: (photoData: Photo) => void;
   onClose: () => void;
@@ -26,6 +27,7 @@ export function LightboxHeader({
   currentIndex,
   totalPhotos,
   showInfo,
+  showControls = true,
   onToggleInfo,
   onEdit,
   onClose,
@@ -65,11 +67,13 @@ export function LightboxHeader({
   };
 
   return (
-    <div className="absolute top-0 inset-x-0 p-4 sm:p-6 flex items-start justify-between pointer-events-none">
+    <div className={`absolute top-0 inset-x-0 p-4 sm:p-6 flex items-center justify-between pointer-events-none z-30 transition-all duration-300 ease-out ${
+      showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+    }`}>
       {/* Left: Counter */}
       <div className="flex items-center gap-3">
         <div className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-black/80 border border-white/10 flex items-center gap-2 shadow-2xl pointer-events-auto transition-transform">
-          <span className="text-xs sm:text-sm font-medium text-white/90 font-mono tracking-wider">
+          <span className="text-xs sm:text-sm font-medium text-white/90 font-mono tracking-wider select-none">
             {String(currentIndex + 1).padStart(2, '0')}
             <span className="text-white/30 mx-1">/</span>
             {String(totalPhotos).padStart(2, '0')}
@@ -81,8 +85,9 @@ export function LightboxHeader({
       <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
         {canEdit && (
           <button
-            onClick={(e) => { e.stopPropagation(); onEdit(photoData); }}
-            className="h-10 sm:h-11 px-4 sm:px-5 bg-blue-600/20 text-blue-400 active:bg-blue-600 active:text-white rounded-2xl text-[10px] font-black tracking-[0.2em] shadow-2xl transition-all active:scale-95 flex items-center gap-2 border border-blue-500/20 uppercase"
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(photoData); }}
+            className="h-10 sm:h-11 px-4 sm:px-5 bg-blue-600/20 text-blue-400 active:bg-blue-600 active:text-white rounded-2xl text-[10px] font-black tracking-[0.2em] shadow-2xl transition-all active:scale-95 flex items-center gap-2 border border-blue-500/20 uppercase cursor-pointer"
           >
             <Icon name="edit" size={14} />
             <span className="hidden sm:inline">{t('edit')}</span>
@@ -90,11 +95,13 @@ export function LightboxHeader({
         )}
 
         <button
+          type="button"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onToggleInfo();
           }}
-          className={`h-10 w-10 sm:h-11 sm:w-11 rounded-2xl border flex items-center justify-center transition-all active:scale-90 shadow-2xl relative ${
+          className={`h-10 w-10 sm:h-11 sm:w-11 rounded-2xl border flex items-center justify-center transition-all active:scale-90 shadow-2xl relative cursor-pointer ${
             showInfo 
               ? 'bg-white text-black border-white' 
               : 'bg-black/80 border-white/10 text-white active:bg-black/60'
@@ -108,19 +115,26 @@ export function LightboxHeader({
         </button>
 
         <button
-          onClick={handleShare}
-          className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-black/80 border border-white/10 active:bg-black/60 flex items-center justify-center text-white transition-all active:scale-90 shadow-2xl"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleShare(e);
+          }}
+          className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-black/80 border border-white/10 active:bg-black/60 flex items-center justify-center text-white transition-all active:scale-90 shadow-2xl cursor-pointer"
           title={t('copyLink')}
         >
           <Icon name="share-2" className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
         <button
+          type="button"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onClose();
           }}
-          className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-black/80 border border-white/10 active:bg-black/60 flex items-center justify-center text-white transition-all active:scale-90 shadow-2xl ml-2"
+          className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-black/80 border border-white/10 active:bg-black/60 flex items-center justify-center text-white transition-all active:scale-90 shadow-2xl ml-2 cursor-pointer"
           title={t('close')}
         >
           <Icon name="x" size={20} />

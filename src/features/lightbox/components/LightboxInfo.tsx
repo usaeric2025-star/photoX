@@ -61,7 +61,9 @@ export function LightboxInfo({
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 20, scale: 0.95 }}
           transition="fast"
-          className="absolute top-24 sm:top-28 right-4 sm:right-6 w-[280px] sm:w-[320px] max-h-[calc(100vh-200px)] overflow-y-auto rounded-3xl bg-black/85 border border-white/10 shadow-2xl p-5 sm:p-6 no-scrollbar pointer-events-auto "
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-16 sm:top-20 right-4 sm:right-6 w-[280px] sm:w-[320px] max-h-[calc(100vh-160px)] overflow-y-auto rounded-3xl bg-black/90 border border-white/10 shadow-2xl p-5 sm:p-6 no-scrollbar pointer-events-auto z-40"
         >
           <div className="space-y-6">
             <div className="space-y-4">
@@ -102,8 +104,9 @@ export function LightboxInfo({
               </div>
 
               <button
-                onClick={() => {
-                  const url = photoData.image_url || photoData.url;
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const url = photoData.imageUrl || photoData.uri || photoData.image_url || photoData.url;
                   if (url) {
                     const a = document.createElement('a');
                     a.href = url;

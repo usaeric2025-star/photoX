@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { GESTURE_CONFIG } from '#src/constants/config.js';
 import { hapticFeedback } from '#lib/ui/haptics.js';
+import { getPointerDistance, clampPosition, clamp } from '#src/lib/gesture.js';
 
 export interface UseLightboxInteractionsProps {
   currentIndex: number;
@@ -8,6 +9,7 @@ export interface UseLightboxInteractionsProps {
   onNext: () => void;
   onPrev: () => void;
   onClose?: () => void;
+  onTap?: () => void;
   minSwipeDistance?: number;
 }
 
@@ -22,6 +24,7 @@ export function useLightboxInteractions({
   onNext,
   onPrev,
   onClose,
+  onTap,
   minSwipeDistance = GESTURE_CONFIG.SWIPE_THRESHOLD,
 }: UseLightboxInteractionsProps) {
   const [scale, setScale] = useState(1);
@@ -59,25 +62,7 @@ export function useLightboxInteractions({
     hasMovedRef.current = false;
     
     if (e.isPrimary && pointers.current.size === 1) {
-      const now = Date.now();
-      const timeDiff = now - lastTapRef.current;
-      if (timeDiff > 50 && timeDiff < GESTURE_CONFIG.DOUBLE_TAP_DELAY) {
-        e.preventDefault();
-        if (scale > 1) resetZoom();
-        else {
-          const rect = target.getBoundingClientRect();
-          const offsetX = e.clientX - (rect.left + rect.width / 2);
-          const offsetY = e.clientY - (rect.top + rect.height / 2);
-          setScale(GESTURE_CONFIG.DOUBLE_TAP_SCALE);
-          setPosition({
-            x: -offsetX * (GESTURE_CONFIG.DOUBLE_TAP_SCALE - 1),
-            y: -offsetY * (GESTURE_CONFIG.DOUBLE_TAP_SCALE - 1)
-          });
-        }
-        lastTapRef.current = 0;
-        return;
-      }
-      lastTapRef.current = now;
+      lastTapRef.current = Date.now();
     }
 
     if (pointers.current.size === 1) {
@@ -87,7 +72,7 @@ export function useLightboxInteractions({
       if (scale === 1) setIsSwiping(true);
     } else if (pointers.current.size === 2) {
       const pts = Array.from(pointers.current.values());
-      lastDistance.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      lastDistance.current = getPointerDistance(pts[0], pts[1]);
       setIsSwiping(false);
       setSwipeDirection(null);
     }
@@ -100,14 +85,12 @@ export function useLightboxInteractions({
     if (pointers.current.size === 2) {
       hasMovedRef.current = true;
       const pts = Array.from(pointers.current.values());
-      const distance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      if (lastDistance.current !== null) {
+      const distance = getPointerDistance(pts[0], pts[1]);
+      if (lastDistance.current !== null && lastDistance.current > 0) {
         const delta = distance / lastDistance.current;
         setScale(prev => {
           const target = prev * delta;
-          // Apply a gentle low-pass filter / damping to prevent sudden micro-jitters
-          const next = prev + (target - prev) * 0.4;
-          return Math.min(GESTURE_CONFIG.MAX_SCALE, Math.max(GESTURE_CONFIG.MIN_SCALE, next));
+          return clamp(target, GESTURE_CONFIG.MIN_SCALE, GESTURE_CONFIG.MAX_SCALE);
         });
       }
       lastDistance.current = distance;
@@ -125,12 +108,12 @@ export function useLightboxInteractions({
       if (scale > 1) {
         const newX = initialPos.current.x + diffX;
         const newY = initialPos.current.y + diffY;
-        const limitX = (scale - 1) * window.innerWidth / 2;
-        const limitY = (scale - 1) * window.innerHeight / 2;
-        setPosition({
-          x: Math.min(limitX, Math.max(-limitX, newX)),
-          y: Math.min(limitY, Math.max(-limitY, newY))
-        });
+        setPosition(clampPosition(
+          { x: newX, y: newY },
+          scale,
+          window.innerWidth,
+          window.innerHeight
+        ));
         return;
       }
 
@@ -173,6 +156,9 @@ export function useLightboxInteractions({
 
     if (pointers.current.size === 0) {
       isDragging.current = false;
+      if (!hasMovedRef.current) {
+        onTap?.();
+      }
       if (scale === 1) {
         if (swipeDirection === 'horizontal') {
           const hasPrev = currentIndex > 0;
@@ -224,12 +210,6 @@ export function useLightboxInteractions({
       onPointerMove,
       onPointerUp,
       onPointerCancel,
-    },
-    handleToggleZoom: (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (hasMovedRef.current) return;
-      if (scale > 1) resetZoom();
-      else setScale(GESTURE_CONFIG.DOUBLE_TAP_SCALE);
     },
     resetZoom
   };

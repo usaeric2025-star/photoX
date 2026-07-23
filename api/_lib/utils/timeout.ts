@@ -19,7 +19,7 @@ export function withTimeout<T>(promiseOrThenable: Promise<T> | PromiseLike<T>, m
   });
 }
 
-const DEFAULT_PING_TIMEOUT_MS = 20000; // 20 seconds to be slightly higher than statement_timeout (15s) to ensure we see the actual DB error if it happens
+const DEFAULT_PING_TIMEOUT_MS = 16000; // 16 seconds (1s higher than statement_timeout to avoid racing)
 
 /**
  * Executes a SELECT 1 query with retry logic to withstand transient connection timeouts
@@ -44,11 +44,11 @@ export async function pingDbWithRetry(db: any, sql: any, retries = 3, delayMs = 
   }
 }
 
-// Global timeout configs to avoid magic numbers across the app
+// Global timeout configs to avoid magic numbers across the app (Locked 2026-07)
 export const TIMEOUTS = {
-  DB_QUERY: 30000, // 30 seconds for standard DB queries
-  AI_REQUEST: 40000, // 40 seconds for AI inference 
-  PUBLIC_META: 30000, // 30 seconds for fast-loading public settings/auth (Critical for cold start)
+  DB_QUERY: 15000, // 15 seconds for standard DB queries (strictly matches statement_timeout)
+  AI_REQUEST: 60000, // 60 seconds for AI inference (Gemini Flash can take longer)
+  PUBLIC_META: 10000, // 10 seconds for fast-loading public settings/auth
   DB_PING: DEFAULT_PING_TIMEOUT_MS,
 };
 

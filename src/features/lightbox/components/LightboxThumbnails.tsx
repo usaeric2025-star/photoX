@@ -7,6 +7,7 @@ interface LightboxThumbnailsProps {
   photos: (Photo | { original: Photo })[];
   currentIndex: number;
   isOpen: boolean;
+  showControls?: boolean;
   onSelect: (index: number) => void;
 }
 
@@ -14,6 +15,7 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
   photos,
   currentIndex,
   isOpen,
+  showControls = true,
   onSelect
 }: LightboxThumbnailsProps) {
   const thumbnailContainerRef = useRef<HTMLDivElement>(null);
@@ -42,7 +44,9 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
   if (photos.length <= 1) return null;
 
   return (
-    <div className="h-[84px] bg-black/95 border-t border-white/5 flex items-center justify-center shrink-0">
+    <div className={`h-[84px] bg-black/95 border-t border-white/5 flex items-center justify-center shrink-0 z-20 relative transition-all duration-300 ease-out ${
+      showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
+    }`}>
       <div 
         ref={thumbnailContainerRef} 
         className="relative flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full px-4 py-2"

@@ -112,6 +112,7 @@ export function usePhotoCard({
   return {
     cardRef: longPress.ref,
     handleClick,
+    handleOpenLightbox,
     longPressHandlers: longPress
   };
 }

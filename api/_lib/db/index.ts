@@ -29,22 +29,36 @@ function getDb(): PostgresJsDatabase<typeof schema> {
   const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
   const maxConnections = isServerless ? 3 : 10;
 
-  const clientOptions: postgres.Options<{}> = {
+  const clientOptions: any = {
     max: maxConnections,
-    idle_timeout: isServerless ? 5 : 10, // Close idle connections quickly within 10 seconds to avoid connection leaks
-    connect_timeout: 10, // 10s to fail fast and let the client retry on transient connection failures
-    prepare: false, // Required for PgBouncer/Supabase transaction pooling
-    connection: {
-      statement_timeout: 15000
+    idle_timeout: isServerless ? 5 : 10,
+    connect_timeout: 10, // 10s to fail fast
+    prepare: false,
+    parameters: {
+      statement_timeout: 15000 // 15s query timeout (hard limit)
     },
     onnotice: () => {},
   };
 
   if (!globalForDb.postgresClient) {
-    globalForDb.postgresClient = postgres(connectionString, {
+    logger.debug(`[DB] Initializing client with max=${maxConnections}, isServerless=${isServerless}`);
+    const client = postgres(connectionString, {
       ...clientOptions,
-      keep_alive: 30, // 30s keep-alive to prevent stale half-closed connections (unit is seconds in postgres.js)
+      keep_alive: 30, // 30s TCP keep-alive
     });
+
+    // Timeout Hardening: Warm up the pooler connection with retry capability
+    import('../utils/timeout.js').then(({ pingDbWithRetry }) => {
+      const dbProxy = { execute: () => client`SELECT 1` };
+      const sqlDummy = (strings: any) => strings;
+      return pingDbWithRetry(dbProxy, sqlDummy, 3, 1000);
+    }).then(() => {
+      logger.info('✅ [DB] Connection established and verified (SELECT 1)');
+    }).catch(err => {
+      logger.warn('⚠️ [DB] Initial background connection warmup warning:', err instanceof Error ? err.message : String(err));
+    });
+
+    globalForDb.postgresClient = client;
   }
 
   globalForDb.drizzleDb = drizzle(globalForDb.postgresClient, {

@@ -130,7 +130,16 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   });
 
   const [showInfo, setShowInfo] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const lang = currentDescLang;
+
+  const handleStageTap = useCallback(() => {
+    if (showInfo) {
+      setShowInfo(false);
+    } else {
+      setShowControls(prev => !prev);
+    }
+  }, [showInfo]);
 
   const handleLangChange = (newLang: 'zh' | 'en' | 'ms') => {
     try {
@@ -193,13 +202,22 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen || isEditing) return;
-      if (e.key === 'ArrowRight') handleNext();
-      if (e.key === 'ArrowLeft') handlePrev();
+      if (e.key === 'Escape') {
+        if (showInfo) {
+          setShowInfo(false);
+        } else {
+          onClose();
+        }
+      } else if (e.key === 'ArrowRight') {
+        handleNext();
+      } else if (e.key === 'ArrowLeft') {
+        handlePrev();
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isEditing, handleNext, handlePrev]);
+  }, [isOpen, isEditing, showInfo, handleNext, handlePrev, onClose]);
 
   const baseActivePhoto = useMemo(() => {
     if (effectivePhotos.length === 0) return null;
@@ -292,6 +310,9 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         </div>
       ) : (
         <div className="relative flex flex-col w-full h-full">
+          {/* Main Stage */}
+          <LightboxStage onTap={handleStageTap} />
+
           {activePhoto && (
             <>
               {/* Header Controls */}
@@ -300,6 +321,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
                 currentIndex={currentIndex}
                 totalPhotos={effectivePhotos.length}
                 showInfo={showInfo}
+                showControls={showControls}
                 onToggleInfo={() => setShowInfo(!showInfo)}
                 onEdit={onEdit}
                 onClose={onClose}
@@ -318,13 +340,11 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
             </>
           )}
 
-          {/* Main Stage */}
-          <LightboxStage />
-
           {/* Thumbnails */}
           <LightboxThumbnails
             photos={effectivePhotos}
             isOpen={isOpen}
+            showControls={showControls}
             onSelect={handleSelect}
             currentIndex={currentIndex}
           />
