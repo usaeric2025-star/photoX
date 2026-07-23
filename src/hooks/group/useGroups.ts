@@ -92,7 +92,8 @@ const GroupService = {
   groupPhotos: async (photoIds: string[], targetGroupId?: string) => {
     const store = getDefaultStore();
     const currentUser = store.get(userAtom);
-    const userId = currentUser?.id || 'admin';
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const userId = (currentUser?.id && uuidRegex.test(currentUser.id)) ? currentUser.id : '8ec53131-a589-4b50-beb4-6b5308541e1b';
     return ErrorFactory.unwrap<{ targetGroupId: string }>(
       api.groups['group-photos'].$post({ json: { photoIds, targetGroupId, userId, groupData: {} } }),
       '組合照片失敗'
@@ -217,7 +218,7 @@ export const useGroupEditState = (
  */
 export function useGroupMutations() {
   const { clearSelection } = useSelectionActions();
-  const { invalidateList } = useInvalidatePhotos();
+  const { invalidateList, invalidateAll } = useInvalidatePhotos();
   const { t } = useTranslation();
 
   const createMutation = useAppMutation({
@@ -297,10 +298,10 @@ export function useGroupMutations() {
 
   const combineMutation = useAppMutation({
     mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => GroupService.groupPhotos(args.photoIds, args.targetGroupId),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Toast is handled by the caller (e.g., SelectionToolbar) to allow replacing loading toasts
       clearSelection();
-      invalidateList();
+      invalidateAll();
     }
   });
 

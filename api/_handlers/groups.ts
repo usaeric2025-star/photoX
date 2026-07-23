@@ -27,7 +27,9 @@ export const groups = new Hono()
     const check = v.safeParse(v.object({ groupData: GroupReqSchema }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
     const { groupData } = check.output;
-    const inputUserId = (body.userId as string) || (body.user_id as string) || '8ec53131-a589-4b50-beb4-6b5308541e1b';
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const rawUserId = (body.userId as string) || (body.user_id as string);
+    const inputUserId = (rawUserId && uuidRegex.test(rawUserId)) ? rawUserId : '8ec53131-a589-4b50-beb4-6b5308541e1b';
     
     // Manual mapping to Drizzle schema
     const insertData = {
@@ -95,7 +97,8 @@ export const groups = new Hono()
     }
 
     // Ensure userId gets a fallback
-    if (!cleanUpdates.userId) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!cleanUpdates.userId || !uuidRegex.test(cleanUpdates.userId)) {
         cleanUpdates.userId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
     }
 
@@ -171,7 +174,8 @@ export const groups = new Hono()
       });
 
       if (!existingGroup) {
-        let finalUserId = (userId !== 'staff' && userId) ? userId : dbUserId;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        let finalUserId = (userId && uuidRegex.test(userId)) ? userId : (dbUserId && uuidRegex.test(dbUserId) ? dbUserId : null);
         if (!finalUserId) {
            finalUserId = '8ec53131-a589-4b50-beb4-6b5308541e1b';
         }

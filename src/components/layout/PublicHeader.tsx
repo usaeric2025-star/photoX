@@ -210,8 +210,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             </div>
 
             <div className="h-px bg-slate-100 my-1 mx-2" />
-
-            <div className="px-2 py-1">
+            <div className="px-3 py-1.5 flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">
+                <Icon name="globe" size={12} />
+                <span>{t('language') || '语言 / Language'}</span>
+              </div>
               <LanguageSwitcher mode="segmented" />
             </div>
 

@@ -149,9 +149,6 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
           <button
             id="exit-selection-btn"
             onClick={() => {
-              if (isMultiSelect) {
-                toggleMode();
-              }
               clearSelection();
             }}
             className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors shrink-0 outline-none"
