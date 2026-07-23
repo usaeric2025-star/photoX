@@ -10,11 +10,11 @@ import {
 } from '#src/store/index.js';
 import { getDefaultStore } from 'jotai';
 
-export const MAX_SELECTED_COUNT = 200;
+const MAX_SELECTED_COUNT = 200;
 
 const store = getDefaultStore();
 
-export const SelectionService = {
+const SelectionService = {
   setAvoidingSelection: (avoid: boolean) => {
     store.set(isAvoidingSelectionAtom, avoid);
   },

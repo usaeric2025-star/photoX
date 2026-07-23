@@ -77,15 +77,16 @@
 - **减少包装转发层级**：避免为了包装而包装。例如：`useSettingsManagement` 直接包装 `useAdminCategory`，而 `useAdminCategory` 又包装了多个微型的 `useCategory*` / `useTag*` 钩子，这导致了极深的调用栈和碎片化。未来应将相近领域的逻辑在适当的领域 Hook（如 `useSettingsManagement`）内直接进行扁平化整合。
 
 ### 规则 2：三大状态体系的严格边界
-- **URL 状态 (唯一的视图真相来源 - `react-router-dom`)**：
-  - 适用场景：搜寻、筛选、分页、多选 IDs (`selected`)、批量模式开关 (`batch`)。
-  - 核心原则：禁止使用 `useEffect` 将 URL 状态与本地 State / Store 进行二次同步。
-- **UI 瞬态 (跨组件临时交互 - `Jotai` Atoms)**：
-  - 适用场景：全局 Dialog 开关、目前 Lightbox 幻灯片数据、主题、语系。
-  - 核心原则：组件与 Hook 订阅时，**必须**通过 `useAtom`, `useAtomValue` 或 `useSetAtom` 进行。
+- **URL 状态 (视图真相来源 - `react-router-dom`)**：
+  - 适用场景：搜寻、筛选、分页、批量模式开关 (`batch`)。
+  - 核心原则：**严禁将高频变动的「选中 IDs (selected)」存入 URL**，以避免 URL 过长导致的性能瓶颈与渲染竞态。URL 仅作为视图模式（如 `?batch=true`）的开关。
+- **UI 瞬态 (内存状态 - `Jotai` Atoms)**：
+  - 适用场景：**多选 IDs (`selectedIdsSetAtom`)**、全局 Dialog 开关、目前 Lightbox 幻灯片数据、主题、语系。
+  - 核心原则：多选数据作为内存状态，响应迅速。批量操作（如合组）时应直接从 Atom 读取 IDs 快照。
 - **Server State (服务端状态 - `TanStack Query`)**：
   - 适用场景：所有向后端 Hono RPC 请求的数据（分类、照片列表、标签等）。
   - 核心原则：统一使用 `useAppQuery` 与 `useAppMutation` 管理，并通过 `useInvalidatePhotos` 统一调度缓存失效。
+  - **批量合组规范**: 手动合组时，前端应使用 `crypto.randomUUID()` 预生成 `targetGroupId`，确保 `onMutate` (乐观更新) 与实际 API 请求使用同一个 ID。
   - **资料结构规范 (锁定)**: 
     - `name` 字段必须始终为**纯字符串 (String)**，严禁改为多语对象。
     - `description` 字段必须为**多语对象 (Object)**，包含 `zh`, `en`, `ms` 屬性。
