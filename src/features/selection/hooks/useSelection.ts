@@ -1,21 +1,19 @@
 import { useSearchParams } from 'react-router-dom';
-import { useCallback, useMemo } from 'react';
-import { isAvoidingSelectionAtom } from '#src/store/index.js';
-import { getDefaultStore } from 'jotai';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { feedback } from '#lib/feedback.js';
-
-const QUERY_PARAMS = {
-  BATCH: 'batch',
-  SELECTED: 'selected',
-} as const;
+import {
+  selectedIdsSetAtom,
+  selectedIdsAtom,
+  isExitingSelectionAtom,
+  isAvoidingSelectionAtom
+} from '#src/store/index.js';
+import { getDefaultStore } from 'jotai';
 
 export const MAX_SELECTED_COUNT = 200;
 
 const store = getDefaultStore();
 
-/**
- * SelectionService: 處理非 URL 的瞬態選擇狀態 (Jotai)
- */
 export const SelectionService = {
   setAvoidingSelection: (avoid: boolean) => {
     store.set(isAvoidingSelectionAtom, avoid);
@@ -26,141 +24,185 @@ export const SelectionService = {
 };
 
 /**
- * useSelectedIds: 唯一真相來源 (URL)
+ * useSelectedIds: 返回选中的 ID 数组 (来自于 Jotai 原子)
  */
-export function useSelectedIds() {
+export function useSelectedIds(): string[] {
+  return useAtomValue(selectedIdsAtom);
+}
+
+/**
+ * useSelectedSet: 返回选中的 ID 集合 Set<string> (O(1) 查找)
+ */
+export function useSelectedSet(): Set<string> {
+  return useAtomValue(selectedIdsSetAtom);
+}
+
+/**
+ * useIsMultiSelect: 是否处于多选模式
+ */
+export function useIsMultiSelect(): boolean {
   const [searchParams] = useSearchParams();
-  const raw = searchParams.get(QUERY_PARAMS.SELECTED) || '';
-  return useMemo(() => {
-    if (!raw) return [];
-    return raw.split(',').filter(Boolean);
-  }, [raw]);
+  const selectedSet = useAtomValue(selectedIdsSetAtom);
+  const isBatchParam = searchParams.get('batch') === 'true';
+
+  return isBatchParam || selectedSet.size > 0;
 }
 
 /**
- * useSelectedSet: O(1) 集合查找，防止大量相片渲染卡頓
+ * useSelectionCount: 返回选中数量
  */
-export function useSelectedSet() {
-  const [searchParams] = useSearchParams();
-  const raw = searchParams.get(QUERY_PARAMS.SELECTED) || '';
-  return useMemo(() => {
-    if (!raw) return new Set<string>();
-    return new Set(raw.split(',').filter(Boolean));
-  }, [raw]);
+export function useSelectionCount(): number {
+  const selectedSet = useAtomValue(selectedIdsSetAtom);
+  return selectedSet.size;
 }
 
 /**
- * useIsMultiSelect: 是否處於多選模式
+ * useIsExitingSelection: 查询当前是否处于退出锁定状态
  */
-export function useIsMultiSelect() {
-  const [searchParams] = useSearchParams();
-  const isBatch = searchParams.get(QUERY_PARAMS.BATCH) === 'true';
-  const raw = searchParams.get(QUERY_PARAMS.SELECTED) || '';
-  const hasSelected = raw.split(',').filter(Boolean).length > 0;
-  return isBatch || hasSelected;
+export function useIsExitingSelection(): boolean {
+  return useAtomValue(isExitingSelectionAtom);
 }
 
 /**
- * useSelectionCount: 返回選中數量
- */
-export function useSelectionCount() {
-  const selected = useSelectedIds();
-  return selected.length;
-}
-
-/**
- * useSelectionActions: 統一的操作接口
+ * useSelectionActions: 统一的操作接口
  */
 export function useSelectionActions() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedSet, setSelectedSet] = useAtom(selectedIdsSetAtom);
+  const [isExiting, setIsExiting] = useAtom(isExitingSelectionAtom);
 
   const toggleSelect = useCallback((id: string) => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.set(QUERY_PARAMS.BATCH, 'true');
-      const current = prev.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean) || [];
-      const isAlreadySelected = current.includes(id);
-      
-      let nextIds: string[];
-      if (isAlreadySelected) {
-        nextIds = current.filter(i => i !== id);
+    if (isExiting) return;
+
+    setSelectedSet(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
       } else {
-        if (current.length >= MAX_SELECTED_COUNT) {
-          feedback.info(`單次最多可選擇 ${MAX_SELECTED_COUNT} 張照片`);
+        if (next.size >= MAX_SELECTED_COUNT) {
+          feedback.info(`单次最多可选 ${MAX_SELECTED_COUNT} 张照片`);
           return prev;
         }
-        nextIds = [...current, id];
+        next.add(id);
       }
-      
-      if (nextIds.length) next.set(QUERY_PARAMS.SELECTED, nextIds.join(','));
-      else next.delete(QUERY_PARAMS.SELECTED);
       return next;
-    }, { replace: true });
-  }, [setSearchParams]);
+    });
+
+    if (searchParams.get('batch') !== 'true') {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('batch', 'true');
+        return next;
+      }, { replace: true });
+    }
+  }, [isExiting, setSelectedSet, searchParams, setSearchParams]);
 
   const clearSelection = useCallback(() => {
+    setIsExiting(true);
+
+    setSelectedSet(new Set());
+
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
-      next.delete(QUERY_PARAMS.SELECTED);
-      next.delete(QUERY_PARAMS.BATCH);
+      next.delete('batch');
+      next.delete('selected');
       return next;
     }, { replace: true });
-    SelectionService.reset();
-  }, [setSearchParams]);
+
+    setTimeout(() => {
+      setIsExiting(false);
+    }, 300);
+  }, [setIsExiting, setSelectedSet, setSearchParams]);
 
   const toggleMode = useCallback(() => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      const isBatch = prev.get(QUERY_PARAMS.BATCH) === 'true';
-      const hasSelected = (prev.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean).length || 0) > 0;
-      const isCurrentlyMulti = isBatch || hasSelected;
-      
-      if (!isCurrentlyMulti) {
-        next.set(QUERY_PARAMS.BATCH, 'true');
-      } else {
-        next.delete(QUERY_PARAMS.BATCH);
-        next.delete(QUERY_PARAMS.SELECTED);
-      }
-      return next;
-    }, { replace: true });
-  }, [setSearchParams]);
+    if (isExiting) return;
 
-  const patch = useCallback((updates: { 
-    selectedIds?: string[] | null; 
-    batch?: boolean; 
+    const isBatch = searchParams.get('batch') === 'true';
+
+    if (isBatch || selectedSet.size > 0) {
+      clearSelection();
+    } else {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('batch', 'true');
+        return next;
+      }, { replace: true });
+    }
+  }, [isExiting, searchParams, selectedSet.size, clearSelection, setSearchParams]);
+
+  const patch = useCallback((updates: {
+    selectedIds?: string[] | null;
+    batch?: boolean;
     isAvoidingSelection?: boolean;
   }) => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      if (updates.selectedIds !== undefined) {
-        if (updates.selectedIds && updates.selectedIds.length) {
-          let validIds = updates.selectedIds;
-          if (validIds.length > MAX_SELECTED_COUNT) {
-            validIds = validIds.slice(0, MAX_SELECTED_COUNT);
-            feedback.info(`已為您保留前 ${MAX_SELECTED_COUNT} 張照片`);
-          }
-          next.set(QUERY_PARAMS.SELECTED, validIds.join(','));
-        } else {
-          next.delete(QUERY_PARAMS.SELECTED);
-        }
-      }
-      if (updates.batch !== undefined) {
-        if (updates.batch) next.set(QUERY_PARAMS.BATCH, 'true');
-        else next.delete(QUERY_PARAMS.BATCH);
-      }
-      return next;
-    }, { replace: true });
-
     if (updates.isAvoidingSelection !== undefined) {
       SelectionService.setAvoidingSelection(updates.isAvoidingSelection);
     }
-  }, [setSearchParams]);
 
-  const selectedIds = useSelectedIds();
-  const isBatchMode = searchParams.get(QUERY_PARAMS.BATCH) === 'true';
+    if (updates.selectedIds !== undefined) {
+      if (updates.selectedIds && updates.selectedIds.length > 0) {
+        let valid = updates.selectedIds;
+        if (valid.length > MAX_SELECTED_COUNT) {
+          valid = valid.slice(0, MAX_SELECTED_COUNT);
+          feedback.info(`已保留前 ${MAX_SELECTED_COUNT} 张照片`);
+        }
+        setSelectedSet(new Set(valid));
+      } else {
+        setSelectedSet(new Set());
+      }
+    }
+
+    if (updates.batch !== undefined) {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (updates.batch) next.set('batch', 'true');
+        else {
+          next.delete('batch');
+          next.delete('selected');
+        }
+        return next;
+      }, { replace: true });
+    }
+  }, [setSelectedSet, setSearchParams]);
+
+  const toggleAll = useCallback((allIds: string[]) => {
+    if (isExiting) return;
+
+    setSelectedSet(prev => {
+      const next = new Set(prev);
+      const currentlySelectedFromList = allIds.filter(id => next.has(id));
+      const isAllSelected = currentlySelectedFromList.length === allIds.length && allIds.length > 0;
+
+      if (isAllSelected) {
+        allIds.forEach(id => next.delete(id));
+      } else {
+        for (const id of allIds) {
+          if (next.has(id)) continue;
+          if (next.size >= MAX_SELECTED_COUNT) {
+            feedback.info(`单次最多可选 ${MAX_SELECTED_COUNT} 张照片`);
+            break;
+          }
+          next.add(id);
+        }
+      }
+      return next;
+    });
+
+    if (searchParams.get('batch') !== 'true') {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('batch', 'true');
+        return next;
+      }, { replace: true });
+    }
+  }, [isExiting, setSelectedSet, searchParams, setSearchParams]);
+
+  const selectedIds = Array.from(selectedSet);
+  const isBatchMode = searchParams.get('batch') === 'true' || selectedIds.length > 0;
 
   return {
     toggleSelect,
+    toggleAll,
     clearSelection,
     toggleMode,
     patch,
@@ -170,9 +212,9 @@ export function useSelectionActions() {
 }
 
 /**
- * useIsPhotoSelected: 輔助檢查單個 ID 是否被選中 (O(1) 優化)
+ * useIsPhotoSelected: 检查单个 ID 是否选中 (O(1) 性能优化)
  */
-export function useIsPhotoSelected(id: string) {
+export function useIsPhotoSelected(id: string): boolean {
   const selectedSet = useSelectedSet();
   return selectedSet.has(id);
 }

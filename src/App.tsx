@@ -34,7 +34,7 @@ export default function App() {
           </motion.div>
         )}
       </ConfirmProvider>
-      <Toaster position="bottom-right" closeButton visibleToasts={3} />
+      <Toaster position="top-right" closeButton visibleToasts={3} />
     </AppErrorBoundary>
   );
 }

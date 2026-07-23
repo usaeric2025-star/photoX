@@ -4,6 +4,7 @@ import { resetForm, updateForm } from '#lib/store/index.js';
 import { useTranslation, useNormalizedLocation } from '#src/hooks/core/index.js';
 import { usePhotoMutations } from '#src/hooks/photo/index.js';
 import { useSelectionActions, useSelectedIds } from '#src/hooks/index.js';
+import { useLocation } from 'react-router-dom';
 
 /**
  * useBatchEdit
@@ -12,7 +13,11 @@ import { useSelectionActions, useSelectedIds } from '#src/hooks/index.js';
  */
 export function useBatchEdit() {
   const { t } = useTranslation();
-  const selectedIds = useSelectedIds();
+  const globalSelectedIds = useSelectedIds();
+  const locationObj = useLocation();
+  const stateSelectedIds = locationObj.state?.selectedIds as string[] | undefined;
+  
+  const selectedIds = stateSelectedIds || globalSelectedIds;
   const { patch: patchSelection } = useSelectionActions();
   const formState = useAtomValue(formStateAtom);
   const { batchEditAsync, deletePhotoAsync, isBatchEditing, isDeleting } = usePhotoMutations();

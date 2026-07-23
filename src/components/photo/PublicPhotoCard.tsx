@@ -39,7 +39,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
   const isMultiSelect = useIsMultiSelect();
   const isPhotoSelected = useIsPhotoSelected(photo.id);
   
-  const { cardRef, handleClick, longPressHandlers } = usePhotoCard({
+  const { cardRef, handleCardClick, longPressHandlers } = usePhotoCard({
     photo,
     isManagement: false,
     isMultiSelect,
@@ -58,7 +58,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
       isMultiSelect={isMultiSelect}
       imgVariant={columns <= 4 ? 'md' : 'sm'}
       priority={priority}
-      onClick={handleClick}
+      onClick={handleCardClick}
       ref={cardRef}
       onMouseDown={longPressHandlers.onMouseDown}
       onMouseMove={longPressHandlers.onMouseMove}

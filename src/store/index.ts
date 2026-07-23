@@ -46,3 +46,10 @@ export {
   initApp, 
   setAppError 
 } from './app.js';
+
+export {
+  selectedIdsSetAtom,
+  selectedIdsAtom,
+  isExitingSelectionAtom
+} from './selection.js';
+

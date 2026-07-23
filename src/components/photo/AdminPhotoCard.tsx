@@ -88,7 +88,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   const { appLang: hookLang } = useTranslation();
   const appLang = (lang as any) || hookLang;
   
-  const { cardRef, handleClick, longPressHandlers } = usePhotoCard({
+  const { cardRef, handleCardClick, longPressHandlers } = usePhotoCard({
     photo,
     isManagement: true,
     isMultiSelect,
@@ -109,7 +109,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
       isMultiSelect={isMultiSelect}
       imgVariant={columns <= 4 ? 'md' : 'sm'}
       priority={priority}
-      onClick={handleClick}
+      onClick={handleCardClick}
       ref={cardRef}
       onMouseDown={longPressHandlers.onMouseDown}
       onMouseMove={longPressHandlers.onMouseMove}

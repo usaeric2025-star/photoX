@@ -20,13 +20,7 @@ export default function PublicPage() {
   const isAuthLoading = useAtomValue(authLoadingAtom);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const isExplicitPublic = searchParams.get('mode') === 'public';
 
-  useEffect(() => {
-    if (!isAuthLoading && user && !isExplicitPublic) {
-      navigate('/admin', { replace: true });
-    }
-  }, [isAuthLoading, user, isExplicitPublic, navigate]);
   const { 
     category, 
     tags, 

@@ -158,6 +158,66 @@ export function usePhotoMutations() {
     }
   });
 
+  const manualGroupMutation = useAppMutation({
+    mutationFn: async ({ photoIds, groupId }: { photoIds: string[], groupId: string }) => {
+      // @ts-ignore - Hono client indexing for group-photos
+      const res = await api.groups['group-photos'].$post({
+        json: { 
+          photoIds, 
+          targetGroupId: groupId 
+        }
+      });
+      return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
+    },
+    onMutate: async ({ photoIds, groupId }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
+      const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
+
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+        if (!oldData) return oldData;
+        
+        // 乐观更新：将选中照片的 groupId 统一设置，并移除旧的封面标志
+        const updateItem = (item: any) => (item && photoIds.includes(item.id) ? { ...item, groupId, isGroupCover: false } : item);
+
+        if (Array.isArray(oldData.pages)) {
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => {
+              const items = page.items || page.data || page;
+              if (Array.isArray(items)) {
+                const updatedItems = items.map(updateItem);
+                if (page.items) return { ...page, items: updatedItems };
+                if (page.data) return { ...page, data: updatedItems };
+                return updatedItems;
+              }
+              return page;
+            })
+          };
+        }
+        if (Array.isArray(oldData)) return oldData.map(updateItem);
+        if (Array.isArray(oldData.items)) return { ...oldData, items: oldData.items.map(updateItem) };
+        if (Array.isArray(oldData.data)) return { ...oldData, data: oldData.data.map(updateItem) };
+        return oldData;
+      });
+
+      return { previousPhotosData };
+    },
+    onError: (_err, _vars, context: any) => {
+      if (context?.previousPhotosData) {
+        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      feedback.error(labels.mutationFailed || '合組失敗');
+    },
+    onSuccess: () => {
+      feedback.success('合併分組成功');
+    },
+    onSettled: () => {
+      invalidateAll();
+    }
+  });
+
   const togglePinMutation = useAppMutation({
     mutationFn: async ({ id, isPinned }: { id: string, isPinned: boolean }) => {
       const res = await api.admin.photos[':id'].pin.$post({
@@ -319,6 +379,7 @@ export function usePhotoMutations() {
     editMutation,
     deleteMutation,
     batchEditMutation,
+    manualGroupMutation,
     togglePinMutation,
     uploadMutation,
     // Aliases for convenience
@@ -327,11 +388,13 @@ export function usePhotoMutations() {
     editPhotoAsync: editMutation.mutateAsync,
     deletePhotoAsync: deleteMutation.mutateAsync,
     batchEditAsync: batchEditMutation.mutateAsync,
+    manualGroupAsync: manualGroupMutation.mutateAsync,
     togglePinAsync: togglePinMutation.mutateAsync,
     usePhotoUpload: () => uploadMutation,
     isEditing: editMutation.isPending,
     isDeleting: deleteMutation.isPending,
     isBatchEditing: batchEditMutation.isPending,
+    isGrouping: manualGroupMutation.isPending,
     isUploading: uploadMutation.isPending
   };
 }

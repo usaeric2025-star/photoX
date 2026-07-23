@@ -281,10 +281,42 @@ export function useGroupMutations() {
 
   const movePhotosMutation = useAppMutation({
     mutationFn: (args: { groupId: string; photoIds: string[] }) => GroupService.movePhotos(args.photoIds, args.groupId),
+    onMutate: async (args) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
+      const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
+
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            items: page.items.map((item: any) => {
+              if (args.photoIds.includes(item.id)) {
+                return { ...item, groupId: args.groupId, isGroupCover: false };
+              }
+              return item;
+            })
+          }))
+        };
+      });
+
+      clearSelection();
+      return { previousPhotosData };
+    },
+    onError: (_err, _vars, context: any) => {
+      if (context?.previousPhotosData) {
+        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      feedback.error(t('mutationFailed') || '移動失敗，請重試');
+    },
     onSuccess: (_, variables) => {
       feedback.success(t('addPhotosSuccess', variables.photoIds.length));
-      clearSelection();
-      invalidateList();
+    },
+    onSettled: () => {
+      invalidateAll();
     }
   });
 
@@ -297,7 +329,9 @@ export function useGroupMutations() {
   });
 
   const combineMutation = useAppMutation({
-    mutationFn: (args: { photoIds: string[]; targetGroupId?: string }) => GroupService.groupPhotos(args.photoIds, args.targetGroupId),
+    mutationFn: async (args: { photoIds: string[]; targetGroupId?: string }) => {
+      return GroupService.groupPhotos(args.photoIds, args.targetGroupId);
+    },
     onMutate: async (args) => {
       // 1. Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
@@ -306,31 +340,33 @@ export function useGroupMutations() {
       const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
 
       // 3. Compute target group ID
-      const targetGroupId = args.targetGroupId || `temp-group-${Date.now()}`;
+      const targetGroupId = args.targetGroupId;
 
       // 4. Optimistically update photo list cache
-      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
-        if (!oldData?.pages) return oldData;
-        let coverAssigned = false;
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
-            ...page,
-            items: page.items.map((item: any) => {
-              if (args.photoIds.includes(item.id)) {
-                const isCover = !coverAssigned;
-                if (isCover) coverAssigned = true;
-                return {
-                  ...item,
-                  groupId: targetGroupId,
-                  isGroupCover: isCover
-                };
-              }
-              return item;
-            })
-          }))
-        };
-      });
+      if (targetGroupId) {
+        queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+          let coverAssigned = false;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              items: page.items.map((item: any) => {
+                if (args.photoIds.includes(item.id)) {
+                  const isCover = !coverAssigned;
+                  if (isCover) coverAssigned = true;
+                  return {
+                    ...item,
+                    groupId: targetGroupId,
+                    isGroupCover: isCover
+                  };
+                }
+                return item;
+              })
+            }))
+          };
+        });
+      }
 
       // 5. Instantly clear selection and close toolbar
       clearSelection();
@@ -343,10 +379,6 @@ export function useGroupMutations() {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      feedback.error(t('mergePhotosFailed') || '合組失敗，請重試');
-    },
-    onSuccess: (_, variables) => {
-      feedback.success(t('mergePhotosSuccess', variables.photoIds.length) || `成功將 ${variables.photoIds.length} 張照片合組`);
     },
     onSettled: () => {
       invalidateAll();

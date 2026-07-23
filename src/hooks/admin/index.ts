@@ -77,7 +77,7 @@ export const AdminService = {
 export function useAdminActions() {
   const { t } = useTranslation();
   const { invalidateAll } = useInvalidatePhotos();
-  const { editMutation, deleteMutation, batchEditMutation, togglePinMutation } = usePhotoMutations();
+  const { editMutation, deleteMutation, batchEditMutation, manualGroupMutation, togglePinMutation, isGrouping } = usePhotoMutations();
   const { handleBatchAiAnalyze, isAiAnalyzing } = useAIBatchAnalysis();
   const selectedIds = useSelectedIds();
   const queryClient = useQueryClient();
@@ -113,10 +113,12 @@ export function useAdminActions() {
     updatePhoto: editMutation,
     deletePhoto: deleteMutation,
     batchUpdate: batchEditMutation,
+    manualGroup: manualGroupMutation,
     togglePin: togglePinMutation,
     handleBatchAiIdentifyTrigger,
     handleBatchAiAnalyze,
     isAiAnalyzing,
+    isGrouping,
     auditResult,
     isAuditing,
     runAudit,

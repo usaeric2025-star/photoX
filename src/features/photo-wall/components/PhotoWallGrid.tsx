@@ -3,7 +3,7 @@ import { DreamMasonry } from 'dream-masonry';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCard } from './PhotoCard.js';
 import { useGrid } from '#src/context/GridContext.js';
-import { useTranslation } from '#src/hooks/index.js';
+import { useTranslation, useSelectionActions } from '#src/hooks/index.js';
 import { PhotoSkeleton } from '#src/components/photo/PhotoSkeleton.js';
 
 interface PhotoWallGridProps {
@@ -34,9 +34,28 @@ export function PhotoWallGrid({
 }: PhotoWallGridProps) {
   const { columns } = useGrid();
   const { appLang } = useTranslation();
+  const { toggleAll } = useSelectionActions();
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
+
+  // Ctrl+A 全选快捷键
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        const activeElement = document.activeElement;
+        const isInput = activeElement?.tagName === 'INPUT' || 
+                        activeElement?.tagName === 'TEXTAREA' || 
+                        activeElement?.getAttribute('contenteditable') === 'true';
+        if (isInput) return;
+
+        e.preventDefault();
+        toggleAll(photos.map(p => p.id));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [photos, toggleAll]);
 
   useEffect(() => {
     if (!containerRef.current) return;

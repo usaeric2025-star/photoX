@@ -47,7 +47,7 @@ export function SelectionToolbarActions({
       {groupId && (
         <button
           id="remove-from-group-btn"
-          onClick={onRemoveFromGroup}
+          onClick={(e) => { e.stopPropagation(); onRemoveFromGroup(); }}
           disabled={selectedCount === 0 || isAnyPending}
           className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
           title="將照片移出此合組"
@@ -67,7 +67,7 @@ export function SelectionToolbarActions({
       {!groupId && (
         <button
           id="combine-photos-btn"
-          onClick={onManualGroup}
+          onClick={(e) => { e.stopPropagation(); onManualGroup(); }}
           disabled={isAnyPending}
           className={`flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all border active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm outline-none ${
             selectedCount < 2
@@ -90,7 +90,7 @@ export function SelectionToolbarActions({
       {/* 批量隱藏 */}
       <button
         id="batch-hide-btn"
-        onClick={() => onBatchToggleHide(true)}
+        onClick={(e) => { e.stopPropagation(); onBatchToggleHide(true); }}
         disabled={selectedCount === 0 || isAnyPending}
         className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
         title="隱藏照片"
@@ -108,7 +108,7 @@ export function SelectionToolbarActions({
       {/* 批量編輯 */}
       <button
         id="batch-edit-btn"
-        onClick={onBatchEdit}
+        onClick={(e) => { e.stopPropagation(); onBatchEdit(); }}
         disabled={selectedCount === 0 || isAnyPending}
         className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
         title="編輯選取項目"
@@ -122,7 +122,7 @@ export function SelectionToolbarActions({
       {/* 批量刪除 */}
       <button
         id="batch-delete-btn"
-        onClick={onBatchDelete}
+        onClick={(e) => { e.stopPropagation(); onBatchDelete(); }}
         disabled={selectedCount === 0 || isAnyPending}
         className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none shadow-sm outline-none"
         title="批次刪除照片"

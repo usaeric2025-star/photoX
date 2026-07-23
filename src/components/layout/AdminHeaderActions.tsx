@@ -45,6 +45,7 @@ export function AdminHeaderActions({
   const canAccessDiagnostics = can('admin:dashboard:access');
 
   const menuItems = [
+    { id: 'public', icon: 'eye' as const, label: t('viewModePublic', '查看公開頁面'), onClick: () => setLocation('/') },
     { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation(ADMIN_ROUTES.HOME) },
     ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) }] : []),
     ...(canAccessDiagnostics ? [
@@ -84,6 +85,15 @@ export function AdminHeaderActions({
           )}
         </button>
       )}
+
+      <button
+        type="button"
+        onClick={() => setLocation('/')}
+        className={cn("w-9 h-9", theme.button)}
+        title={t('viewModePublic', '查看公開頁面')}
+      >
+        <Icon name="eye" size={18} />
+      </button>
 
       <button
         type="button"

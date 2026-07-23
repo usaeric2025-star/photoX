@@ -118,9 +118,9 @@ export const groups = new Hono()
     const body = await c.req.json();
     const check = v.safeParse(v.object({
           targetGroupId: v.optional(v.string()),
-          userId: v.string(),
+          userId: v.optional(v.string()),
           photoIds: v.optional(v.array(v.string())),
-          groupData: v.record(v.string(), v.unknown()),
+          groupData: v.optional(v.record(v.string(), v.unknown())),
           sourceGroupIds: v.optional(v.array(v.string())),
           ungroupedValidIds: v.optional(v.array(v.string()))
       }), body);
@@ -128,7 +128,7 @@ export const groups = new Hono()
     const { 
           targetGroupId: rawTargetGroupId, 
           userId, 
-          groupData, 
+          groupData = {}, 
           photoIds: rawPhotoIds,
           sourceGroupIds: rawSourceGroupIds
       } = check.output;

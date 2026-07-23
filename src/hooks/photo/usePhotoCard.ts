@@ -4,7 +4,7 @@ import { useLongPress } from '#src/hooks/core/index.js';
 import { PhotoListItem } from '#shared/apiContractSchema.js';
 import { useFilters } from '#src/hooks/ui/useUI.js';
 import { useNormalizedLocation } from '#src/hooks/core/index.js';
-import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
+import { useIsMultiSelect, useSelectionActions, useIsExitingSelection } from '#src/hooks/index.js';
 import { usePermission } from '#src/hooks/index.js';
 import { logger } from '#lib/logger.js';
 
@@ -52,9 +52,18 @@ export function usePhotoCard({
     }
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  const isExiting = useIsExitingSelection();
+
+  const handleCardClick = (e: React.MouseEvent) => {
     logger.debug('[usePhotoCard] CLICKED photo:', photo.id, { isManagement, isMultiSelect, hasSearchQuery });
     
+    if (isExiting) {
+      logger.debug('[usePhotoCard] BLOCKED click during exiting selection lock');
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+
     if (longPressTriggered.current) {
       logger.debug('[usePhotoCard] BLOCKED click by long press');
       longPressTriggered.current = false;
@@ -106,7 +115,7 @@ export function usePhotoCard({
 
   return {
     cardRef: longPress.ref,
-    handleClick,
+    handleCardClick,
     handleOpenLightbox,
     longPressHandlers: longPress
   };
