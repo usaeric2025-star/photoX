@@ -20,6 +20,7 @@ import { LoadingScreen } from './components/ui/LoadingScreen.js';
 import { LoginScreen } from './components/admin/LoginScreen.js';
 import { patch } from '#lib/store/index.js';
 import { GridProvider } from './context/GridContext.js';
+import { RootErrorBoundary } from './components/layout/RootErrorBoundary.js';
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const user = useAtomValue(userAtom);
@@ -70,6 +71,7 @@ function RootLayout() {
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <RootErrorBoundary />,
     children: [
       {
         path: '/',
