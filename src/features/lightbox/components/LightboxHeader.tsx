@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { feedback } from '#lib/feedback.js';
 import { Photo } from '#src/types/photo.js';
@@ -22,7 +22,7 @@ interface LightboxHeaderProps {
  * 
  * 燈箱頂部的控制欄，包含計數器、信息開關、編輯與關閉按鈕。
  */
-export function LightboxHeader({
+export const LightboxHeader = memo(function LightboxHeader({
   currentPhoto,
   currentIndex,
   totalPhotos,
@@ -142,4 +142,4 @@ export function LightboxHeader({
       </div>
     </div>
   );
-}
+});

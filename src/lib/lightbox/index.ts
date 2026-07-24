@@ -1,19 +1,22 @@
-import { useAtomValue } from 'jotai';
-import { lightboxSlidesAtom, lightboxCurrentIndexAtom } from '#src/store/index.js';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { 
+  lightboxSlidesAtom, 
+  lightboxCurrentIndexAtom, 
+  openLightboxAtom,
+  closeLightboxAtom 
+} from '#src/store/index.js';
 export * from './types.js';
-import { useSetAtom } from 'jotai';
-import { closeLightboxAtom } from '#src/store/index.js';
 import { LightboxSlide } from './types.js';
-import { } from '#lib/store/index.js';
 import { useFilters } from '#src/hooks/index.js';
 import { useParams } from 'react-router-dom';
 
 export function useLightbox() {
   const slides = useAtomValue(lightboxSlidesAtom);
   const currentIndex = useAtomValue(lightboxCurrentIndexAtom);
+  const openAction = useSetAtom(openLightboxAtom);
   const setLightboxData = useSetAtom(lightboxSlidesAtom);
-  const setLightboxIndex = useSetAtom(lightboxCurrentIndexAtom);
   const clearLightboxData = useSetAtom(closeLightboxAtom);
+  const setLightboxIndex = useSetAtom(lightboxCurrentIndexAtom);
   
   
   
@@ -48,8 +51,7 @@ export function useLightbox() {
   };
 
   const open = (slides: LightboxSlide[], index: number = 0) => {
-    setLightboxData(slides);
-    setLightboxIndex(index);
+    openAction({ slides, index });
     if (slides[index]?.id) {
       setPhotoId(slides[index].id);
     }

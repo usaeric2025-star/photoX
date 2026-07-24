@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePhoto, usePhotoAIResult, usePermission, useAdminMode, useTranslation, useCategories } from '#src/hooks/index.js';
@@ -12,6 +12,7 @@ import { feedback } from '#lib/feedback.js';
 interface LightboxInfoProps {
   currentPhoto: Photo | { original: Photo };
   showInfo: boolean;
+  onToggleInfo?: () => void;
   lang: 'zh' | 'en' | 'ms';
   onLangChange: (lang: 'zh' | 'en' | 'ms') => void;
   onShowFeedback?: (msg: string, type?: 'success' | 'error') => void;
@@ -25,9 +26,10 @@ type InfoTab = 'overview' | 'specs' | 'ai';
  * 燈箱右側的信息面板，採用 Tab 分頁切換，適合移動端操作且避免深下拉。
  * 包含：概要（名稱、分類、標籤、故事、下載）、規格（價格、型號、尺寸）、AI與系統日誌。
  */
-export function LightboxInfo({
+export const LightboxInfo = memo(function LightboxInfo({
   currentPhoto,
   showInfo,
+  onToggleInfo,
   lang,
   onLangChange,
   onShowFeedback
@@ -84,7 +86,7 @@ export function LightboxInfo({
           transition="fast"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-16 sm:top-20 right-3 sm:right-6 w-[calc(100vw-24px)] max-w-[380px] sm:w-[390px] max-h-[calc(100vh-140px)] flex flex-col rounded-3xl bg-zinc-950/95 border border-white/15 shadow-2xl overflow-hidden pointer-events-auto z-40"
+          className="absolute top-16 sm:top-20 right-3 sm:right-6 w-[calc(100vw-24px)] max-w-[380px] sm:w-[390px] max-h-[calc(100vh-140px)] flex flex-col rounded-3xl bg-black/90 border border-white/15 shadow-2xl overflow-hidden pointer-events-auto z-40"
         >
           {/* Header Segmented Tabs (Mobile-first ergonomics) */}
           <div className="p-2 sm:p-2.5 bg-white/[0.03] border-b border-white/10 flex items-center justify-between gap-1 shrink-0">
@@ -482,5 +484,5 @@ export function LightboxInfo({
       )}
     </AnimatePresence>
   );
-}
+});
 

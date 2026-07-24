@@ -27,7 +27,7 @@ export function StandardModalLayout({
   return (
     <div className={`h-full bg-slate-50 flex flex-col animate-fade-up ${className || ''}`}>
       {!hideHeader && (
-        <header className="glass-header">
+        <header className="sticky-header-surface">
           {header ? header : (
             <>
               <div className="px-2">

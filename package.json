@@ -21,7 +21,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "analyze": "vite build --mode analyze",
-    "lint": "tsc --noEmit && bash scripts/check-imports.sh",
+    "lint": "tsc --noEmit && bash scripts/check-imports.sh && bash scripts/check-styles.sh",
     "knip": "knip",
     "test": "vitest",
     "test:e2e": "playwright test",

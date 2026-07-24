@@ -25,14 +25,21 @@ export function useFilters() {
 
   const search = searchParams.get(QUERY_PARAMS.SEARCH) || '';
   const category = searchParams.get(QUERY_PARAMS.CATEGORY) || '';
-  const categories = searchParams.get(QUERY_PARAMS.CATEGORIES)?.split(',').filter(Boolean) || [];
-  const tags = searchParams.get(QUERY_PARAMS.TAGS)?.split(',').filter(Boolean) || [];
+  
+  const categoriesParam = searchParams.get(QUERY_PARAMS.CATEGORIES);
+  const categories = useMemo(() => categoriesParam?.split(',').filter(Boolean) || [], [categoriesParam]);
+  
+  const tagsParam = searchParams.get(QUERY_PARAMS.TAGS);
+  const tags = useMemo(() => tagsParam?.split(',').filter(Boolean) || [], [tagsParam]);
+  
   const sort = searchParams.get(QUERY_PARAMS.SORT) || 'newest';
   const batch = searchParams.get(QUERY_PARAMS.BATCH) === 'true';
   const showGroupsCollapsed = searchParams.get(QUERY_PARAMS.COLLAPSED) !== 'false';
   const anchor = searchParams.get(QUERY_PARAMS.ANCHOR) || '';
   const groupId = searchParams.get(QUERY_PARAMS.GROUP_ID) || '';
-  const groups = searchParams.get(QUERY_PARAMS.GROUPS)?.split(',').filter(Boolean) || [];
+  
+  const groupsParam = searchParams.get(QUERY_PARAMS.GROUPS);
+  const groups = useMemo(() => groupsParam?.split(',').filter(Boolean) || [], [groupsParam]);
 
   const updateFilters = useCallback((updates: {
     search?: string | null;

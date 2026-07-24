@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { cn } from "#lib/utils.js";
 import { Icon } from '#src/components/ui/Icon.js';
 import { Tag } from '#src/types/index.js';
@@ -21,7 +21,7 @@ interface TagButtonProps {
  * 
  * 標籤選擇按鈕，支持單擊切換與長按編輯。
  */
-export const TagButton = memo(function TagButton({ 
+export function TagButton({ 
   tag, 
   isSelected, 
   isHot, 
@@ -95,4 +95,4 @@ export const TagButton = memo(function TagButton({
       </button>
     </div>
   );
-});
+}

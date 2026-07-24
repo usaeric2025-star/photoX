@@ -1,3 +1,4 @@
+import React, { memo, useMemo } from 'react';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { Image } from '#src/components/ui/Image.js';
 import { Photo } from '#src/types/photo.js';
@@ -11,7 +12,7 @@ interface LightboxStageProps {
   onTap?: () => void;
 }
 
-export function LightboxStage({ onTap }: LightboxStageProps = {}) {
+export const LightboxStage = memo(function LightboxStage({ onTap }: LightboxStageProps = {}) {
   const { slides: lightboxSlides, currentIndex: lightboxCurrentIndex, next, prev, clearLightboxData } = useLightbox();
   
   const currentPhoto = lightboxSlides[lightboxCurrentIndex];
@@ -45,12 +46,24 @@ export function LightboxStage({ onTap }: LightboxStageProps = {}) {
   const lqipSrc = getPhotoThumb(key, 'MD', hash);
 
   // Preload adjacent photos (2 before and 2 after) for seamless slide transitions
-  const prefetchUrls = lightboxSlides.map(slide => {
-    if (!slide) return '';
-    const photo = ('original' in slide ? slide.original : slide) as Photo;
-    return getPhotoThumb(photo.imageUrl || photo.uri, 'LG', photo.imageHash);
-  });
-  usePhotoPrefetch(prefetchUrls, lightboxCurrentIndex, 2);
+  const prefetchUrls = useMemo(() => {
+    const urls: string[] = [];
+    const start = Math.max(0, lightboxCurrentIndex - 2);
+    const end = Math.min(lightboxSlides.length, lightboxCurrentIndex + 3);
+    
+    for (let i = start; i < end; i++) {
+      const slide = lightboxSlides[i];
+      if (!slide) {
+        urls.push('');
+      } else {
+        const photo = ('original' in slide ? slide.original : slide) as Photo;
+        urls.push(getPhotoThumb(photo.imageUrl || photo.uri, 'LG', photo.imageHash));
+      }
+    }
+    return urls;
+  }, [lightboxSlides, lightboxCurrentIndex]);
+
+  usePhotoPrefetch(prefetchUrls, lightboxCurrentIndex - Math.max(0, lightboxCurrentIndex - 2), 2); // Pass adjusted currentIndex
 
   if (!currentPhoto || !photoData) return null;
 
@@ -122,4 +135,4 @@ export function LightboxStage({ onTap }: LightboxStageProps = {}) {
       )}
     </div>
   );
-}
+});

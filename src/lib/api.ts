@@ -32,6 +32,15 @@ const client = hc<AppType>(getBaseUrl(), {
     const options = init || {};
     let token = store.get(tokenAtom);
 
+    // Rule 4: Centralized Frontend Timeout
+    const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : '');
+    let timeoutMs = 30000; // Default 30s
+    if (url.includes('/api/ai')) timeoutMs = 60000;
+    else if (url.includes('/api/upload') || url.includes('/api/storage') || url.includes('batch')) timeoutMs = 120000;
+
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+
     if (!token) {
       try {
         const { data } = await supabase.auth.getSession();
@@ -51,12 +60,15 @@ const client = hc<AppType>(getBaseUrl(), {
       options.headers = headers;
     }
 
-    const response = await fetch(input, options);
-    
-    // We removed the global ErrorFactory.handle() here to prevent duplicate error toasts,
-    // since ErrorFactory.unwrap() and query/mutation hooks already display the errors with better context.
-
-    return response;
+    try {
+      const response = await fetch(input, {
+        ...options,
+        signal: controller.signal
+      });
+      return response;
+    } finally {
+      clearTimeout(id);
+    }
   }
 });
 

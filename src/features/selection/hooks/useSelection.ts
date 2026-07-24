@@ -1,12 +1,16 @@
 import { useSearchParams } from 'react-router-dom';
-import { useCallback, useEffect, useMemo } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useMemo } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { feedback } from '#lib/feedback.js';
 import {
   selectedIdsSetAtom,
   selectedIdsAtom,
   isExitingSelectionAtom,
-  isAvoidingSelectionAtom
+  isAvoidingSelectionAtom,
+  selectedCountAtom,
+  toggleSelectionAtom,
+  clearSelectionAtom,
+  isSelectingAtom
 } from '#src/store/index.js';
 import { getDefaultStore } from 'jotai';
 
@@ -42,18 +46,17 @@ export function useSelectedIds(): string[] {
  */
 export function useIsMultiSelect(): boolean {
   const [searchParams] = useSearchParams();
-  const selectedSet = useAtomValue(selectedIdsSetAtom);
+  const isSelecting = useAtomValue(isSelectingAtom);
   const isBatchParam = searchParams.get('batch') === 'true';
 
-  return isBatchParam || selectedSet.size > 0;
+  return isBatchParam || isSelecting;
 }
 
 /**
  * useSelectionCount: 返回选中数量
  */
 export function useSelectionCount(): number {
-  const selectedSet = useAtomValue(selectedIdsSetAtom);
-  return selectedSet.size;
+  return useAtomValue(selectedCountAtom);
 }
 
 /**
@@ -68,25 +71,22 @@ export function useIsExitingSelection(): boolean {
  */
 export function useSelectionActions() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedSet, setSelectedSet] = useAtom(selectedIdsSetAtom);
-  const [isExiting, setIsExiting] = useAtom(isExitingSelectionAtom);
+  const selectedCount = useAtomValue(selectedCountAtom);
+  const isExiting = useAtomValue(isExitingSelectionAtom);
+  
+  const toggleSelectAction = useSetAtom(toggleSelectionAtom);
+  const clearSelectionAction = useSetAtom(clearSelectionAtom);
+  const setSelectedSet = useSetAtom(selectedIdsSetAtom);
 
   const toggleSelect = useCallback((id: string) => {
     if (isExiting) return;
 
-    setSelectedSet(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        if (next.size >= MAX_SELECTED_COUNT) {
-          feedback.info(`单次最多可选 ${MAX_SELECTED_COUNT} 张照片`);
-          return prev;
-        }
-        next.add(id);
-      }
-      return next;
-    });
+    if (selectedCount >= MAX_SELECTED_COUNT && !store.get(selectedIdsSetAtom).has(id)) {
+      feedback.info(`单次最多可选 ${MAX_SELECTED_COUNT} 张照片`);
+      return;
+    }
+
+    toggleSelectAction(id);
 
     if (searchParams.get('batch') !== 'true') {
       setSearchParams(prev => {
@@ -95,12 +95,10 @@ export function useSelectionActions() {
         return next;
       }, { replace: true });
     }
-  }, [isExiting, setSelectedSet, searchParams, setSearchParams]);
+  }, [isExiting, selectedCount, toggleSelectAction, searchParams, setSearchParams]);
 
   const clearSelection = useCallback(() => {
-    setIsExiting(true);
-
-    setSelectedSet(new Set());
+    clearSelectionAction();
 
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
@@ -108,18 +106,14 @@ export function useSelectionActions() {
       next.delete('selected');
       return next;
     }, { replace: true });
-
-    setTimeout(() => {
-      setIsExiting(false);
-    }, 300);
-  }, [setIsExiting, setSelectedSet, setSearchParams]);
+  }, [clearSelectionAction, setSearchParams]);
 
   const toggleMode = useCallback(() => {
     if (isExiting) return;
 
     const isBatch = searchParams.get('batch') === 'true';
 
-    if (isBatch || selectedSet.size > 0) {
+    if (isBatch || selectedCount > 0) {
       clearSelection();
     } else {
       setSearchParams(prev => {
@@ -128,7 +122,7 @@ export function useSelectionActions() {
         return next;
       }, { replace: true });
     }
-  }, [isExiting, searchParams, selectedSet.size, clearSelection, setSearchParams]);
+  }, [isExiting, searchParams, selectedCount, clearSelection, setSearchParams]);
 
   const patch = useCallback((updates: {
     selectedIds?: string[] | null;
@@ -197,8 +191,7 @@ export function useSelectionActions() {
     }
   }, [isExiting, setSelectedSet, searchParams, setSearchParams]);
 
-  const selectedIds = Array.from(selectedSet);
-  const isBatchMode = searchParams.get('batch') === 'true' || selectedIds.length > 0;
+  const isBatchMode = searchParams.get('batch') === 'true' || selectedCount > 0;
 
   return {
     toggleSelect,
@@ -206,7 +199,7 @@ export function useSelectionActions() {
     clearSelection,
     toggleMode,
     patch,
-    selectedIds,
+    selectedIds: useAtomValue(selectedIdsAtom),
     isBatchMode
   };
 }

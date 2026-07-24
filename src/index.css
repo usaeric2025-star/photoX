@@ -124,7 +124,7 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  .glass-morphism {
+  .surface-overlay-solid {
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
@@ -161,7 +161,7 @@
   }
 
   /* --- Global Scaffolding --- */
-  .glass-header {
+  .sticky-header-surface {
     @apply sticky top-0 bg-white/95 border-b border-slate-100 flex items-center px-4 py-3 shrink-0;
   }
 
@@ -197,6 +197,17 @@ dialog::backdrop {
 
 dialog[open] { opacity: 1; transform: scale(1); }
 dialog[open]::backdrop { opacity: 1; background-color: rgba(0, 0, 0, 0.6); }
+
+/* Unified Backdrop Styles (No Blur for Performance) */
+.backdrop-solid-dark::backdrop {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: none !important;
+}
+
+.backdrop-solid-standard::backdrop {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: none !important;
+}
 
 @starting-style {
   dialog[open] { opacity: 0; transform: scale(0.95); }

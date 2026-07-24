@@ -1,5 +1,7 @@
-import { Hono, type Context } from 'hono';
+import { Hono, type Context, type Next } from 'hono';
 import { type StatusCode } from 'hono/utils/http-status';
+import { timeout } from 'hono/timeout';
+import { HTTPException } from 'hono/http-exception';
 import { requireRealUser } from './auth.js';
 import { getTraceId } from './error/traceId.js';
 import { logger } from './logger.js';
@@ -7,7 +9,33 @@ import { AppError } from '../../shared/AppError.js';
 import { errorFactory } from './error/factory.js';
 
 export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | undefined }) {
-  // --- Middleware ---
+  // --- Timeout Middleware (Rule 2: Centralized Timeout) ---
+  // - AI: 60s
+  // - Batch/Upload: 120s (Note: Vercel Hobby limits to 60s, Pro limits up to 300s)
+  // - Default: 30s
+  app.use('*', async (c: Context, next: Next) => {
+    const path = c.req.path;
+    let duration = 30000; // Default 30s
+
+    if (path.startsWith('/api/ai')) {
+      duration = 60000; // AI 60s
+    } else if (
+      path.startsWith('/api/upload') || 
+      path.startsWith('/api/storage') || 
+      path.includes('/batch') ||
+      path.includes('/refresh-view')
+    ) {
+      duration = 120000; // Batch/Storage 120s
+    }
+
+    const handler = timeout(duration, () => {
+      return new HTTPException(504, { message: `Request Timeout after ${duration}ms` });
+    });
+
+    return handler(c, next);
+  });
+
+  // --- Logger & Trace ---
   app.use('*', async (c: Context, next) => {
       const traceId = getTraceId(c);
       c.header('X-Trace-Id', traceId);

@@ -1,5 +1,5 @@
-import { useAtomValue } from 'jotai';
-import { descLangAtom } from '#src/store/index.js';
+import { useAtom, useAtomValue } from 'jotai';
+import { descLangAtom, lightboxShowInfoAtom, lightboxShowControlsAtom } from '#src/store/index.js';
 import { patch } from '#lib/store/index.js';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
@@ -53,6 +53,9 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   
   const { setPhotoId, setModal, photoId: queryPhotoId } = useFilters();
   const currentDescLang = useAtomValue(descLangAtom);
+  const [showInfo, setShowInfo] = useAtom(lightboxShowInfoAtom);
+  const [showControls, setShowControls] = useAtom(lightboxShowControlsAtom);
+
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [localToast, setLocalToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -120,15 +123,6 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     setModal('edit');
   });
 
-  const [showInfo, setShowInfo] = useState(false);
-  
-  // Reset info panel when lightbox closes or opens to ensure it's closed by default
-  useEffect(() => {
-    if (!isOpen) {
-      setShowInfo(false);
-    }
-  }, [isOpen]);
-  const [showControls, setShowControls] = useState(true);
   const { appLang } = useTranslation();
 
   const prevAppLangRef = useRef(appLang);
@@ -139,7 +133,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
       prevAppLangRef.current = appLang;
       patch({ descLang: appLang });
     }
-  }, [appLang, patch]);
+  }, [appLang]);
 
   const lang = currentDescLang || appLang;
 
@@ -147,19 +141,23 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     if (showInfo) {
       setShowInfo(false);
     } else {
-      setShowControls(prev => !prev);
+      setShowControls(!showControls);
     }
-  }, [showInfo]);
+  }, [showInfo, showControls, setShowInfo, setShowControls]);
 
-  const handleLangChange = (newLang: 'zh' | 'en' | 'ms') => {
+  const handleToggleInfo = useCallback(() => {
+    setShowInfo(!showInfo);
+  }, [showInfo, setShowInfo]);
+
+  const handleLangChange = useCallback((newLang: 'zh' | 'en' | 'ms') => {
     try {
         patch({ descLang: newLang });
     } catch (e) {
         ErrorFactory.handle(e as Error, { context: 'Failed to change language' });
     }
-  };
+  }, []);
 
-  const normalizeSlide = (slide: Photo | { original: Photo } | LightboxSlide): Photo | { original: Photo } => {
+  const normalizeSlide = useCallback((slide: Photo | { original: Photo } | LightboxSlide): Photo | { original: Photo } => {
     if (slide && typeof slide === 'object') {
         if ('original' in slide) return slide as { original: Photo };
         if ('imageUrl' in slide || 'image_url' in slide || 'id' in slide) return slide as Photo;
@@ -199,12 +197,12 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         };
     }
     return slide as Photo;
-  };
+  }, []);
 
   const effectivePhotos = useMemo(() => {
     if (finalSourcePhotos.length === 0 && isOpen) return [];
     return finalSourcePhotos.map(normalizeSlide);
-  }, [finalSourcePhotos, isOpen]) as (Photo | { original: Photo })[];
+  }, [finalSourcePhotos, isOpen, normalizeSlide]) as (Photo | { original: Photo })[];
 
   const handleNext = hookNext;
   const handlePrev = hookPrev;
@@ -227,7 +225,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isEditing, showInfo, handleNext, handlePrev, onClose]);
+  }, [isOpen, isEditing, showInfo, handleNext, handlePrev, onClose, setShowInfo]);
 
   const baseActivePhoto = useMemo(() => {
     if (effectivePhotos.length === 0) return null;
@@ -320,7 +318,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         </div>
       ) : (
         <div className="relative flex flex-col w-full h-full">
-          {/* Main Stage */}
+          {/* Main Stage - Stable Tap Handler */}
           <LightboxStage onTap={handleStageTap} />
 
           {activePhoto && (
@@ -332,7 +330,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
                 totalPhotos={effectivePhotos.length}
                 showInfo={showInfo}
                 showControls={showControls}
-                onToggleInfo={() => setShowInfo(!showInfo)}
+                onToggleInfo={handleToggleInfo}
                 onEdit={onEdit}
                 onClose={onClose}
                 onShowFeedback={handleShowFeedback}
@@ -344,6 +342,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
                 lang={lang}
                 onLangChange={handleLangChange}
                 showInfo={showInfo}
+                onToggleInfo={handleToggleInfo}
                 currentPhoto={activePhoto}
                 onShowFeedback={handleShowFeedback}
               />

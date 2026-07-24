@@ -166,7 +166,7 @@ export function TaskDrawer() {
       onClose={() => setTaskDrawerOpen(false)}
       className={cn(
         'h-full w-85 bg-white border-l border-slate-100 shadow-2xl transition-all duration-300 flex flex-col m-0 ml-auto outline-none p-0 max-h-none',
-        'backdrop:bg-black/40 backdrop:backdrop-blur-none',
+        'backdrop-solid-standard',
         !isOpen ? 'translate-x-full' : 'translate-x-0'
       )}
     >

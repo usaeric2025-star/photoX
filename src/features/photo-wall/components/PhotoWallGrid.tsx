@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useRef, useEffect, useState, useMemo, memo } from 'react';
 import { DreamMasonry } from 'dream-masonry';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCard } from './PhotoCard.js';
@@ -22,7 +22,7 @@ interface PhotoWallGridProps {
  * 
  * 瀑布流網格組件，使用 dream-masonry 實現高性能無限捲動。
  */
-export function PhotoWallGrid({
+export const PhotoWallGrid = memo(function PhotoWallGrid({
   photos,
   hasMore,
   isLoading = false,
@@ -203,4 +203,4 @@ export function PhotoWallGrid({
       )}
     </div>
   );
-}
+});
