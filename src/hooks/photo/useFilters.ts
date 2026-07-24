@@ -142,6 +142,49 @@ export function useFilters() {
     groups
   }), [search, category, categories, tags, sort, groupId, groups]);
 
+  /**
+   * Toggle a tag filter.
+   */
+  const toggleTag = useCallback((tag: string) => {
+    const nextTags = tags?.includes(tag)
+      ? tags.filter(t => t !== tag)
+      : [...(tags || []), tag];
+    
+    updateFilters({ tags: nextTags.length ? nextTags : undefined });
+  }, [tags, updateFilters]);
+
+  /**
+   * Set exclusive tag filter.
+   */
+  const setExclusiveTag = useCallback((tag: string) => {
+    updateFilters({ tags: [tag] });
+  }, [updateFilters]);
+
+  /**
+   * Toggle a category filter (Multi-select).
+   */
+  const toggleCategory = useCallback((category: string) => {
+    const nextCategories = categories?.includes(category)
+      ? categories.filter(c => c !== category)
+      : [...(categories || []), category];
+    
+    updateFilters({ categories: nextCategories.length ? nextCategories : undefined });
+  }, [categories, updateFilters]);
+
+  /**
+   * Clear all filters.
+   */
+  const clearFilters = useCallback(() => {
+    updateFilters({
+      search: undefined,
+      category: undefined,
+      categories: undefined,
+      tags: undefined,
+      groupId: undefined,
+      groups: undefined
+    });
+  }, [updateFilters]);
+
   return {
     search, setSearch,
     category, setCategory,
@@ -158,6 +201,10 @@ export function useFilters() {
     updateFilters,
     openModal,
     closeModal,
+    toggleTag,
+    setExclusiveTag,
+    toggleCategory,
+    clearFilters,
     filters
   };
 }

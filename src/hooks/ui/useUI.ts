@@ -6,7 +6,6 @@ const QUERY_PARAMS = {
   MODAL: 'modal',
   PHOTO_ID: 'photoId',
   BATCH: 'batch',
-  SELECTED: 'selected',
   COLLAPSED: 'collapsed',
   ANCHOR: 'anchor',
   COLS: 'cols',
@@ -74,7 +73,6 @@ export function useUI() {
   const modalActions = useModalActions();
 
   const batch = searchParams.get(QUERY_PARAMS.BATCH) === 'true';
-  const selected = searchParams.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean) || [];
   const showGroupsCollapsed = searchParams.get(QUERY_PARAMS.COLLAPSED) !== 'false';
   const anchor = searchParams.get(QUERY_PARAMS.ANCHOR) || '';
   const columns = searchParams.get(QUERY_PARAMS.COLS) || '';
@@ -85,15 +83,6 @@ export function useUI() {
       const next = new URLSearchParams(prev);
       if (val) next.set(QUERY_PARAMS.BATCH, 'true');
       else next.delete(QUERY_PARAMS.BATCH);
-      return next;
-    }, { replace: true });
-  }, [setSearchParams]);
-
-  const setSelected = useCallback((val: string[] | null) => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      if (val && val.length > 0) next.set(QUERY_PARAMS.SELECTED, val.join(','));
-      else next.delete(QUERY_PARAMS.SELECTED);
       return next;
     }, { replace: true });
   }, [setSearchParams]);
@@ -137,7 +126,6 @@ export function useUI() {
   return {
     ...modalActions,
     batch, setBatch,
-    selected, setSelected,
     showGroupsCollapsed, setShowGroupsCollapsed,
     anchor, setAnchor,
     columns, setColumns,
