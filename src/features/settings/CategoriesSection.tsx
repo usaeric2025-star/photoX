@@ -30,7 +30,7 @@ function CategoryItem({
   const confirm = useConfirm();
   const { appLang, t } = useTranslation();
   
-  const displayName = (cat.description as any)?.[appLang] || cat.name || '未命名分类';
+  const displayName = (cat.description as Record<string, string>)?.[appLang] || cat.name || '未命名分类';
 
   return (
     <NativePopover
@@ -105,7 +105,7 @@ export function CategoriesSection({
   const [isAddOpen, addDialog] = useDisclosure(false);
 
   const { submit: runUpdateCategory, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({ id: v.number(), updates: v.record(v.string(), v.unknown()) }),
     mutationFn: async ({ id, updates }: { id: number, updates: Record<string, unknown> }) => {
       await categoryMutations.edit.mutateAsync({ id, updates });
     },
@@ -113,7 +113,7 @@ export function CategoriesSection({
   });
 
   const { submit: runDeleteCategory } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({ id: v.number() }),
     mutationFn: async ({ id }: { id: number }) => {
       await categoryMutations.remove.mutateAsync(id);
     },
@@ -121,7 +121,7 @@ export function CategoriesSection({
   });
 
   const { submit: runAddCategory, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({ name: v.pipe(v.string(), v.minLength(1, t('categoryNameEmpty') || '分類名稱不能為空')) }),
     mutationFn: async ({ name }: { name: string }) => {
       await categoryMutations.create.mutateAsync({ name });
     },
@@ -155,7 +155,7 @@ export function CategoriesSection({
                   id: Number(c.id), 
                   updates: { 
                     name: c.name,
-                    description: { ...((cat.description as any) || {}), [appLang]: c.name }
+                    description: { ...((cat.description as Record<string, string>) || {}), [appLang]: c.name }
                   } 
                 });
               }}

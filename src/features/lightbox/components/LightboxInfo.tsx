@@ -51,7 +51,7 @@ export const LightboxInfo = memo(function LightboxInfo({
   const catNameFromHook = getTranslatedCategoryName(photoData.categoryId, categories, lang, uiTranslations);
   const categoryName = catNameFromHook || photoData.categoryDescription?.[lang] || photoData.categoryName || '';
   
-  const rawTags = photoData.tags || (photoData as any).photoTags || (photoData as any).photo_tags || [];
+  const rawTags = photoData.tags || (photoData as Record<string, unknown>).photoTags || (photoData as Record<string, unknown>).photo_tags || [];
   const tags = Array.isArray(rawTags) ? rawTags : [];
   
   const { can } = usePermission();
@@ -196,10 +196,15 @@ export const LightboxInfo = memo(function LightboxInfo({
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       {tags.length > 0 ? (
-                        tags.map((tag: any, idx: number) => {
+                        tags.map((tag: unknown, idx: number) => {
+                          const tObj = tag as Record<string, unknown>;
+                          const tagsObj = tObj.tags as Record<string, unknown> | undefined;
+                          const tagObj = tObj.tag as Record<string, unknown> | undefined;
                           const tagName = typeof tag === 'string'
                             ? tag
-                            : (tag.name || tag.label || tag.tags?.name || tag.tag?.name);
+                            : (tag && typeof tag === 'object')
+                              ? (String(tObj.name || '') || String(tObj.label || '') || String(tagsObj?.name || '') || String(tagObj?.name || ''))
+                              : null;
                           if (!tagName) return null;
                           return (
                             <span key={idx} className="bg-white/5 text-white/80 px-2 py-1 rounded-lg text-[11px] font-medium border border-white/10">
@@ -259,7 +264,7 @@ export const LightboxInfo = memo(function LightboxInfo({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      const url = photoData.imageUrl || photoData.uri || photoData.image_url || photoData.url;
+                      const url = (photoData.imageUrl || photoData.uri || (photoData as Record<string, unknown>).image_url || (photoData as Record<string, unknown>).url) as string;
                       if (url) {
                         const a = document.createElement('a');
                         a.href = url;
@@ -428,7 +433,7 @@ export const LightboxInfo = memo(function LightboxInfo({
                   ) : showRaw ? (
                     <div className="bg-black/80 rounded-2xl p-3 border border-purple-500/20 max-h-48 overflow-y-auto no-scrollbar">
                       <pre className="text-[10px] font-mono text-emerald-400/90 whitespace-pre-wrap break-all leading-relaxed">
-                        {aiResult?.rawResult || 'No raw data available'}
+                        {(aiResult as any)?.rawResult || 'No raw data available'}
                       </pre>
                     </div>
                   ) : (
@@ -438,7 +443,7 @@ export const LightboxInfo = memo(function LightboxInfo({
                         <span>{t('aiAnalysisComplete') || 'AI 智能分析完成'}</span>
                       </div>
                       <p className="text-[11px] text-purple-200/80 leading-relaxed">
-                        {aiResult?.summary || (lang === 'zh' ? '系統已自動完成照片分類、尺寸預估及關鍵標籤提取。' : 'System has completed category, dimension, and tag extraction.')}
+                        {(aiResult as any)?.summary || (lang === 'zh' ? '系統已自動完成照片分類、尺寸預估及關鍵標籤提取。' : 'System has completed category, dimension, and tag extraction.')}
                       </p>
                     </div>
                   )}

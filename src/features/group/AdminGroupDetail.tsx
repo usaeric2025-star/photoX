@@ -9,7 +9,7 @@ import { GroupSettingsDialog } from '#src/components/groups/GroupSettingsDialog.
 import { useGroupEditState } from '#src/hooks/index.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
 import { AdminGroupHeader } from './components/AdminGroupHeader.js';
-import { photoWallStore } from '#src/features/photo-wall/signal.js';
+import { photoWallStore } from '#src/features/photo-wall/atoms.js';
 import { GroupDetailLayout } from './components/GroupDetailLayout.js';
 import { useAppLocation } from '#src/hooks/core/index.js';
 import { useParams } from 'react-router-dom';
@@ -41,7 +41,7 @@ export function AdminGroupDetailPage() {
   const { anchor, setAnchor } = useFilters();
   const { open: openLightbox } = useLightbox();
   
-  const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
+  const lightboxItems = useMemo(() => photosToLightboxSlides(photos as any), [photos]);
 
   const handlePhotoClick = useCallback((photo: PhotoListItem) => {
     const index = photos.findIndex(p => p.id === photo.id);
@@ -143,7 +143,7 @@ export function AdminGroupDetailPage() {
       loading={loading}
       error={error}
       group={group}
-      photos={photos}
+      photos={photos as any}
       hasNextPage={!!hasNextPage}
       isFetchingNextPage={!!isFetchingNextPage}
       fetchNextPage={fetchNextPage || (() => {})}

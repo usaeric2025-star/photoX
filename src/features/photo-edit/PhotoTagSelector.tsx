@@ -37,7 +37,12 @@ export function PhotoTagSelector({
   const cleanSelectedIds = Array.from(
     new Set(
       safeArray(selectedTagIds)
-        .map((item) => String(typeof item === 'object' && item !== null ? (item as any).id || '' : item).trim())
+        .map((item) => {
+          if (typeof item === 'object' && item !== null && 'id' in item) {
+            return String((item as { id: string | number }).id).trim();
+          }
+          return String(item).trim();
+        })
         .filter(Boolean),
     ),
   ) as string[];

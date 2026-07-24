@@ -1,4 +1,5 @@
 import { useAppMutation, useQueryClient, useAppQuery } from '#lib/query/index.js';
+import { QueryKey } from '@tanstack/react-query';
 import { api } from '#lib/api.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { queryKeys } from '#lib/query/keys.js';
@@ -7,6 +8,7 @@ import { useInvalidatePhotos } from './usePhotos.js';
 import { createTask } from '#lib/task-queue/index.js';
 import { executeBatchUpload } from '#lib/task-queue/adapters/upload.js';
 import { generateId } from '#lib/id.js';
+import { Photo } from '#src/types/index.js';
 import { PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { queryClient as globalQueryClient } from '#lib/query/index.js';
 import { useAtomValue } from 'jotai';
@@ -45,13 +47,13 @@ export function usePhotoMutations() {
   };
 
   const editMutation = useAppMutation({
-    mutationFn: async ({ id, updates }: { id: string, updates: any }) => {
+    mutationFn: async ({ id, updates }: { id: string, updates: Record<string, unknown> }) => {
       const res = await api.admin.photos[':id'].$patch({
         param: { id },
         // @ts-ignore
         json: updates
       });
-      return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
+      return ErrorFactory.unwrap<{ id: string }>(res, labels.mutationFailed);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.photos.detail(data.id) });
@@ -65,38 +67,41 @@ export function usePhotoMutations() {
       const res = await api.admin.photos.batch.delete.$post({
         json: { ids }
       });
-      return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
+      return ErrorFactory.unwrap<{ success: boolean }>(res, labels.mutationFailed);
     },
     onMutate: async (ids: string[]) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
       const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
 
-      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
         if (!oldData) return oldData;
-        const filterItem = (item: any) => item && !ids.includes(item.id);
+        const filterItem = (item: { id: string }) => item && !ids.includes(item.id);
 
-        if (Array.isArray(oldData.pages)) {
+        const data = oldData as { pages?: Array<unknown>; items?: Array<unknown>; data?: Array<unknown> };
+
+        if (Array.isArray(data.pages)) {
           return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => {
+            ...data,
+            pages: data.pages.map((page: unknown) => {
               if (Array.isArray(page)) return page.filter(filterItem);
-              if (page && Array.isArray(page.items)) return { ...page, items: page.items.filter(filterItem) };
-              if (page && Array.isArray(page.data)) return { ...page, data: page.data.filter(filterItem) };
+              const p = page as Record<string, unknown>;
+              if (p && typeof p === 'object' && Array.isArray(p.items)) return { ...p, items: p.items.filter(filterItem) };
+              if (p && typeof p === 'object' && Array.isArray(p.data)) return { ...p, data: p.data.filter(filterItem) };
               return page;
             })
           };
         }
-        if (Array.isArray(oldData)) return oldData.filter(filterItem);
-        if (Array.isArray(oldData.items)) return { ...oldData, items: oldData.items.filter(filterItem) };
-        if (Array.isArray(oldData.data)) return { ...oldData, data: oldData.data.filter(filterItem) };
+        if (Array.isArray(data)) return data.filter(filterItem);
+        if (Array.isArray(data.items)) return { ...data, items: data.items.filter(filterItem) };
+        if (Array.isArray(data.data)) return { ...data, data: data.data.filter(filterItem) };
         return oldData;
       });
 
       return { previousPhotosData };
     },
-    onError: (_err, _ids, context: any) => {
+    onError: (_err, _ids, context: { previousPhotosData?: Array<[QueryKey, unknown]> } | undefined) => {
       if (context?.previousPhotosData) {
-        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+        context.previousPhotosData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
@@ -111,43 +116,46 @@ export function usePhotoMutations() {
   });
 
   const batchEditMutation = useAppMutation({
-    mutationFn: async ({ ids, updates }: { ids: string[], updates: any }) => {
+    mutationFn: async ({ ids, updates }: { ids: string[], updates: Record<string, unknown> }) => {
       // @ts-ignore - Hono client indexing
       const res = await api.admin.photos.batch.edit.$patch({
         json: { ids, updates }
       });
-      return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
+      return ErrorFactory.unwrap<{ success: boolean }>(res, labels.mutationFailed);
     },
     onMutate: async ({ ids, updates }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
       const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
 
-      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
         if (!oldData) return oldData;
-        const updateItem = (item: any) => (item && ids.includes(item.id) ? { ...item, ...updates } : item);
+        const updateItem = (item: { id: string }) => (item && ids.includes(item.id) ? { ...item, ...updates } : item);
 
-        if (Array.isArray(oldData.pages)) {
+        const data = oldData as { pages?: Array<unknown>; items?: Array<unknown>; data?: Array<unknown> };
+
+        if (Array.isArray(data.pages)) {
           return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => {
+            ...data,
+            pages: data.pages.map((page: unknown) => {
               if (Array.isArray(page)) return page.map(updateItem);
-              if (page && Array.isArray(page.items)) return { ...page, items: page.items.map(updateItem) };
-              if (page && Array.isArray(page.data)) return { ...page, data: page.data.map(updateItem) };
+              const p = page as Record<string, unknown>;
+              if (p && typeof p === 'object' && Array.isArray(p.items)) return { ...p, items: p.items.map(updateItem) };
+              if (p && typeof p === 'object' && Array.isArray(p.data)) return { ...p, data: p.data.map(updateItem) };
               return page;
             })
           };
         }
-        if (Array.isArray(oldData)) return oldData.map(updateItem);
-        if (Array.isArray(oldData.items)) return { ...oldData, items: oldData.items.map(updateItem) };
-        if (Array.isArray(oldData.data)) return { ...oldData, data: oldData.data.map(updateItem) };
+        if (Array.isArray(data)) return data.map(updateItem);
+        if (Array.isArray(data.items)) return { ...data, items: data.items.map(updateItem) };
+        if (Array.isArray(data.data)) return { ...data, data: data.data.map(updateItem) };
         return oldData;
       });
 
       return { previousPhotosData };
     },
-    onError: (_err, _vars, context: any) => {
+    onError: (_err, _vars, context: { previousPhotosData?: Array<[QueryKey, unknown]> } | undefined) => {
       if (context?.previousPhotosData) {
-        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+        context.previousPhotosData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
@@ -170,23 +178,26 @@ export function usePhotoMutations() {
           targetGroupId: groupId 
         }
       });
-      return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
+      return ErrorFactory.unwrap<Record<string, unknown>>(res, labels.mutationFailed);
     },
     onMutate: async ({ photoIds, groupId }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
       const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
 
-      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
         if (!oldData) return oldData;
         
         // 乐观更新：将选中照片的 groupId 统一设置，并移除旧的封面标志
-        const updateItem = (item: any) => (item && photoIds.includes(item.id) ? { ...item, groupId, isGroupCover: false } : item);
+        const updateItem = (item: { id: string; groupId?: string | null; isGroupCover?: boolean }) => 
+          (item && photoIds.includes(item.id) ? { ...item, groupId, isGroupCover: false } : item);
 
-        if (Array.isArray(oldData.pages)) {
+        const data = oldData as { pages?: Array<{ items?: unknown[]; data?: unknown[] }>; items?: unknown[]; data?: unknown[] };
+
+        if (Array.isArray(data.pages)) {
           return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => {
-              const items = page.items || page.data || page;
+            ...data,
+            pages: data.pages.map((page) => {
+              const items = (page.items || page.data || (Array.isArray(page) ? page : null)) as Array<{ id: string; groupId?: string | null; isGroupCover?: boolean }>;
               if (Array.isArray(items)) {
                 const updatedItems = items.map(updateItem);
                 if (page.items) return { ...page, items: updatedItems };
@@ -197,17 +208,17 @@ export function usePhotoMutations() {
             })
           };
         }
-        if (Array.isArray(oldData)) return oldData.map(updateItem);
-        if (Array.isArray(oldData.items)) return { ...oldData, items: oldData.items.map(updateItem) };
-        if (Array.isArray(oldData.data)) return { ...oldData, data: oldData.data.map(updateItem) };
+        if (Array.isArray(data)) return data.map(updateItem);
+        if (Array.isArray(data.items)) return { ...data, items: data.items.map(updateItem) };
+        if (Array.isArray(data.data)) return { ...data, data: data.data.map(updateItem) };
         return oldData;
       });
 
       return { previousPhotosData };
     },
-    onError: (_err, _vars, context: any) => {
+    onError: (_err, _vars, context: { previousPhotosData?: Array<[QueryKey, unknown]> } | undefined) => {
       if (context?.previousPhotosData) {
-        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+        context.previousPhotosData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
@@ -229,50 +240,53 @@ export function usePhotoMutations() {
         // @ts-ignore
         json: { isPinned }
       });
-      return ErrorFactory.unwrap<any>(res, labels.mutationFailed);
+      return ErrorFactory.unwrap<{ id: string; isPinned: boolean }>(res, labels.mutationFailed);
     },
     onMutate: async ({ id, isPinned }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.photos.all });
       const previousDetail = queryClient.getQueryData(queryKeys.photos.detail(id));
 
       if (previousDetail) {
-        queryClient.setQueryData(queryKeys.photos.detail(id), (old: any) => 
+        queryClient.setQueryData(queryKeys.photos.detail(id), (old: { id: string; isPinned?: boolean } | undefined) => 
           old ? { ...old, isPinned } : old
         );
       }
 
-      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
         if (!oldData) return oldData;
 
-        const updateItem = (item: any) => (item && item.id === id ? { ...item, isPinned } : item);
+        const updateItem = (item: { id: string; isPinned?: boolean }) => (item && item.id === id ? { ...item, isPinned } : item);
 
-        if (Array.isArray(oldData.pages)) {
+        const data = oldData as { pages?: Array<unknown>; items?: Array<unknown>; data?: Array<unknown> };
+
+        if (Array.isArray(data.pages)) {
           return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => {
+            ...data,
+            pages: data.pages.map((page: unknown) => {
               if (Array.isArray(page)) {
                 return page.map(updateItem);
               }
-              if (page && Array.isArray(page.items)) {
-                return { ...page, items: page.items.map(updateItem) };
+              const p = page as Record<string, unknown>;
+              if (p && Array.isArray(p.items)) {
+                return { ...p, items: p.items.map(updateItem) };
               }
-              if (page && Array.isArray(page.data)) {
-                return { ...page, data: page.data.map(updateItem) };
+              if (p && Array.isArray(p.data)) {
+                return { ...p, data: p.data.map(updateItem) };
               }
               return page;
             })
           };
         }
 
-        if (Array.isArray(oldData)) {
-          return oldData.map(updateItem);
+        if (Array.isArray(data)) {
+          return data.map(updateItem);
         }
 
-        if (Array.isArray(oldData.items)) {
-          return { ...oldData, items: oldData.items.map(updateItem) };
+        if (Array.isArray(data.items)) {
+          return { ...data, items: data.items.map(updateItem) };
         }
-        if (Array.isArray(oldData.data)) {
-          return { ...oldData, data: oldData.data.map(updateItem) };
+        if (Array.isArray(data.data)) {
+          return { ...data, data: data.data.map(updateItem) };
         }
 
         return oldData;
@@ -280,14 +294,14 @@ export function usePhotoMutations() {
 
       return { previousDetail };
     },
-    onError: (err, { id }, context) => {
+    onError: (err, { id }, context: { previousDetail?: unknown } | undefined) => {
       if (context?.previousDetail) {
         queryClient.setQueryData(queryKeys.photos.detail(id), context.previousDetail);
       }
       invalidateList();
       feedback.error(labels.mutationFailed);
     },
-    onSuccess: (data, { isPinned }) => {
+    onSuccess: (_data, { isPinned }) => {
       const msg = isPinned ? '已置頂' : '已取消置頂';
       feedback.success(msg);
     },
@@ -329,14 +343,15 @@ export function usePhotoMutations() {
         execute: async (signal, onProgress) => {
            return executeBatchUpload(fileList, user?.id || '', { groupId: targetGroupId })(signal, onProgress);
         },
-        onComplete: (results: any) => {
+        onComplete: (results: unknown) => {
           invalidateAll();
           
           if (Array.isArray(results)) {
+            const typedResults = results as { success?: boolean; duplicate?: boolean; id?: string }[];
             // Trigger AI analysis for successful new uploads
-            const successfulIds = results
-              .filter((r: any) => r.success && !r.duplicate && r.id)
-              .map((r: any) => r.id);
+            const successfulIds = typedResults
+              .filter((r) => r.success && !r.duplicate && r.id)
+              .map((r) => r.id as string);
             
             if (successfulIds.length > 0) {
               createTask({
@@ -346,7 +361,7 @@ export function usePhotoMutations() {
                 userId: user?.id,
                 execute: async (signal, onProgress) => {
                   return runBatchAnalysis({
-                    targetPhotos: successfulIds.map(id => ({ id })) as any,
+                    targetPhotos: successfulIds.map(id => ({ id } as any)),
                     onProgress,
                     signal
                   });
@@ -355,9 +370,9 @@ export function usePhotoMutations() {
             }
 
             const total = fileList.length;
-            const successes = results.filter((r: any) => r.success && !r.duplicate);
-            const duplicates = results.filter((r: any) => r.duplicate);
-            const failures = results.filter((r: any) => !r.success);
+            const successes = typedResults.filter((r) => r.success && !r.duplicate);
+            const duplicates = typedResults.filter((r) => r.duplicate);
+            const failures = typedResults.filter((r) => !r.success);
 
             if (duplicates.length === total) {
               feedback.info(t('allPhotosDuplicated') || '所選照片在庫中均已存在（已自動排重跳過）');
@@ -411,7 +426,7 @@ export function useAIBatchAnalysis() {
   const user = useAtomValue(userAtom);
 
   const aiAnalyzeMutation = useAppMutation({
-    mutationFn: async (photos: any[]) => {
+    mutationFn: async (photos: Photo[]) => {
       return createTask({
         label: t('aiAnalyze') || 'AI 識別中',
         type: 'ai-analyze',
@@ -437,7 +452,7 @@ export function useAIBatchAnalysis() {
 /**
  * usePhotoAIResult
  */
-export function usePhotoAIResult(photoId: string, options: any = {}) {
+export function usePhotoAIResult(photoId: string, options: { enabled?: boolean } = {}) {
   const { t } = useTranslation();
   
   return useAppQuery(
@@ -446,7 +461,7 @@ export function usePhotoAIResult(photoId: string, options: any = {}) {
       if (!photoId) return null;
       // @ts-ignore
       const res = await api.admin.photos[':id']['ai-result'].$get({ param: { id: photoId } });
-      return ErrorFactory.unwrap<any>(res, t('aiAnalyzeFailed') || 'AI Analysis Failed');
+      return ErrorFactory.unwrap<Record<string, unknown>>(res, t('aiAnalyzeFailed') || 'AI Analysis Failed');
     },
     { 
       enabled: !!photoId && options.enabled !== false,

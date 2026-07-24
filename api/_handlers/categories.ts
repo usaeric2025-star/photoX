@@ -1,11 +1,16 @@
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, categories as categoriesTable, furnitureItems } from '../_lib/db/index.js';
-import { eq, sql } from 'drizzle-orm';
 import { CategoryReqSchema } from '../../shared/apiContractSchema.js';
-import { errorResponse, successResponse } from '../_lib/response.js';
+import { successResponse } from '../_lib/response.js';
 import { errorFactory } from '../_lib/error/factory.js';
-import { getAllCategories } from '../_lib/db/queries/categories.js';
+import { 
+    getAllCategories, 
+    seedCategories, 
+    clearPhotosFromCategory, 
+    createCategory, 
+    updateCategory, 
+    deleteCategory 
+} from '../_lib/db/queries/categories.js';
 
 interface FormattedCategory {
     id: number;
@@ -52,8 +57,6 @@ export const categories = new Hono()
     return successResponse(c, formatted);
   })
   .post('/seed', async (c) => {
-    await db.delete(categoriesTable).where(sql`true`);
-    
     const seedData = [
       { id: 1, code: 'chair', name: '椅子', sortOrder: 1, description: { zh: '椅子', en: 'Chair', ms: 'Kerusi' } },
       { id: 2, code: 'table', name: '桌子', sortOrder: 2, description: { zh: '桌子', en: 'Table', ms: 'Meja' } },
@@ -64,7 +67,7 @@ export const categories = new Hono()
       { id: 7, code: 'others', name: '其他', sortOrder: 7, description: { zh: '其他', en: 'Others', ms: 'Lain-lain' } }
     ];
 
-    await db.insert(categoriesTable).values(seedData);
+    await seedCategories(seedData);
     categoriesCache = null;
     return successResponse(c, { message: 'Database seeded successfully' });
   })
@@ -73,23 +76,16 @@ export const categories = new Hono()
     const check = v.safeParse(v.object({ categoryId: v.number() }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
     const { categoryId } = check.output;
-    const updated = await db
-        .update(furnitureItems)
-        .set({ categoryId: null })
-        .where(eq(furnitureItems.categoryId, categoryId))
-        .returning({ id: furnitureItems.id });
+    const updatedIds = await clearPhotosFromCategory(categoryId);
     
-    return successResponse(c, updated.map(i => i.id));
+    return successResponse(c, updatedIds.map(i => i.id));
   })
   .post('/', async (c) => {
     const body = await c.req.json();
     const check = v.safeParse(v.object({ categoryData: CategoryReqSchema }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
     const { categoryData } = check.output;
-    const [data] = await db
-        .insert(categoriesTable)
-        .values([categoryData])
-        .returning();
+    const data = await createCategory(categoryData);
     
     categoriesCache = null;
     return successResponse(c, data);
@@ -101,19 +97,14 @@ export const categories = new Hono()
     if (!check.success) throw errorFactory.validation(check.issues);
     const { updates } = check.output;
     
-    await db
-        .update(categoriesTable)
-        .set(updates)
-        .where(eq(categoriesTable.id, id));
+    await updateCategory(id, updates);
     
     categoriesCache = null;
     return successResponse(c, null);
   })
   .delete('/:id{[0-9]+}', async (c) => {
     const id = parseInt(c.req.param('id'));
-    await db
-        .delete(categoriesTable)
-        .where(eq(categoriesTable.id, id));
+    await deleteCategory(id);
     
     categoriesCache = null;
     return successResponse(c, null);

@@ -103,7 +103,7 @@ export const executeBatchUpload = (
       } catch (err) {
         failedCount++;
         ErrorFactory.handle(err, { context: 'Upload processing error', silent: true });
-        return { success: false, error: String(err), name: task.file.name } as any;
+        return { success: false, error: String(err), name: task.file.name, storageId: '', duplicate: false };
       }
     },
     2 // Upload 2 at a time to avoid heavy concurrent processing/compression

@@ -71,7 +71,7 @@ export function NotFoundPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 select-none">
       <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-8 text-center space-y-6 animate-scale-in">
         <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
-          <Icon name={config.icon as any} className="w-8 h-8" />
+          <Icon name={config.icon} className="w-8 h-8" />
         </div>
 
         <div className="space-y-2">

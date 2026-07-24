@@ -15,68 +15,62 @@ import { storage } from './_handlers/storage.js';
 import { system } from './_handlers/system.js';
 import { setupMiddlewares } from './_lib/middleware.js';
 import { cronRefreshView } from './_handlers/cron/refresh-view.js';
+import { AppError } from '../shared/AppError.js';
+import { HTTPException } from 'hono/http-exception';
+import { type StatusCode, type ContentfulStatusCode } from 'hono/utils/http-status';
 
-// Validate env at module level
+// Validate env at module level (P1: Env Validation)
 const serverEnv = getServerEnv(process.env);
 
 // --- Environment Validation ---
-if (!serverEnv.DATABASE_URL) {
-    logger.error('❌ [CRITICAL] DATABASE_URL is missing or invalid in serverEnv!');
+const CRITICAL_ENVS: (keyof typeof serverEnv)[] = ['DATABASE_URL', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+const missingEnvs = CRITICAL_ENVS.filter(key => !serverEnv[key]);
+
+if (missingEnvs.length > 0) {
+    logger.error(`❌ [CRITICAL] Missing essential environment variables: ${missingEnvs.join(', ')}`);
+    if (process.env.NODE_ENV === 'production') {
+        // In production, we should potentially fail fast, but for now we log error loudly
+    }
 } else {
-    logger.info('✅ [INIT] DATABASE_URL validated, proceeding to route initialization.');
+    logger.info('✅ [INIT] Core environment variables validated.');
 }
 
-const apiApp = new Hono();
+export type Env = {
+    Variables: {
+        requestId: string;
+        user?: { id: string; email?: string };
+        userId?: string;
+    }
+}
+
+const apiApp = new Hono<Env>();
+
+import { errorFactory } from './_lib/error/factory.js';
 
 // ✅ 統一錯誤處理
 apiApp.onError((err, c) => {
-    logger.error('[API Error]', err);
+    const requestId = c.get('requestId') || 'unknown';
+    logger.error(`[API Error] ${c.req.method} ${c.req.path}`, err);
     
-    // 如果錯誤對象已經自帶明確的 HTTP 狀態碼，則直接使用
-    if (err && typeof err === 'object') {
-        const anyErr = err as any;
-        if (typeof anyErr.statusCode === 'number') {
-            return errorResponse(c, err, anyErr.statusCode);
-        }
-        if (typeof anyErr.status === 'number') {
-            return errorResponse(c, err, anyErr.status);
-        }
+    // 如果錯誤已經是 AppError，直接返回
+    if (err instanceof AppError) {
+        err.traceId = typeof requestId === 'string' ? requestId : 'unknown';
+        return c.json(errorFactory.fail(err), (err.statusCode as ContentfulStatusCode) || 500);
     }
+
+    // 处理 HTTPException
+    if (err instanceof HTTPException) {
+        return c.json(errorFactory.fail(errorFactory.create({
+            message: err.message,
+            status: err.status,
+            code: 'HTTP_EXCEPTION'
+        })), err.status as ContentfulStatusCode);
+    }
+
+    const appErr = errorFactory.wrap(err, `api.${c.req.method.toLowerCase()}.${c.req.path.replace(/\//g, '_')}`);
+    appErr.traceId = typeof requestId === 'string' ? requestId : 'unknown';
     
-    // 避免將資料庫連線失敗、找不到資料庫、或 timeout 等系統/資料庫層面錯誤誤判為 404 Not Found
-    const isDbOrNetworkError = 
-        err.message?.includes('relation') || 
-        err.message?.includes('column') || 
-        err.message?.includes('ENOTFOUND') || 
-        err.message?.includes('connect') || 
-        err.message?.includes('database') || 
-        err.message?.includes('timeout') || 
-        err.message?.includes('canceling') || 
-        err.message?.includes('PostgresError') ||
-        err.message?.includes('DrizzleQueryError') ||
-        err.message?.includes('pool');
-
-    const isAiPath = c.req.path.startsWith('/api/ai');
-
-    if (isDbOrNetworkError) {
-        // 嚴格確保這類錯誤被標記為 500 或以上，不可回傳 404，以便前端觸發 Retry
-        return errorResponse(c, err, 500);
-    }
-
-    // 針對特定的身份驗證錯誤提供更清晰的提示
-    if (err.message?.includes('Unauthorized') || err.message?.includes('No credentials')) {
-        return errorResponse(c, err, 401);
-    }
-
-    if (!isAiPath && (err.message?.includes('Not found') || err.message?.includes('not found') || err.message?.includes('NotFound'))) {
-        return errorResponse(c, err, 404);
-    }
-    if (err.message?.toLowerCase().includes('foreign key')) {
-        const foreignKeyErr = new Error('关联的数据不存在，请刷新页面後重试 (Foreign Key Error)');
-        (foreignKeyErr as any).code = 'FOREIGN_KEY_VIOLATION';
-        return errorResponse(c, foreignKeyErr, 400);
-    }
-    return errorResponse(c, err, 500);
+    return c.json(errorFactory.fail(appErr), (appErr.statusCode as ContentfulStatusCode) || 500);
 });
 
 apiApp.use('*', cors());

@@ -24,7 +24,7 @@ export const getDisplayGroupCode = (groupId?: string | null): string => {
 /**
  * Normalize dimension unit strings (inch, in, ", ″, cm, mm) without forcing conversion
  */
-export function normalizeUnit(rawUnit?: string | null, rawDim?: any): 'cm' | 'inch' | 'mm' {
+export function normalizeUnit(rawUnit?: string | null, rawDim?: Record<string, unknown>): 'cm' | 'inch' | 'mm' {
   const u = (rawUnit || '').toLowerCase().trim();
   if (['inch', 'in', 'inches', '"', '″', "''"].includes(u)) return 'inch';
   if (['mm', 'millimeter', 'millimetres'].includes(u)) return 'mm';

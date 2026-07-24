@@ -19,7 +19,7 @@ export const PhotoEditFormService = {
   getInitialValues: (photo: Partial<Photo> | null): PhotoEditFormData => {
     if (!photo) return {} as PhotoEditFormData;
     const p = photo;
-    const metadata = (p.metadata || {}) as Record<string, any>;
+    const metadata = (p.metadata || {}) as Record<string, unknown>;
     
     let name = toSingleString(p.name);
     let description = toMultiObject(p.description);
@@ -40,7 +40,7 @@ export const PhotoEditFormService = {
         
         if (rawJson) {
           const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
-          const normalized = adapter.normalize(rawJson, JSON.stringify(rawJson));
+          const normalized = adapter.normalize(rawJson as Record<string, unknown>, JSON.stringify(rawJson));
           
           const isGenericName = !name || name === PLACEHOLDERS.EMPTY_VAL || name === '' || REGEX.GENERIC_PHOTO_NAME.test(name) || REGEX.IMAGE_EXTENSIONS.test(name);
           if (normalized.name && isGenericName) {

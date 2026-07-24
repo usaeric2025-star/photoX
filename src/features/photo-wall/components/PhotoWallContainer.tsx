@@ -1,6 +1,6 @@
 import { patch } from '#lib/store/index.js';
 import React, { useEffect, useRef, useCallback } from 'react';
-import { photoWallStore } from '../signal.js';
+import { photoWallStore } from '../atoms.js';
 import { PhotoWallGrid } from './PhotoWallGrid.js';
 import { usePhotoWall } from '../hooks/usePhotoWall.js';
 import { PhotoListItem } from '#shared/apiContractSchema.js';
@@ -121,16 +121,16 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
     }
 
     // 回退：先用當前列表打開，再後台獲取展開數據
-    const slides = photosToLightboxSlides(currentPhotos);
+    const slides = photosToLightboxSlides(currentPhotos as any);
     const index = currentPhotos.findIndex(p => p.id === photo.id);
     openLightbox(slides, index >= 0 ? index : 0);
 
     if (isAggregated) {
       try {
-        const result = await ErrorFactory.unwrap<any>(
+        const result = await ErrorFactory.unwrap<{ items: PhotoListItem[] }>(
           api.photos.list.$post({ 
              json: { 
-               ...props.filters as any,
+               ...props.filters as Record<string, unknown>,
                onlyGroupsCover: false,
                limit: 500,
                isAdminMode: props.mode === 'admin'
@@ -223,7 +223,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   return (
     <LocalErrorBoundary name="PhotoWallGrid">
       <PhotoWallGrid
-        photos={photos}
+        photos={photos as any}
         hasMore={hasMore}
         isLoading={isLoading}
         isLoadingMore={isLoadingMore}

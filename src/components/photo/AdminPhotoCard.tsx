@@ -86,7 +86,7 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
   const isPhotoSelected = useIsPhotoSelected(photo.id);
   const { can } = usePermission();
   const { appLang: hookLang } = useTranslation();
-  const appLang = (lang as any) || hookLang;
+  const appLang = (lang as 'zh' | 'en' | 'ms' | undefined) || hookLang;
   
   const { cardRef, handleCardClick, longPressHandlers } = usePhotoCard({
     photo,

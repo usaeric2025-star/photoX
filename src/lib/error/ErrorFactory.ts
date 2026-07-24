@@ -45,30 +45,31 @@ export class ErrorFactory {
   }
 
   static fromApiResponse(
-    data: any,
+    data: unknown,
     fallbackMessage?: string
   ): AppError {
     if (!data) {
       return this.create(fallbackMessage || 'API Error');
     }
 
+    const payload = data as Record<string, unknown>;
     // Extract inner error payload or use flat structure
-    const err = data.error ?? data;
+    const err = (payload.error ?? payload) as Record<string, unknown>;
     
     if (typeof err === 'string') {
       return this.create(err, { 
         userMessage: err,
-        code: data.code || ErrorCode.UNKNOWN_ERROR,
-        traceId: data.traceId
+        code: (payload.code as ErrorCode) || ErrorCode.UNKNOWN_ERROR,
+        traceId: payload.traceId as string
       });
     }
 
-    let message = err.message || data.message || fallbackMessage || 'API Error';
+    let message = (err.message as string) || (payload.message as string) || fallbackMessage || 'API Error';
     if (typeof message === "string" && (message.includes("Invalid type:") || message.includes("Invalid key:") || message.includes("Expected ") || message.includes("Validation "))) { 
       message = `輸入數據格式不正確 (Validation Error): ${message}`; 
     }
-    const code = err.code || data.code || ErrorCode.UNKNOWN_ERROR;
-    const traceId = err.traceId || data.traceId || generateTraceId();
+    const code = (err.code as string) || (payload.code as string) || ErrorCode.UNKNOWN_ERROR;
+    const traceId = (err.traceId as string) || (payload.traceId as string) || generateTraceId();
 
     const categoryMap: Record<string, ErrorCategory> = {
       UNAUTHORIZED: ErrorCategory.AUTH,
@@ -95,35 +96,36 @@ export class ErrorFactory {
    * Promotes extremely clean, reusable 1-line query and mutation hooks.
    */
   static async unwrap<T>(
-    promiseOrResponse: Promise<any> | any,
+    promiseOrResponse: Promise<unknown> | unknown,
     fallbackMessage: string
   ): Promise<T> {
     try {
       const res = await promiseOrResponse;
       
       // Handle standard browser/node fetch Response object
-      if (res && typeof res === 'object' && 'json' in res && typeof res.json === 'function') {
-        const contentType = res.headers?.get('content-type') || '';
+      if (res && typeof res === 'object' && 'json' in (res as Record<string, unknown>) && typeof (res as Record<string, unknown>).json === 'function') {
+        const fetchRes = res as Response;
+        const contentType = fetchRes.headers?.get('content-type') || '';
         const isJson = contentType.includes('application/json');
 
-        if (!res.ok) {
-          let errorData: any = null;
+        if (!fetchRes.ok) {
+          let errorData: unknown = null;
           if (isJson) {
             try {
-              errorData = await res.json();
+              errorData = await fetchRes.json();
             } catch {
               // Ignore parse error and fallback to status message
             }
           }
           
           if (!errorData) {
-            const urlStr = res.url ? new URL(res.url).pathname : '';
-            const statusText = res.statusText || 'HTTP Error';
+            const urlStr = fetchRes.url ? new URL(fetchRes.url).pathname : '';
+            const statusText = fetchRes.statusText || 'HTTP Error';
             const bodyHint = !isJson ? ' (Received HTML/Non-JSON response, possible timeout or server error)' : '';
             
-            throw this.create(`${res.status} ${statusText}${bodyHint} ${urlStr}`.trim(), {
-              code: res.status === 404 ? ErrorCode.NOT_FOUND : ErrorCode.NETWORK_ERROR,
-              statusCode: res.status,
+            throw this.create(`${fetchRes.status} ${statusText}${bodyHint} ${urlStr}`.trim(), {
+              code: fetchRes.status === 404 ? ErrorCode.NOT_FOUND : ErrorCode.NETWORK_ERROR,
+              statusCode: fetchRes.status,
               userMessage: fallbackMessage,
             });
           }
@@ -131,43 +133,45 @@ export class ErrorFactory {
         }
         
         if (!isJson) {
-           const text = await res.text().catch(() => 'No body');
+           const text = await fetchRes.text().catch(() => 'No body');
            logger.warn('[ErrorFactory] Received non-JSON successful response:', { 
-             status: res.status, 
+             status: fetchRes.status, 
              contentType,
              bodyPrefix: text.substring(0, 100) 
            });
            // If it's HTML but status is 200, it's likely a proxy redirect or SPA fallback
            if (text.trim().toLowerCase().startsWith('<!doctype')) {
-              throw this.create(`Received HTML instead of JSON for ${res.url}. Possible server misconfiguration or auth redirect.`, {
+              throw this.create(`Received HTML instead of JSON for ${fetchRes.url}. Possible server misconfiguration or auth redirect.`, {
                 code: ErrorCode.NETWORK_ERROR,
                 statusCode: 500,
                 userMessage: '伺服器回應格式錯誤 (Unexpected HTML response)',
               });
            }
-           return text as any;
+           return text as unknown as T;
         }
 
-        const json = await res.json();
-        if (json && typeof json === 'object') {
-          if (json.success === false) {
-            throw this.fromApiResponse(json, fallbackMessage);
+        const json = await fetchRes.json();
+        const jsonPayload = json as Record<string, unknown>;
+        if (jsonPayload && typeof jsonPayload === 'object') {
+          if (jsonPayload.success === false) {
+            throw this.fromApiResponse(jsonPayload, fallbackMessage);
           }
-          if ('data' in json) {
-            return json.data as T;
+          if ('data' in jsonPayload) {
+            return jsonPayload.data as T;
           }
-          return json as T;
+          return jsonPayload as unknown as T;
         }
         return json as T;
       }
 
       // Handle standard parsed API JSON response object
       if (res && typeof res === 'object') {
-        if (res.success === false) {
+        const obj = res as Record<string, unknown>;
+        if (obj.success === false) {
           throw this.fromApiResponse(res, fallbackMessage);
         }
-        if ('data' in res) {
-          return res.data as T;
+        if ('data' in obj) {
+          return obj.data as T;
         }
       }
 
@@ -299,10 +303,11 @@ export class ErrorFactory {
     }
 
     if (error instanceof Error) {
+      const traceId = (error as { traceId?: string }).traceId ?? (context?.traceId as string);
       return this.create(error.message, { 
         originalError: error,
         userMessage: fallbackMessage || error.message,
-        traceId: (error as any).traceId ?? (context?.traceId as string),
+        traceId,
         context
       });
     }

@@ -89,35 +89,35 @@ const patch = (update: Partial<UIStoreState>) => {
 };
 
 const updateForm = (updates: Partial<ProductFormData>) => {
-  store.set(formStateAtom as any, { ...store.get(formStateAtom), ...updates });
+  store.set(formStateAtom, { ...store.get(formStateAtom), ...updates });
 };
 
 const resetForm = () => {
-  store.set(formStateAtom as any, defaultForm);
+  store.set(formStateAtom, defaultForm);
 };
 
 const incrementDialogCount = () => {
-  store.set(incrementDialogCountAtom as any);
+  store.set(incrementDialogCountAtom);
 };
 
 const decrementDialogCount = () => {
-  store.set(decrementDialogCountAtom as any);
+  store.set(decrementDialogCountAtom);
 };
 
 const setLightboxData = (slides: LightboxSlide[]) => {
-  store.set(lightboxSlidesAtom as any, slides);
+  store.set(lightboxSlidesAtom, slides);
 };
 
 const setLightboxIndex = (index: number) => {
-  store.set(lightboxCurrentIndexAtom as any, index);
+  store.set(lightboxCurrentIndexAtom, index);
 };
 
 const clearLightboxData = () => {
-  store.set(closeLightboxAtom as any);
+  store.set(closeLightboxAtom);
 };
 
 const setFatalError = (error: Error | null) => {
-  store.set(fatalErrorAtom as any, error);
+  store.set(fatalErrorAtom, error);
 };
 
 export { patch, updateForm, resetForm, setLightboxData, setLightboxIndex, clearLightboxData, setFatalError, incrementDialogCount, decrementDialogCount };

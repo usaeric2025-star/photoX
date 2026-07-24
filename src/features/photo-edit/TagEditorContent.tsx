@@ -8,7 +8,7 @@ import {
   useTagSearch,
 } from '#src/hooks/index.js';
 import { MAX_TAGS_PER_PHOTO } from "#src/constants/limits.js";
-import { Tag } from '#src/types/index.js';
+import { Tag, AppSettings } from '#src/types/index.js';
 import { SearchInput } from "#src/components/ui/SearchInput.js";
 import { TagButton } from "./components/TagButton.js";
 import { TagActionDialog } from "./components/TagActionDialog.js";
@@ -58,7 +58,7 @@ export function TagEditor({
         : [...pinnedTags, tagId];
       
       const nextSettings = { ...settings, pinnedTags: newPinned };
-      await updateSettings(nextSettings as any);
+      await updateSettings(nextSettings as Partial<AppSettings> & Record<string, unknown>);
     } catch (err) {
       ErrorFactory.handle(err as Error, { context: "切换置顶状态" });
     }

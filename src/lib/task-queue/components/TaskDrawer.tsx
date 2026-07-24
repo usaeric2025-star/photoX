@@ -36,13 +36,14 @@ function TaskItem({ task }: { task: Task }) {
 
   const progress = task.state.status === 'processing' ? task.state.progress : (task.state.status === 'completed' ? 1 : 0);
   const progressPercent = Math.min(100, Math.max(0, Math.round(progress * 100)));
-  const results = (task.state.status === 'completed' || task.state.status === 'failed') ? (task.state as any).result : null;
+  const results = (task.state.status === 'completed') ? task.state.result : null;
   let message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
 
   if (task.state.status === 'completed' && task.type === 'upload' && Array.isArray(results)) {
-    const successCount = results.filter((r: any) => r.success && !r.duplicate).length;
-    const duplicateCount = results.filter((r: any) => r.success && r.duplicate).length;
-    const failCount = results.filter((r: any) => !r.success).length;
+    const typedResults = results as { success?: boolean; duplicate?: boolean }[];
+    const successCount = typedResults.filter((r) => r.success && !r.duplicate).length;
+    const duplicateCount = typedResults.filter((r) => r.success && r.duplicate).length;
+    const failCount = typedResults.filter((r) => !r.success).length;
 
     const parts = [];
     if (successCount > 0) parts.push(t('uploadSuccess', successCount));
@@ -54,7 +55,7 @@ function TaskItem({ task }: { task: Task }) {
     }
   }
 
-  const failedItems = Array.isArray(results) ? results.filter((r: any) => !r.success) : [];
+  const failedItems = Array.isArray(results) ? (results as { success?: boolean }[]).filter((r) => !r.success) : [];
   const [showDetails, setShowDetails] = React.useState(false);
 
   return (
@@ -122,13 +123,16 @@ function TaskItem({ task }: { task: Task }) {
 
       {showDetails && failedItems.length > 0 && (
         <div className="mt-2 pt-2 border-t border-red-100/50 space-y-1 max-h-40 overflow-y-auto no-scrollbar">
-          {failedItems.map((item: any, idx: number) => (
-            <div key={idx} className="text-[9px] flex items-start gap-2 text-red-600 font-medium">
-              <span className="shrink-0">•</span>
-              <span className="truncate flex-1">{item.name}</span>
-              <span className="text-[8px] opacity-70 shrink-0">{item.error || '未知錯誤'}</span>
-            </div>
-          ))}
+          {failedItems.map((item: unknown, idx: number) => {
+            const it = item as Record<string, unknown> & { name?: string; error?: string };
+            return (
+              <div key={idx} className="text-[9px] flex items-start gap-2 text-red-600 font-medium">
+                <span className="shrink-0">•</span>
+                <span className="truncate flex-1">{it.name}</span>
+                <span className="text-[8px] opacity-70 shrink-0">{it.error || '未知錯誤'}</span>
+              </div>
+            );
+          })}
         </div>
       )}
 

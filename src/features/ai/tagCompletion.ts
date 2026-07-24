@@ -50,7 +50,7 @@ export async function resolveTagNamesToIds(
     const uniqueNames = Array.from(new Set(normalizedTagNames));
 
     uniqueNames.forEach(name => {
-      const existing = dbTags.find((t: any) => 
+      const existing = dbTags.find((t: import('#src/types/index.js').Tag) => 
         (String(t.id) === name) || (t.name && t.name.toUpperCase() === name)
       );
       

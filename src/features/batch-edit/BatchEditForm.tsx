@@ -12,7 +12,7 @@ interface BatchEditFormProps {
 }
 
 const defaultForm: PhotoEditFormData = {
-  name: undefined as any,
+  name: undefined,
   description: undefined,
   categoryId: undefined,
   manufacturerId: undefined,

@@ -1,3 +1,4 @@
+import { Theme } from '#src/types/index.js';
 import { userAtom, totalCountAtom, signOut } from '#src/store/index.js';
 import React from 'react';
 import { useAtomValue } from 'jotai';
@@ -55,7 +56,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
         <AdminHeaderLogo 
           logoUrl={logoUrl}
           totalCount={totalCount}
-          theme={theme as any}
+          theme={theme as Theme}
         />
         <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
         <h1 className="text-sm font-semibold text-slate-900 hidden sm:block">
@@ -74,7 +75,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           user={user}
           signOut={signOut}
           lang={lang}
-          theme={theme as any}
+          theme={theme as Theme}
         />
       </div>
     </header>

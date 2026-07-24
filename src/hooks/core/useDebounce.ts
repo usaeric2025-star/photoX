@@ -17,7 +17,7 @@ export function useDebounce<T>(value: T, delay: number): T {
 /**
  * 防抖函数（用于自动保存、事件回调）
  */
-export function useDebounceFn<T extends (...args: any[]) => any>(
+export function useDebounceFn<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
 ): {

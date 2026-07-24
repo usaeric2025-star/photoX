@@ -11,7 +11,7 @@ export const AI_PROMPTS = {
 ## 輸出 JSON 格式
 - name: (String) 必須是簡潔的英文名稱，嚴禁包含型號或文件擴展名。
 - description: { zh, en, ms } (必須包含三語，其中 zh 為中文，en 為英文，ms 為馬來文)
-- category_id: 從可用列表中選擇：${JSON.stringify(context.categories)}
+- category_id: 從可用列表中選擇最匹配的 ID (數字)：${JSON.stringify(context.categories)}
 - tag_names: 嚴格限制最多 3 個最相關的標籤（不翻譯）：${JSON.stringify(context.tags)}
 - dimensions: 必須提供。格式：[{ "label": "Product Name", "length": number, "width": number, "height": number, "unit": "inch" | "cm" | "mm", "is_ai_estimated": true }]。重要：若照片上有英寸/英制標註（例如符號 "、in、inch），unit 必須保持 "inch"，絕對禁止擅自轉換成 "cm"。只有未標註且為公制時才使用 "cm"。請注意，label 必須一律使用英文（例如直接使用產品名稱如 'Dining Chair'，若是局部尺寸則使用 'Seat Height' 等，嚴禁使用無意義的 'Overall' 或中文）。若照片中有尺寸標註，請提取準確數值；若無，請根據常識估計尺寸（如家具通常的長寬高），嚴禁返回空陣列。
 - item_code: 若照片中有產品編號或型號文字，請單獨提取至此欄位。

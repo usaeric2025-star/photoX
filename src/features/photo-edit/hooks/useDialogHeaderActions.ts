@@ -56,7 +56,7 @@ export function useDialogHeaderActions(onClose: () => void) {
         {
           loading: t('aiAnalyzing') || '正在 AI 識別...',
           success: t('aiAnalyzeSuccess') || 'AI 識別完成',
-          error: (err: any) => `${t('aiAnalyzeFailed') || 'AI 識別失敗'}: ${err.message}`
+          error: (err: { message: string }) => `${t('aiAnalyzeFailed') || 'AI 識別失敗'}: ${err.message}`
         }
       );
     } else {

@@ -19,7 +19,7 @@ export function useAppForm<TData>({
     onValueChange
 }: UseAppFormOptions<TData>) {
     const form = useForm({
-        defaultValues: defaultValues as any,
+        defaultValues: defaultValues as TData & Record<string, unknown>,
         validators: schema ? {
             onChange: ({ value }) => {
                 const result = v.safeParse(schema as v.GenericSchema, value);

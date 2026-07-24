@@ -259,7 +259,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   // dynamically fetch all group photos and expand the slides!
   const isAdminMode = useAdminMode();
   const groupPhotosQueryEnabled = !!(isOpen && sourcePhotos.length <= 1 && activePhoto?.groupId);
-  const { data: groupPhotos = [] } = useAppQuery<any[]>(
+  const { data: groupPhotos = [] } = useAppQuery<import('#src/types/index.js').Photo[]>(
     groupPhotosQueryEnabled ? ['photos', 'group-expand', activePhoto?.groupId] : null,
     async () => {
       if (!activePhoto?.groupId) return [];
@@ -292,7 +292,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       });
 
-      const groupSlides = photosToLightboxSlides(sortedGroupPhotos);
+      const groupSlides = photosToLightboxSlides(sortedGroupPhotos as any);
       setLightboxData(groupSlides);
       const newIndex = sortedGroupPhotos.findIndex(p => p.id === activePhoto.id);
       if (newIndex !== -1) {

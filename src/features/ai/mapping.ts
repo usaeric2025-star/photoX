@@ -25,7 +25,7 @@ export async function mapAiToMultilingual(
   // Extract name string
   if (isNameObj) {
     const nameData = rawName as Record<string, string>;
-    nameStr = nameData.zh || nameData.en || nameData.ms || '';
+    nameStr = nameData.en || nameData.zh || nameData.ms || '';
   } else {
     nameStr = String(rawName || '');
   }

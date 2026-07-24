@@ -74,7 +74,7 @@ const SettingsService = {
             
       await ErrorFactory.unwrap<unknown>(
         api.admin.settings['save-settings'].$post({
-          json: { settingsPayload: payload as any }
+          json: { settingsPayload: payload as Record<string, unknown> }
         }),
         '保存设置失败'
       );
@@ -152,7 +152,7 @@ export function useSettings() {
     isPending,
     updateSettings,
     agnesApiKey: settings?.agnes_api_key,
-    accessPasscode: (settings as any)?.access_passcode,
+    accessPasscode: (settings as Record<string, unknown> | undefined)?.access_passcode as string | undefined || settings?.accessPasscode,
     updateSettingsSync: updateSettings,
   }), [settings, isPending, updateSettings]);
 }

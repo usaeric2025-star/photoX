@@ -15,6 +15,8 @@ export const errorFactory = {
     const error = err as PostgresError | null;
     let message = error?.message || String(err);
     const context: Record<string, unknown> = { operation };
+    let status = 500;
+    let category = ErrorCategory.RUNTIME;
     
     // Unwrap DrizzleQueryError or similar wrappers
     const actualError = (error?.cause || error) as PostgresError | null;
@@ -29,24 +31,47 @@ export const errorFactory = {
         }
         if (actualError.code) {
             context.postgresCode = actualError.code;
+            category = ErrorCategory.RUNTIME;
             
             // Map common Postgres error codes to specific codes
             if (actualError.code === '57014') {
                 code = ErrorCode.TIMEOUT;
+                status = 504;
                 message = `Statement timeout: The query took too long to execute. (${message})`;
             } else if (actualError.code === '23505') {
                 code = ErrorCode.ALREADY_EXISTS;
+                status = 409;
             } else if (actualError.code === '23503') {
                 code = ErrorCode.FAILED_PRECONDITION;
+                status = 400;
                 message = `Foreign key violation: Referenced record does not exist. (${message})`;
             }
+        }
+    }
+
+    // General error string detection
+    const lowMsg = message.toLowerCase();
+    if (status === 500) {
+        if (lowMsg.includes('unauthorized') || lowMsg.includes('no credentials')) {
+            code = ErrorCode.UNAUTHORIZED;
+            status = 401;
+            category = ErrorCategory.AUTH;
+        } else if (lowMsg.includes('permission denied') || lowMsg.includes('forbidden')) {
+            code = ErrorCode.PERMISSION_DENIED;
+            status = 403;
+            category = ErrorCategory.AUTH;
+        } else if (lowMsg.includes('not found')) {
+            code = ErrorCode.NOT_FOUND;
+            status = 404;
+            category = ErrorCategory.BUSINESS;
         }
     }
     
     return new AppError({
       message: `[${operation}] ${message}`,
       code,
-      category: ErrorCategory.RUNTIME,
+      statusCode: status,
+      category,
       severity: ErrorSeverity.ERROR,
       cause: error instanceof Error ? error : undefined,
       context
@@ -67,6 +92,22 @@ export const errorFactory = {
     });
   },
   
+  notFound(message: string = 'Resource not found', operation?: string): AppError {
+    return this.create({ message, code: ErrorCode.NOT_FOUND, status: 404, operation });
+  },
+
+  unauthorized(message: string = 'Authentication required', operation?: string): AppError {
+    return this.create({ message, code: ErrorCode.UNAUTHORIZED, status: 401, operation });
+  },
+
+  permissionDenied(message: string = 'Permission denied', operation?: string): AppError {
+    return this.create({ message, code: ErrorCode.PERMISSION_DENIED, status: 403, operation });
+  },
+
+  conflict(message: string, operation?: string): AppError {
+    return this.create({ message, code: ErrorCode.CONFLICT, status: 409, operation });
+  },
+
   create(params: { message: string, code?: ErrorCode | string, status?: number, operation?: string, category?: ErrorCategory }): AppError {
     const fullMessage = params.operation ? `[${params.operation}] ${params.message}` : params.message;
     return new AppError({

@@ -133,7 +133,7 @@ const iconMap: Record<string, LucideIcon> = {
 
 import { logger } from '#src/lib/logger.js';
 
-type IconName = string;
+export type IconName = string;
 
 interface IconProps {
   name: IconName;

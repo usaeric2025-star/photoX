@@ -24,7 +24,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   const { manufacturers = [] } = useManufacturers();
   const { tags: allTags = [] } = useTags();
 
-  const formRef = useRef<any>(null);
+  const formRef = useRef<unknown>(null);
   const defaultValues = useMemo(() => PhotoEditFormService.getInitialValues(photo), [photo]);
 
   const doSave = useCallback(async (values: PhotoEditFormData) => {
@@ -97,13 +97,13 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
   useEffect(() => {
     if (!photo?.metadata?.ai_raw || allTags.length === 0) return;
     
-    const currentTags = form.getFieldValue('tags');
+    const currentTags = form.getFieldValue('tags') as any[];
     if (currentTags && currentTags.length > 0) return;
     if (defaultValues.tags && defaultValues.tags.length > 0) return;
 
     const resolveAITags = async () => {
       try {
-        let rawJson = photo.metadata!.ai_raw;
+        let rawJson: any = photo.metadata!.ai_raw;
         if (typeof rawJson === 'string') {
           const cleanRaw = rawJson.replace(REGEX.MD_JSON_CODE_BLOCK, '').trim();
           rawJson = JSON.parse(cleanRaw);
@@ -111,7 +111,7 @@ export function usePhotoEditForm(photoId: string, photo: Photo | null, onSuccess
         
         if (rawJson) {
           const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
-          const normalized = adapter.normalize(rawJson, String(photo.metadata!.ai_raw));
+          const normalized = adapter.normalize(rawJson as Record<string, unknown>, String(photo.metadata!.ai_raw));
           
           if (normalized.tagNames?.length) {
             const resolvedIds = await resolveTagNamesToIds(normalized.tagNames, allTags);

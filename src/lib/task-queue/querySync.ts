@@ -18,12 +18,13 @@ export function setupQuerySync(): () => void {
         pendingInvalidations.add('photos_list');
         scheduleInvalidation();
         
-        try {
-          const results = (task.state as any).result;
+        if (task.state.status === 'completed') {
+          const results = task.state.result;
           if (Array.isArray(results)) {
-            const successCount = results.filter((r: any) => r.success && !r.duplicate).length;
-            const duplicateCount = results.filter((r: any) => r.success && r.duplicate).length;
-            const failCount = results.filter((r: any) => !r.success).length;
+            const typedResults = results as { success?: boolean; duplicate?: boolean }[];
+            const successCount = typedResults.filter((r) => r.success && !r.duplicate).length;
+            const duplicateCount = typedResults.filter((r) => r.success && r.duplicate).length;
+            const failCount = typedResults.filter((r) => !r.success).length;
 
             const t = ErrorFormatter.t;
             const parts = [];
@@ -42,8 +43,6 @@ export function setupQuerySync(): () => void {
               }
             }
           }
-        } catch (e) {
-          // ignore notification error
         }
         break;
       case 'ai-analyze':

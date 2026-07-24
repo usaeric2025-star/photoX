@@ -25,7 +25,7 @@ export function TopLayer({
   onClose,
   id
 }: TopLayerProps) {
-  const ref = useRef<any>(null);
+  const ref = useRef<HTMLDialogElement & HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -59,8 +59,9 @@ export function TopLayer({
     const el = ref.current;
     if (!el || type !== 'popover') return;
 
-    const handleToggle = (e: any) => {
-      if (e.newState === 'closed' && open) {
+    const handleToggle = (e: Event) => {
+      const target = e as unknown as { newState: string };
+      if (target.newState === 'closed' && open) {
         onClose?.();
       }
     };

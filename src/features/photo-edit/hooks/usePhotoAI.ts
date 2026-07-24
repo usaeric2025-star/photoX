@@ -46,13 +46,13 @@ export function usePhotoEditAI() {
     mutationFn: async ({ imageUrl }: { imageUrl: string }) => {
       if (!editPhotoId) throw new Error('Missing editPhotoId');
       
-      const rawResult = await AIService.analyze({ id: editPhotoId, thumbnailUrl: imageUrl } as any);
+      const rawResult = await AIService.analyze({ id: editPhotoId, thumbnailUrl: imageUrl });
       
       const updates = await mapAnalysisToUpdates(rawResult, allTags, categories);
 
       // 尺寸翻譯額外處理 (Ensure icons/units are consistent)
       if (Array.isArray(updates.dimensions)) {
-        updates.dimensions = updates.dimensions.map((d: any) => ({
+        updates.dimensions = updates.dimensions.map((d: { label?: string; unit?: string; value?: string | number }) => ({
           ...d,
           label: translateDimensionLabelToEnglish(String(d.label || t('dimensions'))),
           unit: normalizeUnit(d.unit, d),
@@ -73,8 +73,9 @@ export function usePhotoEditAI() {
       if (updates.resolvedTagIds) {
         // We handle tag syncing separately or via updatePhoto if supported
         // Here we just ensure the form has the right tags for the final commit
-        const resolvedTags = updates.resolvedTagIds.map((id: any) => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
-        form.setFieldValue('tags', resolvedTags as any);
+        const resolvedTagIds = updates.resolvedTagIds as Array<string | number>;
+        const resolvedTags = resolvedTagIds.map((id: number | string) => allTags.find(t => String(t.id) === String(id))).filter((t): t is Tag => !!t);
+        form.setFieldValue('tags', resolvedTags);
       }
 
       await updatePhoto.mutateAsync({ id: editPhotoId, updates: savePayload });
@@ -106,17 +107,18 @@ export function usePhotoEditAI() {
     if (!editPhotoId) return;
     setIsReExtracting(true);
     try {
-      let parsed = rawResult as any;
+      let parsed: unknown = rawResult;
       if (typeof parsed === 'string') {
         const cleanRaw = parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         parsed = JSON.parse(cleanRaw);
       }
       
-      const updates = await mapAnalysisToUpdates(parsed, allTags, categories);
+      const updates = await mapAnalysisToUpdates(parsed as import('#src/features/ai/orchestration.js').PhotoAnalysisResponse, allTags, categories);
       
       if (updates.resolvedTagIds) {
-        const resolvedTags = updates.resolvedTagIds.map((id: any) => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
-        form.setFieldValue('tags', resolvedTags as any);
+        const resolvedTagIds = updates.resolvedTagIds as Array<string | number>;
+        const resolvedTags = resolvedTagIds.map((id: number | string) => allTags.find(t => String(t.id) === String(id))).filter((t): t is Tag => !!t);
+        form.setFieldValue('tags', resolvedTags);
       }
 
       Object.entries(updates).forEach(([key, value]) => {

@@ -32,17 +32,17 @@ export function ManufacturersSection({
   const { t } = useTranslation();
 
   const { submit: runAddManufacturer, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({ name: v.pipe(v.string(), v.minLength(1, t('manufacturerNameEmpty') || '廠商名稱不能為空')) }),
     mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeManufacturerName(name);
       if (!normalized) return;
-      await manufacturerMutations.create.mutateAsync(normalized);
+      await manufacturerMutations.create.mutateAsync({ name: normalized });
     },
     successMessage: t('addMfrSuccess'),
   });
 
   const { submit: runUpdateManufacturer, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1, t('manufacturerNameEmpty') || '廠商名稱不能為空')) }),
     mutationFn: async ({ id, name }: { id: string, name: string }) => {
       await manufacturerMutations.edit.mutateAsync({ id, updates: { name } });
     },

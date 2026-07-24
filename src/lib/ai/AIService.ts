@@ -20,11 +20,11 @@ export class AIService {
   /**
    * 獲取單張照片的 AI 識別結果
    */
-  static async analyze(photo: Photo): Promise<Record<string, unknown>> {
+  static async analyze(photo: { id: string; imageUrl?: string; thumbnailUrl?: string }): Promise<Record<string, unknown>> {
     const res = await api.ai.analyze.$post({
       json: { 
         photoId: photo.id, 
-        imageUrl: photo.thumbnailUrl || photo.imageUrl 
+        imageUrl: photo.thumbnailUrl || photo.imageUrl || ''
       }
     });
     return ErrorFactory.unwrap(res, 'AI Analysis Failed');
@@ -38,7 +38,7 @@ export class AIService {
     const res = await api.ai['analyze'].$post({
       json: params
     });
-    return ErrorFactory.unwrap<any>(res, 'AI Batch Analysis Failed');
+    return ErrorFactory.unwrap<unknown>(res, 'AI Batch Analysis Failed');
   }
 
   /**
@@ -65,17 +65,19 @@ export class AIService {
   /**
    * 格式化 AI 建議（單純視覺展示用）
    */
-  static formatAiSuggestions(raw: any) {
+  static formatAiSuggestions(raw: Record<string, unknown>) {
+    const r = raw;
+    const desc = r.description as Record<string, string> | string | undefined;
     return {
-      name: cleanTranslationPrefixes(raw.name || '').trim(),
+      name: cleanTranslationPrefixes(String(r.name || '')).trim(),
       description: {
-        zh: cleanTranslationPrefixes(raw.description?.zh || raw.description || '').trim(),
-        en: cleanTranslationPrefixes(raw.description?.en || '').trim(),
-        ms: cleanTranslationPrefixes(raw.description?.ms || '').trim(),
+        zh: cleanTranslationPrefixes((typeof desc === 'object' ? desc?.zh : desc) || '').trim(),
+        en: cleanTranslationPrefixes((typeof desc === 'object' ? desc?.en : '') || '').trim(),
+        ms: cleanTranslationPrefixes((typeof desc === 'object' ? desc?.ms : '') || '').trim(),
       },
-      tags: Array.isArray(raw.tags) ? raw.tags : [],
-      category: raw.category || null,
-      manufacturer: raw.manufacturer || null,
+      tags: Array.isArray(r.tags) ? r.tags : [],
+      category: (r.category as string) || null,
+      manufacturer: (r.manufacturer as string) || null,
     };
   }
 }

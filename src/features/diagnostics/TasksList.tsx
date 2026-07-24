@@ -105,7 +105,7 @@ export function TasksContent() {
           >
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</span>
-              <Icon name={stat.icon as any} size={14} className={stat.color} />
+              <Icon name={stat.icon as "history" | "zap" | "check-circle" | "alert-triangle"} size={14} className={stat.color} />
             </div>
             <div className={`text-2xl font-black ${stat.color}`}>{stat.value}</div>
           </div>

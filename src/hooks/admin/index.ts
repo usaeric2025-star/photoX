@@ -27,35 +27,41 @@ export const AdminService = {
   getAllCachedPhotos: (queryClient: QueryClient) => {
     try {
       const cachedQueries = queryClient.getQueriesData({ queryKey: queryKeys.photos.all });
-      const foundPhotos = new Map<string, any>();
+      const foundPhotos = new Map<string, { id: string; [key: string]: unknown }>();
             
       for (const [_, data] of cachedQueries) {
         if (!data) continue;
-        const typedData = data as any;
-        if (typeof data === 'object' && 'pages' in typedData && Array.isArray(typedData.pages)) {
+        const typedData = data as { 
+          pages?: Array<{ items?: Array<{ id: string }>; data?: Array<{ id: string }> }>; 
+          items?: Array<{ id: string }>; 
+          data?: Array<{ id: string }>;
+          id?: string;
+        };
+        
+        if (typedData.pages && Array.isArray(typedData.pages)) {
           for (const page of typedData.pages) {
-            const items = (page.items || page.data || []) as any[];
+            const items = (page.items || page.data || []) as Array<{ id: string }>;
             for (const item of items) {
-              if (item && typeof item.id === 'string') foundPhotos.set(item.id, item);
+              if (item && typeof item.id === 'string') foundPhotos.set(item.id, item as { id: string; [key: string]: unknown });
             }
           }
         } 
         else if (Array.isArray(data)) {
           for (const item of data) {
-            if (item && typeof item.id === 'string') foundPhotos.set(item.id, item);
+            if (item && typeof item.id === 'string') foundPhotos.set(item.id, item as { id: string; [key: string]: unknown });
           }
         }
-        else if (typeof data === 'object' && typedData.id) {
-          foundPhotos.set(typedData.id, typedData);
+        else if (typeof typedData === 'object' && typedData.id) {
+          foundPhotos.set(typedData.id, typedData as { id: string; [key: string]: unknown });
         }
       }
       return Array.from(foundPhotos.values());
     } catch (err) {
-      ErrorFactory.handle(err, { context: '[AdminService] Failed to retrieve photos from cache', silent: true });
+      ErrorFactory.handle(err as Error, { context: '[AdminService] Failed to retrieve photos from cache', silent: true });
       return [];
     }
   },
-  filterPhotosWithGroups: (allPhotos: any[], targetIds: string[]) => {
+  filterPhotosWithGroups: (allPhotos: { id: string; groupId?: string | null }[], targetIds: string[]) => {
     if (targetIds.length === 0) return allPhotos;
     const selectedGroupIds = new Set<string>();
     const targetIdSet = new Set(targetIds.map(id => String(id)));
@@ -84,7 +90,7 @@ export function useAdminActions() {
   const { auditResult, isAuditing, runAudit, deduplicate, runDailyCleanup } = useSystemMaintenance();
   const { performanceIssues, clearAudits } = usePerformanceAudit();
 
-  const handleBatchAiIdentifyTrigger = async (allPhotos?: any[], ids?: string[]) => {
+  const handleBatchAiIdentifyTrigger = async (allPhotos?: { id: string; groupId?: string | null }[], ids?: string[]) => {
     const targetIds = ids || selectedIds;
     let photosToProcess = Array.isArray(allPhotos) ? allPhotos : AdminService.getAllCachedPhotos(queryClient);
     if (photosToProcess.length === 0) {
@@ -102,7 +108,7 @@ export function useAdminActions() {
       await feedback.promise(handleBatchAiAnalyze(filteredPhotos as any), {
         loading: t('aiAnalyzing') || '正在啟動 AI 識別...',
         success: t('aiAnalyzeSuccess') || 'AI 識別任務已啟動',
-        error: (err: any) => `${t('aiAnalyzeFailed') || 'AI 識別失敗'}: ${err.message}`
+        error: (err: { message: string }) => `${t('aiAnalyzeFailed') || 'AI 識別失敗'}: ${err.message}`
       });
     } catch (e) {
       // handled by feedback.promise
@@ -140,7 +146,17 @@ export function usePerformanceAudit() {
   const { t } = useTranslation();
   const performanceIssues = useMemo(() => {
     const incidents = perfAudit.getIncidents();
-    const issues: any[] = [];
+    const issues: Array<{ 
+      id: string; 
+      category: string; 
+      severity: string; 
+      title: string; 
+      description: string; 
+      affectedCount: number; 
+      autoFixable: boolean; 
+      actionName: string; 
+      isClientOnly: boolean; 
+    }> = [];
     const grouped = incidents.reduce((acc, curr) => {
       if (!acc[curr.label]) acc[curr.label] = [];
       acc[curr.label].push(curr);
@@ -338,7 +354,7 @@ export function useGlobalTasks() {
     async () => {
       // @ts-ignore - Hono client indexing
       const res = await api.admin.maintenance.jobs.$get();
-      return ErrorFactory.unwrap<any[]>(res, t('taskFetchFailed'));
+      return ErrorFactory.unwrap<Record<string, unknown>[]>(res, t('taskFetchFailed'));
     },
     {
       refetchInterval: (rJobs) => {
@@ -364,14 +380,14 @@ export function useGlobalTasks() {
       source: 'session', 
       title: zt.label,
       status,
-      progress: ((zt.state as any).progress || 0) * 100,
-      message: (zt.state as any).message || (zt.state.status === 'failed' ? zt.state.error : ''),
+      progress: ((zt.state as TaskState & { progress?: number }).progress || 0) * 100,
+      message: (zt.state as TaskState & { message?: string }).message || (zt.state.status === 'failed' ? (zt.state as TaskState & { error?: string }).error : ''),
       createdAt: zt.createdAt,
     });
   });
 
   const safeRemoteJobs = Array.isArray(remoteJobs) ? remoteJobs : [];
-  safeRemoteJobs.forEach(rj => {
+  safeRemoteJobs.forEach((rj: any) => {
     if (!rj?.id) return;
     
     let status: UnifiedTaskStatus = 'processing';

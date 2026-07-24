@@ -24,8 +24,10 @@ const dummyAuth = {
   signOut: async () => {}
 };
 
+type SafeProxy = any;
+
 // 遞迴的防崩潰安全 Proxy 產生器，支持鏈式調用：supabase.from('x').select('*').eq(...)
-const makeSafeProxy = (path: string[] = []): any => {
+const makeSafeProxy = (path: string[] = []): SafeProxy => {
   const targetFn = () => {};
   return new Proxy(targetFn, {
     get: (_target, prop) => {
@@ -43,7 +45,7 @@ const makeSafeProxy = (path: string[] = []): any => {
       // 返回一個新的 SafeProxy，允許持續鏈式調用 .select().eq().order()
       return makeSafeProxy(path);
     }
-  });
+  }) as unknown as SafeProxy;
 };
 
 export const supabase = isSupabaseConfigured 

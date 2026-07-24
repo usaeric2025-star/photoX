@@ -7,7 +7,7 @@ import { isAppError, AppError } from '#shared/AppError.js';
 
 export const FatalErrorOverlay = () => {
   const { t } = useTranslation();
-  const error = useAtomValue(fatalError) as any;
+  const error = useAtomValue(fatalError);
   const { copy, copied } = useCopyToClipboard({ 
     successMessage: t('copySuccess'),
     feedback: false // Toast feedback is often hidden behind native dialogs
@@ -66,7 +66,7 @@ export const FatalErrorOverlay = () => {
 
   const getDisplayTrace = () => {
       if (isAppError(error)) return error.traceId;
-      if ('traceId' in error) return (error as { traceId?: string }).traceId;
+      if (error && typeof error === 'object' && 'traceId' in error) return (error as { traceId?: string }).traceId;
       return 'N/A';
   };
 

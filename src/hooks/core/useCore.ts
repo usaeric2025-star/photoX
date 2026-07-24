@@ -57,7 +57,7 @@ export const useAppLocation = () => {
   const pathname = location.pathname;
   const normalized = pathname === "/" ? "/" : pathname.replace(/\/$/, "");
   
-  const setLocation = useCallback((to: string, options?: any) => {
+  const setLocation = useCallback((to: string, options?: import('react-router-dom').NavigateOptions) => {
     const next = to === "/" ? "/" : to.replace(/\/$/, "");
     navigate(next, options);
   }, [navigate]);

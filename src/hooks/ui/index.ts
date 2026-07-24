@@ -23,7 +23,7 @@ export * from './useUI.js';
  * 管理原生 Top Layer 元素 (dialog/popover) 的 Hook。
  */
 export function useTopLayer() {
-  const ref = useRef<any>(null);
+  const ref = useRef<HTMLElement & { showPopover?: () => void; hidePopover?: () => void; showModal?: () => void; close?: () => void }>(null);
 
   const show = useCallback(() => {
     const el = ref.current;

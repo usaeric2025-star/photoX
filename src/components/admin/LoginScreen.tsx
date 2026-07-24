@@ -32,7 +32,7 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
   });
 
   const handleStaffLogin = () => {
-    const correctPasscode = (settings as any)?.accessPasscode;
+    const correctPasscode = settings?.accessPasscode;
     
     if (!correctPasscode) {
       feedback.error(t('staffPasscodeRequired'));

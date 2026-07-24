@@ -45,8 +45,9 @@ export function NativePopover({
     const popover = popoverRef.current;
     if (!popover) return;
 
-    const handleToggle = (e: any) => {
-      const newState = e.newState === 'open';
+    const handleToggle = (e: Event) => {
+      const target = e as unknown as { newState: string };
+      const newState = target.newState === 'open';
       setIsOpen(newState);
       onOpenChange?.(newState);
       

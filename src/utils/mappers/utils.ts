@@ -167,12 +167,12 @@ const mapTranslationField = (value: unknown): { zh: string; en: string; ms: stri
  * 泛用的欄位資料庫映射工具，減少多個 commands.ts 中的重複程式碼
  */
 const mapFieldsToDb = (
-  updates: Record<string, any>,
+  updates: Record<string, unknown>,
   allowedFields: string[],
   neverAllowed: string[],
   fieldMap: Record<string, string>
-): Record<string, any> => {
-  const dbUpdates: Record<string, any> = {};
+): Record<string, unknown> => {
+  const dbUpdates: Record<string, unknown> = {};
 
   for (const key of allowedFields) {
     if (key in updates && !neverAllowed.includes(key)) {

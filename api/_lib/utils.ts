@@ -12,18 +12,19 @@ function snakeToCamel(str: string): string {
 /**
  * Deeply converts object keys from snake_case to camelCase
  */
-export function toCamelCaseKeys<T>(obj: any): T {
+export function toCamelCaseKeys<T>(obj: unknown): T {
   if (Array.isArray(obj)) {
-    return obj.map(v => toCamelCaseKeys(v)) as any;
-  } else if (obj !== null && obj.constructor === Object) {
-    return Object.keys(obj).reduce(
+    return obj.map(v => toCamelCaseKeys(v)) as unknown as T;
+  } else if (obj !== null && typeof obj === 'object' && obj.constructor === Object) {
+    const typedObj = obj as Record<string, unknown>;
+    return Object.keys(typedObj).reduce(
       (result, key) => ({
         ...result,
-        [snakeToCamel(key)]: toCamelCaseKeys(obj[key]),
+        [snakeToCamel(key)]: toCamelCaseKeys(typedObj[key]),
       }),
       {},
-    ) as any;
+    ) as unknown as T;
   }
-  return obj;
+  return obj as T;
 }
 

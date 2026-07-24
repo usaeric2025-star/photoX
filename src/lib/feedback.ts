@@ -130,7 +130,7 @@ export const feedback = {
    */
   promise: async <T>(
     promise: Promise<T>,
-    messages: { loading: string; success: string; error?: string | ((err: any) => string) }
+    messages: { loading: string; success: string; error?: string | ((err: { message: string }) => string) }
   ): Promise<T> => {
     toast.promise(promise, {
       loading: messages.loading,

@@ -107,7 +107,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   };
 
   const { submit: runSaveSettings, isLoading: isSavingSettings } = useFormSubmit({
-    schema: v.any(),
+    schema: v.record(v.string(), v.unknown()),
     mutationFn: async (s: Partial<AppSettings>) => {
       await updateSettings(s as AppSettings);
     },

@@ -31,7 +31,7 @@ export function CategorySelect() {
               .map((cat) => {
                 const isSelected = String(field.state.value || "") === String(cat.id || "");
                 const displayName = getTranslatedCategoryName(
-                  cat.id as any,
+                  cat.id,
                   categories,
                   appLang,
                   uiTranslations,
@@ -40,7 +40,7 @@ export function CategorySelect() {
                   <button
                     key={cat.id}
                     type="button"
-                    onClick={() => field.handleChange(isSelected ? null : String(cat.id))}
+                    onClick={() => field.handleChange(isSelected ? null : Number(cat.id))}
                     className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all ${isSelected ? "bg-blue-600 border-blue-600 shadow-md shadow-blue-600/20" : "bg-white border-slate-100 active:bg-slate-50"}`}
                   >
                     <span

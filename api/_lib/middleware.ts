@@ -1,92 +1,84 @@
-import { Hono, type Context, type Next } from 'hono';
+import { Hono, type Next } from 'hono';
+import { type Env } from '../_app.js';
 import { type StatusCode } from 'hono/utils/http-status';
 import { timeout } from 'hono/timeout';
 import { HTTPException } from 'hono/http-exception';
 import { requireRealUser } from './auth.js';
 import { getTraceId } from './error/traceId.js';
-import { logger } from './logger.js';
+import { logger, logContext } from './logger.js';
 import { AppError } from '../../shared/AppError.js';
 import { errorFactory } from './error/factory.js';
 
-export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | undefined }) {
-  // --- Timeout Middleware (Rule 2: Centralized Timeout) ---
-  // - AI: 60s
-  // - Batch/Upload: 120s (Note: Vercel Hobby limits to 60s, Pro limits up to 300s)
-  // - Default: 30s
-  app.use('*', async (c: Context, next: Next) => {
-    const path = c.req.path;
-    let duration = 30000; // Default 30s
+export function setupMiddlewares(app: Hono<Env>, serverEnv: { NODE_ENV: string | undefined }) {
+  // --- Global Lifecycle Middleware (Tracing, Logging, Timeouts, Cache Control) ---
+  app.use('*', async (c, next) => {
+    const traceId = getTraceId(c);
+    c.header('X-Trace-Id', traceId);
+    c.set('requestId', traceId);
+    
+    return logContext.run({ requestId: traceId }, async () => {
+        const path = c.req.path;
+        const method = c.req.method;
 
-    if (path.startsWith('/api/ai')) {
-      duration = 60000; // AI 60s
-    } else if (
-      path.startsWith('/api/upload') || 
-      path.startsWith('/api/storage') || 
-      path.includes('/batch') ||
-      path.includes('/refresh-view')
-    ) {
-      duration = 120000; // Batch/Storage 120s
-    }
+        // 1. Determine Timeout Duration
+        let duration = 30000;
+        if (path.startsWith('/api/ai')) duration = 60000;
+        else if (path.startsWith('/api/upload') || path.startsWith('/api/storage') || path.includes('/batch') || path.includes('/refresh-view')) {
+          duration = 120000;
+        }
 
-    const handler = timeout(duration, () => {
-      return new HTTPException(504, { message: `Request Timeout after ${duration}ms` });
+        const timeoutHandler = timeout(duration, () => {
+          logger.warn(`Request Timeout triggered for ${method} ${path} after ${duration}ms`);
+          return new HTTPException(504, { message: `Request Timeout after ${duration}ms` });
+        });
+
+        // 2. Logging
+        if (method !== 'GET' || serverEnv.NODE_ENV === 'development') {
+            logger.info(`[HTTP] ${method} ${path}`);
+        }
+
+        // 3. Execution
+        const response = await timeoutHandler(c, next);
+
+        // 4. Post-execution Cache Control Logic
+        if (method === 'GET') {
+          const isAdminMode = c.req.query('isAdminMode') === 'true';
+          const referer = c.req.header('referer') || '';
+          const isAdminPath = referer.includes('/admin') || path.startsWith('/api/admin') || isAdminMode;
+
+          const isListPath = 
+            path === '/api/tags' || path === '/api/tags/' ||
+            path === '/api/categories' || path === '/api/categories/' ||
+            path === '/api/manufacturers' || path === '/api/manufacturers/' ||
+            path === '/api/groups' || path === '/api/groups/';
+
+          if (isAdminPath) {
+            c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          } else if (isListPath) {
+            c.header('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
+          } else if (path.startsWith('/api/public/settings') || path.startsWith('/api/system/health')) {
+            c.header('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+          }
+        } else if (method === 'POST') {
+          if (path.endsWith('/list') || path.endsWith('/list-by-group') || path.endsWith('/list-by-group-paginated')) {
+              const referer = c.req.header('referer') || '';
+              const isAdminPath = referer.includes('/admin') || path.startsWith('/api/admin');
+              
+              if (isAdminPath) {
+                  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+              } else {
+                  c.header('Cache-Control', 'public, s-maxage=5, stale-while-revalidate=30');
+                  c.header('Vercel-CDN-Cache-Control', 'max-age=15, stale-while-revalidate=30');
+              }
+          }
+        }
+
+        return response;
     });
-
-    return handler(c, next);
-  });
-
-  // --- Logger & Trace ---
-  app.use('*', async (c: Context, next) => {
-      const traceId = getTraceId(c);
-      c.header('X-Trace-Id', traceId);
-      // 只在非 GET 請求或開發環境執行日誌，減少雜訊
-      if (c.req.method !== 'GET' || serverEnv.NODE_ENV === 'development') {
-          logger.info(`[HTTP] ${c.req.method} ${c.req.path}`, { traceId });
-      }
-      
-      // 為頻繁讀取的靜態型錄路由與列表加上 Cache-Control (Vercel Edge 緩存與防護 504)
-      if (c.req.method === 'GET') {
-        const path = c.req.path;
-        const isAdminMode = c.req.query('isAdminMode') === 'true';
-        const referer = c.req.header('referer') || '';
-        const isAdminPath = referer.includes('/admin') || path.startsWith('/api/admin') || isAdminMode;
-
-        const isListPath = 
-          path === '/api/tags' || path === '/api/tags/' ||
-          path === '/api/categories' || path === '/api/categories/' ||
-          path === '/api/manufacturers' || path === '/api/manufacturers/' ||
-          path === '/api/groups' || path === '/api/groups/';
-
-        if (isAdminPath) {
-          c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        } else if (isListPath) {
-          // CDN 快取 10 秒，在背景重新驗證 60 秒，減少資料庫壓力與冷啟動
-          c.header('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
-        } else if (path.startsWith('/api/public/settings') || path.startsWith('/api/system/health')) {
-          // 長效快取
-          c.header('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
-        }
-      } else if (c.req.method === 'POST') {
-        const path = c.req.path;
-        // 針對 POST 的查詢 API 也能加 Edge 緩存，Vercel 支援帶有 Vercel-CDN-Cache-Control 的 POST 查詢緩存
-        if (path.endsWith('/list') || path.endsWith('/list-by-group') || path.endsWith('/list-by-group-paginated')) {
-            const referer = c.req.header('referer') || '';
-            const isAdminPath = referer.includes('/admin') || path.startsWith('/api/admin');
-            
-            if (isAdminPath) {
-                c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-            } else {
-                c.header('Cache-Control', 'public, s-maxage=5, stale-while-revalidate=30');
-                c.header('Vercel-CDN-Cache-Control', 'max-age=15, stale-while-revalidate=30');
-            }
-        }
-      }
-      
-      await next();
   });
 
   // Auth Middleware for Administrative Routes
-  app.use('/admin/*', async (c: Context, next) => {
+  app.use('/admin/*', async (c, next) => {
       const path = c.req.path;
       if (path.includes('/admin/settings/get-keys') || path.includes('/admin/settings/get')) {
           await next();
@@ -106,7 +98,7 @@ export function setupMiddlewares(app: Hono, serverEnv: { NODE_ENV: string | unde
   });
 
   // Protect all mutation endpoints (non-GET) that are not under /admin
-  app.use('*', async (c: Context, next) => {
+  app.use('*', async (c, next) => {
       const method = c.req.method;
       const path = c.req.path;
       const isMutation = ['POST', 'PUT', 'DELETE'].includes(method);

@@ -24,7 +24,7 @@ export const initAuth = async () => {
   await safeAsync(async () => {
     const sessionPromise = supabase.auth.getSession().catch(e => ({ data: { session: null }, error: e }));
     
-    const { data } = await withTimeout(sessionPromise, 3000, 'Supabase Get Auth Session').catch(() => ({ data: { session: null } })) as any;
+    const { data } = (await withTimeout(sessionPromise, 3000, 'Supabase Get Auth Session').catch(() => ({ data: { session: null } }))) as { data: { session: { user: any; access_token?: string } | null } };
     
     if (data.session?.user) {
       const u = data.session.user;

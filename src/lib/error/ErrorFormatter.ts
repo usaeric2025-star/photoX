@@ -28,7 +28,7 @@ export class ErrorFormatter {
 
   static formatValibotError(error: v.ValiError<v.GenericSchema>): string {
     return error.issues.map((issue) => {
-      const path = issue.path?.map((p) => String((p as any).key)).join('.') || '参数';
+      const path = issue.path?.map((p) => String((p as unknown as Record<string, unknown>).key)).join('.') || '参数';
       return `${path} ${issue.message}`;
     }).join('，');
   }

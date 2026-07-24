@@ -1,7 +1,7 @@
 export const toSingleString = (val: unknown): string => {
   if (typeof val === 'object' && val !== null) {
     const v = val as Record<string, string>;
-    return v.zh || v.en || v.ms || '';
+    return v.en || v.zh || v.ms || '';
   }
   return typeof val === 'string' ? val : '';
 };

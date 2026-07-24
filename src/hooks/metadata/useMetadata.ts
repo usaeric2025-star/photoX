@@ -88,7 +88,7 @@ function useMetadataMutations() {
   };
 
   const createMutation = useAppMutation({
-    mutationFn: async ({ domain, data }: { domain: Domain; data: any }) => {
+    mutationFn: async ({ domain, data }: { domain: Domain; data: Record<string, unknown> }) => {
       // @ts-ignore - Hono client indexing
       return ErrorFactory.unwrap(api[domain].$post({ json: data }), t('createFailed'));
     },
@@ -99,7 +99,7 @@ function useMetadataMutations() {
   });
 
   const updateMutation = useAppMutation({
-    mutationFn: async ({ domain, id, updates }: { domain: Domain; id: string | number; updates: any }) => {
+    mutationFn: async ({ domain, id, updates }: { domain: Domain; id: string | number; updates: Record<string, unknown> }) => {
       // @ts-ignore - Hono client indexing
       return ErrorFactory.unwrap(api[domain][':id'].$put({ param: { id: String(id) }, json: { updates } }), t('updateFailed'));
     },
@@ -131,8 +131,8 @@ function useMetadataMutations() {
 export function useCategoryMutations() {
   const { create, update, remove, isPending } = useMetadataMutations();
   return {
-    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'categories', data: { categoryData: data } }) },
-    edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'categories', ...args }) },
+    create: { mutateAsync: (data: Record<string, unknown>) => create.mutateAsync({ domain: 'categories', data: { categoryData: data } }) },
+    edit: { mutateAsync: (args: { id: string | number; updates: Record<string, unknown> }) => update.mutateAsync({ domain: 'categories', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'categories', id }) },
     isPending
   };
@@ -141,8 +141,8 @@ export function useCategoryMutations() {
 export function useTagMutations() {
   const { create, update, remove, isPending } = useMetadataMutations();
   return {
-    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'tags', data: { tagData: data } }) },
-    edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'tags', ...args }) },
+    create: { mutateAsync: (data: Record<string, unknown>) => create.mutateAsync({ domain: 'tags', data: { tagData: data } }) },
+    edit: { mutateAsync: (args: { id: string | number; updates: Record<string, unknown> }) => update.mutateAsync({ domain: 'tags', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'tags', id }) },
     isPending
   };
@@ -151,8 +151,8 @@ export function useTagMutations() {
 export function useManufacturerMutations() {
   const { create, update, remove, isPending } = useMetadataMutations();
   return {
-    create: { mutateAsync: (data: any) => create.mutateAsync({ domain: 'manufacturers', data: { manufacturerData: data } }) },
-    edit: { mutateAsync: (args: { id: string | number; updates: any }) => update.mutateAsync({ domain: 'manufacturers', ...args }) },
+    create: { mutateAsync: (data: Record<string, unknown>) => create.mutateAsync({ domain: 'manufacturers', data: { manufacturerData: data } }) },
+    edit: { mutateAsync: (args: { id: string | number; updates: Record<string, unknown> }) => update.mutateAsync({ domain: 'manufacturers', ...args }) },
     remove: { mutateAsync: (id: string | number) => remove.mutateAsync({ domain: 'manufacturers', id }) },
     isPending
   };
@@ -198,7 +198,7 @@ export function useTagSearch(keywordOrTags: string | Tag[]) {
  * useTagSorting
  * 處理標籤排序、置頂與熱度識別。
  */
-export function useTagSorting(tags: Tag[], settings?: any) {
+export function useTagSorting(tags: Tag[], settings?: { pinnedTags?: string[] }) {
   const [sortBy, setSortBy] = useState<'name' | 'count'>('count');
   
   const pinnedIds = useMemo(() => {

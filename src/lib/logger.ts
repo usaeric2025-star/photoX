@@ -63,5 +63,5 @@ export const logger = new Logger();
 
 // 挂载到 window 方便调试
 if (isDev && typeof window !== 'undefined') {
-  (window as any).logger = logger;
+  (window as unknown as Record<string, unknown>).logger = logger;
 }

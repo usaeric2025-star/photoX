@@ -1,11 +1,23 @@
 import { errorFactory } from "../_lib/error/factory.js";
 import { Hono } from 'hono';
 import * as v from 'valibot';
-import { db, tags as tagsTable, photoTags } from '../_lib/db/index.js';
-import { eq, ilike, asc, inArray, sql, and, ne } from 'drizzle-orm';
 import { TagReqSchema } from '../../shared/apiContractSchema.js';
-import { errorResponse, successResponse } from '../_lib/response.js';
+import { successResponse } from '../_lib/response.js';
 import { logger } from '../_lib/logger.js';
+import { 
+    getAllTags, 
+    searchTags, 
+    updateTag, 
+    createTag, 
+    batchCreateTags, 
+    deleteTag, 
+    refreshTagHotScores, 
+    removeTagFromPhoto, 
+    syncPhotoTags, 
+    syncBatchPhotoTags,
+    getTagDetails,
+    getCurrentPhotoTags
+} from '../_lib/db/queries/tags.js';
 
 let tagsCache: Record<string, unknown>[] | null = null;
 let tagsCacheTime = 0;
@@ -23,20 +35,14 @@ export const tags = new Hono()
         logger.debug('[Tags Cache] Returning cached tags');
         return successResponse(c, tagsCache);
     }
-    const data = await db.select().from(tagsTable).orderBy(asc(tagsTable.name));
+    const data = await getAllTags();
     tagsCache = data;
     tagsCacheTime = now;
     return successResponse(c, data);
   })
   .get('/search', async (c) => {
     const keyword = c.req.query('keyword') || '';
-    const query = db.select().from(tagsTable).orderBy(asc(tagsTable.name));
-    
-    const filteredQuery = keyword 
-      ? query.where(ilike(tagsTable.name, `%${keyword}%`))
-      : query;
-
-    const data = await filteredQuery.limit(100);
+    const data = await searchTags(keyword);
     return successResponse(c, data);
   })
   .put('/:id{[0-9]+}', async (c) => {
@@ -45,7 +51,7 @@ export const tags = new Hono()
     const check = v.safeParse(v.object({ updates: v.omit(TagReqSchema, ["id"]) }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
     const { updates } = check.output;
-    await db.update(tagsTable).set(updates).where(eq(tagsTable.id, id));
+    await updateTag(id, updates);
     clearTagsCache();
     return successResponse(c, null);
   })
@@ -54,7 +60,7 @@ export const tags = new Hono()
     const check = v.safeParse(v.object({ tagData: TagReqSchema }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
     const { tagData } = check.output;
-    const [data] = await db.insert(tagsTable).values(tagData).returning();
+    const data = await createTag(tagData);
     clearTagsCache();
     return successResponse(c, data);
   })
@@ -63,18 +69,18 @@ export const tags = new Hono()
     const check = v.safeParse(v.object({ tags: v.array(TagReqSchema) }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
     const { tags: tagsData } = check.output;
-    const data = await db.insert(tagsTable).values(tagsData).returning({ id: tagsTable.id, name: tagsTable.name });
+    const data = await batchCreateTags(tagsData);
     clearTagsCache();
     return successResponse(c, data);
   })
   .delete('/:id{[0-9]+}', async (c) => {
     const id = parseInt(c.req.param('id'));
-    await db.delete(tagsTable).where(eq(tagsTable.id, id));
+    await deleteTag(id);
     clearTagsCache();
     return successResponse(c, null);
   })
   .post('/refresh-hot-scores', async (c) => {
-    await db.execute(sql`SELECT refresh_tag_hot_scores()`);
+    await refreshTagHotScores();
     clearTagsCache();
     return successResponse(c, null);
   })
@@ -83,7 +89,7 @@ export const tags = new Hono()
     const check = v.safeParse(v.object({ photoId: v.string(), tagId: v.number() }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
     const { photoId, tagId } = check.output;
-    await db.delete(photoTags).where(and(eq(photoTags.photoId, photoId), eq(photoTags.tagId, tagId)));
+    await removeTagFromPhoto(photoId, tagId);
     return successResponse(c, null);
   })
   .post('/sync-photo-tags', async (c) => {
@@ -98,12 +104,13 @@ export const tags = new Hono()
     const { photoId, tagWeights, tagSources } = check.output;
     const tagIds = check.output.tagIds.map(id => Number(id)).filter(id => !isNaN(id));
     
-    // 1. Fetch current associations
-    const currentAssociations = await db.select({ tagId: photoTags.tagId }).from(photoTags).where(eq(photoTags.photoId, photoId));
+    // 1. Fetch current associations and details in parallel
+    const [currentAssociations, tagDetails] = await Promise.all([
+        getCurrentPhotoTags(photoId),
+        getTagDetails(tagIds)
+    ]);
+    
     const existingTagIds = new Set(currentAssociations.map(pt => pt.tagId));
-
-    // 2. Query target tags for details
-    const tagDetails = await db.select({ id: tagsTable.id, isPinned: tagsTable.isPinned }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
     const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));
 
     const getWeight = (tagId: number, tagDetail?: { isPinned?: boolean | null } | null): number => {
@@ -122,7 +129,7 @@ export const tags = new Hono()
       return 50;
     };
 
-    // 3. Sort and limit
+    // 2. Sort and limit
     const sortedTagIds = [...tagIds].sort((a, b) => {
       const weightA = getWeight(a, tagDetailsMap.get(a));
       const weightB = getWeight(b, tagDetailsMap.get(b));
@@ -134,11 +141,8 @@ export const tags = new Hono()
 
     const limitedTagIds = sortedTagIds.slice(0, 3);
 
-    // 4. Update junction table
-    await db.delete(photoTags).where(eq(photoTags.photoId, photoId));
-    if (limitedTagIds.length > 0) {
-      await db.insert(photoTags).values(limitedTagIds.map(tagId => ({ photoId, tagId })));
-    }
+    // 3. Sync
+    await syncPhotoTags(photoId, limitedTagIds);
     return successResponse(c, null);
   })
   .post('/sync-batch-photo-tags', async (c) => {
@@ -153,7 +157,7 @@ export const tags = new Hono()
     const { photoIds, tagWeights, tagSources } = check.output;
     const tagIds = check.output.tagIds.map(id => Number(id)).filter(id => !isNaN(id));
     
-    const tagDetails = await db.select({ id: tagsTable.id, isPinned: tagsTable.isPinned }).from(tagsTable).where(inArray(tagsTable.id, tagIds));
+    const tagDetails = await getTagDetails(tagIds);
     const tagDetailsMap = new Map(tagDetails.map(t => [t.id, t]));
 
     const getWeight = (tagId: number, tagDetail?: { isPinned?: boolean | null } | null): number => {
@@ -181,10 +185,6 @@ export const tags = new Hono()
 
     const limitedTagIds = sortedTagIds.slice(0, 3);
 
-    await db.delete(photoTags).where(inArray(photoTags.photoId, photoIds));
-    if (limitedTagIds.length > 0) {
-      const associations = photoIds.flatMap(photoId => limitedTagIds.map(tagId => ({ photoId, tagId })));
-      await db.insert(photoTags).values(associations);
-    }
+    await syncBatchPhotoTags(photoIds, limitedTagIds);
     return successResponse(c, null);
   });

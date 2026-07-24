@@ -44,7 +44,7 @@ export function getPathFromUrl(url: string): string {
 }
 
 export function withTimeout<T>(promise: Promise<T>, ms: number, labelOrError?: string): Promise<T> {
-  let timeoutId: any;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     const msg = labelOrError
       ? `Operation [${labelOrError}] timed out after ${ms}ms`

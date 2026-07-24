@@ -34,7 +34,7 @@ function formatField(field: Record<string, unknown> | string | number | null | u
   if (!field) return '';
   if (typeof field === 'object') {
     const obj = field as Record<string, unknown>;
-    return String(obj.zh || obj.en || obj.ms || '');
+    return String(obj.en || obj.zh || obj.ms || '');
   }
   return String(field);
 }
@@ -69,18 +69,18 @@ export const analyzePhoto = async (photoId: string, imageUrl?: string, signal?: 
 
   for (let i = 0; i <= maxRetries; i++) {
     try {
-      const data = await ErrorFactory.unwrap<Record<string, any>>(
+      const data = await ErrorFactory.unwrap<Record<string, unknown>>(
         api.ai.analyze.$post({ json: { photoId, imageUrl } }, { init: { signal } }),
         'AI 服務響應異常'
       );
       
-      let parsed = data;
+      let parsed: Record<string, unknown> = data;
       if (Array.isArray(parsed)) {
-        parsed = parsed[0] || {};
+        parsed = (parsed[0] || {}) as Record<string, unknown>;
       }
       
       const adapter = PhotoAIAdapterRegistry.getAdapter('gemini');
-      const normalized = adapter.normalize(parsed, data.raw_result || JSON.stringify(parsed));
+      const normalized = adapter.normalize(parsed, (data as Record<string, unknown>).raw_result as string || JSON.stringify(parsed));
 
       let cleanName = normalized.name || '';
       cleanName = cleanName.replace(/\.(jpg|jpeg|png|webp|gif|bmp)$/i, '').trim();
@@ -88,24 +88,25 @@ export const analyzePhoto = async (photoId: string, imageUrl?: string, signal?: 
       return {
         name: cleanName,
         description: normalized.description,
-        category_id: normalized.categoryId,
+        category_id: normalized.categoryId || parsed.category_id || parsed.categoryId || parsed.category_name || parsed.categoryName || parsed.category,
         group_id: normalized.groupId,
         tagNames: normalized.tagNames,
-        tagIds: Array.isArray(parsed.tag_ids) ? parsed.tag_ids.map(String) : [],
+        tagIds: Array.isArray(parsed.tag_ids) ? (parsed.tag_ids as unknown[]).map(String) : [],
         dimensions: normalized.dimensions,
         raw_result: normalized.rawResult
       };
-    } catch (e: any) {
-      lastError = e;
-      if (e.name === 'AbortError') throw new Error('请求已取消');
+    } catch (e: unknown) {
+      const err = e as { name?: string; statusCode?: number; response?: { status?: number }; message?: string };
+      lastError = err;
+      if (err.name === 'AbortError') throw new Error('请求已取消');
       
       // If it's a 404/504 or common transient error, retry
-      const statusCode = e.statusCode || (e.response && e.response.status);
-      const isTransient = statusCode === 404 || statusCode === 504 || statusCode === 502 || statusCode === 503 || e.message?.includes('timeout') || e.message?.includes('NOT_FOUND');
+      const statusCode = err.statusCode || (err.response && err.response.status);
+      const isTransient = statusCode === 404 || statusCode === 504 || statusCode === 502 || statusCode === 503 || err.message?.includes('timeout') || err.message?.includes('NOT_FOUND');
       
       if (isTransient && i < maxRetries) {
         const delay = Math.pow(2, i) * 1000;
-        logger.warn(`[analyzePhoto] Attempt ${i + 1} failed with ${e.message}, retrying in ${delay}ms...`);
+        logger.warn(`[analyzePhoto] Attempt ${i + 1} failed with ${err.message}, retrying in ${delay}ms...`);
         await new Promise(res => setTimeout(res, delay));
         continue;
       }

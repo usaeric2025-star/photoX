@@ -88,8 +88,8 @@ export class ErrorCapture {
     if (error instanceof Error) {
       message = error.message;
       cause = error;
-    } else if (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
-      message = (error as any).message;
+    } else if (error && typeof error === 'object' && 'message' in error && typeof (error as Record<string, unknown>).message === 'string') {
+      message = (error as Record<string, string>).message;
     } else if (typeof error === 'string') {
       message = error;
     }

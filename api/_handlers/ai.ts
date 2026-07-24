@@ -1,5 +1,6 @@
 import { errorFactory } from "../_lib/error/factory.js";
 import { Hono } from 'hono';
+import { type Env } from '../_app.js';
 import * as v from 'valibot';
 import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '../_lib/db/index.js';
 import { eq, and, inArray, desc, sql } from 'drizzle-orm';
@@ -19,7 +20,9 @@ import {
 } from '../../shared/apiContractSchema.js';
 import { AI_PROMPTS } from './ai/prompts.js';
 import { logger } from '../_lib/logger.js';
-import { errorResponse, successResponse } from '../_lib/response.js';
+import { getEffectiveUserId } from '../_lib/auth.js';
+import { normalizeImageUrl } from '../_lib/utils/image.js';
+import { successResponse, errorResponse } from '../_lib/response.js';
 import { syncGroupCoversAndCount } from '../_lib/groups.js';
 import { refreshPhotosView } from '../_lib/db/actions.js';
 
@@ -30,7 +33,7 @@ interface HonoContextUser {
 
 import { withTimeout, TIMEOUTS } from '../_lib/utils/timeout.js';
 
-export const ai = new Hono()
+export const ai = new Hono<Env>()
   .post("/test", async (c) => {
     const body = await c.req.json();
     let { provider: providerName, apiKey, model } = body;
@@ -97,70 +100,49 @@ export const ai = new Hono()
     if (!check.success) throw errorFactory.validation(check.issues);
 
     const { photoId, imageUrl: clientImageUrl } = check.output;
-    let finalImageUrl = clientImageUrl;
+    
+    // 1. Parallel Context & Photo Lookup (P0: Parallelization)
+    const [photo, catData, tagData] = await Promise.all([
+        (photoId && !photoId.startsWith('temp-') && !clientImageUrl) 
+            ? db.query.furnitureItems.findFirst({ columns: { imageUrl: true }, where: eq(furnitureItems.id, photoId) })
+            : Promise.resolve(null),
+        db.select({ 
+            id: categories.id, 
+            name: categories.name,
+            code: categories.code,
+            description: categories.description,
+        }).from(categories).limit(200),
+        db.select({ 
+            id: tags.id, 
+            name: tags.name 
+        }).from(tags).limit(500),
+    ]).catch(err => {
+        logger.warn("AI Analyze: Parallel context fetch failed partially:", err);
+        return [null, [], []];
+    });
 
-    // Only lookup in DB if no image URL was provided by client
-    if (photoId && !photoId.startsWith('temp-') && !finalImageUrl) {
-        const photo = await db.query.furnitureItems.findFirst({
-            columns: { imageUrl: true },
-            where: eq(furnitureItems.id, photoId)
-        });
-        if (photo) finalImageUrl = photo.imageUrl ?? undefined;
-    }
+    const finalImageUrl = normalizeImageUrl(clientImageUrl || (photo as { imageUrl: string | null })?.imageUrl);
 
-    if (!finalImageUrl) finalImageUrl = undefined;
     if (!finalImageUrl) return errorResponse(c, "Image URL is required for analysis", 400);
 
-    // Normalize image URL to ensure it is fully qualified for Gemini API access
-    const r2Base = process.env.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
-    const cleanBase = r2Base.endsWith('/') ? r2Base.slice(0, -1) : r2Base;
-
-    if (!finalImageUrl.startsWith('http://') && !finalImageUrl.startsWith('https://')) {
-        const cleanPath = finalImageUrl.startsWith('/') ? finalImageUrl.slice(1) : finalImageUrl;
-        finalImageUrl = `${cleanBase}/${cleanPath}`;
-    } else if (finalImageUrl.includes('/products/')) {
-        finalImageUrl = finalImageUrl
-            .replace('/products/', '/')
-            .replace(/\/(\d+-[a-z0-9]+\.webp)$/i, '/temp-$1');
-    }
-
-    const match = finalImageUrl.match(/photox\/(public|thumb|original)\/(.+)/);
-    if (match) {
-        const pathAndFilename = match[0];
-        finalImageUrl = `${cleanBase}/${pathAndFilename}`;
-    }
-
-    // Use safer query approach - select only what we need and handle errors per-table
-    let catRef: { id: number; name: string | null }[] = [];
-    let tagRef: { id: string | number; name: string | null }[] = [];
-    let groupRef: { id: string; name: string | null; status: string | null; createdAt: Date | null }[] = [];
-
-    try {
-        const [catData, tagData] = await Promise.all([
-            db.select({ 
-                id: categories.id, 
-                name: categories.name,
-            }).from(categories).limit(200),
-            db.select({ 
-                id: tags.id, 
-                name: tags.name 
-            }).from(tags).limit(500),
-        ]);
-        catRef = catData;
-        tagRef = tagData;
-    } catch (err: unknown) {
-        logger.warn("AI Analyze: Background context fetch failed partially:", err);
-    }
+    const catRef = catData || [];
+    const tagRef = tagData || [];
 
     const provider = await getAIProvider();
     const modelConfig = (provider as BaseAIProvider).getConfig().model;
     const model = modelConfig || 'google/gemini-2.5-flash-lite';
     
     const context = {
-        categories: catRef.map(c => ({ 
-            id: c.id, 
-            name: c.name
-        })).slice(0, 100),
+        categories: catRef.map(c => {
+            const desc = (c.description as Record<string, unknown>) || {};
+            return {
+                id: c.id,
+                code: c.code || '',
+                name: c.name || '',
+                zhName: typeof desc === 'object' ? String(desc.zh || c.name) : c.name,
+                enName: typeof desc === 'object' ? String(desc.en || '') : '',
+            };
+        }).slice(0, 100),
         tags: tagRef.map(t => ({ 
             id: t.id, 
             name: t.name 
@@ -291,7 +273,7 @@ export const ai = new Hono()
     const check = v.safeParse(AIClusterPhotosReqSchema, body);
     if (!check.success) throw errorFactory.validation(check.issues);
 
-    const user = c.get('user' as never) as HonoContextUser | undefined;
+    const user = c.get('user');
     const userId = user?.id;
 
     // 1. AI 識別 - 排除臨時 ID
@@ -300,49 +282,52 @@ export const ai = new Hono()
         return successResponse(c, []);
     }
     
-    const parsed = await processGroupAnalysis(realPhotoIds);
-    const createdGroups: (typeof groupsTable.$inferSelect)[] = [];
-    
-    // Optimize: Fetch a valid user_id
-    let dbUserId: string | undefined = undefined;
-    if (realPhotoIds.length > 0) {
-        const sourcePhoto = await db.query.furnitureItems.findFirst({
+    // Fetch user context and process AI analysis in parallel (P0: Parallelization)
+    const [parsed, sourcePhoto, finalUserId] = await Promise.all([
+        processGroupAnalysis(realPhotoIds),
+        db.query.furnitureItems.findFirst({
             columns: { userId: true },
             where: inArray(furnitureItems.id, realPhotoIds)
-        });
-        if (sourcePhoto?.userId) {
-            dbUserId = sourcePhoto.userId;
+        }),
+        getEffectiveUserId(c, userId)
+    ]);
+
+    const createdGroups: (typeof groupsTable.$inferSelect)[] = [];
+    
+    // 2. 事務性寫入 (批量化優化，消除手動狀態循環)
+    const groupsToInsert = parsed.groups.map(g => {
+        const gName = g.name;
+        let finalName = '';
+        if (typeof gName === 'string') {
+            finalName = gName;
+        } else if (gName && typeof gName === 'object') {
+            finalName = String((gName as Record<string, unknown>).zh || (gName as Record<string, unknown>).en || '');
         }
-    }
 
-    // 2. 事務性寫入 (手動類比)
-    for (const g of parsed.groups) {
-        const groupId = crypto.randomUUID();
-        
-        let finalUserId = (userId && userId !== 'staff') ? userId : dbUserId;
-        if (!finalUserId) {
-            const userRecord = await db.query.users.findFirst({ columns: { id: true } });
-            finalUserId = userRecord?.id || '8ec53131-a589-4b50-beb4-6b5308541e1b';
-        }
-
-        // Prepare localized name and description
-        const groupName = typeof g.name === 'string' ? g.name : (g.name as any)?.zh || '';
-        const groupDesc = g.description || { zh: '' };
-
-        const [groupData] = await db.insert(groupsTable).values([{
-            id: groupId,
-            name: groupName,
-            description: groupDesc,
+        return {
+            id: crypto.randomUUID(),
+            name: finalName,
+            description: g.description || { zh: '' },
             status: 'confirmed',
             userId: finalUserId,
             createdAt: new Date()
-        }]).returning();
+        };
+    });
 
-        await db.update(furnitureItems)
-            .set({ groupId: groupId })
-            .where(inArray(furnitureItems.id, g.photoIds));
+    if (groupsToInsert.length > 0) {
+        const inserted = await db.insert(groupsTable).values(groupsToInsert).returning();
+        createdGroups.push(...inserted);
 
-        createdGroups.push(groupData);
+        // 批量更新照片的組別 ID
+        await Promise.all(groupsToInsert.map((group, idx) => {
+            const photoIds = parsed.groups[idx].photoIds;
+            if (photoIds && photoIds.length > 0) {
+                return db.update(furnitureItems)
+                    .set({ groupId: group.id })
+                    .where(inArray(furnitureItems.id, photoIds));
+            }
+            return Promise.resolve();
+        }));
     }
 
     // 3. 記錄操作日誌

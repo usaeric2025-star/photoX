@@ -132,18 +132,18 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
           {activeRefreshing ? <LoadingSpinner size="xs" /> : <Icon name="refresh-cw" size={18} />}
         </button>
 
-        {/* 3. 切换至管理后台/登录按钮 (Apple Style) - 僅員工及未登錄遊客可見 */}
+        {/* 3. 切换至管理后台/登录按钮 - 放在 Header 主区域 */}
         {(!user || hasAdminAccess) && (
           <button
             onClick={handleAuthAction}
             className={cn("w-9 h-9", theme.button)}
             title={hasAdminAccess ? (isAdminRoute ? t('viewModePublic') : t('viewModeAdmin')) : t('adminPanel')}
           >
-            <Icon name="layout-dashboard" size={18} />
+            <Icon name={isAdminRoute ? "eye" : "layout-dashboard"} size={18} />
           </button>
         )}
 
-        {/* 4. 菜单 (語言、登錄、退出) */}
+        {/* 4. 菜单 (語言、功能導航、帳號操作) */}
         <NativePopover
           align="end"
           trigger={
@@ -177,34 +177,32 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                 const items = [];
                 items.push({ id: 'gallery', icon: 'image' as const, label: t('gallery'), onClick: () => setLocation('/') });
                 if (hasAdminAccess) {
-                  items.push({ id: 'admin', icon: 'layout-dashboard' as const, label: t('viewModeAdmin'), onClick: () => setLocation(ADMIN_ROUTES.HOME) });
                   if (can('photo:batch-edit')) {
                     items.push({ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) });
                   }
                   if (can('system:settings')) {
-                    items.push({ id: 'diagnostics', icon: 'diagnostics' as const, label: t('diagnostics'), onClick: () => setLocation(ADMIN_ROUTES.DIAGNOSTICS) });
+                    items.push({ id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics'), onClick: () => setLocation(ADMIN_ROUTES.DIAGNOSTICS) });
                     items.push({ id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs'), onClick: () => setLocation(ADMIN_ROUTES.ERROR_LOGS) });
                     items.push({ id: 'divider1', divider: true });
                     items.push({ id: 'settings', icon: 'settings' as const, label: t('settings'), onClick: () => setLocation(ADMIN_ROUTES.SETTINGS) });
                   }
-                } else {
-                  items.push({ id: 'admin', icon: 'log-in' as const, label: t('adminPanel'), onClick: () => setLocation(ADMIN_ROUTES.HOME) });
                 }
 
                 return items.map((item) => {
                   if ('divider' in item && item.divider) {
                     return <div key={item.id} className="h-px bg-slate-100 my-1 mx-2" />;
                   }
-                  return (
-                    <button 
-                      key={item.id}
-                      onClick={item.onClick}
-                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-100 transition-colors text-left w-full"
-                    >
-                      <Icon name={(item as any).icon} size={16} className="text-slate-500" />
-                      {(item as any).label}
-                    </button>
-                  );
+                    const menuBtn = item as { id: string; onClick: () => void; icon: string; label: string };
+                    return (
+                      <button 
+                        key={menuBtn.id}
+                        onClick={menuBtn.onClick}
+                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-100 transition-colors text-left w-full"
+                      >
+                        <Icon name={menuBtn.icon} size={16} className="text-slate-500" />
+                        {menuBtn.label}
+                      </button>
+                    );
                 });
               })()}
             </div>

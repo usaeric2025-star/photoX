@@ -41,15 +41,15 @@ export function useOptimisticPhotoMutation<TVariables = unknown, TData = unknown
       }));
 
       // 3. 執行樂觀更新 - 更新列表
-      queryClient.setQueriesData<InfiniteData<any>>(
+      queryClient.setQueriesData<InfiniteData<{ items?: Photo[]; data?: Photo[] }>>(
         { queryKey: photoKeys.lists() },
         (old) => {
           if (!old) return old;
           return {
             ...old,
             pages: old.pages.map(page => {
-              const pageItems = page?.items || page?.data || [];
-              const updatedItems = pageItems.map((p: any) => idArray.includes(p.id) ? updater(p) : p).filter((p: any) => p !== null);
+              const pageItems = (page?.items || page?.data || []) as Photo[];
+              const updatedItems = pageItems.map((p) => idArray.includes(p.id) ? (updater(p) as Photo) : p).filter((p) => p !== null);
               if (page && 'items' in page) {
                 return { ...page, items: updatedItems };
               }

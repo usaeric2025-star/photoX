@@ -3,12 +3,19 @@ import { logger } from "../logger.js";
 import { extractJSON } from "./utils.js";
 import { db, aiAuditLogs } from '../../_lib/db/index.js';
 import { eq } from "drizzle-orm";
+import { withTimeout } from "../utils/timeout.js";
 
+/**
+ * AI Provider interface
+ */
 interface AIProvider {
   name: string;
   chat: (messages: { role: string; content: unknown }[]) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
 }
 
+/**
+ * Options for executeAITask
+ */
 interface AITaskOptions {
   task: string;
   provider: AIProvider;
@@ -117,7 +124,12 @@ export async function executeAITask(options: AITaskOptions) {
   for (let i = 0; i <= maxRetries; i++) {
     try {
       const iterStartTime = Date.now();
-      const result = await provider.chat(messages);
+      // Apply 25s timeout for the external API call (P0: AI Timeout)
+      const result = await withTimeout(
+        provider.chat(messages),
+        25000,
+        `AI Provider [${provider.name}] Request`
+      );
       const iterEndTime = Date.now();
 
       // 1. 自動審計日誌 (用於 logger 輸出和後端控制台)

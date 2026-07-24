@@ -45,7 +45,6 @@ export function AdminHeaderActions({
   const canAccessDiagnostics = can('admin:dashboard:access');
 
   const menuItems = [
-    { id: 'public', icon: 'eye' as const, label: t('viewModePublic', '查看公開頁面'), onClick: () => setLocation('/?mode=public') },
     { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation(ADMIN_ROUTES.HOME) },
     ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) }] : []),
     ...(canAccessDiagnostics ? [
@@ -100,6 +99,16 @@ export function AdminHeaderActions({
         )}
       </button>
 
+      {/* 公開頁面 / 前台視圖轉換按鈕 (直接放置於 Header) */}
+      <button
+        type="button"
+        onClick={handleAuthAction}
+        className={cn("w-9 h-9", theme.button)}
+        title={t('viewModePublic', '查看公開頁面')}
+      >
+        <Icon name="eye" size={18} />
+      </button>
+
       <NativePopover
         align="end"
         trigger={
@@ -131,7 +140,7 @@ export function AdminHeaderActions({
           )}
           <div className="h-px bg-slate-100 my-1 mx-2" />
           <div className="flex flex-col gap-0.5">
-            {menuItems.map((item: any) => {
+            {menuItems.map((item: { id: string; icon?: import('#src/components/ui/Icon.js').IconName; label?: string; onClick?: () => void; divider?: boolean }) => {
               if (item.divider) {
                 return <div key={item.id} className="h-px bg-slate-100 my-1 mx-2" />;
               }

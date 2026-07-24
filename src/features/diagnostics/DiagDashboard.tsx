@@ -74,7 +74,7 @@ export function DiagDashboard() {
              ] as const).map(tabItem => (
                <button
                  key={tabItem.id}
-                 onClick={() => setActiveTab(tabItem.id as any)}
+                 onClick={() => setActiveTab(tabItem.id)}
                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all ${
                    activeTab === tabItem.id 
                     ? 'bg-white text-blue-900 shadow-sm' 

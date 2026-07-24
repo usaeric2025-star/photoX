@@ -55,12 +55,12 @@ export function OrgTab() {
         <form.Field name="tags">
           {({ state, handleChange }) => (
             <PhotoTagSelector 
-              selectedTagIds={Array.isArray(state.value) ? (typeof state.value[0] === 'object' ? (state.value as any[]).map(t => String(t.id)) : state.value as string[]) : []}
+              selectedTagIds={Array.isArray(state.value) ? (typeof state.value[0] === 'object' ? (state.value as { id: string | number }[]).map(t => String(t.id)) : state.value as string[]) : []}
               onChange={handleChange}
               tags={tags}
               addTag={async (name) => {
-                const result = await addTagMut(name);
-                return result && typeof result === 'object' && 'id' in result ? String(result.id) : null;
+                const result = await addTagMut({ name });
+                return result && typeof result === 'object' && 'id' in (result as any) ? String((result as any).id) : null;
               }}
               updateTag={async (id, name) => {
                 await updateTagMut({ id: Number(id), updates: { name } });
@@ -98,7 +98,7 @@ export function OrgTab() {
         title={t('newMfrTitle')}
         placeholder={t('mfrNamePlaceholder')}
         onConfirm={async (name: string) => {
-          await addManMut(name);
+          await addManMut({ name });
         }}
       />
     </div>

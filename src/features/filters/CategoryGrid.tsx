@@ -70,7 +70,7 @@ export function CategoryGrid({ enabled = true }: { mode?: 'public' | 'admin', en
         
         const categoryName = cat.id === null 
           ? (uiTranslations.all || '全部')
-          : getTranslatedCategoryName(cat.id as any, categories || [], appLang, uiTranslations);
+          : getTranslatedCategoryName(cat.id, categories || [], appLang, uiTranslations);
           
         return (
           <CategoryButton
@@ -79,7 +79,7 @@ export function CategoryGrid({ enabled = true }: { mode?: 'public' | 'admin', en
             isSelected={isSelected}
             categoryName={categoryName}
             currentFilters={filters}
-            onClick={() => updateFilters({ categoryId: cat.id as any })}
+            onClick={() => updateFilters({ categoryId: cat.id })}
           />
         );
       })}

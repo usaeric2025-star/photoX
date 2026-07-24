@@ -43,11 +43,11 @@ export function useInvalidatePhotos() {
  * 獲取照片列表（支援分頁、篩選、搜尋）。
  * 整合了 useFilters 作為精準定位的參數來源。
  */
-export function usePhotos(params: any = {}) {
+export function usePhotos(params: Record<string, unknown> = {}) {
   const { uiTranslations: labels } = useTranslation();
   const { filters } = useFilters();
   
-  const limit = params.limit || 24;
+  const limit = (params.limit as number) || 24;
 
   const query = useInfiniteQuery({
     queryKey: queryKeys.photos.list({ ...filters, ...params, limit }),
@@ -61,7 +61,7 @@ export function usePhotos(params: any = {}) {
           limit: String(limit) 
         } 
       });
-      return ErrorFactory.unwrap<any>(res, labels.pullFail || 'Fetch Failed');
+      return ErrorFactory.unwrap<{ items: import('#src/types/index.js').Photo[]; total: number; page: number }>(res, labels.pullFail || 'Fetch Failed');
     },
     getNextPageParam: (lastPage) => {
       if (!lastPage || !lastPage.items || lastPage.items.length === 0) return undefined;
@@ -94,7 +94,7 @@ export function usePhotoDetail(id: string | null) {
       if (!id) return null;
       // @ts-ignore - Hono client indexing
       const res = await api.photos[':id'].$get({ param: { id } });
-      return ErrorFactory.unwrap<any>(res, labels.pullFail || 'Fetch Failed');
+      return ErrorFactory.unwrap<import('#src/types/index.js').Photo>(res, labels.pullFail || 'Fetch Failed');
     },
     { 
       enabled: !!id,

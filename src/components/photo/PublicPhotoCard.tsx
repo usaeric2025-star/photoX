@@ -35,7 +35,7 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
 }: PublicPhotoCardProps) {
   const { columns } = useGrid();
   const { appLang: hookLang } = useTranslation();
-  const appLang = (lang as any) || hookLang;
+  const appLang = (lang as 'zh' | 'en' | 'ms' | undefined) || hookLang;
   const isMultiSelect = useIsMultiSelect();
   const isPhotoSelected = useIsPhotoSelected(photo.id);
   

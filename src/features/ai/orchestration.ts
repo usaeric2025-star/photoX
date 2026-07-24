@@ -12,19 +12,100 @@ export * from './utils.js';
 import { hasExistingInfo } from './utils.js';
 import { supabase } from '#lib/supabase.js';
 
-import { Photo, Dimension, ProductGroup } from '#src/types/index.js';
+import { Photo, Dimension, ProductGroup, Tag, Category } from '#src/types/index.js';
 import { queryClient } from '#src/lib/query/index.js';
 import { queryKeys } from '#src/lib/query/keys.js';
 
-interface PhotoAnalysisResponse {
+export interface PhotoAnalysisResponse {
   name?: unknown;
   description?: unknown;
+  productName?: string;
+  productStory?: string;
   category_id?: string | number | null;
+  categoryId?: string | number | null;
+  category_name?: string;
+  categoryName?: string;
+  category?: string;
+  groupId?: string | number | null;
   group_id?: string | number | null;
   dimensions?: Dimension[];
   tagNames?: string[];
+  tag_names?: string[];
   tagIds?: string[];
+  tag_ids?: string[];
   raw_result?: string;
+  itemCode?: string;
+  item_code?: string;
+  manualCode?: string;
+  manual_code?: string;
+  modelNumber?: string;
+  model_number?: string;
+}
+
+/**
+ * Intelligent helper to match raw AI category response against available system categories.
+ * Supports ID, code, name, description translations (zh, en, ms), aliases, and partial matches.
+ */
+export function matchCategory(rawInput: unknown, categories: Category[]): number | null {
+  if (!rawInput || !categories || categories.length === 0) return null;
+
+  let targetVal = '';
+  if (typeof rawInput === 'object' && rawInput !== null) {
+    const obj = rawInput as Record<string, unknown>;
+    targetVal = String(obj.id || obj.code || obj.name || obj.zh || obj.en || '').trim();
+  } else {
+    targetVal = String(rawInput).trim();
+  }
+
+  if (!targetVal || targetVal.toLowerCase() === 'null' || targetVal.toLowerCase() === 'undefined') return null;
+
+  const targetLower = targetVal.toLowerCase();
+
+  // 1. Direct ID match
+  const byId = categories.find(c => String(c.id) === targetVal);
+  if (byId) return Number(byId.id);
+
+  // 2. Exact match against code, name, description (zh, en, ms), or aliases
+  for (const cat of categories) {
+    const code = String(cat.code || '').toLowerCase();
+    const name = String(cat.name || '').toLowerCase();
+    const descZh = String(cat.description?.zh || '').toLowerCase();
+    const descEn = String(cat.description?.en || '').toLowerCase();
+    const descMs = String(cat.description?.ms || '').toLowerCase();
+    const aliases = Array.isArray(cat.aliases) ? cat.aliases.map((a) => String(a).toLowerCase()) : [];
+
+    if (
+      (code && code === targetLower) ||
+      (name && name === targetLower) ||
+      (descZh && descZh === targetLower) ||
+      (descEn && descEn === targetLower) ||
+      (descMs && descMs === targetLower) ||
+      aliases.includes(targetLower)
+    ) {
+      return Number(cat.id);
+    }
+  }
+
+  // 3. Substring / Fuzzy match
+  for (const cat of categories) {
+    const code = String(cat.code || '').toLowerCase();
+    const name = String(cat.name || '').toLowerCase();
+    const descZh = String(cat.description?.zh || '').toLowerCase();
+    const descEn = String(cat.description?.en || '').toLowerCase();
+    const aliases = Array.isArray(cat.aliases) ? cat.aliases.map((a) => String(a).toLowerCase()) : [];
+
+    if (
+      (code && code.length > 2 && (targetLower.includes(code) || code.includes(targetLower))) ||
+      (name && name.length > 1 && (targetLower.includes(name) || name.includes(targetLower))) ||
+      (descZh && descZh.length > 1 && (targetLower.includes(descZh) || descZh.includes(targetLower))) ||
+      (descEn && descEn.length > 2 && (targetLower.includes(descEn) || descEn.includes(targetLower))) ||
+      aliases.some(a => a.length > 2 && (targetLower.includes(a) || a.includes(targetLower)))
+    ) {
+      return Number(cat.id);
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -32,16 +113,16 @@ interface PhotoAnalysisResponse {
  * Unifies the parsing logic used in both single analysis and batch processing.
  */
 export async function mapAnalysisToUpdates(
-  result: any,
-  allTags: any[] = [],
-  categories: any[] = []
-): Promise<Record<string, any>> {
+  result: PhotoAnalysisResponse,
+  allTags: Tag[] = [],
+  categories: Category[] = []
+): Promise<Record<string, unknown>> {
   const { name: nameStr, description: descObj } = await mapAiToMultilingual(
-    result.name || result.productName,
-    result.description || result.productStory
+    (result.name as string) || result.productName,
+    (result.description as string) || result.productStory
   );
 
-  const updates: Record<string, any> = {
+  const updates: Record<string, unknown> = {
     name: nameStr.substring(0, 200),
     description: descObj,
   };
@@ -49,21 +130,19 @@ export async function mapAnalysisToUpdates(
   // 1. Group / Grouping
   const rawGroup = result.groupId || result.group_id;
   if (rawGroup && String(rawGroup) !== 'null') {
-    updates.groupId = String(typeof rawGroup === 'object' ? (rawGroup as any).id : rawGroup);
+    updates.groupId = String((typeof rawGroup === 'object' && rawGroup !== null && 'id' in (rawGroup as object)) ? (rawGroup as { id: string | number }).id : (rawGroup ?? ''));
   }
 
-  // 2. Category
-  const rawCatId = result.category_id || result.categoryId;
-  const rawCatName = result.category_name || result.categoryName;
-  let matchedCatId: number | null = null;
-  
-  if (rawCatId && categories.find(c => String(c.id) === String(rawCatId))) {
-    matchedCatId = Number(rawCatId);
-  } else if (rawCatName) {
-    const found = categories.find(c => c.name.toLowerCase() === String(rawCatName).toLowerCase());
-    if (found) matchedCatId = Number(found.id);
+  // 2. Category - Try explicit category fields or fallback properties
+  const availableCats = categories.length > 0 
+    ? categories 
+    : (queryClient.getQueryData<Category[]>(queryKeys.categories.all) || []);
+
+  const rawCat = result.category_id ?? result.categoryId ?? result.category_name ?? result.categoryName ?? result.category;
+  const matchedCatId = matchCategory(rawCat, availableCats);
+  if (matchedCatId !== null) {
+    updates.categoryId = matchedCatId;
   }
-  if (matchedCatId) updates.categoryId = matchedCatId;
 
   // 3. Tags
   const tagNames = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
@@ -84,6 +163,7 @@ export async function mapAnalysisToUpdates(
   // 5. Codes
   if (result.itemCode || result.item_code) updates.itemCode = String(result.itemCode || result.item_code);
   if (result.manualCode || result.manual_code) updates.manualCode = String(result.manualCode || result.manual_code);
+
   if (result.modelNumber || result.model_number) updates.modelNumber = String(result.modelNumber || result.model_number);
 
   return updates;
@@ -110,13 +190,14 @@ const analyzeAndSavePhoto = async (
       }
     });
 
-    if (updates.resolvedTagIds && updates.resolvedTagIds.length > 0) {
+    const finalTagIds = (updates.resolvedTagIds as Array<string | number>);
+    if (finalTagIds && finalTagIds.length > 0) {
       const tagSources: Record<string, "ai"> = {};
-      updates.resolvedTagIds.forEach((id: any) => {
+      finalTagIds.forEach((id: string | number) => {
           tagSources[String(id)] = "ai";
       });
       await api.tags['sync-photo-tags'].$post({
-          json: { photoId: photo.id, tagIds: updates.resolvedTagIds.map(String), tagSources }
+          json: { photoId: photo.id, tagIds: finalTagIds.map(String), tagSources }
       });
     }
 

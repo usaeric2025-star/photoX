@@ -65,17 +65,17 @@ export function TagsSection({
   };
 
   const { submit: runAddTag, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({ name: v.pipe(v.string(), v.minLength(1, t('tagNameEmpty') || '標籤名稱不能為空')) }),
     mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeTagName(name);
       if (!normalized) return;
-      await tagMutations.create.mutateAsync(normalized);
+      await tagMutations.create.mutateAsync({ name: normalized });
     },
     successMessage: t('addTagSuccess') || '已新增標籤',
   });
 
   const { submit: runUpdateTag, isLoading: isUpdating, fieldErrors: editFieldErrors, clearFieldError: editClearFieldError } = useFormSubmit({
-    schema: v.any(),
+    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1, t('tagNameEmpty') || '標籤名稱不能為空')) }),
     mutationFn: async ({ id, name }: { id: string, name: string }) => {
       await tagMutations.edit.mutateAsync({ id, updates: { name } });
     },

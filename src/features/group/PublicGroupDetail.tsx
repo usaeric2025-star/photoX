@@ -9,7 +9,7 @@ import { useFilters, useTranslation } from '#src/hooks/index.js';
 import { PublicGroupHeader } from './components/PublicGroupHeader.js';
 import { } from '#lib/store/index.js';
 import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
-import { photoWallStore } from '#src/features/photo-wall/signal.js';
+import { photoWallStore } from '#src/features/photo-wall/atoms.js';
 import { GroupDetailLayout } from './components/GroupDetailLayout.js';
 
 import { useAppLocation } from '#src/hooks/core/index.js';
@@ -43,7 +43,7 @@ export function PublicGroupDetailPage() {
   const patchUI = patch;
   const { open: openLightbox } = useLightbox();
 
-  const lightboxItems = useMemo(() => photosToLightboxSlides(photos), [photos]);
+  const lightboxItems = useMemo(() => photosToLightboxSlides(photos as any), [photos]);
 
   const handlePhotoClick = useCallback((photo: PhotoListItem) => {
     const index = photos.findIndex(p => p.id === photo.id);
@@ -115,7 +115,7 @@ export function PublicGroupDetailPage() {
       loading={loading}
       error={error}
       group={group}
-      photos={photos}
+      photos={photos as any}
       hasNextPage={!!hasNextPage}
       isFetchingNextPage={!!isFetchingNextPage}
       fetchNextPage={fetchNextPage || (() => {})}

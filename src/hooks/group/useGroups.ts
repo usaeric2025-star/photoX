@@ -252,19 +252,20 @@ export function useGroupMutations() {
     mutationFn: (args: { groupId: string; photoId: string | null }) => GroupService.setCover(args.groupId, args.photoId),
     onMutate: async (args) => {
       if (args.photoId) {
-        queryClient.setQueryData(queryKeys.photos.detail(args.photoId), (oldData: any) => {
+        queryClient.setQueryData(queryKeys.photos.detail(args.photoId), (oldData: import('#src/types/index.js').Photo | undefined) => {
            if (!oldData) return oldData;
            return { ...oldData, isGroupCover: true };
         });
         
         // Optimitically update photo list
-        queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
-          if (!oldData?.pages) return oldData;
+        queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
+          const data = oldData as { pages?: Array<{ items: Photo[] }> };
+          if (!data?.pages) return oldData;
           return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
+            ...data,
+            pages: data.pages.map((page) => ({
               ...page,
-              items: page.items.map((item: any) => {
+              items: page.items.map((item) => {
                 if (item.groupId === args.groupId) {
                   return { ...item, isGroupCover: item.id === args.photoId };
                 }
@@ -288,13 +289,14 @@ export function useGroupMutations() {
       await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
       const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
 
-      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
-        if (!oldData?.pages) return oldData;
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
+        const data = oldData as { pages?: Array<{ items: Photo[] }> };
+        if (!data?.pages) return oldData;
         return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
+          ...data,
+          pages: data.pages.map((page) => ({
             ...page,
-            items: page.items.map((item: any) => {
+            items: page.items.map((item) => {
               if (args.photoIds.includes(item.id)) {
                 return { ...item, groupId: args.groupId, isGroupCover: false };
               }
@@ -307,9 +309,9 @@ export function useGroupMutations() {
       clearSelection();
       return { previousPhotosData };
     },
-    onError: (_err, _vars, context: any) => {
+    onError: (_err, _vars, context: { previousPhotosData?: Array<[import('@tanstack/react-query').QueryKey, unknown]> } | undefined) => {
       if (context?.previousPhotosData) {
-        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+        context.previousPhotosData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
@@ -348,14 +350,15 @@ export function useGroupMutations() {
 
       // 4. Optimistically update photo list cache
       if (targetGroupId) {
-        queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
-          if (!oldData?.pages) return oldData;
+        queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
+          const data = oldData as { pages?: Array<{ items: Photo[] }> };
+          if (!data?.pages) return oldData;
           let coverAssigned = false;
           return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
+            ...data,
+            pages: data.pages.map((page) => ({
               ...page,
-              items: page.items.map((item: any) => {
+              items: page.items.map((item) => {
                 if (args.photoIds.includes(item.id)) {
                   const isCover = !coverAssigned;
                   if (isCover) coverAssigned = true;
@@ -377,9 +380,9 @@ export function useGroupMutations() {
 
       return { previousPhotosData };
     },
-    onError: (_err, _variables, context: any) => {
+    onError: (_err, _variables, context: { previousPhotosData?: Array<[import('@tanstack/react-query').QueryKey, unknown]> } | undefined) => {
       if (context?.previousPhotosData) {
-        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+        context.previousPhotosData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
@@ -396,13 +399,14 @@ export function useGroupMutations() {
       await queryClient.cancelQueries({ queryKey: queryKeys.photos.lists() });
       const previousPhotosData = queryClient.getQueriesData({ queryKey: queryKeys.photos.lists() });
 
-      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: any) => {
-        if (!oldData?.pages) return oldData;
+      queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
+        const data = oldData as { pages?: Array<{ items: Photo[] }> };
+        if (!data?.pages) return oldData;
         return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
+          ...data,
+          pages: data.pages.map((page) => ({
             ...page,
-            items: page.items.map((item: any) => {
+            items: page.items.map((item) => {
               if (args.photoIds.includes(item.id)) {
                 return { ...item, groupId: null, isGroupCover: false };
               }
@@ -415,9 +419,9 @@ export function useGroupMutations() {
       clearSelection();
       return { previousPhotosData };
     },
-    onError: (_err, _vars, context: any) => {
+    onError: (_err, _vars, context: { previousPhotosData?: Array<[import('@tanstack/react-query').QueryKey, unknown]> } | undefined) => {
       if (context?.previousPhotosData) {
-        context.previousPhotosData.forEach(([queryKey, data]: [any, any]) => {
+        context.previousPhotosData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }

@@ -49,7 +49,7 @@ interface NormalizedPhotoAIOutput {
 /**
  * 2. 業界標準：AI 代理適配器介面 (AI Agent Adapter Interface)
  */
-export interface IPhotoAIAgentAdapter<TRawResponse = any> {
+export interface IPhotoAIAgentAdapter<TRawResponse = Record<string, unknown>> {
   /**
    * 唯一職責：將任意 AI 服務回傳的原始、可能混亂的資料，
    * 提煉、補齊、並轉換為系統統一要求的強型態輸出契約。
@@ -70,7 +70,7 @@ const safeTrim = (val: unknown): string => {
  * 3. 預設 Gemini 服務適配器 (Default Gemini Photo AI Adapter)
  */
 class GeminiPhotoAIAdapter implements IPhotoAIAgentAdapter {
-  normalize(raw: any, rawText?: string): NormalizedPhotoAIOutput {
+  normalize(raw: Record<string, unknown>, rawText?: string): NormalizedPhotoAIOutput {
     if (!raw) {
       throw new Error('Adapter Error: Input raw data is empty');
     }
@@ -78,8 +78,9 @@ class GeminiPhotoAIAdapter implements IPhotoAIAgentAdapter {
     // 1. 提煉名稱 (Name)
     let finalName = '';
     if (raw.name) {
-      if (typeof raw.name === 'object') {
-        finalName = safeTrim(raw.name.zh || raw.name.en || raw.name.ms || '');
+      if (typeof raw.name === 'object' && raw.name !== null) {
+        const nameObj = raw.name as Record<string, unknown>;
+        finalName = safeTrim(nameObj.zh || nameObj.en || nameObj.ms || '');
       } else {
         finalName = safeTrim(raw.name);
       }
@@ -88,28 +89,39 @@ class GeminiPhotoAIAdapter implements IPhotoAIAgentAdapter {
     // 2. 提煉多語系描述 (Description)
     const finalDesc: { zh: string; en?: string; ms?: string } = { zh: '' };
     if (raw.description) {
-      if (typeof raw.description === 'object') {
-        finalDesc.zh = safeTrim(raw.description.zh || '');
-        if (raw.description.en) finalDesc.en = safeTrim(raw.description.en);
-        if (raw.description.ms) finalDesc.ms = safeTrim(raw.description.ms);
+      if (typeof raw.description === 'object' && raw.description !== null) {
+        const descObj = raw.description as Record<string, unknown>;
+        finalDesc.zh = safeTrim(descObj.zh || '');
+        if (descObj.en) finalDesc.en = safeTrim(descObj.en);
+        if (descObj.ms) finalDesc.ms = safeTrim(descObj.ms);
       } else {
         finalDesc.zh = safeTrim(raw.description);
       }
     }
 
     // 3. 提煉分類與分組 ID
-    const categoryId = raw.category_id ? String(raw.category_id) : null;
+    const rawCat = raw.category_id ?? raw.categoryId ?? raw.category_name ?? raw.categoryName ?? raw.category;
+    let categoryId: string | null = null;
+    if (rawCat !== undefined && rawCat !== null && rawCat !== '') {
+      if (typeof rawCat === 'object' && rawCat !== null) {
+        const catObj = rawCat as Record<string, unknown>;
+        categoryId = String(catObj.id || catObj.code || catObj.name || catObj.zh || catObj.en || '').trim();
+      } else {
+        categoryId = String(rawCat).trim();
+      }
+    }
     const groupId = raw.group_id ? String(raw.group_id) : null;
 
     // 4. 提煉與淨化標籤 (Tag Names)
     const rawTags = raw.tagNames || raw.tag_names || raw.new_tags || raw.tags || raw.keywords || raw.labels || [];
     let tagNames: string[] = [];
     if (Array.isArray(rawTags)) {
-      tagNames = rawTags
-        .map((t: any) => {
+      tagNames = (rawTags as unknown[])
+        .map((t) => {
           if (!t) return '';
-          if (typeof t === 'object') {
-            return safeTrim(t.name || t.zh || t.en || t.label || '');
+          if (typeof t === 'object' && t !== null) {
+            const tagObj = t as Record<string, unknown>;
+            return safeTrim(tagObj.name || tagObj.zh || tagObj.en || tagObj.label || '');
           }
           return safeTrim(t);
         })
@@ -119,16 +131,17 @@ class GeminiPhotoAIAdapter implements IPhotoAIAgentAdapter {
     // 5. 提煉尺寸 (Dimensions)
     const dimensions: Dimension[] = [];
     if (Array.isArray(raw.dimensions)) {
-      raw.dimensions.forEach((d: any) => {
+      (raw.dimensions as unknown[]).forEach((d) => {
         if (d && typeof d === 'object') {
-          const label = d.label || d.part || 'W_D_H';
+          const dimObj = d as Record<string, unknown>;
+          const label = dimObj.label || dimObj.part || 'W_D_H';
           dimensions.push({
             label: safeTrim(label),
-            part: safeTrim(d.part || label),
-            width: typeof d.width === 'number' ? d.width : parseFloat(d.width) || 0,
-            length: typeof d.length === 'number' ? d.length : (typeof d.depth === 'number' ? d.depth : parseFloat(d.length || d.depth) || 0),
-            height: typeof d.height === 'number' ? d.height : parseFloat(d.height) || 0,
-            unit: normalizeUnit(d.unit, d),
+            part: safeTrim(dimObj.part || label),
+            width: typeof dimObj.width === 'number' ? dimObj.width : parseFloat(String(dimObj.width)) || 0,
+            length: typeof dimObj.length === 'number' ? dimObj.length : (typeof dimObj.depth === 'number' ? dimObj.depth : parseFloat(String(dimObj.length || dimObj.depth)) || 0),
+            height: typeof dimObj.height === 'number' ? dimObj.height : parseFloat(String(dimObj.height)) || 0,
+            unit: normalizeUnit(String(dimObj.unit || 'cm'), dimObj),
             isAi: true,
           });
         }

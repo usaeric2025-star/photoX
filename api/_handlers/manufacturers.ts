@@ -1,18 +1,19 @@
 import { Hono } from 'hono';
-import { db, manufacturers as manufacturersTable } from '../_lib/db/index.js';
-import { eq, asc } from 'drizzle-orm';
 import * as v from 'valibot';
 import { ManufacturerReqSchema } from '../../shared/apiContractSchema.js';
-import { errorResponse, successResponse } from '../_lib/response.js';
+import { successResponse } from '../_lib/response.js';
 import { errorFactory } from '../_lib/error/factory.js';
+import { 
+    getAllManufacturers, 
+    clearPhotosFromManufacturer, 
+    createManufacturer, 
+    updateManufacturer, 
+    deleteManufacturer 
+} from '../_lib/db/queries/manufacturers.js';
 
 export const manufacturers = new Hono()
   .get('/', async (c) => {
-    const data = await db
-      .select()
-      .from(manufacturersTable)
-      .orderBy(asc(manufacturersTable.name));
-    
+    const data = await getAllManufacturers();
     return successResponse(c, data);
   })
   .post('/clear-photos', async (c) => {
@@ -20,12 +21,7 @@ export const manufacturers = new Hono()
     const check = v.safeParse(v.object({ manufacturerId: v.string() }), body);
     if (!check.success) throw errorFactory.validation(check.issues);
     const { manufacturerId } = check.output;
-    const { furnitureItems } = await import('../_lib/db/index.js');
-    const updated = await db
-        .update(furnitureItems)
-        .set({ manufacturerId: null })
-        .where(eq(furnitureItems.manufacturerId, manufacturerId))
-        .returning({ id: furnitureItems.id });
+    const updated = await clearPhotosFromManufacturer(manufacturerId);
     
     return successResponse(c, updated.map(i => i.id));
   })
@@ -35,13 +31,10 @@ export const manufacturers = new Hono()
     if (!check.success) throw errorFactory.validation(check.issues);
     const { manufacturerData } = check.output;
     const crypto = await import('node:crypto');
-    const [data] = await db
-      .insert(manufacturersTable)
-      .values({
-          id: crypto.randomUUID(),
-          ...manufacturerData
-      })
-      .returning();
+    const data = await createManufacturer({
+        id: crypto.randomUUID(),
+        ...manufacturerData
+    });
     
     return successResponse(c, data);
   })
@@ -52,18 +45,11 @@ export const manufacturers = new Hono()
     if (!check.success) throw errorFactory.validation(check.issues);
     const { updates } = check.output;
 
-    await db
-      .update(manufacturersTable)
-      .set(updates)
-      .where(eq(manufacturersTable.id, id));
-    
+    await updateManufacturer(id, updates);
     return successResponse(c, null);
   })
   .delete('/:id{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}', async (c) => {
     const id = c.req.param('id');
-    await db
-      .delete(manufacturersTable)
-      .where(eq(manufacturersTable.id, id));
-    
+    await deleteManufacturer(id);
     return successResponse(c, null);
   });

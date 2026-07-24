@@ -23,8 +23,8 @@ export async function uploadToR2(file: Blob, photoId: string, imageHash?: string
       });
 
       if (presignRes.status === 409) {
-        const data = await presignRes.json() as any;
-        return data.existingUrl || data.data?.existingUrl; // Already exists, return existing URL
+        const data = await presignRes.json() as { existingUrl?: string; data?: { existingUrl?: string } };
+        return data.existingUrl || data.data?.existingUrl || ''; // Already exists, return existing URL
       }
       
       const { uploadUrl, publicUrl } = await ErrorFactory.unwrap<{ uploadUrl: string, publicUrl: string }>(

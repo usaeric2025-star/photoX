@@ -8,7 +8,7 @@ type SanitizedPhoto = typeof furnitureItems.$inferInsert;
  * (such as empty strings, "null", "undefined", or "uncategorized") are correctly mapped to null.
  */
 export function sanitizePhotoPayload(payload: Record<string, unknown>): Partial<SanitizedPhoto> {
-    const sanitized: Record<string, any> = { ...payload };
+    const sanitized: Record<string, unknown> = { ...payload };
 
     // Fields that should be strictly cast to integers or null
     const integerFields = ['categoryId', 'category_id'];
@@ -101,11 +101,11 @@ export function sanitizePhotoPayload(payload: Record<string, unknown>): Partial<
 
     // 4. Filter out any unexpected non-schema fields to prevent SQL column-not-exist errors
     const VALID_KEYS = new Set([
-      'id', 'userId', 'name', 'description', 'categoryId', 'manufacturerId',
-      'groupId', 'isGroupCover', 'isPinned', 'imageUrl', 'imageHash', 'price',
-      'note', 'type', 'isHidden', 'itemCode', 'manualCode', 'modelNumber',
-      'descriptionTranslations', 'isAnalyzing', 'subCategory', 'dimensions',
-      'groupOrder', 'metadata', 'updatedAt', 'createdAt', 'nameSearchable'
+        'id', 'userId', 'name', 'description', 'categoryId', 'manufacturerId',
+        'groupId', 'isGroupCover', 'isPinned', 'imageUrl', 'imageHash', 'price',
+        'note', 'type', 'isHidden', 'itemCode', 'manualCode', 'modelNumber',
+        'descriptionTranslations', 'isAnalyzing', 'subCategory', 'dimensions',
+        'groupOrder', 'metadata', 'updatedAt', 'createdAt', 'nameSearchable'
     ]);
 
     const filtered: Record<string, unknown> = {};
@@ -118,7 +118,7 @@ export function sanitizePhotoPayload(payload: Record<string, unknown>): Partial<
     // 5. Enforce AGENTS_md rules for description (Object) and name (String)
     if (filtered.name !== undefined) {
         if (typeof filtered.name === 'object' && filtered.name !== null) {
-            const obj = filtered.name as Record<string, any>;
+            const obj = filtered.name as Record<string, unknown>;
             filtered.name = String(obj.zh || obj.en || obj.ms || '');
         } else {
             filtered.name = filtered.name ? String(filtered.name) : '';
@@ -132,11 +132,11 @@ export function sanitizePhotoPayload(payload: Record<string, unknown>): Partial<
             filtered.description = { zh: '', en: '', ms: '' };
         } else {
             // Ensure zh, en, ms exist
-            const desc = filtered.description as Record<string, any>;
+            const descObj = filtered.description as Record<string, unknown>;
             filtered.description = {
-                zh: String(desc.zh || ''),
-                en: String(desc.en || ''),
-                ms: String(desc.ms || '')
+                zh: String(descObj.zh || ''),
+                en: String(descObj.en || ''),
+                ms: String(descObj.ms || '')
             };
         }
     }
