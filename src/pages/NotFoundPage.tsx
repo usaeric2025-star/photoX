@@ -4,12 +4,12 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { logger } from '#lib/logger.js';
 import { useTranslation } from '#src/hooks/index.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { ADMIN_ROUTES } from '#src/constants/config.js';
 
 export function NotFoundPage() {
   const { t } = useTranslation();
-  const [pathname] = useNormalizedLocation();
+  const [pathname] = useAppLocation();
   const [isOnline, setIsOnline] = React.useState(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );

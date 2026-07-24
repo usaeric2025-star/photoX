@@ -6,7 +6,7 @@ import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { } from '#lib/store/index.js';
 import { usePublicSettings, usePermission, useTranslation, useInvalidatePhotos } from '#src/hooks/index.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
@@ -27,7 +27,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const { data: settings } = usePublicSettings();
   const { can } = usePermission();
   
-  const [location, setLocation] = useNormalizedLocation();
+  const [location, setLocation] = useAppLocation();
   const isAdminRoute = location.startsWith(ADMIN_ROUTES.HOME);
   const isGroupPage = location.startsWith('/group/') || location.startsWith(ADMIN_ROUTES.GROUP_DETAIL_BASE + '/');
 

@@ -11,7 +11,7 @@ import { useGroupMutations } from '#src/hooks/group/index.js';
 import { AdminGroupHeader } from './components/AdminGroupHeader.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 import { GroupDetailLayout } from './components/GroupDetailLayout.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { useParams } from 'react-router-dom';
 
 /**
@@ -22,7 +22,7 @@ import { useParams } from 'react-router-dom';
 export function AdminGroupDetailPage() {
   const routeParams = useParams<{ id?: string }>();
   const { groupId: fGroupId, photoId } = useFilters();
-  const [, setLocation] = useNormalizedLocation();
+  const [, setLocation] = useAppLocation();
   
   const groupId = routeParams?.id || fGroupId;
   const { 

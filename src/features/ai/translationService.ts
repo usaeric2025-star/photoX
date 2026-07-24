@@ -42,7 +42,7 @@ export const translateFields = async (
   const dt = translateRes(description, descData);
   
   return {
-    name: { zh: name, en: nt.en, ms: nt.ms },
+    name: name,
     description: { zh: description, en: dt.en, ms: dt.ms }
   };
 };

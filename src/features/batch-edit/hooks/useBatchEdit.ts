@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { formStateAtom } from '#src/store/index.js';
 import { resetForm, updateForm } from '#lib/store/index.js';
-import { useTranslation, useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useTranslation, useAppLocation } from '#src/hooks/core/index.js';
 import { usePhotoMutations } from '#src/hooks/photo/index.js';
 import { useSelectionActions, useSelectedIds } from '#src/hooks/index.js';
 import { useLocation } from 'react-router-dom';
@@ -21,7 +21,7 @@ export function useBatchEdit() {
   const { patch: patchSelection } = useSelectionActions();
   const formState = useAtomValue(formStateAtom);
   const { batchEditAsync, deletePhotoAsync, isBatchEditing, isDeleting } = usePhotoMutations();
-  const [location, setLocation] = useNormalizedLocation();
+  const [location, setLocation] = useAppLocation();
 
   const handleSave = async () => {
     if (!selectedIds || selectedIds.length === 0) return;

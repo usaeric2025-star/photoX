@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { useAtomValue } from 'jotai';
 import { userAtom, authLoadingAtom } from '#src/store/index.js';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '#src/config/permissions.js';
@@ -19,7 +19,7 @@ export function AdminModeProvider({ children, value }: { children: React.ReactNo
  */
 export function useAdminMode(): boolean {
   const context = useContext(AdminModeContext);
-  const [location] = useNormalizedLocation();
+  const [location] = useAppLocation();
     
   if (!context) {
     return location.startsWith('/admin') || location.startsWith('/settings') || location.startsWith('/diagnostics');

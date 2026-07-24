@@ -6,7 +6,7 @@ import { ErrorBoundary } from '#src/components/shared/ErrorBoundary.js';
 import { Outlet } from 'react-router-dom';
 import { UploadModeDialog } from '#src/features/upload/components/UploadModeDialog.js';
 import { usePhotoUpload, useSelectionActions } from '#src/hooks/index.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { SelectionToolbar } from '#src/features/selection/index.js';
 
 export function AdminPageContent({ children }: { children?: React.ReactNode }) {
@@ -14,7 +14,7 @@ export function AdminPageContent({ children }: { children?: React.ReactNode }) {
   const uploadModeDialogOpen = useAtomValue(uploadModeDialogOpenAtom);
   const uploadAsGroup = useAtomValue(uploadAsGroupAtom);
   const { clearSelection } = useSelectionActions();
-  const [location] = useNormalizedLocation();
+  const [location] = useAppLocation();
 
   const lastPathname = React.useRef(location.split('?')[0]);
   useEffect(() => {

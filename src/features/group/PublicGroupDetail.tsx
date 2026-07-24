@@ -12,14 +12,14 @@ import { WhatsAppDialog } from '#src/components/shared/WhatsAppDialog.js';
 import { photoWallStore } from '#src/features/photo-wall/signal.js';
 import { GroupDetailLayout } from './components/GroupDetailLayout.js';
 
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 
 import { useParams } from 'react-router-dom';
 
 export function PublicGroupDetailPage() {
   const routeParams = useParams<{ slug?: string }>();
   const { groupId: fGroupId, photoId } = useFilters();
-  const [location, setLocation] = useNormalizedLocation();
+  const [location, setLocation] = useAppLocation();
   
   const groupId = routeParams?.slug || fGroupId;
   

@@ -101,7 +101,11 @@ export interface Tag {
 export interface Manufacturer {
   id: string;
   name: string;
-  description?: string;
+  description?: {
+    zh: string;
+    en?: string;
+    ms?: string;
+  };
 }
 
 export interface ProductGroup {

@@ -10,7 +10,7 @@ import { LoadingScreen } from '#src/components/ui/LoadingScreen.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { StandardModalLayout } from '#src/components/ui/StandardModalLayout.js';
-import { useNormalizedLocation, useDebounceFn } from '#src/hooks/core/index.js';
+import { useAppLocation, useDebounceFn } from '#src/hooks/core/index.js';
 import { testAiConnection } from "#src/features/ai/AICommands.js";
 import { executeTask } from '#lib/task-queue/index.js';
 import { uploadToR2 } from '#src/lib/upload/index.js';
@@ -35,7 +35,7 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ onClose }: SettingsPageProps) {
-  const [location, setLocation] = useNormalizedLocation();
+  const [location, setLocation] = useAppLocation();
   const { t, appLang } = useTranslation();
   const { settings, agnesApiKey, accessPasscode, updateSettings } = useSettings();
   

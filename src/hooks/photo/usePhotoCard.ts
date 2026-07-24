@@ -3,7 +3,7 @@ import React, { useRef } from 'react';
 import { useLongPress } from '#src/hooks/core/index.js';
 import { PhotoListItem } from '#shared/apiContractSchema.js';
 import { useFilters } from '#src/hooks/ui/useUI.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { useIsMultiSelect, useSelectionActions, useIsExitingSelection } from '#src/hooks/index.js';
 import { usePermission } from '#src/hooks/index.js';
 import { logger } from '#lib/logger.js';
@@ -37,7 +37,7 @@ export function usePhotoCard({
   
   const { toggleSelect } = useSelectionActions();
   
-  const [location, setLocation] = useNormalizedLocation();
+  const [location, setLocation] = useAppLocation();
 
   const handleOpenLightbox = () => {
     logger.debug('[usePhotoCard] handleOpenLightbox for photo:', photo.id);

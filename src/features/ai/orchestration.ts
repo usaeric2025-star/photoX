@@ -27,60 +27,97 @@ interface PhotoAnalysisResponse {
   raw_result?: string;
 }
 
+/**
+ * Maps AI raw response to photo update payload.
+ * Unifies the parsing logic used in both single analysis and batch processing.
+ */
+export async function mapAnalysisToUpdates(
+  result: any,
+  allTags: any[] = [],
+  categories: any[] = []
+): Promise<Record<string, any>> {
+  const { name: nameStr, description: descObj } = await mapAiToMultilingual(
+    result.name || result.productName,
+    result.description || result.productStory
+  );
+
+  const updates: Record<string, any> = {
+    name: nameStr.substring(0, 200),
+    description: descObj,
+  };
+
+  // 1. Group / Grouping
+  const rawGroup = result.groupId || result.group_id;
+  if (rawGroup && String(rawGroup) !== 'null') {
+    updates.groupId = String(typeof rawGroup === 'object' ? (rawGroup as any).id : rawGroup);
+  }
+
+  // 2. Category
+  const rawCatId = result.category_id || result.categoryId;
+  const rawCatName = result.category_name || result.categoryName;
+  let matchedCatId: number | null = null;
+  
+  if (rawCatId && categories.find(c => String(c.id) === String(rawCatId))) {
+    matchedCatId = Number(rawCatId);
+  } else if (rawCatName) {
+    const found = categories.find(c => c.name.toLowerCase() === String(rawCatName).toLowerCase());
+    if (found) matchedCatId = Number(found.id);
+  }
+  if (matchedCatId) updates.categoryId = matchedCatId;
+
+  // 3. Tags
+  const tagNames = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
+  const tagIds = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
+  
+  if (tagNames.length > 0 || tagIds.length > 0) {
+    const finalTagIds = await resolveTagNamesToIds([...tagIds, ...tagNames], allTags);
+    if (finalTagIds.length > 0) {
+      updates.resolvedTagIds = finalTagIds;
+    }
+  }
+
+  // 4. Dimensions
+  if (Array.isArray(result.dimensions)) {
+    updates.dimensions = result.dimensions;
+  }
+
+  // 5. Codes
+  if (result.itemCode || result.item_code) updates.itemCode = String(result.itemCode || result.item_code);
+  if (result.manualCode || result.manual_code) updates.manualCode = String(result.manualCode || result.manual_code);
+  if (result.modelNumber || result.model_number) updates.modelNumber = String(result.modelNumber || result.model_number);
+
+  return updates;
+}
+
 const analyzeAndSavePhoto = async (
   photo: Photo
 ): Promise<unknown> => {
   try {
-    // Speed up by using thumbnail for AI analysis if available
     const analysisData = (await analyzePhoto(photo.id, photo.thumbnailUrl as string)) as PhotoAnalysisResponse;
     
-    // Validate that we have something to update
     if (!analysisData.name && !analysisData.description && (!analysisData.tagNames || analysisData.tagNames.length === 0)) {
         throw new Error('AI 分析未返回有效結果');
     }
 
-    const { name: nameObj, description: descObj } = await mapAiToMultilingual(
-      analysisData.name,
-      analysisData.description
-    );
+    const updates = await mapAnalysisToUpdates(analysisData);
 
     const updateResult = await updatePhoto(photo.id, {
-      name: (nameObj.en || nameObj.zh || '').substring(0, 200),
-      description: descObj,
-      categoryId: analysisData.category_id != null ? Number(analysisData.category_id) : (photo.categoryId ?? null),
-      dimensions: analysisData.dimensions || [],
+      ...updates,
       metadata: {
         ...(photo.metadata as Record<string, unknown> || {}),
         ai_updated_at: new Date().toISOString(),
-        ai_raw: analysisData.raw_result || null
+        ai_raw: analysisData.raw_result || JSON.stringify(analysisData)
       }
     });
 
-    const tagNames = analysisData.tagNames || [];
-    const tagIds = analysisData.tagIds || [];
-    
-    if (tagNames.length > 0 || tagIds.length > 0) {
-      let finalTagIds: (string | number)[] = [...tagIds];
-      if (tagNames.length > 0) {
-         try {
-             const resolveResult = await resolveTagNamesToIds(tagNames, []);
-             if (resolveResult.length > 0) {
-                 finalTagIds = [...finalTagIds, ...resolveResult];
-             }
-         } catch(e) {}
-      }
-      
-      const stringifiedIds = Array.from(new Set(finalTagIds.map(String)));
-      
-      if (stringifiedIds.length > 0) {
-          const tagSources: Record<string, "ai"> = {};
-          stringifiedIds.forEach(id => {
-              tagSources[id] = "ai";
-          });
-          await api.tags['sync-photo-tags'].$post({
-              json: { photoId: photo.id, tagIds: stringifiedIds, tagSources }
-          });
-      }
+    if (updates.resolvedTagIds && updates.resolvedTagIds.length > 0) {
+      const tagSources: Record<string, "ai"> = {};
+      updates.resolvedTagIds.forEach((id: any) => {
+          tagSources[String(id)] = "ai";
+      });
+      await api.tags['sync-photo-tags'].$post({
+          json: { photoId: photo.id, tagIds: updates.resolvedTagIds.map(String), tagSources }
+      });
     }
 
     return updateResult;

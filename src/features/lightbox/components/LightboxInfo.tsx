@@ -162,36 +162,55 @@ export function LightboxInfo({
                 </div>
 
                 {/* Category & Tags Badges */}
-                <div className="space-y-2">
-                  <span className="text-[10px] font-extrabold tracking-wider text-white/40 uppercase">
-                    {t('categoryAndTags') || '分類與標籤'}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {categoryName && (
-                      <span className="bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-lg text-xs font-semibold tracking-wide flex items-center gap-1.5 border border-indigo-500/30">
-                        <Icon name="layers" className="w-3.5 h-3.5 text-indigo-400" />
-                        {categoryName}
+                <div className="space-y-3">
+                  {/* Category Section */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 px-0.5">
+                      <Icon name="folder" className="w-2.5 h-2.5 text-indigo-400/60" />
+                      <span className="text-[9px] font-black tracking-widest text-white/30 uppercase">
+                        {t('category') || '分類'}
                       </span>
-                    )}
-                    {tags.length > 0 ? (
-                      tags.map((tag: any, idx: number) => {
-                        const tagName = typeof tag === 'string'
-                          ? tag
-                          : (tag.name || tag.label || tag.tags?.name || tag.tag?.name);
-                        if (!tagName) return null;
-                        return (
-                          <span key={idx} className="bg-white/5 text-white/80 px-2.5 py-1 rounded-lg text-xs font-medium border border-white/10">
-                            #{tagName}
-                          </span>
-                        );
-                      })
-                    ) : (
-                      !categoryName && (
-                        <span className="text-xs text-white/30 italic">
-                          {t('noCategoryOrTags') || '無分類或標籤'}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {categoryName ? (
+                        <span className="bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-lg text-xs font-semibold tracking-wide flex items-center gap-1.5 border border-indigo-500/30">
+                          {categoryName}
                         </span>
-                      )
-                    )}
+                      ) : (
+                        <span className="text-[10px] text-white/20 italic ml-1">
+                          {t('noCategory') || '無分類'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tags Section */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 px-0.5">
+                      <Icon name="tag" className="w-2.5 h-2.5 text-white/30" />
+                      <span className="text-[9px] font-black tracking-widest text-white/30 uppercase">
+                        {t('tags') || '標籤'}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {tags.length > 0 ? (
+                        tags.map((tag: any, idx: number) => {
+                          const tagName = typeof tag === 'string'
+                            ? tag
+                            : (tag.name || tag.label || tag.tags?.name || tag.tag?.name);
+                          if (!tagName) return null;
+                          return (
+                            <span key={idx} className="bg-white/5 text-white/80 px-2 py-1 rounded-lg text-[11px] font-medium border border-white/10">
+                              #{tagName}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <span className="text-[10px] text-white/20 italic ml-1">
+                          {t('noTags') || '無標籤'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

@@ -20,26 +20,40 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
 }: LightboxThumbnailsProps) {
   const thumbnailContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll thumbnails when currentIndex changes
+  // Auto-scroll thumbnails when currentIndex changes, isOpen becomes true, or photos length changes
   useEffect(() => {
-    if (thumbnailContainerRef.current) {
-      const container = thumbnailContainerRef.current;
-      const activeThumb = container.children[currentIndex] as HTMLElement | undefined;
-      if (activeThumb) {
-        const containerWidth = container.clientWidth;
-        const thumbWidth = activeThumb.clientWidth;
-        const thumbLeft = activeThumb.offsetLeft;
-        
-        // Target scroll left puts the thumb in the middle of the container
-        const targetScrollLeft = thumbLeft - (containerWidth / 2) + (thumbWidth / 2);
-        
-        container.scrollTo({
-          left: targetScrollLeft,
-          behavior: 'smooth'
-        });
+    if (!isOpen) return;
+
+    const scrollActiveIntoView = () => {
+      if (thumbnailContainerRef.current) {
+        const container = thumbnailContainerRef.current;
+        const activeThumb = container.children[currentIndex] as HTMLElement | undefined;
+        if (activeThumb) {
+          const containerWidth = container.clientWidth;
+          const thumbWidth = activeThumb.clientWidth;
+          const thumbLeft = activeThumb.offsetLeft;
+          
+          if (containerWidth > 0) {
+            // Target scroll left puts the thumb in the middle of the container
+            const targetScrollLeft = thumbLeft - (containerWidth / 2) + (thumbWidth / 2);
+            container.scrollTo({
+              left: targetScrollLeft,
+              behavior: 'smooth'
+            });
+          }
+        }
       }
-    }
-  }, [currentIndex, isOpen]);
+    };
+
+    // Use dual-stage delayed scroll triggers to ensure DOM measurements are accurate and layout is fully resolved.
+    const timer1 = setTimeout(scrollActiveIntoView, 50);
+    const timer2 = setTimeout(scrollActiveIntoView, 150);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [currentIndex, isOpen, photos.length]);
 
   if (photos.length <= 1) return null;
 
@@ -58,7 +72,6 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
           const thumb = getPhotoThumb(key, 'SM', hash);
           const isActive = idx === currentIndex;
           const isNear = Math.abs(idx - currentIndex) <= 2;
-          const isRenderable = Math.abs(idx - currentIndex) <= 12;
           
           return (
             <button
@@ -68,17 +81,13 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
               aria-label={`Select photo ${idx + 1}`}
               aria-current={isActive}
             >
-              {isRenderable ? (
-                <Image 
-                  src={thumb} 
-                  className="w-full h-full object-cover" 
-                  alt="" 
-                  disableFade={true} 
-                  priority={isNear}
-                />
-              ) : (
-                <div className="w-full h-full bg-slate-950" />
-              )}
+              <Image 
+                src={thumb} 
+                className="w-full h-full object-cover" 
+                alt="" 
+                disableFade={true} 
+                priority={isNear}
+              />
             </button>
           );
         })}

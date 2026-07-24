@@ -1,5 +1,6 @@
 import React from 'react';
 import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
+import { Icon } from '#src/components/ui/Icon.js';
 import { FormSectionHeader } from '#src/components/admin/FormShared.js';
 import { useCategories, useTranslation } from '#src/hooks/index.js';
 import { getTranslatedCategoryName } from "#src/utils/category.js";
@@ -18,7 +19,12 @@ export function CategorySelect() {
     <form.Field name="categoryId">
       {(field) => (
         <section className="space-y-4">
-          <FormSectionHeader title={t('category') || '分類'} />
+          <div className="flex items-center gap-2 px-1 mb-3">
+             <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+               <Icon name="folder" size={12} />
+             </div>
+             <FormSectionHeader title={t('category') || '分類'} />
+          </div>
           <div className="grid grid-cols-4 gap-1.5 px-0.5">
             {categories
               .filter((cat) => cat && cat.id)

@@ -43,10 +43,11 @@ export default defineConfig(({mode}) => {
                 id.includes('node_modules/react/jsx-runtime')) {
               return 'vendor-react-core';
             }
-            // 2. 路由（较少变化）
-            if (id.includes('node_modules/wouter/') || 
-                id.includes('node_modules/nuqs/')) {
-              return 'vendor-router';
+            // 2. 路由與狀態管理（較少變化）
+            if (id.includes('node_modules/react-router-dom/') || 
+                id.includes('node_modules/@remix-run/router/') ||
+                id.includes('node_modules/jotai/')) {
+              return 'vendor-router-state';
             }
             // 3. 数据层（较少变化）
             if (id.includes('node_modules/@tanstack/react-query/')) {
@@ -58,6 +59,9 @@ export default defineConfig(({mode}) => {
             }
             if (id.includes('node_modules/motion/') || id.includes('node_modules/framer-motion/')) {
               return 'vendor-motion';
+            }
+            if (id.includes('node_modules/dream-masonry/')) {
+              return 'vendor-masonry';
             }
             if (id.includes('node_modules/sonner/')) {
               return 'vendor-ui-core';

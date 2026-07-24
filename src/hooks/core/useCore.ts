@@ -48,26 +48,22 @@ export function useTranslation() {
 }
 
 /**
- * useWouterLocation (Normalized version for react-router)
+ * useAppLocation
+ * Standard wrapper for react-router location and navigation.
  */
-export const useWouterLocation = () => {
+export const useAppLocation = () => {
   const location = useRRLocation();
   const navigate = useNavigate();
   const pathname = location.pathname;
   const normalized = pathname === "/" ? "/" : pathname.replace(/\/$/, "");
   
-  const setNormalized = useCallback((to: string, options?: any) => {
+  const setLocation = useCallback((to: string, options?: any) => {
     const next = to === "/" ? "/" : to.replace(/\/$/, "");
     navigate(next, options);
   }, [navigate]);
   
-  return [normalized, setNormalized] as [string, typeof setNormalized];
+  return [normalized, setLocation] as [string, typeof setLocation];
 };
-
-/**
- * useNormalizedLocation
- */
-export const useNormalizedLocation = useWouterLocation;
 
 /**
  * useAppInit

@@ -7,7 +7,7 @@ import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { feedback } from '#lib/feedback.js';
 import { useTranslation } from '#src/hooks/core/index.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 
 interface AdminGroupHeaderProps {
   group: Group;
@@ -22,7 +22,7 @@ interface AdminGroupHeaderProps {
  * 管理員合組詳情頁的首部控制欄，支持標題編輯、分享與批量操作切換。
  */
 export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTitle }: AdminGroupHeaderProps) {
-  const [, setLocation] = useNormalizedLocation();
+  const [, setLocation] = useAppLocation();
   const [copied, setCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(group.name);
@@ -87,7 +87,7 @@ export function AdminGroupHeader({ group, photoCount, onEditSettings, onUpdateTi
   };
 
   return (
-    <div className="glass-header px-4 py-3 flex items-center justify-between w-full border-b bg-white/90 backdrop-blur-md relative">
+    <div className="glass-header px-4 py-3 flex items-center justify-between w-full border-b bg-white/95 relative">
       {/* Left side: Back button & Title section */}
       <div className="flex items-center gap-4 min-w-0 flex-1">
         <button 

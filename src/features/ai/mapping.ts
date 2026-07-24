@@ -15,61 +15,41 @@ export interface TranslatedField {
 export async function mapAiToMultilingual(
   rawName: unknown,
   rawDesc: unknown
-): Promise<{ name: TranslatedField; description: TranslatedField }> {
-  let nameObj: TranslatedField = { zh: '', en: '', ms: '' };
+): Promise<{ name: string; description: TranslatedField }> {
+  let nameStr = '';
   let descObj: TranslatedField = { zh: '', en: '', ms: '' };
 
   const isNameObj = rawName && typeof rawName === 'object';
   const isDescObj = rawDesc && typeof rawDesc === 'object';
 
-  // Optimization: If AI already returned objects for both, just use them
-  if (isNameObj && isDescObj) {
+  // Extract name string
+  if (isNameObj) {
     const nameData = rawName as Record<string, string>;
+    nameStr = nameData.zh || nameData.en || nameData.ms || '';
+  } else {
+    nameStr = String(rawName || '');
+  }
+
+  // Extract description object
+  if (isDescObj) {
     const descData = rawDesc as Record<string, string>;
-    return {
-      name: {
-        zh: nameData.zh || nameData.en || '',
-        en: nameData.en || nameData.zh || '',
-        ms: nameData.ms || nameData.zh || ''
-      },
-      description: {
-        zh: descData.zh || descData.en || '',
-        en: descData.en || descData.zh || '',
-        ms: descData.ms || descData.zh || ''
-      }
+    descObj = {
+      zh: descData.zh || descData.en || descData.ms || '',
+      en: descData.en || descData.zh || '',
+      ms: descData.ms || descData.zh || ''
     };
+  } else {
+    const descStr = String(rawDesc || '');
+    if (nameStr || descStr) {
+        try {
+          const translation = await translateFields(nameStr, descStr);
+          return translation;
+        } catch(err) {
+          ErrorFactory.capture(err);
+          descObj = { zh: descStr, en: descStr, ms: descStr };
+        }
+    }
   }
 
-  // Handle case where name is string but description is object (very common with current prompt)
-  if (!isNameObj && isDescObj) {
-    const nameStr = String(rawName || '');
-    const descData = rawDesc as Record<string, string>;
-    return {
-      name: { zh: nameStr, en: nameStr, ms: nameStr },
-      description: {
-        zh: descData.zh || descData.en || '',
-        en: descData.en || descData.zh || '',
-        ms: descData.ms || descData.zh || ''
-      }
-    };
-  }
-
-  // Fallback to translation service only if necessary
-  const nameStr = isNameObj ? ((rawName as Record<string, string>).zh || (rawName as Record<string, string>).en || '') : String(rawName || '');
-  const descStr = isDescObj ? ((rawDesc as Record<string, string>).zh || (rawDesc as Record<string, string>).en || '') : String(rawDesc || '');
-  
-  if (!nameStr && !descStr) {
-    return { name: nameObj, description: descObj };
-  }
-
-  try {
-    const translation = await translateFields(nameStr, descStr);
-    return translation;
-  } catch(err) {
-    ErrorFactory.capture(err);
-    return {
-      name: { zh: nameStr, en: nameStr, ms: nameStr },
-      description: { zh: descStr, en: descStr, ms: descStr }
-    };
-  }
+  return { name: nameStr, description: descObj };
 }

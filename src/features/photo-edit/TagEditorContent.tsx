@@ -106,9 +106,14 @@ export function TagEditor({
   return (
     <div className="space-y-2">
       <div className="space-y-2 mb-3">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none px-1">
-          标签 / TAGS
-        </h3>
+        <div className="flex items-center gap-2 px-1">
+          <div className="p-1.5 rounded-lg bg-slate-100 text-slate-500">
+            <Icon name="tag" size={12} />
+          </div>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+            标签 / TAGS
+          </h3>
+        </div>
         <div className="flex items-center gap-2 px-1 relative group">
           <SearchInput
             placeholder="搜索标签..."

@@ -192,12 +192,12 @@ interface AIAnalysisResult {
 }
 
 export interface TranslationResult {
-  name: { zh: string; en: string; ms: string };
+  name: string;
   description: { zh: string; en: string; ms: string };
 }
 
 interface ProcessedPhotoData {
-  name: { zh: string; en: string; ms: string };
+  name: string;
   description: { zh: string; en: string; ms: string };
   category_id: string | null;
   tagNames: string[];

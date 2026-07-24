@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 import { cn } from '#lib/utils.js';
 import {  activeTaskCountAtom } from '#lib/store/index.js';
 import {  useSettings, useAdminActions, usePermission, useTranslation } from '#src/hooks/index.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { storage } from '#lib/storage.js';
 import { useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { AdminHeaderLogo } from './AdminHeaderLogo.js';
@@ -19,7 +19,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const user = useAtomValue(userAtom);
   
   const { settings } = useSettings();
-  const [location, setLocation] = useNormalizedLocation();
+  const [location, setLocation] = useAppLocation();
   const { t, lang } = useTranslation();
   const isMultiSelect = useIsMultiSelect();
   const { toggleMode } = useSelectionActions();

@@ -4,7 +4,7 @@ import { Icon } from '#src/components/ui/Icon.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { feedback } from '#lib/feedback.js';
 import { useTranslation } from '#src/hooks/core/index.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 
 interface PublicGroupHeaderProps {
   group: Group;
@@ -13,7 +13,7 @@ interface PublicGroupHeaderProps {
 
 export function PublicGroupHeader({ group, photoCount }: PublicGroupHeaderProps) {
   const [copied, setCopied] = useState(false);
-  const [location, setLocation] = useNormalizedLocation();
+  const [location, setLocation] = useAppLocation();
   const { t } = useTranslation();
 
   const handleCopyId = async () => {

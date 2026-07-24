@@ -89,7 +89,7 @@ export function FilterBar({ mode, className, compact = false }: FilterBarProps) 
           {/* 分類網格 */}
           <CategoryGrid mode={mode} enabled={true} />
           
-          {/* 已選標籤 */}
+          {/* 已選標籤狀態 (Active Filter Status) */}
           {selectedTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 items-center pt-1 animate-fade-in border-t border-slate-50 mt-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Active:</span>
@@ -117,7 +117,7 @@ export function FilterBar({ mode, className, compact = false }: FilterBarProps) 
             </div>
           )}
           
-          {/* 標籤網格 */}
+          {/* 標籤過濾器 (Secondary Filters) */}
           {showTags && (
             <TagGrid onClose={() => setShowTags(false)} />
           )}

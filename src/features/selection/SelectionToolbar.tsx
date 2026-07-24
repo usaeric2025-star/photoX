@@ -13,7 +13,7 @@ import {
 } from '#src/hooks/index.js';
 import { feedback } from '#lib/feedback.js';
 import { activeTaskCountAtom } from '#lib/store/index.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { useConfirm } from '#src/context/ConfirmContext.js';
 import { useMediaQuery, usePhotoMutations } from '#src/hooks/index.js';
 import { useGroupMutations } from '#src/hooks/group/index.js';
@@ -48,7 +48,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const { deletePhoto, batchUpdate } = useAdminActions();
   const confirm = useConfirm();
   const { combine: combineMutation, removePhotos: removeMutation } = useGroupMutations();
-  const [location, setLocation] = useNormalizedLocation();
+  const [location, setLocation] = useAppLocation();
   const { t } = useTranslation();
 
   // Smart groupId detection from URL if not provided

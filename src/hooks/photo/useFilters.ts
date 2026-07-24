@@ -11,7 +11,6 @@ const QUERY_PARAMS = {
   GROUP_ID: 'groupId',
   GROUPS: 'groups',
   BATCH: 'batch',
-  SELECTED: 'selected',
   COLLAPSED: 'collapsed',
   ANCHOR: 'anchor',
 } as const;
@@ -30,7 +29,6 @@ export function useFilters() {
   const tags = searchParams.get(QUERY_PARAMS.TAGS)?.split(',').filter(Boolean) || [];
   const sort = searchParams.get(QUERY_PARAMS.SORT) || 'newest';
   const batch = searchParams.get(QUERY_PARAMS.BATCH) === 'true';
-  const selected = searchParams.get(QUERY_PARAMS.SELECTED)?.split(',').filter(Boolean) || [];
   const showGroupsCollapsed = searchParams.get(QUERY_PARAMS.COLLAPSED) !== 'false';
   const anchor = searchParams.get(QUERY_PARAMS.ANCHOR) || '';
   const groupId = searchParams.get(QUERY_PARAMS.GROUP_ID) || '';
@@ -47,7 +45,6 @@ export function useFilters() {
     groupId?: string | null;
     groups?: string[] | null;
     batch?: boolean | null;
-    selected?: string[] | null;
     collapsed?: boolean | null;
     anchor?: string | null;
   }) => {
@@ -108,12 +105,6 @@ export function useFilters() {
         else next.delete(QUERY_PARAMS.BATCH);
       }
 
-      if (updates.selected !== undefined) {
-        const cleaned = cleanArray(updates.selected);
-        if (cleaned) next.set(QUERY_PARAMS.SELECTED, cleaned.join(','));
-        else next.delete(QUERY_PARAMS.SELECTED);
-      }
-
       if (updates.collapsed !== undefined) {
         if (updates.collapsed === false) next.set(QUERY_PARAMS.COLLAPSED, 'false');
         else next.delete(QUERY_PARAMS.COLLAPSED);
@@ -135,7 +126,6 @@ export function useFilters() {
   const setTags = useCallback((val: string[] | null) => updateFilters({ tags: val }), [updateFilters]);
   const setSort = useCallback((val: string | null) => updateFilters({ sort: val }), [updateFilters]);
   const setBatch = useCallback((val: boolean | null) => updateFilters({ batch: val }), [updateFilters]);
-  const setSelected = useCallback((val: string[] | null) => updateFilters({ selected: val }), [updateFilters]);
   const setShowGroupsCollapsed = useCallback((val: boolean | null) => updateFilters({ collapsed: val }), [updateFilters]);
   const setAnchor = useCallback((val: string | null) => updateFilters({ anchor: val }), [updateFilters]);
   const setGroupId = useCallback((val: string | null) => updateFilters({ groupId: val }), [updateFilters]);
@@ -161,7 +151,6 @@ export function useFilters() {
     modal, setModal,
     photoId, setPhotoId,
     batch, setBatch,
-    selected, setSelected,
     showGroupsCollapsed, setShowGroupsCollapsed,
     anchor, setAnchor,
     groupId, setGroupId,

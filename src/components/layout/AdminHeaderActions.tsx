@@ -5,7 +5,7 @@ import { useSetAtom } from "jotai";
 import { isTaskDrawerOpen } from '#lib/store/index.js';
 import { User, Theme } from '#src/types/index.js';
 import { NativePopover } from '#src/components/ui/NativePopover.js';
-import { useNormalizedLocation } from '#src/hooks/core/index.js';
+import { useAppLocation } from '#src/hooks/core/index.js';
 import { LanguageSwitcher } from '#src/components/ui/LanguageSwitcher.js';
 import { usePermission } from '#src/hooks/index.js';
 import { ADMIN_ROUTES } from '#src/constants/config.js';
@@ -36,7 +36,7 @@ export function AdminHeaderActions({
   user,
   signOut,
 }: AdminHeaderActionsProps) {
-  const [, setLocation] = useNormalizedLocation();
+  const [, setLocation] = useAppLocation();
   const setTaskDrawerOpen = useSetAtom(isTaskDrawerOpen);
   const { can } = usePermission();
   const canBatchEdit = can('photo:batch-edit');

@@ -14,6 +14,7 @@ import * as v from 'valibot';
 import { type PhotoEditFormData } from '#lib/valibot/schemas/photo.js';
 import { useInvalidatePhotos } from '#src/hooks/photo/index.js';
 import { AIService } from '#src/lib/ai/AIService.js';
+import { mapAnalysisToUpdates } from '#src/features/ai/orchestration.js';
 import { normalizeUnit } from '#src/utils/photo.js';
 
 export { usePhotoAIResult } from '#src/hooks/photo/index.js';
@@ -47,20 +48,9 @@ export function usePhotoEditAI() {
       
       const rawResult = await AIService.analyze({ id: editPhotoId, thumbnailUrl: imageUrl } as any);
       
-      const updates = await AIService.parseToUpdates(rawResult, allTags, categories);
+      const updates = await mapAnalysisToUpdates(rawResult, allTags, categories);
 
-      // AI 標籤解析與回填
-      if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
-        const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
-        const finalTags = Array.from(new Set([
-          ...(updates.resolvedTagIds as number[]).map(id => allTags.find(t => Number(t.id) === id)),
-          ...resolvedTags
-        ])).filter(Boolean) as Tag[];
-        updates.tags = finalTags.slice(0, 10);
-        invalidateTags();
-      }
-
-      // 尺寸翻譯處理
+      // 尺寸翻譯額外處理 (Ensure icons/units are consistent)
       if (Array.isArray(updates.dimensions)) {
         updates.dimensions = updates.dimensions.map((d: any) => ({
           ...d,
@@ -78,11 +68,20 @@ export function usePhotoEditAI() {
         }
       });
 
-      // 自動保存到後端
-      await updatePhoto.mutateAsync({ id: editPhotoId, updates });
+      // 自動保存到後端 (including resolved tags if any)
+      const savePayload = { ...updates };
+      if (updates.resolvedTagIds) {
+        // We handle tag syncing separately or via updatePhoto if supported
+        // Here we just ensure the form has the right tags for the final commit
+        const resolvedTags = updates.resolvedTagIds.map((id: any) => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
+        form.setFieldValue('tags', resolvedTags as any);
+      }
+
+      await updatePhoto.mutateAsync({ id: editPhotoId, updates: savePayload });
       
       invalidateDetail(editPhotoId);
       invalidateList();
+      invalidateTags();
       queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
       
       return rawResult;
@@ -113,14 +112,11 @@ export function usePhotoEditAI() {
         parsed = JSON.parse(cleanRaw);
       }
       
-      const updates = await AIService.parseToUpdates(parsed, allTags, categories);
+      const updates = await mapAnalysisToUpdates(parsed, allTags, categories);
       
-      if (updates.unresolvedTagNames && Array.isArray(updates.unresolvedTagNames)) {
-        const resolvedTags = await AIService.resolveTagNames(updates.unresolvedTagNames as string[], allTags);
-        updates.tags = Array.from(new Set([
-          ...(updates.resolvedTagIds as number[]).map(id => allTags.find(t => Number(t.id) === id)),
-          ...resolvedTags
-        ])).filter(Boolean).slice(0, 10);
+      if (updates.resolvedTagIds) {
+        const resolvedTags = updates.resolvedTagIds.map((id: any) => allTags.find(t => String(t.id) === String(id))).filter(Boolean);
+        form.setFieldValue('tags', resolvedTags as any);
       }
 
       Object.entries(updates).forEach(([key, value]) => {
@@ -132,6 +128,7 @@ export function usePhotoEditAI() {
       await updatePhoto.mutateAsync({ id: editPhotoId, updates });
       invalidateDetail(editPhotoId);
       invalidateList();
+      invalidateTags();
       feedback.success(t('reExtractSuccess') || '重新提取成功');
     } catch (e) {
       ErrorFactory.handle(e as Error, { context: 'AI Re-extraction' });
