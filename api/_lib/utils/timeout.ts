@@ -19,7 +19,7 @@ export function withTimeout<T>(promiseOrThenable: Promise<T> | PromiseLike<T>, m
   });
 }
 
-const DEFAULT_PING_TIMEOUT_MS = 16000; // 16 seconds (1s higher than statement_timeout to avoid racing)
+const DEFAULT_PING_TIMEOUT_MS = 30000; // 30 seconds to allow for 25s connect_timeout
 
 /**
  * Executes a SELECT 1 query with retry logic to withstand transient connection timeouts

@@ -69,8 +69,10 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
 
   const handleAuthAction = () => {
     if (isAdminRoute) {
+      sessionStorage.setItem('preferred_mode', 'public');
       setLocation('/');
     } else {
+      sessionStorage.setItem('preferred_mode', 'admin');
       setLocation(ADMIN_ROUTES.HOME);
     }
   };
@@ -80,11 +82,11 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
       bg: "bg-white border-slate-200 text-slate-800",
       logoColor: "bg-slate-900",
       logoText: "text-slate-900 font-bold",
-      button: "bg-white hover:bg-slate-50 text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 transition-all outline-none rounded-lg flex items-center justify-center border shadow-sm",
+      button: "bg-white hover:bg-slate-50 text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 transition-all outline-none rounded-lg flex items-center justify-center border",
       badge: "bg-slate-50 border-slate-200 text-slate-600",
       badgeLabel: "text-slate-500",
       badgeVal: "text-slate-900 font-bold",
-      popoverTrigger: "bg-white hover:bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 border transition-all outline-none rounded-lg flex items-center justify-center shadow-sm"
+      popoverTrigger: "bg-white hover:bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 border transition-all outline-none rounded-lg flex items-center justify-center"
     }
   }['public'];
 
@@ -176,17 +178,6 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               {(() => {
                 const items = [];
                 items.push({ id: 'gallery', icon: 'image' as const, label: t('gallery'), onClick: () => setLocation('/') });
-                if (hasAdminAccess) {
-                  if (can('photo:batch-edit')) {
-                    items.push({ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) });
-                  }
-                  if (can('system:settings')) {
-                    items.push({ id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics'), onClick: () => setLocation(ADMIN_ROUTES.DIAGNOSTICS) });
-                    items.push({ id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs'), onClick: () => setLocation(ADMIN_ROUTES.ERROR_LOGS) });
-                    items.push({ id: 'divider1', divider: true });
-                    items.push({ id: 'settings', icon: 'settings' as const, label: t('settings'), onClick: () => setLocation(ADMIN_ROUTES.SETTINGS) });
-                  }
-                }
 
                 return items.map((item) => {
                   if ('divider' in item && item.divider) {

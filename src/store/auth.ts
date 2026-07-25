@@ -144,6 +144,7 @@ export const signOut = async () => {
     setUser(null);
     setToken(null);
     if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('preferred_mode');
       window.location.reload();
     }
   }, { context: 'auth-signout' });

@@ -124,10 +124,10 @@ export async function executeAITask(options: AITaskOptions) {
   for (let i = 0; i <= maxRetries; i++) {
     try {
       const iterStartTime = Date.now();
-      // Apply 25s timeout for the external API call (P0: AI Timeout)
+      // Apply 60s timeout for the external API call (P0: AI Timeout)
       const result = await withTimeout(
         provider.chat(messages),
-        25000,
+        60000,
         `AI Provider [${provider.name}] Request`
       );
       const iterEndTime = Date.now();

@@ -250,8 +250,15 @@ export class ErrorFactory {
   static wrap(error: unknown, operation: string, resource?: string): AppError {
     const opLocalized = operation;
     const resLocalized = resource ? ErrorFormatter.mapResourceToLocalized(resource) : '';
-    const cleanUserMsg = resource ? `${opLocalized}${resLocalized}${this.t.saveFailed}` : `${opLocalized}${this.t.saveFailed}`;
+    
+    let cleanUserMsg = '';
     const systemMsg = error instanceof Error ? error.message : this.extractErrorMessage(error);
+
+    if (operation.startsWith('[')) {
+      cleanUserMsg = `${operation}: ${systemMsg}`;
+    } else {
+      cleanUserMsg = resource ? `${opLocalized}${resLocalized}${this.t.saveFailed}` : `${opLocalized}${this.t.saveFailed}`;
+    }
     
     return this.create(systemMsg, {
       userMessage: cleanUserMsg,

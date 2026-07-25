@@ -32,7 +32,7 @@ function getDb(): PostgresJsDatabase<typeof schema> {
   const clientOptions: any = {
     max: maxConnections,
     idle_timeout: isServerless ? 5 : 10,
-    connect_timeout: 10, // 10s to fail fast
+    connect_timeout: 25, // 25s to fail fast
     prepare: false,
     parameters: {
       statement_timeout: 15000 // 15s query timeout (hard limit)

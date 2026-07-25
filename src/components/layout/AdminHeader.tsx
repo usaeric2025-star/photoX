@@ -70,7 +70,10 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           batchAiIdentify={handleBatchAiIdentifyTrigger}
           isAiAnalyzing={isAiAnalyzing}
           taskCount={taskCount}
-          handleAuthAction={() => setLocation('/')}
+          handleAuthAction={() => {
+            sessionStorage.setItem('preferred_mode', 'public');
+            setLocation('/');
+          }}
           t={t}
           user={user}
           signOut={signOut}
