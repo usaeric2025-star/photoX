@@ -22,8 +22,8 @@ export function setupMiddlewares(app: Hono<Env>, serverEnv: { NODE_ENV: string |
 
         // 1. Determine Timeout Duration
         let duration = 30000;
-        if (path.startsWith('/api/ai')) duration = 60000;
-        else if (path.startsWith('/api/upload') || path.startsWith('/api/storage') || path.includes('/batch') || path.includes('/refresh-view')) {
+        if (path.includes('/ai')) duration = 120000;
+        else if (path.includes('/upload') || path.includes('/storage') || path.includes('/batch') || path.includes('/refresh-view')) {
           duration = 120000;
         }
 

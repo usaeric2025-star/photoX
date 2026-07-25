@@ -170,16 +170,19 @@ export async function mapAnalysisToUpdates(
 }
 
 const analyzeAndSavePhoto = async (
-  photo: Photo
+  photo: Photo,
+  allTags: Tag[] = [],
+  categories: Category[] = [],
+  signal?: AbortSignal
 ): Promise<unknown> => {
   try {
-    const analysisData = (await analyzePhoto(photo.id, photo.thumbnailUrl as string)) as PhotoAnalysisResponse;
+    const analysisData = (await analyzePhoto(photo.id, photo.thumbnailUrl as string, signal)) as PhotoAnalysisResponse;
     
     if (!analysisData.name && !analysisData.description && (!analysisData.tagNames || analysisData.tagNames.length === 0)) {
         throw new Error('AI 分析未返回有效結果');
     }
 
-    const updates = await mapAnalysisToUpdates(analysisData);
+    const updates = await mapAnalysisToUpdates(analysisData, allTags, categories);
 
     const updateResult = await updatePhoto(photo.id, {
       ...updates,
@@ -213,12 +216,25 @@ export async function runBatchAnalysis({
 
   onProgress(0.05, `正在準備分析 ${totalPhotosToProcess} 張照片...`);
 
+  let allTags: Tag[] = [];
+  let categories: Category[] = [];
+  try {
+    const [tagsRes, catsRes] = await Promise.all([
+      api.tags.$get(),
+      api.categories.$get()
+    ]);
+    if (tagsRes.ok) { const json = await tagsRes.json() as any; allTags = (json.data || json) as Tag[]; }
+    if (catsRes.ok) { const json = await catsRes.json() as any; categories = (json.data || json) as Category[]; }
+  } catch (err) {
+    ErrorFactory.handle(err, { context: "[AI Batch] Failed to prefetch reference data", silent: true });
+  }
+
   // Simple concurrency pool
   const processPhoto = async (photo: Photo, index: number) => {
     if (signal?.aborted) return;
-    
+        
     try {
-      await analyzeAndSavePhoto(photo);
+      await analyzeAndSavePhoto(photo, allTags, categories, signal);
     } catch (err) {
       ErrorFactory.handle(err, { context: `[AI Batch] Photo ${photo.id} error` });
     } finally {

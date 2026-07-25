@@ -23,13 +23,14 @@ const SettingsService = {
     try {
       const settingsPromise = api.public.settings.$get();
       const [settingsResponse] = await withTimeout(Promise.all([settingsPromise]), 10000, 'Initialize Settings & Auth APIs');
-            
+      
       const settingsData = await ErrorFactory.unwrap<Partial<AppSettings>>(
         settingsResponse,
         'Initialize Settings & Auth APIs failed'
       );
-      return { 
-         app_name: 'photoX',
+
+      return {
+          app_name: 'photoX',
         ...settingsData
       } as AppSettings;
     } catch (e) {
@@ -46,23 +47,58 @@ const SettingsService = {
     try {
       const rawPayload = { ...settings };
       const payload: Record<string, unknown> = { id: 1 };
-            
+      
       if (rawPayload.agnes_api_key === "••••••••••••••••") delete rawPayload.agnes_api_key;
+      if (rawPayload.openrouterApiKey === "••••••••••••••••") delete rawPayload.openrouterApiKey;
+      if (rawPayload.agnesApiKey === "••••••••••••••••") delete rawPayload.agnesApiKey;
+      if (rawPayload.geminiApiKey === "••••••••••••••••") delete rawPayload.geminiApiKey;
       if (rawPayload.api_key) delete rawPayload.api_key;
-            
+      
       Object.entries(rawPayload).forEach(([key, value]) => {
-        if (key === 'ai_provider') return;
+        if (key === 'ai_provider' || key === 'primaryAiProvider') return;
+
+        if (key === 'openrouterApiKey' && typeof value === 'string') {
+          void api.admin.settings['save-key'].$post({ json: { provider: 'openrouter', apiKey: value } });
+          return;
+        }
+        if (key === 'agnesApiKey' && typeof value === 'string') {
+          void api.admin.settings['save-key'].$post({ json: { provider: 'agnes', apiKey: value } });
+          return;
+        }
+        if (key === 'geminiApiKey' && typeof value === 'string') {
+          void api.admin.settings['save-key'].$post({ json: { provider: 'gemini', apiKey: value } });
+          return;
+        }
+
+        if (key === 'openrouterModel' && typeof value === 'string') {
+          void api.admin.settings['save-model'].$post({ json: { provider: 'openrouter', model: value } });
+          return;
+        }
+        if (key === 'agnesModel' && typeof value === 'string') {
+          void api.admin.settings['save-model'].$post({ json: { provider: 'agnes', model: value } });
+          return;
+        }
+        if (key === 'geminiModel' && typeof value === 'string') {
+          void api.admin.settings['save-model'].$post({ json: { provider: 'gemini', model: value } });
+          return;
+        }
+
         if (SETTINGS_COLUMNS.includes(key)) {
           payload[key] = value;
         }
       });
-            
+      
       if (rawPayload.provider) {
         void api.admin.settings['save-provider'].$post({
-          json: { provider: rawPayload.provider }
+          json: { provider: String(rawPayload.provider) }
         });
       }
-            
+      if (rawPayload.primaryAiProvider) {
+        void api.admin.settings['save-provider'].$post({
+          json: { provider: String(rawPayload.primaryAiProvider) }
+        });
+      }
+      
       if (rawPayload.pinned_tags || rawPayload.hot_tags_count !== undefined) {
         payload.tags_json = JSON.stringify({
           pinned_tags: rawPayload.pinned_tags || [],
@@ -70,8 +106,9 @@ const SettingsService = {
           hot_tag_threshold: rawPayload.hot_tag_threshold ?? 1,
         });
       }
+
       payload.updated_at = new Date().toISOString();
-            
+      
       await ErrorFactory.unwrap<unknown>(
         api.admin.settings['save-settings'].$post({
           json: { settingsPayload: payload as Record<string, unknown> }
@@ -87,26 +124,27 @@ const SettingsService = {
   uploadLogo: async (file: File) => {
     const bucketName = DB_CONFIG.BUCKET_NAME; 
     const fileName = `app/logo-${Date.now()}.webp`;
-        
+    
     try {
       const { error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(fileName, file, { upsert: true });
-              
+        
       if (uploadError) {
         throw ErrorFactory.wrap(uploadError, 'uploadLogo', fileName);
       }
-            
+      
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
         .getPublicUrl(fileName);
-              
+        
       await ErrorFactory.unwrap<unknown>(
         api.admin.settings['upsert-logo'].$post({
           json: { url: publicUrl }
         }),
         '更新Logo设置失败'
       );
+
       return publicUrl;
     } catch (err: unknown) {
       throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'uploadLogo');
@@ -129,9 +167,9 @@ const useSettingsMutations = () => {
     }
   });
 
-  return { 
-     update: updateMutation.mutateAsync, 
-     upload: uploadMutation.mutateAsync,
+  return {
+      update: updateMutation.mutateAsync,
+      upload: uploadMutation.mutateAsync,
     isPending: updateMutation.isPending || uploadMutation.isPending
   };
 };

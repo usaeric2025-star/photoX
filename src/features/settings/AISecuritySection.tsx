@@ -2,6 +2,7 @@ import { useAtomValue } from 'jotai';
 import { appLangAtom } from '#src/store/index.js';
 import { OpenRouterConfigBlock } from './OpenRouterConfigBlock.js';
 import { AgnesConfigBlock } from './AgnesConfigBlock.js';
+import { GeminiConfigBlock } from './GeminiConfigBlock.js';
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { AppSettings } from '#src/types/index.js';
@@ -40,6 +41,12 @@ export function AISecuritySection({
     setIsEditingOpenRouter,
     isEditingAgnes,
     setIsEditingAgnes,
+    localGeminiKey,
+    setLocalGeminiKey,
+    isEditingGemini,
+    setIsEditingGemini,
+    geminiModel,
+    setGeminiModel,
     openrouterModel,
     setOpenrouterModel,
     agnesModel,
@@ -67,14 +74,14 @@ export function AISecuritySection({
            <div className="flex items-center gap-2 bg-white/50 p-1 rounded-full border border-slate-200">
               <span className="text-[8px] font-bold text-brand-navy/60 ml-2 uppercase">首选 / Primary</span>
               <div className="flex bg-slate-100 rounded-full p-0.5">
-                {(['openrouter', 'agnes'] as const).map(p => (
+                {(['openrouter', 'agnes', 'gemini'] as const).map(p => (
                    <button
                     key={p}
                     onClick={() => saveProvider(p)}
                     disabled={isSavingProvider === true}
                     className={`px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all ${keysStatus.primaryProvider === p ? 'bg-white text-brand-navy shadow-sm' : 'text-brand-navy/40 hover:text-brand-navy/60'}`}
                   >
-                    {p === 'openrouter' ? 'OpenRouter' : 'Agnes'}
+                    {p === 'openrouter' ? 'OpenRouter' : p === 'agnes' ? 'Agnes' : 'Gemini'}
                   </button>
                 ))}
               </div>
@@ -100,7 +107,7 @@ export function AISecuritySection({
           />
 
           <AgnesConfigBlock
-            keysStatus={keysStatus}
+            keysStatus={keysStatus as any}
             isEditingAgnes={isEditingAgnes}
             setIsEditingAgnes={setIsEditingAgnes}
             localAgnesKey={localAgnesKey}
@@ -108,11 +115,28 @@ export function AISecuritySection({
             agnesModel={agnesModel}
             setAgnesModel={setAgnesModel}
             inputClass={inputClass}
-            saveKey={saveKey}
-            handleSaveModel={handleSaveModel}
-            handleTest={handleTest}
+            saveKey={saveKey as any}
+            handleSaveModel={handleSaveModel as any}
+            handleTest={handleTest as any}
             isSaving={isSavingKey && keysStatus.primaryProvider === 'agnes' ? 'agnes' : null}
             isTesting={isTestingProvider && keysStatus.primaryProvider === 'agnes' ? 'agnes' : null}
+            appLang={appLang}
+            t={t}
+          />
+          <GeminiConfigBlock
+            keysStatus={keysStatus as any}
+            isEditingGemini={isEditingGemini}
+            setIsEditingGemini={setIsEditingGemini}
+            localGeminiKey={localGeminiKey}
+            setLocalGeminiKey={setLocalGeminiKey}
+            geminiModel={geminiModel}
+            setGeminiModel={setGeminiModel}
+            inputClass={inputClass}
+            saveKey={saveKey as any}
+            handleSaveModel={handleSaveModel as any}
+            handleTest={handleTest as any}
+            isSaving={isSavingKey && keysStatus.primaryProvider === 'gemini' ? 'gemini' : null}
+            isTesting={isTestingProvider && keysStatus.primaryProvider === 'gemini' ? 'gemini' : null}
             appLang={appLang}
             t={t}
           />

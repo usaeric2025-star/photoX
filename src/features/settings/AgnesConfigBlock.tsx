@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface KeysStatus {
+  gemini: boolean;
   openrouter: boolean;
   agnes: boolean;
   primaryProvider: string;

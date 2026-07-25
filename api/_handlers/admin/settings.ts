@@ -33,13 +33,14 @@ export const adminSettings = new Hono()
         whatsapp_2_name: settingsRes.whatsapp2Name || '',
         app_name: secretsMap['site_name'] || 'PhotoX',
         agnes_api_key: secretsMap['agnes'] || '',
+        gemini_api_key: secretsMap['gemini'] || '',
         openrouter_api_key: secretsMap['openrouter'] || ''
     } : {};
 
     return successResponse(c, data);
 })
 .get("/get-keys", async (c) => {
-    const keysToFetch = ['openrouter', 'agnes', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'agnes_model'];
+    const keysToFetch = ['openrouter', 'agnes', 'gemini', 'PRIMARY_AI_PROVIDER', 'openrouter_model', 'agnes_model', 'gemini_model'];
     const secretsRes = await getSecretsByKeys(keysToFetch);
 
     const config: Record<string, string> = {};
@@ -47,6 +48,7 @@ export const adminSettings = new Hono()
     
     let hasOpenrouter = !!config.openrouter;
     let hasAgnes = !!config.agnes;
+    let hasGemini = !!config.gemini;
     const primarySecret = config.PRIMARY_AI_PROVIDER || 'openrouter';
 
     if (!hasAgnes || !hasOpenrouter) {
@@ -62,9 +64,11 @@ export const adminSettings = new Hono()
         keysStatus: { 
             openrouter: hasOpenrouter, 
             agnes: hasAgnes,
+            gemini: hasGemini,
             primaryProvider: primarySecret,
             openrouter_model: config.openrouter_model || '',
-            agnes_model: config.agnes_model || ''
+            agnes_model: config.agnes_model || '',
+            gemini_model: config.gemini_model || ''
         }
     });
 })
@@ -77,6 +81,7 @@ export const adminSettings = new Hono()
     const encryptedKey = encrypt(apiKey.trim());
     
     await upsertSecret(provider, encryptedKey);
+    clearSettingsCache();
 
     return successResponse(c, null, { message: `密鑰已加密保存！` });
 })
@@ -87,6 +92,7 @@ export const adminSettings = new Hono()
 
     const { provider, model } = check.output;
     await upsertSecret(`${provider}_model`, model);
+    clearSettingsCache();
     return successResponse(c, null);
 })
 .post("/save-provider", async (c) => {
@@ -95,13 +101,14 @@ export const adminSettings = new Hono()
     if (!check.success) throw errorFactory.validation(check.issues);
 
     await upsertSecret('PRIMARY_AI_PROVIDER', check.output.provider);
+    clearSettingsCache();
     return successResponse(c, null);
 })
 .post("/save-settings", async (c) => {
     const body = await c.req.json();
     const { settingsPayload } = body as { settingsPayload: Record<string, unknown> };
     
-    const allowedKeys = ['id', 'logoUrl', 'whatsapp1', 'whatsapp2', 'whatsapp1Name', 'whatsapp2Name', 'accessPasscode', 'passcodeEnabled', 'hotTagThreshold', 'hotTagsCount', 'openrouterModel', 'agnesModel'];
+    const allowedKeys = ['id', 'logoUrl', 'whatsapp1', 'whatsapp2', 'whatsapp1Name', 'whatsapp2Name', 'accessPasscode', 'passcodeEnabled', 'hotTagThreshold', 'hotTagsCount', 'openrouterModel', 'agnesModel', 'geminiModel'];
 
     const mappedPayload = toCamelCaseKeys<Record<string, unknown>>(settingsPayload);
     const filteredPayload: Record<string, unknown> = {};
@@ -112,10 +119,21 @@ export const adminSettings = new Hono()
         }
     }
 
-    await upsertSettings(1, filteredPayload);
+    if (Object.keys(filteredPayload).length > 0) {
+        await upsertSettings(1, filteredPayload);
+    }
     
+    // 支持在 save-settings 中集中处理 secrets 相关内容，提升效率
     if (settingsPayload.app_name !== undefined) {
         await upsertSecret('site_name', settingsPayload.app_name as string);
+    }
+    if (settingsPayload.primary_ai_provider !== undefined || settingsPayload.primaryAiProvider !== undefined) {
+        const provider = (settingsPayload.primary_ai_provider || settingsPayload.primaryAiProvider) as string;
+        await upsertSecret('PRIMARY_AI_PROVIDER', provider);
+    }
+    if (settingsPayload.access_passcode !== undefined || settingsPayload.accessPasscode !== undefined) {
+        const code = (settingsPayload.access_passcode || settingsPayload.accessPasscode) as string;
+        await upsertSecret('access_passcode', code);
     }
     
     clearSettingsCache();
