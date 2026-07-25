@@ -19,11 +19,13 @@ export interface PhotoQueryParams {
     categoryId?: number;
     tagId?: number;
     groupId?: string;
+    onlyGroupsCover?: boolean;
+    onlyUngrouped?: boolean;
     sort?: 'newest' | 'pinned';
 }
 
 export async function getPhotosList(params: PhotoQueryParams) {
-    const { page = 1, limit = 100, isAdminMode = false, search, categoryId, groupId, sort = 'newest' } = params;
+    const { page = 1, limit = 100, isAdminMode = false, search, categoryId, groupId, onlyGroupsCover, onlyUngrouped, sort = 'newest' } = params;
     
     let whereClause = sql`TRUE`;
     if (!isAdminMode) {
@@ -35,6 +37,11 @@ export async function getPhotosList(params: PhotoQueryParams) {
     }
     if (groupId) {
         whereClause = sql`${whereClause} AND ${furnitureItems.groupId} = ${groupId}`;
+    }
+    if (onlyGroupsCover) {
+        whereClause = sql`${whereClause} AND (${furnitureItems.groupId} IS NULL OR ${furnitureItems.isGroupCover} = TRUE)`;
+    } else if (onlyUngrouped) {
+        whereClause = sql`${whereClause} AND ${furnitureItems.groupId} IS NULL`;
     }
     if (search) {
         whereClause = sql`${whereClause} AND (${furnitureItems.manualCode} ILIKE ${`%${search}%`} OR ${furnitureItems.id} ILIKE ${`%${search}%`})`;

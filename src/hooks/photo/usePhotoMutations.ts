@@ -187,9 +187,23 @@ export function usePhotoMutations() {
       queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
         if (!oldData) return oldData;
         
-        // 乐观更新：将选中照片的 groupId 统一设置，并移除旧的封面标志
-        const updateItem = (item: { id: string; groupId?: string | null; isGroupCover?: boolean }) => 
-          (item && photoIds.includes(item.id) ? { ...item, groupId, isGroupCover: false } : item);
+        // 乐观更新：将选中照片合并，保留第一张作为封面，其余移除（以实现立即收起的视觉效果）
+        let hasAssignedCover = false;
+        const updatePageItems = (items: Array<any>) => {
+          const newItems: any[] = [];
+          for (const item of items) {
+            if (photoIds.includes(item.id)) {
+              if (!hasAssignedCover) {
+                hasAssignedCover = true;
+                newItems.push({ ...item, groupId, isGroupCover: true, memberCount: photoIds.length });
+              }
+              // Skip adding the other photos to simulate collapsing
+            } else {
+              newItems.push(item);
+            }
+          }
+          return newItems;
+        };
 
         const data = oldData as { pages?: Array<{ items?: unknown[]; data?: unknown[] }>; items?: unknown[]; data?: unknown[] };
 
@@ -197,9 +211,9 @@ export function usePhotoMutations() {
           return {
             ...data,
             pages: data.pages.map((page) => {
-              const items = (page.items || page.data || (Array.isArray(page) ? page : null)) as Array<{ id: string; groupId?: string | null; isGroupCover?: boolean }>;
+              const items = (page.items || page.data || (Array.isArray(page) ? page : null)) as Array<any>;
               if (Array.isArray(items)) {
-                const updatedItems = items.map(updateItem);
+                const updatedItems = updatePageItems(items);
                 if (page.items) return { ...page, items: updatedItems };
                 if (page.data) return { ...page, data: updatedItems };
                 return updatedItems;
@@ -208,9 +222,9 @@ export function usePhotoMutations() {
             })
           };
         }
-        if (Array.isArray(data)) return data.map(updateItem);
-        if (Array.isArray(data.items)) return { ...data, items: data.items.map(updateItem) };
-        if (Array.isArray(data.data)) return { ...data, data: data.data.map(updateItem) };
+        if (Array.isArray(data)) return updatePageItems(data);
+        if (Array.isArray(data.items)) return { ...data, items: updatePageItems(data.items) };
+        if (Array.isArray(data.data)) return { ...data, data: updatePageItems(data.data) };
         return oldData;
       });
 

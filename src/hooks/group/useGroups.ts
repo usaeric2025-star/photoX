@@ -353,24 +353,28 @@ export function useGroupMutations() {
         queryClient.setQueriesData({ queryKey: queryKeys.photos.lists() }, (oldData: unknown) => {
           const data = oldData as { pages?: Array<{ items: Photo[] }> };
           if (!data?.pages) return oldData;
-          let coverAssigned = false;
+          let hasAssignedCover = false;
           return {
             ...data,
-            pages: data.pages.map((page) => ({
-              ...page,
-              items: page.items.map((item) => {
+            pages: data.pages.map((page) => {
+              const newItems: any[] = [];
+              for (const item of page.items) {
                 if (args.photoIds.includes(item.id)) {
-                  const isCover = !coverAssigned;
-                  if (isCover) coverAssigned = true;
-                  return {
-                    ...item,
-                    groupId: targetGroupId,
-                    isGroupCover: isCover
-                  };
+                  if (!hasAssignedCover) {
+                    hasAssignedCover = true;
+                    newItems.push({ 
+                      ...item, 
+                      groupId: targetGroupId, 
+                      isGroupCover: true,
+                      memberCount: args.photoIds.length
+                    });
+                  }
+                } else {
+                  newItems.push(item);
                 }
-                return item;
-              })
-            }))
+              }
+              return { ...page, items: newItems };
+            })
           };
         });
       }
