@@ -179,6 +179,15 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
                 const items = [];
                 items.push({ id: 'gallery', icon: 'image' as const, label: t('gallery'), onClick: () => setLocation('/') });
 
+                if (!user || hasAdminAccess) {
+                  items.push({
+                    id: 'admin',
+                    icon: isAdminRoute ? 'eye' : 'layout-dashboard',
+                    label: isAdminRoute ? t('viewModePublic') : t('adminPanel'),
+                    onClick: handleAuthAction
+                  });
+                }
+
                 return items.map((item) => {
                   if ('divider' in item && item.divider) {
                     return <div key={item.id} className="h-px bg-slate-100 my-1 mx-2" />;
