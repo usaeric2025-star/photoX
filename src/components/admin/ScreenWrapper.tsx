@@ -9,7 +9,7 @@ interface ScreenWrapperProps {
 
 export function ScreenWrapper({ children, onClose, title }: ScreenWrapperProps) {
   return (
-    <div className="h-full bg-slate-50 flex flex-col animate-fade-up">
+    <div className="h-full bg-slate-50 flex flex-col ">
       <div className="flex items-center justify-between p-4 shrink-0 bg-slate-50 border-b border-slate-100">
         <div className="px-2">
           {title && <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">{title}</h2>}

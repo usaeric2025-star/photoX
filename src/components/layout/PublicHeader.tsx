@@ -91,7 +91,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   }['public'];
 
   return (
-    <header className={cn("h-14 shrink-0 border-b px-4 flex items-center justify-between transition-all duration-300 relative", theme.bg, className)}>
+    <header className={cn("h-14 shrink-0 border-b px-4 flex items-center justify-between  relative", theme.bg, className)}>
       {/* 左侧：Logo & 计数 */}
       <div className="flex items-center gap-4 shrink-0 flex-nowrap">
         {logoUrl && logoUrl.trim() !== '' ? (

@@ -80,7 +80,7 @@ export function AdminHeaderActions({
           {isAiAnalyzing ? (
             <Icon name="loader" size={18} className="animate-spin text-blue-600" />
           ) : (
-            <Icon name="sparkles" size={18} className="animate-pulse" />
+            <Icon name="sparkles" size={18} className="" />
           )}
         </button>
       )}

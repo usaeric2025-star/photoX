@@ -38,13 +38,15 @@ export function AdminPageContent({ children }: { children?: React.ReactNode }) {
 
       <input 
         type="file" id="admin-quick-add-input" multiple accept="image/*" className="hidden" 
+        onClick={(e) => {
+          (e.target as HTMLInputElement).value = '';
+        }}
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
             uploadFiles({
               files: Array.from(e.target.files),
               asGroup: uploadAsGroup
             });
-            e.target.value = '';
           }
         }}
       />

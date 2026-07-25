@@ -46,7 +46,7 @@ function AdminGallery() {
       <AdminHeader className="border-b bg-white shadow-none" />
       <div className="flex-1 relative overflow-hidden flex flex-col">
         <FilterBar mode="admin" className="bg-white border-b shadow-none" />
-        <div className="flex-1 relative animate-fade-in translate-z-0 overflow-hidden flex flex-col">
+        <div className="flex-1 relative  translate-z-0 overflow-hidden flex flex-col">
           <AdminContainer />
         </div>
         <TopLayer type="popover" className="bottom-8 right-8 top-auto left-auto">
@@ -116,17 +116,17 @@ export const router = createBrowserRouter([
             </ScreenWrapper>
           )},
           { path: 'settings', element: (
-            <div className="h-full bg-slate-50 animate-scale-in w-full">
+            <div className="h-full bg-slate-50  w-full">
               <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
             </div>
           )},
           { path: 'tasks', element: (
-            <div className="h-full bg-slate-50 animate-scale-in w-full">
+            <div className="h-full bg-slate-50  w-full">
               <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
             </div>
           )},
           { path: 'error-logs', element: (
-            <div className="h-full bg-slate-50 animate-scale-in w-full">
+            <div className="h-full bg-slate-50  w-full">
               <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
             </div>
           )},

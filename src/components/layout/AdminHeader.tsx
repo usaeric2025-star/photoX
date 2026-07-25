@@ -51,7 +51,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   };
 
   return (
-    <header className={cn("h-14 shrink-0 border-b px-4 flex items-center justify-between font-sans transition-all duration-300 relative", theme.bg, className)}>
+    <header className={cn("h-14 shrink-0 border-b px-4 flex items-center justify-between font-sans  relative", theme.bg, className)}>
       <div className="flex items-center gap-4">
         <AdminHeaderLogo 
           logoUrl={logoUrl}

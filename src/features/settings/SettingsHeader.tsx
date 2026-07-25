@@ -28,7 +28,7 @@ export function SettingsHeader({ hasChanges, isSaving, onSave, onClose }: Settin
           {t('systemSettings') || '系統設置 / Settings'}
         </span>
         {hasChanges && (
-          <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full font-bold uppercase tracking-widest animate-pulse">
+          <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full font-bold uppercase tracking-widest ">
             {t('unsavedChanges') || '未儲存'}
           </span>
         )}

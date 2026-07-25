@@ -45,7 +45,7 @@ export function DiagDashboard() {
   const isStandalone = location.startsWith('/diagnostics');
 
   return (
-    <div className={isStandalone ? "h-screen overflow-y-auto w-full px-6 md:px-8 py-8 pb-32 no-scrollbar max-w-7xl mx-auto space-y-8 bg-slate-50 animate-in fade-in duration-500" : "space-y-8 animate-in fade-in duration-500"}>
+    <div className={isStandalone ? "h-screen overflow-y-auto w-full px-6 md:px-8 py-8 pb-32 no-scrollbar max-w-7xl mx-auto space-y-8 bg-slate-50 " : "space-y-8 "}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {isStandalone && (
@@ -105,26 +105,26 @@ export function DiagDashboard() {
 
       <div className="relative">
         {activeTab === 'stats' && (
-          <div className="animate-in fade-in duration-500">
+          <div className="">
             <Suspense fallback={<LoadingSpinner size="lg" className="mx-auto my-20" />}>
               <StatisticsScreen />
             </Suspense>
           </div>
         )}
         {activeTab === 'diagnosis' && (
-          <div className="space-y-8 animate-in fade-in duration-500">
+          <div className="space-y-8 ">
             <MaintenanceCenter 
               onSuccess={refreshReport} 
             />
           </div>
         )}
         {activeTab === 'tasks' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2">
+          <div className="">
             <TasksContent />
           </div>
         )}
         {activeTab === 'logs' && (
-          <div className="animate-in fade-in duration-500">
+          <div className="">
             <ErrorLogViewer />
           </div>
         )}

@@ -91,12 +91,12 @@ export function FilterBar({ mode, className, compact = false }: FilterBarProps) 
           
           {/* 已選標籤狀態 (Active Filter Status) */}
           {selectedTags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 items-center pt-1 animate-fade-in border-t border-slate-50 mt-1">
+            <div className="flex flex-wrap gap-1.5 items-center pt-1  border-t border-slate-50 mt-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Active:</span>
               {selectedTags.map(tag => (
                 <span 
                   key={tag.id}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-white animate-scale-in"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-white "
                 >
                   <span>{tag.name}</span>
                   <button
