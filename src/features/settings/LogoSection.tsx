@@ -58,7 +58,7 @@ export function LogoSection({
             <input 
               id="logo-upload-input"
               type="file" 
-              onChange={handleLogoUpload} 
+              onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}               onChange={handleLogoUpload} 
               className="absolute inset-0 opacity-0 cursor-pointer" 
               accept="image/*" 
             />

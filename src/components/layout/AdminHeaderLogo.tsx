@@ -23,7 +23,7 @@ export function AdminHeaderLogo({ logoUrl, totalCount, theme }: AdminHeaderLogoP
           src={logoUrl!} 
           className="h-7 sm:h-9 w-auto object-contain shrink-0" 
           alt="Logo" 
-          loading="lazy"
+          
           onError={() => setImgError(true)}
         />
       ) : (

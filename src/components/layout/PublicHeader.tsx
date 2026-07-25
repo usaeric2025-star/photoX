@@ -99,7 +99,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             src={logoUrl} 
             className="h-8 w-auto object-contain shrink-0 rounded-lg" 
             alt="Logo" 
-            loading="lazy"
+            
           />
         ) : (
           <div className="flex items-center gap-1.5 px-1">
@@ -159,7 +159,7 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
               <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none">
                 <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden text-[8px] shrink-0">
                   {user?.photoUrl && user.photoUrl.trim() !== '' ? (
-                    <img src={user.photoUrl} referrerPolicy="no-referrer" alt="" loading="lazy" />
+                    <img src={user.photoUrl} referrerPolicy="no-referrer" alt=""  />
                   ) : (
                     <Icon name="user" size={10} />
                   )}
