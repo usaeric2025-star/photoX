@@ -8,7 +8,7 @@ const UPLOAD_RETRY_COUNT = 2;
  * Upload a blob to R2 via presigned URL
  * Returns the public URL of the uploaded file
  */
-export async function uploadToR2(file: Blob, photoId: string, imageHash?: string): Promise<string> {
+export async function uploadToR2(file: Blob, photoId: string): Promise<string> {
   let lastError: Error | null = null;
   
   for (let attempt = 0; attempt <= UPLOAD_RETRY_COUNT; attempt++) {
@@ -16,16 +16,10 @@ export async function uploadToR2(file: Blob, photoId: string, imageHash?: string
       // 1. Get presigned URL
       const presignRes = await api.storage['upload-presign'].$post({
         json: { 
-          photoId, 
-          imageHash,
+          photoId,
           contentType: file.type || 'image/webp'
         }
       });
-
-      if (presignRes.status === 409) {
-        const data = await presignRes.json() as { existingUrl?: string; data?: { existingUrl?: string } };
-        return data.existingUrl || data.data?.existingUrl || ''; // Already exists, return existing URL
-      }
       
       const { uploadUrl, publicUrl } = await ErrorFactory.unwrap<{ uploadUrl: string, publicUrl: string }>(
         presignRes,

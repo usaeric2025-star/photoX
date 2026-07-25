@@ -11,37 +11,8 @@ const serverEnv = getServerEnv(process.env);
 export const storage = new Hono()
   .post("/upload-presign", async (c) => {
     await requireRealUser(c);
-    const { photoId, fileKey, contentType, imageHash, force } = await c.req.json();
+    const { photoId, fileKey, contentType } = await c.req.json();
     if (!photoId && !fileKey) return errorResponse(c, "photoId or fileKey required", 400);
-
-    // 排重检查
-    if (imageHash && !force) {
-        const existing = await db.query.furnitureItems.findFirst({
-            columns: { id: true, imageUrl: true, imageHash: true },
-            where: eq(furnitureItems.imageHash, imageHash)
-        });
-        
-        if (existing) {
-            if (existing.imageUrl && (existing.imageUrl.startsWith('http') || existing.imageUrl.startsWith('https'))) {
-                return c.json({
-                    success: false,
-                    error: "照片已存在",
-                    existingUrl: existing.imageUrl,
-                    photoId: existing.id
-                }, 409);
-            }
-            
-            const fileName = `photox/public/${existing.id}.webp`;
-            const uploadUrl = await getUploadPresignedUrl(fileName, contentType || 'image/webp');
-            
-            return successResponse(c, { 
-                resuming: true,
-                photoId: existing.id,
-                uploadUrl,
-                publicUrl: `${serverEnv.R2_PUBLIC_URL_PREFIX}/photox/public/${existing.id}.webp`
-            });
-        }
-    }
     
     const fileName = fileKey ? `photox/public/${fileKey}` : `photox/public/${photoId}.webp`;
     const uploadUrl = await getUploadPresignedUrl(fileName, contentType || 'image/webp');

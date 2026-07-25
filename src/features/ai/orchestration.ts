@@ -183,23 +183,13 @@ const analyzeAndSavePhoto = async (
 
     const updateResult = await updatePhoto(photo.id, {
       ...updates,
+      tags: updates.resolvedTagIds,
       metadata: {
         ...(photo.metadata as Record<string, unknown> || {}),
         ai_updated_at: new Date().toISOString(),
         ai_raw: analysisData.raw_result || JSON.stringify(analysisData)
       }
     });
-
-    const finalTagIds = (updates.resolvedTagIds as Array<string | number>);
-    if (finalTagIds && finalTagIds.length > 0) {
-      const tagSources: Record<string, "ai"> = {};
-      finalTagIds.forEach((id: string | number) => {
-          tagSources[String(id)] = "ai";
-      });
-      await api.tags['sync-photo-tags'].$post({
-          json: { photoId: photo.id, tagIds: finalTagIds.map(String), tagSources }
-      });
-    }
 
     return updateResult;
   } catch (err) {

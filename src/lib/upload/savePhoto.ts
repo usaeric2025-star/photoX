@@ -24,6 +24,18 @@ export async function savePhoto(record: Partial<PhotoRecord> & { id: string }): 
     }),
     'Database save failed'
   );
+  return data.id;
+}
 
+export async function updatePhoto(id: string, updates: Partial<PhotoRecord>): Promise<string> {
+  const data = await ErrorFactory.unwrap<{ id: string }>(
+    api.photos.update.$post({
+      json: {
+        id,
+        updates
+      }
+    }),
+    'Database update failed'
+  );
   return data.id;
 }

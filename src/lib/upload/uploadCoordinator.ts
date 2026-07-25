@@ -2,7 +2,7 @@ import { UploadTask, UploadResult } from './types.js';
 import { checkDuplicate } from './duplicate.js';
 import { compressImage } from './compression.js';
 import { uploadToR2 } from './storage.js';
-import { savePhoto } from './savePhoto.js';
+import { savePhoto, updatePhoto } from './savePhoto.js';
 import { rollbackUpload } from './rollback.js';
 import { generateId } from '#lib/id.js';
 import { logger } from '#lib/logger.js';
@@ -26,12 +26,11 @@ export async function processUpload(task: UploadTask, onStatus?: (status: string
     logger.info(`[Upload] Duplicate found for hash ${hash.substring(0, 8)}: ${duplicate.existingId}`);
     if (task.groupId && duplicate.existingId) {
       try {
-        await savePhoto({
-          id: duplicate.existingId,
+        await updatePhoto(duplicate.existingId, {
           groupId: task.groupId
         });
       } catch (err) {
-        logger.warn('[Upload] Failed to attach duplicate photo to group', err);
+        logger.warn(`[Upload] Failed to attach duplicate photo to group`, err);
       }
     }
     return { success: true, duplicate: true, id: duplicate.existingId };
@@ -46,7 +45,7 @@ export async function processUpload(task: UploadTask, onStatus?: (status: string
   onStatus?.('正在上傳...');
   let imageUrl: string;
   try {
-    imageUrl = await uploadToR2(compressed.blob, photoId, hash);
+    imageUrl = await uploadToR2(compressed.blob, photoId);
   } catch (error) {
     ErrorFactory.handle(error, { context: '[Upload] Storage failed', silent: true });
     return { success: false, error: error instanceof Error ? error.message : 'Storage upload failed' };
