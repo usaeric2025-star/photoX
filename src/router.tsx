@@ -121,14 +121,14 @@ export const router = createBrowserRouter([
             </div>
           )},
           { path: 'tasks', element: (
-            <div className="h-full bg-slate-50  w-full">
-              <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
-            </div>
+            <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
+              <DiagDashboard />
+            </ScreenWrapper>
           )},
           { path: 'error-logs', element: (
-            <div className="h-full bg-slate-50  w-full">
-              <SettingsPage onClose={() => window.location.href = ADMIN_ROUTES.HOME} />
-            </div>
+            <ScreenWrapper onClose={() => window.location.href = ADMIN_ROUTES.HOME}>
+              <DiagDashboard />
+            </ScreenWrapper>
           )},
           { path: 'group/:id', element: <AdminGroupDetailPage /> },
         ]

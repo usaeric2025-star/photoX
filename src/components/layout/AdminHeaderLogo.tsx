@@ -49,7 +49,7 @@ export function AdminHeaderLogo({ logoUrl, totalCount, theme }: AdminHeaderLogoP
           )}
         </div>
       )}
-      <div className={cn("flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
+      <div className={cn("hidden md:flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-1 select-none shrink-0 cursor-default justify-center shadow-sm whitespace-nowrap", theme.badge)}>
         <span className={cn("uppercase tracking-tighter text-[9px] shrink-0", theme.badgeLabel)}>{t('totalStock')}</span>
         <span className={cn("shrink-0", theme.badgeVal)}>
           {totalCount.toLocaleString()}

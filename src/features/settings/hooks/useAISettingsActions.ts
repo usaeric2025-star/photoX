@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSettings, useTranslation } from '#src/hooks/index.js';
 import { AppSettings } from '#src/types/index.js';
 import { feedback } from '#lib/feedback.js';
 import { testAiConnection } from "#src/features/ai/AICommands.js";
-import { useAppQuery, queryClient } from '#lib/query/index.js';
-import { api } from '#lib/api.js';
 
 /**
  * useAISettingsActions
@@ -18,35 +16,21 @@ export function useAISettingsActions() {
   const { settings, updateSettings } = useSettings();
   const { t } = useTranslation();
 
-  const { data: adminSettings } = useAppQuery(
-    ['admin', 'settings', 'get-keys'],
-    async () => {
-      const res = await api.admin.settings['get-keys'].$get();
-      return ErrorFactory.unwrap(res, 'Failed to fetch AI keys');
-    }
+  const [localOpenRouterKey, setLocalOpenRouterKey] = useState(
+    settings?.openrouterApiKey ? '••••••••••••••••' : ''
   );
-
-  const [localOpenRouterKey, setLocalOpenRouterKey] = useState('');
-  const [localAgnesKey, setLocalAgnesKey] = useState('');
-  const [localGeminiKey, setLocalGeminiKey] = useState('');
-
-  const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
-  const [openrouterModel, setOpenrouterModel] = useState('google/gemini-2.5-flash');
-  const [agnesModel, setAgnesModel] = useState('gemini-2.0-flash-exp');
-
-  useEffect(() => {
-    if (adminSettings?.keysStatus) {
-      if (adminSettings.keysStatus.openrouter) setLocalOpenRouterKey('••••••••••••••••');
-      if (adminSettings.keysStatus.agnes) setLocalAgnesKey('••••••••••••••••');
-      if (adminSettings.keysStatus.gemini) setLocalGeminiKey('••••••••••••••••');
-
-      if (adminSettings.keysStatus.gemini_model) setGeminiModel(adminSettings.keysStatus.gemini_model);
-      if (adminSettings.keysStatus.openrouter_model) setOpenrouterModel(adminSettings.keysStatus.openrouter_model);
-      if (adminSettings.keysStatus.agnes_model) setAgnesModel(adminSettings.keysStatus.agnes_model);
-    }
-  }, [adminSettings]);
-
+  const [localAgnesKey, setLocalAgnesKey] = useState(
+    settings?.agnesApiKey ? '••••••••••••••••' : ''
+  );
+  const [localGeminiKey, setLocalGeminiKey] = useState(
+    settings?.geminiApiKey ? '••••••••••••••••' : ''
+  );
+  const [geminiModel, setGeminiModel] = useState(String(settings?.geminiModel || 'gemini-2.0-flash'));
   const [isEditingGemini, setIsEditingGemini] = useState(false);
+
+  const [openrouterModel, setOpenrouterModel] = useState(String(settings?.openrouterModel || 'google/gemini-2.5-flash'));
+  const [agnesModel, setAgnesModel] = useState(String(settings?.agnesModel || 'gemini-2.0-flash-exp'));
+  
   const [isEditingOpenRouter, setIsEditingOpenRouter] = useState(false);
   const [isEditingAgnes, setIsEditingAgnes] = useState(false);
   
@@ -55,10 +39,10 @@ export function useAISettingsActions() {
   const [isSavingProvider, setIsSavingProvider] = useState(false);
 
   const keysStatus = {
-    openrouter: adminSettings?.keysStatus?.openrouter || !!settings?.openrouterApiKey,
-    agnes: adminSettings?.keysStatus?.agnes || !!settings?.agnesApiKey,
-    gemini: adminSettings?.keysStatus?.gemini || !!settings?.geminiApiKey,
-    primaryProvider: adminSettings?.keysStatus?.primaryProvider || String(settings?.primaryAiProvider || 'agnes')
+    openrouter: !!settings?.openrouterApiKey,
+    agnes: !!settings?.agnesApiKey,
+    gemini: !!settings?.geminiApiKey,
+    primaryProvider: String(settings?.primaryAiProvider || 'agnes')
   };
 
   const saveKey = async (provider: AIProvider, key: string) => {
@@ -71,14 +55,13 @@ export function useAISettingsActions() {
       if (provider === 'openrouter') {
         setIsEditingOpenRouter(false);
         setLocalOpenRouterKey('••••••••••••••••');
-      } else if (provider === 'agnes') {
-        setIsEditingAgnes(false);
-        setLocalAgnesKey('••••••••••••••••');
-      } else {
+      } else if (provider === 'gemini') {
         setIsEditingGemini(false);
         setLocalGeminiKey('••••••••••••••••');
+      } else {
+        setIsEditingAgnes(false);
+        setLocalAgnesKey('••••••••••••••••');
       }
-      queryClient.invalidateQueries({ queryKey: ['admin', 'settings', 'get-keys'] });
     } catch (e) {
       ErrorFactory.handle(e, { context: t('updateError') || '保存失敗' });
     } finally {
@@ -90,7 +73,6 @@ export function useAISettingsActions() {
     setIsSavingProvider(true);
     try {
       await updateSettings({ primaryAiProvider: provider } as Partial<AppSettings>);
-      queryClient.invalidateQueries({ queryKey: ['admin', 'settings', 'get-keys'] });
     } finally {
       setIsSavingProvider(false);
     }
@@ -104,7 +86,8 @@ export function useAISettingsActions() {
   const handleTest = async (provider: AIProvider) => {
     setIsTestingProvider(provider);
     try {
-      const ok = await testAiConnection("use-backend-key", provider);
+      const apiKey = provider === 'openrouter' ? settings?.openrouterApiKey : provider === 'agnes' ? settings?.agnesApiKey : settings?.geminiApiKey;
+      const ok = await testAiConnection(String(apiKey || ""), provider);
       if (ok) {
         feedback.success(t('aiConnectSuccess') || '連接成功');
       } else {

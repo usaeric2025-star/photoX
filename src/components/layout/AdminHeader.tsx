@@ -51,15 +51,15 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   };
 
   return (
-    <header className={cn("h-14 shrink-0 border-b px-4 flex items-center justify-between font-sans  relative", theme.bg, className)}>
-      <div className="flex items-center gap-4">
+    <header className={cn("h-14 shrink-0 border-b px-3 sm:px-4 flex items-center justify-between font-sans relative flex-nowrap overflow-hidden", theme.bg, className)}>
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
         <AdminHeaderLogo 
           logoUrl={logoUrl}
           totalCount={totalCount}
           theme={theme as Theme}
         />
-        <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
-        <h1 className="text-sm font-semibold text-slate-900 hidden sm:block">
+        <div className="h-4 w-px bg-slate-200 mx-0.5 hidden lg:block shrink-0" />
+        <h1 className="text-sm font-semibold text-slate-900 hidden lg:block truncate shrink-0">
           {t('adminPanelTitle')}
         </h1>
       </div>

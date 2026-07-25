@@ -32,7 +32,7 @@ const GroupService = {
 
   update: async (id: string, updates: Partial<ProductGroup>) => {
     return ErrorFactory.unwrap<ProductGroup>(
-      api.groups[':id'].$put({ param: { id }, json: { updates } }),
+      (api.groups[':id'].$put as any)({ param: { id }, json: { updates } }),
       '更新群組失敗'
     );
   },
@@ -77,7 +77,7 @@ const GroupService = {
 
   getById: async (id: string, mode: 'admin' | 'public' = 'public') => {
     return ErrorFactory.unwrap<ProductGroup>(
-      api.groups[':id'].$get({ param: { id }, query: { isAdminMode: mode === 'admin' ? 'true' : 'false' } }),
+      (api.groups[':id'].$get as any)({ param: { id }, query: { isAdminMode: mode === 'admin' ? 'true' : 'false' } }),
       '獲取群組詳情失敗'
     );
   },
@@ -146,8 +146,8 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
   } = usePhotos({
     groupId: groupId || undefined,
     mode: isAdmin ? 'admin' : 'public',
-    categoryId: category,
-    tagId: tags?.[0],
+    categoryId: undefined,
+    tagId: undefined,
     searchQuery: search,
     sortOrder: sort,
     onlyGroupsCover: false,

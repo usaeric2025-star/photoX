@@ -113,7 +113,7 @@ export const PhotoWallGrid = memo(function PhotoWallGrid({
 
   // IntersectionObserver 雙重保障：當捲動到接近底部觸發器時，自動加載下一頁
   useEffect(() => {
-    if (!hasMore || isLoading || isLoadingMore) return;
+    if (!hasMore) return;
 
     const trigger = loadMoreTriggerRef.current;
     if (!trigger) return;
@@ -121,13 +121,13 @@ export const PhotoWallGrid = memo(function PhotoWallGrid({
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !isLoading && !isLoadingMore) {
           handleLoadMore();
         }
       },
       {
-        root: scrollParent || null,
-        rootMargin: '400px', // 提前 400px 觸發加載，確保流暢度
+        root: null, // 全局 viewport 相交判定，確保在任何嵌套容器中高可靠性觸發
+        rootMargin: '600px', // 提前 600px 觸發加載
       }
     );
 
@@ -136,7 +136,7 @@ export const PhotoWallGrid = memo(function PhotoWallGrid({
     return () => {
       observer.disconnect();
     };
-  }, [scrollParent, hasMore, isLoading, isLoadingMore, handleLoadMore]);
+  }, [hasMore, isLoading, isLoadingMore, handleLoadMore]);
 
   const renderItem = useCallback((photo: PhotoListItem, index?: number) => (
     <div className="w-full h-full" data-photo-id={photo.id}>
@@ -188,17 +188,15 @@ export const PhotoWallGrid = memo(function PhotoWallGrid({
       />
       
       {/* 獨立、高可靠性之無限捲動觸發錨點 */}
-      {hasMore && !isLoading && !isLoadingMore && (
-        <div ref={loadMoreTriggerRef} className="h-4 w-full" id="infinite-scroll-trigger" />
-      )}
-      
-      {isLoadingMore && photos.length > 0 && (
-        <div className="py-12 flex justify-center w-full">
-           <div className="flex gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-navy/40 animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-navy/60 animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-navy animate-bounce"></div>
-           </div>
+      {hasMore && (
+        <div ref={loadMoreTriggerRef} className="py-6 flex items-center justify-center w-full min-h-[3rem]" id="infinite-scroll-trigger">
+          {isLoadingMore && (
+            <div className="flex gap-1 items-center justify-center">
+               <div className="w-1.5 h-1.5 rounded-full bg-brand-navy/40 animate-bounce [animation-delay:-0.3s]"></div>
+               <div className="w-1.5 h-1.5 rounded-full bg-brand-navy/60 animate-bounce [animation-delay:-0.15s]"></div>
+               <div className="w-1.5 h-1.5 rounded-full bg-brand-navy animate-bounce"></div>
+            </div>
+          )}
         </div>
       )}
     </div>
