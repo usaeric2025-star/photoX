@@ -40,6 +40,8 @@ export function usePhotoWall(mode: 'public' | 'admin' = 'public', customFilters?
 
   const isInitialLoading = isPending || isLoading || (isFetching && photos.length === 0);
 
+  const isAggregated = !!queryOptions.onlyGroupsCover;
+
   return {
     photos,
     total,
@@ -54,6 +56,7 @@ export function usePhotoWall(mode: 'public' | 'admin' = 'public', customFilters?
     isFetching,
     error,
     refetch,
-    refresh: refetch
+    refresh: refetch,
+    isAggregated
   };
 }

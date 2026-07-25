@@ -78,7 +78,7 @@ function arrangePhotosWithGroups(allPhotos: PhotoListItem[]): PhotoListItem[] {
 export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const { open: openLightbox, setLightboxData, setLightboxIndex } = useLightbox();
   const { photoId } = useUI();
-  const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh } = usePhotoWall(props.mode, props.filters);
+  const { photos, total, hasMore, isLoading, isLoadingMore, loadMore, error, refresh, isAggregated } = usePhotoWall(props.mode, props.filters);
   
   const { uiTranslations: labels } = useTranslation();
 
@@ -87,7 +87,6 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
   const onPhotoClickRef = useRef(props.onPhotoClick);
   onPhotoClickRef.current = props.onPhotoClick;
 
-  const isAggregated = !!props.filters?.onlyGroupsCover;
   const expandedPhotosRef = useRef<PhotoListItem[] | null>(null);
 
   // 同步總數到全局 UI 狀態
@@ -229,6 +228,7 @@ export function PhotoWallContainer(props: PhotoWallContainerProps) {
         isLoadingMore={isLoadingMore}
         loadMore={loadMore}
         isAggregated={isAggregated}
+        hideGroupBadge={!isAggregated}
       />
     </LocalErrorBoundary>
   );
