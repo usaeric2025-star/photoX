@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
+import { useSettingsText } from '#src/hooks/useSettingsText.js';
 
 interface LogoSectionProps {
   logoUrl?: string;
@@ -11,19 +12,21 @@ interface LogoSectionProps {
 /**
  * LogoSection
  * 
- * 處理商戶 Logo 的上傳與顯示。
+ * 处理商户 Logo 的上传与显示。
  */
 export function LogoSection({
   logoUrl,
   handleLogoUpload,
   cardClass,
 }: LogoSectionProps) {
+  const text = useSettingsText();
+
   return (
     <div className={cardClass} id="section-logo">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-1 h-3 bg-brand-gold rounded-full shrink-0"></div>
         <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest">
-          品牌識別 / Brand Identity
+          {text.logo.title}
         </h4>
       </div>
       
@@ -47,13 +50,13 @@ export function LogoSection({
 
         <div className="flex flex-col gap-3 flex-1">
           <div className="space-y-1">
-            <h5 className="text-[11px] font-black text-brand-navy uppercase tracking-tight">商戶 Logo / Store Logo</h5>
-            <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest leading-none">推薦比例 1:1 · 透明背景為佳</p>
+            <h5 className="text-[11px] font-black text-brand-navy uppercase tracking-tight">{text.logo.storeLogo}</h5>
+            <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest leading-none">{text.logo.recommendation}</p>
           </div>
           
           <label className="relative overflow-hidden inline-block self-start">
             <span className="px-6 py-2.5 bg-brand-gold text-white rounded-2xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-brand-gold/90 transition-colors cursor-pointer shadow-lg shadow-brand-gold/20">
-              <Icon name="upload" size={14} /> 上傳新圖標
+              <Icon name="upload" size={14} /> {logoUrl ? text.logo.changeLogo : text.logo.uploadLogo}
             </span>
             <input 
               id="logo-upload-input"

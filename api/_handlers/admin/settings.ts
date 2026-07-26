@@ -46,9 +46,9 @@ export const adminSettings = new Hono()
     const config: Record<string, string> = {};
     secretsRes.forEach((s) => { config[s.key] = s.value || ''; });
     
-    let hasOpenrouter = !!config.openrouter;
-    let hasAgnes = !!config.agnes;
-    let hasGemini = !!config.gemini;
+    let hasOpenrouter = !!config.openrouter || !!process.env.OPENROUTER_API_KEY;
+    let hasAgnes = !!config.agnes || !!process.env.GEMINI_API_KEY;
+    let hasGemini = !!config.gemini || !!process.env.GEMINI_API_KEY;
     const primarySecret = config.PRIMARY_AI_PROVIDER || 'openrouter';
 
     if (!hasAgnes || !hasOpenrouter) {

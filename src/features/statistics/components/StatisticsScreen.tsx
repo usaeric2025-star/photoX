@@ -57,7 +57,7 @@ export function StatisticsScreen() {
     }
   );
 
-  if (isLoading) return <div className="p-8 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse">Calculating Metrics...</div>;
+  if (isLoading) return <div className="p-8 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse">正在计算统计指标...</div>;
 
   const totalPhotos = stats?.totalPhotos || 0;
   const hiddenCount = stats?.hiddenPhotos || 0;
@@ -72,42 +72,42 @@ export function StatisticsScreen() {
       <div className="space-y-1">
         <h2 className="text-2xl font-black text-brand-navy tracking-tight uppercase italic flex items-center gap-2">
           <Icon name="bar-chart-3" size={24} className="text-brand-gold" />
-          系统存量概览 / System Inventory
+          系统存量概览
         </h2>
         <p className="text-xs text-brand-navy/40 font-bold uppercase tracking-widest">
-          实时统计与资源分布 / Live Metrics & Resource Distribution
+          实时统计与资源分布
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
-          title="总计资产 / Total Assets" 
+          title="总计资产" 
           value={totalPhotos} 
-          subValue="Items"
+          subValue="张"
           icon="image"
           colorClass="bg-blue-50 text-blue-600"
           delay={0.1}
         />
         <StatCard 
-          title="逻辑分组 / Groups" 
+          title="逻辑分组" 
           value={groupsCount} 
-          subValue="Clusters"
+          subValue="组"
           icon="layout-grid"
           colorClass="bg-brand-navy/5 text-brand-navy"
           delay={0.2}
         />
         <StatCard 
-          title="活跃分类 / Categories" 
+          title="活跃分类" 
           value={categoriesCount} 
-          subValue="Types"
+          subValue="个"
           icon="database"
           colorClass="bg-brand-gold/10 text-brand-gold"
           delay={0.3}
         />
         <StatCard 
-          title="逻辑标签 / Labels" 
+          title="系统标签" 
           value={tagsCount} 
-          subValue="Tags"
+          subValue="个"
           icon="tags"
           colorClass="bg-slate-100 text-slate-600"
           delay={0.4}
@@ -118,7 +118,7 @@ export function StatisticsScreen() {
         <div className="bg-white p-6 rounded-[32px] border border-brand-navy/5 shadow-sm space-y-6">
           <h3 className="text-xs font-black text-brand-navy uppercase tracking-widest flex items-center gap-2">
             <div className="w-1.5 h-3.5 bg-brand-navy rounded-full"></div>
-            资源明细 / Details
+            资源明细
           </h3>
           
           <div className="space-y-4">
@@ -128,8 +128,8 @@ export function StatisticsScreen() {
                   <Icon name="image" size={16} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-brand-navy">隐藏资产 / Hidden</p>
-                  <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest">Private assets</p>
+                  <p className="text-[11px] font-bold text-brand-navy">隐藏资产</p>
+                  <p className="text-[9px] text-brand-navy/40 font-bold tracking-widest">私密照片数量</p>
                 </div>
               </div>
               <span className="text-sm font-black text-brand-navy">{hiddenCount}</span>
@@ -141,8 +141,8 @@ export function StatisticsScreen() {
                   <Icon name="hard-drive" size={16} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-brand-navy">估算占用 / Storage Est.</p>
-                  <p className="text-[9px] text-brand-navy/40 font-bold uppercase tracking-widest">Estimated R2 usage</p>
+                  <p className="text-[11px] font-bold text-brand-navy">估算占用</p>
+                  <p className="text-[9px] text-brand-navy/40 font-bold tracking-widest">存储容量预估</p>
                 </div>
               </div>
               <span className="text-sm font-black text-brand-navy">~{estStorage} MB</span>
@@ -152,19 +152,18 @@ export function StatisticsScreen() {
 
         <div className="bg-brand-navy p-8 rounded-[32px] shadow-xl space-y-6 text-white overflow-hidden relative">
           <div className="relative space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 italic">System Status</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 italic">系统状态</h3>
             <div className="space-y-2">
               <h4 className="text-3xl font-black tracking-tighter leading-tight italic">
-                系统运行<span className="text-brand-gold">极佳</span><br />
-                System Health: Perfect
+                系统运行<span className="text-brand-gold">极佳</span>
               </h4>
               <p className="text-xs font-bold opacity-60 leading-relaxed max-w-[240px]">
-                所有数据库分片状态正常，R2 存储链路延迟 45ms，AI 语义引擎索引已完成 100%。
+                数据库链接正常，存储与 API 响应良好，AI 语义引擎索引正常运转中。
               </p>
             </div>
             <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full w-fit">
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              <span className="text-[9px] font-black uppercase tracking-widest">Live: Operational</span>
+              <span className="text-[9px] font-black tracking-widest">状态：在线正常</span>
             </div>
           </div>
           <Icon name="bar-chart-3" size={200} className="absolute -bottom-20 -right-20 text-white/5 rotate-12" />

@@ -8,6 +8,7 @@ import { getTranslatedCategoryName } from '#src/utils/category.js';
 import { PLACEHOLDERS } from '#src/constants/config.js';
 import { copyToClipboard } from '#src/utils/clipboard.js';
 import { feedback } from '#lib/feedback.js';
+import { AIService } from '#src/lib/ai/AIService.js';
 
 interface LightboxInfoProps {
   currentPhoto: Photo | { original: Photo };
@@ -59,7 +60,7 @@ export const LightboxInfo = memo(function LightboxInfo({
   const isAdmin = isAdminMode && can('photo:view-internal-info');
   
   const { data: aiResult, isLoading: aiLoading } = usePhotoAIResult(photoData.id, { 
-    enabled: showInfo && isAdmin
+    enabled: showInfo
   });
 
   const isAiIdentified = !!(photoData.metadata && (photoData.metadata as Record<string, unknown>).ai_raw) || !!photoData.isAnalyzing;
@@ -431,10 +432,33 @@ export const LightboxInfo = memo(function LightboxInfo({
                       <span>{t('analyzing') || 'AI 分析中...'}</span>
                     </div>
                   ) : showRaw ? (
-                    <div className="bg-black/80 rounded-2xl p-3 border border-purple-500/20 max-h-48 overflow-y-auto no-scrollbar">
-                      <pre className="text-[10px] font-mono text-emerald-400/90 whitespace-pre-wrap break-all leading-relaxed">
-                        {(aiResult as any)?.rawResult || 'No raw data available'}
-                      </pre>
+                    <div className="space-y-2">
+                      <div className="bg-black/80 rounded-2xl p-3 border border-purple-500/20 max-h-48 overflow-y-auto no-scrollbar">
+                        <pre className="text-[10px] font-mono text-emerald-400/90 whitespace-pre-wrap break-all leading-relaxed">
+                          {(aiResult as any)?.rawResult || 'No raw data available'}
+                        </pre>
+                      </div>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const res = await AIService.reExtract(uuid);
+                              if (res) {
+                                feedback.success(lang === 'zh' ? 'RAW 属性已重新提取' : 'Re-extracted attributes from RAW');
+                              } else {
+                                feedback.error(lang === 'zh' ? '提取失败' : 'Re-extraction failed');
+                              }
+                            } catch (e) {
+                              feedback.error(lang === 'zh' ? '提取失败' : 'Re-extraction failed');
+                            }
+                          }}
+                          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/30 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm"
+                        >
+                          <Icon name="refresh-cw" className="w-3.5 h-3.5 text-purple-300" />
+                          <span>{lang === 'zh' ? 'AI RAW 重新提取属性' : 'Re-extract Meta from RAW'}</span>
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="bg-purple-950/30 p-3.5 rounded-2xl border border-purple-500/20 space-y-2 text-xs text-purple-200">

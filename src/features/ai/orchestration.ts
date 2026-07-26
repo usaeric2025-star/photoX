@@ -145,7 +145,27 @@ export async function mapAnalysisToUpdates(
   }
 
   // 3. Tags
-  const tagNames = Array.isArray(result.tagNames) ? result.tagNames : (Array.isArray(result.tag_names) ? result.tag_names : []);
+  const rawTagNames = Array.isArray(result.tagNames) 
+    ? result.tagNames 
+    : (Array.isArray(result.tag_names) 
+      ? result.tag_names 
+      : (Array.isArray((result as Record<string, unknown>).tags) 
+        ? ((result as Record<string, unknown>).tags as unknown[]) 
+        : (Array.isArray((result as Record<string, unknown>).keywords) 
+          ? ((result as Record<string, unknown>).keywords as unknown[]) 
+          : (Array.isArray((result as Record<string, unknown>).labels) 
+            ? ((result as Record<string, unknown>).labels as unknown[]) 
+            : []))));
+
+  const tagNames: string[] = rawTagNames.map(t => {
+    if (!t) return '';
+    if (typeof t === 'object' && t !== null) {
+      const obj = t as Record<string, unknown>;
+      return String(obj.name || obj.zh || obj.en || obj.label || '').trim();
+    }
+    return String(t).trim();
+  }).filter(Boolean);
+
   const tagIds = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
   
   if (tagNames.length > 0 || tagIds.length > 0) {
@@ -196,6 +216,12 @@ const analyzeAndSavePhoto = async (
 
     return updateResult;
   } catch (err) {
+    const isAborted = signal?.aborted || (err instanceof Error && (err.name === 'AbortError' || err.message.includes('aborted') || err.message.includes('取消')));
+    if (isAborted) {
+      const cancelErr = new Error('请求已取消');
+      cancelErr.name = 'AbortError';
+      throw cancelErr;
+    }
     ErrorFactory.handle(err, { context: `[AI Orchestration] analyzeAndSavePhoto failed for ${photo.id}` });
     throw new Error((err as Error).message || '分析照片失敗');
   }
@@ -212,7 +238,7 @@ export async function runBatchAnalysis({
 }) {
   const totalPhotosToProcess = targetPhotos.length;
   let finishedCount = 0;
-  const CONCURRENCY = 3; // Process 3 photos at a time to avoid overwhelming the API/DB
+  const CONCURRENCY = 2; // Process 2 photos at a time to prevent rate limits and server overload
 
   onProgress(0.05, `正在準備分析 ${totalPhotosToProcess} 張照片...`);
 
@@ -247,13 +273,16 @@ export async function runBatchAnalysis({
     }
   };
 
-  // Simple concurrency pool using a sliding window
+  // Simple concurrency pool using a sliding window with pacing
   const queue = [...targetPhotos];
   const workers = Array(Math.min(CONCURRENCY, queue.length)).fill(null).map(async () => {
     while (queue.length > 0 && !signal?.aborted) {
       const photo = queue.shift();
       if (photo) {
-        await processPhoto(photo, 0); // index doesn't matter here
+        await processPhoto(photo, 0);
+        if (queue.length > 0 && !signal?.aborted) {
+          await new Promise(r => setTimeout(r, 250)); // Pacing delay between batch tasks
+        }
       }
     }
   });

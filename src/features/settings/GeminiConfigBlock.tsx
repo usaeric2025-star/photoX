@@ -1,4 +1,6 @@
 import React from 'react';
+import { DEFAULT_AI_MODELS } from '../../../shared/aiModels.js';
+import { useSettingsText } from '#src/hooks/useSettingsText.js';
 
 interface KeysStatus {
   openrouter: boolean;
@@ -20,14 +22,12 @@ interface GeminiConfigBlockProps {
   handleTest: (provider: 'openrouter' | 'gemini') => Promise<void>;
   isSaving: 'openrouter' | 'gemini' | null;
   isTesting: 'openrouter' | 'gemini' | null;
-  appLang: string;
-  t: (key: string, ...args: unknown[]) => string;
 }
 
 /**
  * GeminiConfigBlock
  * 
- * Gemini AI 服務配置區塊。
+ * Gemini AI 服务配置区块。
  */
 export function GeminiConfigBlock({
   keysStatus,
@@ -42,18 +42,19 @@ export function GeminiConfigBlock({
   handleSaveModel,
   handleTest,
   isSaving,
-  isTesting,
-  t
+  isTesting
 }: GeminiConfigBlockProps) {
+  const text = useSettingsText();
+
   return (
     <div className="space-y-4 p-5 rounded-3xl bg-purple-50/30 border border-purple-100">
       <div className="flex items-center justify-between mb-4">
         <div className="space-y-0.5">
            <h5 className="text-[10px] font-black text-purple-900 uppercase tracking-tight">Gemini AI</h5>
-           <p className="text-[8px] text-purple-900/40 font-bold uppercase tracking-widest">集成原生引擎 / Native Engine</p>
+           <p className="text-[8px] text-purple-900/40 font-bold tracking-widest">原生引擎</p>
         </div>
         <div className="flex items-center gap-2">
-          {keysStatus.gemini && <div className="px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full text-[8px] font-black uppercase">{t('active') || '已啟用'}</div>}
+          {keysStatus.gemini && <div className="px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full text-[8px] font-black uppercase">已启用</div>}
           <button 
             onClick={() => {
               setIsEditingGemini(!isEditingGemini);
@@ -61,7 +62,7 @@ export function GeminiConfigBlock({
             }}
             className={`text-[8px] font-black px-2 py-0.5 rounded-full transition-colors ${isEditingGemini ? 'bg-slate-200 text-slate-600' : 'bg-purple-600 text-white'}`}
           >
-            {isEditingGemini ? t('cancel') || '取消' : t('edit') || '編輯'}
+            {isEditingGemini ? text.common.cancel : text.common.edit}
           </button>
         </div>
       </div>
@@ -82,16 +83,16 @@ export function GeminiConfigBlock({
                    disabled={isSaving === 'gemini'}
                    className="absolute right-1 top-1 py-1 px-4 bg-purple-600 text-white text-[10px] font-black rounded-lg shadow-sm hover:translate-y-[-1px] active:translate-y-[1px] transition-all disabled:opacity-50"
                >
-                   {isSaving === 'gemini' ? '..' : '保存'}
+                   {isSaving === 'gemini' ? '..' : text.common.save}
                </button>
             )}
           </div>
           
           <div className="space-y-1 mt-2 mb-2">
-            <label className="text-[10px] font-bold text-purple-900/60 block">模型型号 / Model</label>
+            <label className="text-[10px] font-bold text-purple-900/60 block">{text.ai.modelLabel}</label>
             <input
                 type="text"
-                placeholder="例如: gemini-2.0-flash-exp"
+                placeholder={`例如: ${DEFAULT_AI_MODELS.gemini}`}
                 className={`${inputClass} !h-8 text-[11px] w-full bg-white border-purple-900/10 py-1.5`}
                 value={geminiModel}
                 onChange={(e) => setGeminiModel(e.target.value)}
@@ -104,7 +105,7 @@ export function GeminiConfigBlock({
             disabled={isTesting !== null} 
             className={`w-full text-[9px] font-black p-2.5 transition-all rounded-xl border flex items-center justify-center gap-2 ${isTesting === 'gemini' ? 'bg-purple-50 text-purple-300 border-purple-100' : 'bg-white hover:bg-purple-50 border-purple-200 text-purple-700 shadow-sm active:scale-95'}`}
           >
-            {isTesting === 'gemini' ? '測試連通性中...' : '测试连通性 / Test Connection'}
+            {isTesting === 'gemini' ? '测试中...' : text.ai.test}
           </button>
       </div>
     </div>

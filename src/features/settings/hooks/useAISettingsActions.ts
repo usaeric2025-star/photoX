@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DEFAULT_AI_MODELS } from '../../../../shared/aiModels.js';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSettings, useTranslation } from '#src/hooks/index.js';
 import { AppSettings } from '#src/types/index.js';
@@ -25,11 +26,15 @@ export function useAISettingsActions() {
   const [localGeminiKey, setLocalGeminiKey] = useState(
     settings?.geminiApiKey ? '••••••••••••••••' : ''
   );
-  const [geminiModel, setGeminiModel] = useState(String(settings?.geminiModel || 'gemini-2.0-flash'));
+  const [geminiModel, setGeminiModel] = useState(String(settings?.geminiModel || DEFAULT_AI_MODELS.gemini));
   const [isEditingGemini, setIsEditingGemini] = useState(false);
 
-  const [openrouterModel, setOpenrouterModel] = useState(String(settings?.openrouterModel || 'google/gemini-2.5-flash'));
-  const [agnesModel, setAgnesModel] = useState(String(settings?.agnesModel || 'gemini-2.0-flash-exp'));
+  const [openrouterModel, setOpenrouterModel] = useState(String(settings?.openrouterModel || DEFAULT_AI_MODELS.openrouter));
+  const [agnesModel, setAgnesModel] = useState(String(settings?.agnesModel || DEFAULT_AI_MODELS.agnes));
+
+  const [primaryProviderState, setPrimaryProviderState] = useState<AIProvider>(
+    (settings?.primaryAiProvider as AIProvider) || 'agnes'
+  );
 
   useEffect(() => {
     if (settings?.openrouterApiKey) setLocalOpenRouterKey('••••••••••••••••');
@@ -38,7 +43,8 @@ export function useAISettingsActions() {
     if (settings?.openrouterModel) setOpenrouterModel(String(settings.openrouterModel));
     if (settings?.agnesModel) setAgnesModel(String(settings.agnesModel));
     if (settings?.geminiModel) setGeminiModel(String(settings.geminiModel));
-  }, [settings?.openrouterApiKey, settings?.agnesApiKey, settings?.geminiApiKey, settings?.openrouterModel, settings?.agnesModel, settings?.geminiModel]);
+    if (settings?.primaryAiProvider) setPrimaryProviderState(settings.primaryAiProvider as AIProvider);
+  }, [settings?.openrouterApiKey, settings?.agnesApiKey, settings?.geminiApiKey, settings?.openrouterModel, settings?.agnesModel, settings?.geminiModel, settings?.primaryAiProvider]);
   
   const [isEditingOpenRouter, setIsEditingOpenRouter] = useState(false);
   const [isEditingAgnes, setIsEditingAgnes] = useState(false);
@@ -51,7 +57,7 @@ export function useAISettingsActions() {
     openrouter: !!settings?.openrouterApiKey,
     agnes: !!settings?.agnesApiKey,
     gemini: !!settings?.geminiApiKey,
-    primaryProvider: String(settings?.primaryAiProvider || 'agnes')
+    primaryProvider: primaryProviderState
   };
 
   const saveKey = async (provider: AIProvider, key: string) => {
@@ -72,16 +78,24 @@ export function useAISettingsActions() {
         setLocalAgnesKey('••••••••••••••••');
       }
     } catch (e) {
-      ErrorFactory.handle(e, { context: t('updateError') || '保存失敗' });
+      ErrorFactory.handle(e, { context: t('updateError') || '保存失败' });
     } finally {
       setIsSavingKey(null);
     }
   };
 
   const saveProvider = async (provider: AIProvider) => {
+    if (isSavingProvider) return;
+    const prev = primaryProviderState;
+    setPrimaryProviderState(provider);
     setIsSavingProvider(true);
     try {
       await updateSettings({ primaryAiProvider: provider } as Partial<AppSettings>);
+      const name = provider === 'openrouter' ? 'OpenRouter' : provider === 'agnes' ? 'Agnes' : 'Gemini';
+      feedback.success(`已设置首选 AI 处理器为 ${name}`);
+    } catch (e) {
+      setPrimaryProviderState(prev);
+      ErrorFactory.handle(e, { context: '切换首选 AI 处理器失败' });
     } finally {
       setIsSavingProvider(false);
     }
@@ -96,14 +110,14 @@ export function useAISettingsActions() {
     setIsTestingProvider(provider);
     try {
       const apiKey = provider === 'openrouter' ? settings?.openrouterApiKey : provider === 'agnes' ? settings?.agnesApiKey : settings?.geminiApiKey;
-      const ok = await testAiConnection(String(apiKey || ""), provider);
-      if (ok) {
-        feedback.success(t('aiConnectSuccess') || '連接成功');
+      const res = await testAiConnection(String(apiKey || ""), provider);
+      if (res && res.success) {
+        feedback.success('测试连接成功');
       } else {
-        feedback.error(t('aiConnectFailed') || '連接失敗');
+        feedback.error(res?.error || '测试连接失败');
       }
     } catch (e) {
-      ErrorFactory.handle(e, { context: t('aiConnectFailed') || '連接失敗' });
+      ErrorFactory.handle(e, { context: '测试连接失败' });
     } finally {
       setIsTestingProvider(null);
     }

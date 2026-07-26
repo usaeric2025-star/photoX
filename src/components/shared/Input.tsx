@@ -41,7 +41,7 @@ export const Input = ({
       />
       {error && (
         <p className="mt-1.5 px-1 text-xs font-bold text-red-500 animate-fade-in">
-          {error}
+          {typeof error === 'string' ? error : (typeof error === 'object' && error ? (error as { message?: string }).message || String(error) : String(error))}
         </p>
       )}
     </div>

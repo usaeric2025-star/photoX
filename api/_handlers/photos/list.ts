@@ -63,6 +63,7 @@ export const listRoutes = new Hono()
                     isHidden: !!d.isHidden,
                     isCover: !!d.isGroupCover,
                     isGroupCover: !!d.isGroupCover,
+                    metadata: d.metadata || null,
                     createdAt: d.createdAt 
                         ? (d.createdAt instanceof Date ? d.createdAt.toISOString() : String(d.createdAt)) 
                         : null,

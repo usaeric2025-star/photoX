@@ -1,14 +1,11 @@
-import { useAtomValue } from 'jotai';
-import { appLangAtom } from '#src/store/index.js';
-import { OpenRouterConfigBlock } from './OpenRouterConfigBlock.js';
-import { AgnesConfigBlock } from './AgnesConfigBlock.js';
-import { GeminiConfigBlock } from './GeminiConfigBlock.js';
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { AppSettings } from '#src/types/index.js';
-import { } from '#lib/store/index.js';
-import { useTranslation } from '#src/hooks/index.js';
+import { useSettingsText } from '#src/hooks/useSettingsText.js';
 import { useAISettingsActions } from './hooks/useAISettingsActions.js';
+import { OpenRouterConfigBlock } from './OpenRouterConfigBlock.js';
+import { AgnesConfigBlock } from './AgnesConfigBlock.js';
+import { GeminiConfigBlock } from './GeminiConfigBlock.js';
 
 interface AISecuritySectionProps {
   agnesApiKey: string;
@@ -26,11 +23,9 @@ interface AISecuritySectionProps {
  * AI 處理器配置與安全設置區塊。
  */
 export function AISecuritySection({
-  agnesApiKey: initialAgnesKey,
   inputClass
 }: AISecuritySectionProps) {
-  const appLang = useAtomValue(appLangAtom);
-  const { t } = useTranslation();
+  const text = useSettingsText();
   const {
     keysStatus,
     localOpenRouterKey,
@@ -63,23 +58,27 @@ export function AISecuritySection({
   return (
     <div className="grid grid-cols-1 gap-6">
       <div className="bg-white rounded-[32px] shadow-sm border border-brand-navy/10 overflow-hidden" id="section-ai">
-        <div className="p-6 border-b border-brand-navy/5 flex items-center justify-between bg-slate-50/50">
-           <div className="flex items-center">
-             <Icon name="sparkles" size={16} className="text-brand-gold mr-2" />
-             <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest">
-                AI 处理器配置 / AI Processors
+        <div className="p-5 sm:p-6 border-b border-brand-navy/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/80">
+           <div className="flex items-center gap-2">
+             <Icon name="sparkles" size={18} className="text-brand-gold shrink-0" />
+             <h4 className="font-bold text-brand-navy text-sm sm:text-base tracking-tight">
+                {text.ai.title}
              </h4>
            </div>
            
-           <div className="flex items-center gap-2 bg-white/50 p-1 rounded-full border border-slate-200">
-              <span className="text-[8px] font-bold text-brand-navy/60 ml-2 uppercase">首选 / Primary</span>
-              <div className="flex bg-slate-100 rounded-full p-0.5">
+           <div className="flex items-center gap-2 bg-white/90 p-1.5 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-xs font-bold text-brand-navy/70 ml-2 shrink-0">{text.ai.primary}</span>
+              <div className="flex bg-slate-100/80 rounded-xl p-1 gap-1">
                 {(['openrouter', 'agnes', 'gemini'] as const).map(p => (
                    <button
                     key={p}
                     onClick={() => saveProvider(p)}
-                    disabled={isSavingProvider === true}
-                    className={`px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all ${keysStatus.primaryProvider === p ? 'bg-white text-brand-navy shadow-sm' : 'text-brand-navy/40 hover:text-brand-navy/60'}`}
+                    disabled={isSavingProvider}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      keysStatus.primaryProvider === p 
+                        ? 'bg-white text-brand-navy shadow-xs border border-slate-200/60 font-extrabold' 
+                        : 'text-brand-navy/50 hover:text-brand-navy hover:bg-white/50'
+                    }`}
                   >
                     {p === 'openrouter' ? 'OpenRouter' : p === 'agnes' ? 'Agnes' : 'Gemini'}
                   </button>
@@ -88,7 +87,7 @@ export function AISecuritySection({
            </div>
         </div>
 
-        <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <OpenRouterConfigBlock 
             keysStatus={keysStatus}
             isEditingOpenRouter={isEditingOpenRouter}
@@ -101,9 +100,8 @@ export function AISecuritySection({
             saveKey={saveKey}
             handleSaveModel={handleSaveModel}
             handleTest={handleTest}
-            isSaving={isSavingKey && keysStatus.primaryProvider === 'openrouter' ? 'openrouter' : null}
-            isTesting={isTestingProvider && keysStatus.primaryProvider === 'openrouter' ? 'openrouter' : null}
-            t={t}
+            isSaving={isSavingKey === 'openrouter' ? 'openrouter' : null}
+            isTesting={isTestingProvider === 'openrouter' ? 'openrouter' : null}
           />
 
           <AgnesConfigBlock
@@ -118,10 +116,8 @@ export function AISecuritySection({
             saveKey={saveKey as any}
             handleSaveModel={handleSaveModel as any}
             handleTest={handleTest as any}
-            isSaving={isSavingKey && keysStatus.primaryProvider === 'agnes' ? 'agnes' : null}
-            isTesting={isTestingProvider && keysStatus.primaryProvider === 'agnes' ? 'agnes' : null}
-            appLang={appLang}
-            t={t}
+            isSaving={isSavingKey === 'agnes' ? 'agnes' : null}
+            isTesting={isTestingProvider === 'agnes' ? 'agnes' : null}
           />
           <GeminiConfigBlock
             keysStatus={keysStatus as any}
@@ -135,10 +131,8 @@ export function AISecuritySection({
             saveKey={saveKey as any}
             handleSaveModel={handleSaveModel as any}
             handleTest={handleTest as any}
-            isSaving={isSavingKey && keysStatus.primaryProvider === 'gemini' ? 'gemini' : null}
-            isTesting={isTestingProvider && keysStatus.primaryProvider === 'gemini' ? 'gemini' : null}
-            appLang={appLang}
-            t={t}
+            isSaving={isSavingKey === 'gemini' ? 'gemini' : null}
+            isTesting={isTestingProvider === 'gemini' ? 'gemini' : null}
           />
         </div>
       </div>

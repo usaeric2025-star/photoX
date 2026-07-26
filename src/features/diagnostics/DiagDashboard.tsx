@@ -25,7 +25,7 @@ export function DiagDashboard() {
   const activeTab = (() => {
     if (location.startsWith(ADMIN_ROUTES.TASKS)) return 'tasks';
     if (location.startsWith(ADMIN_ROUTES.ERROR_LOGS)) return 'logs';
-    return tab;
+    return tab || 'stats';
   })();
 
   const setActiveTab = (newTab: 'diagnosis' | 'tasks' | 'logs' | 'stats') => {
@@ -37,7 +37,7 @@ export function DiagDashboard() {
       if (!location.startsWith(ADMIN_ROUTES.DIAGNOSTICS)) {
         setLocation(ADMIN_ROUTES.DIAGNOSTICS);
       }
-      setTab(newTab === 'stats' ? null : newTab);
+      setTab(newTab);
     }
   };
 
@@ -59,18 +59,18 @@ export function DiagDashboard() {
           )}
           <Icon name="shield-check" className="w-8 h-8 text-blue-900" />
           <div className="space-y-0.5">
-            <h1 className="text-2xl font-black text-blue-900 tracking-tight uppercase">{t('systemMaintCenter')}</h1>
-            <p className="text-xs text-slate-500 font-medium">SYSTEM MAINTENANCE & RECOVERY HUB</p>
+            <h1 className="text-2xl font-black text-blue-900 tracking-tight uppercase">系统维护与诊断中心</h1>
+            <p className="text-xs text-slate-500 font-medium">状态监控、修复工具与系统日志</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
              {([
-               { id: 'stats', label: `${t('dataOverview')} / Stats` },
-               { id: 'diagnosis', label: `${t('diagnosisAndRepair')} / Repair` },
-               { id: 'tasks', label: `${t('taskCenter')} / Tasks` },
-               { id: 'logs', label: `${t('systemLogs')} / Logs` }
+               { id: 'stats', label: '数据概览' },
+               { id: 'diagnosis', label: '诊断修复' },
+               { id: 'tasks', label: '任务中心' },
+               { id: 'logs', label: '系统日志' }
              ] as const).map(tabItem => (
                <button
                  key={tabItem.id}

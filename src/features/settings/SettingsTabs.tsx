@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
+import { useSettingsText } from '#src/hooks/useSettingsText.js';
 
 interface SettingsTabsProps {
   activeTab: string;
@@ -7,11 +8,13 @@ interface SettingsTabsProps {
 }
 
 export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
+  const text = useSettingsText();
+
   const tabs = [
-    { id: 'general', label: '核心配置', icon: 'Settings', subLabel: 'General' },
-    { id: 'ai', label: '智能核心', icon: 'Cpu', subLabel: 'AI Engine' },
-    { id: 'assets', label: '資產管理', icon: 'layout-grid', subLabel: 'Assets' },
-    { id: 'status', label: '系統監控', icon: 'Activity', subLabel: 'Health' },
+    { id: 'general', label: text.tabs.general, icon: 'Settings', subLabel: 'General' },
+    { id: 'ai', label: text.tabs.ai, icon: 'Cpu', subLabel: 'AI Engine' },
+    { id: 'assets', label: text.tabs.assets, icon: 'layout-grid', subLabel: 'Assets' },
+    { id: 'status', label: text.tabs.status, icon: 'Activity', subLabel: 'Health' },
   ] as const;
 
   return (

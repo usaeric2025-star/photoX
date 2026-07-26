@@ -37,27 +37,9 @@ interface SettingsPageProps {
 export function SettingsPage({ onClose }: SettingsPageProps) {
   const [location, setLocation] = useAppLocation();
   const { t, appLang } = useTranslation();
-  const { settings, agnesApiKey, accessPasscode, updateSettings } = useSettings();
+  const { settings, accessPasscode, updateSettings } = useSettings();
   
-  const [testResult, setTestResult] = useState<{ success?: boolean; error?: string; loading?: boolean; } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
-
-  const { submit: runConnectionTest } = useFormSubmit({
-    schema: v.object({}),
-    mutationFn: async () => {
-      const ok = await testAiConnection(String(agnesApiKey || ""), "google");
-      if (!ok) throw new Error(t('aiConnectFailed'));
-      return true;
-    },
-    onSuccess: () => setTestResult({ success: true }),
-    onError: (msg: unknown) => setTestResult({ success: false, error: String(msg) }),
-  });
-
-  const testConnection = async () => {
-    if (!agnesApiKey) return;
-    setTestResult({ loading: true });
-    await runConnectionTest({});
-  };
 
   const { run: debouncedSave } = useDebounceFn((newSettings: AppSettings) => {
     updateSettings(newSettings).catch(e => ErrorFactory.handle(e, { context: '[SettingsPage] debouncedSave failed', silent: true }));
@@ -157,10 +139,10 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {loadedTabs.includes('ai') && (
             <div className={activeTab === 'ai' ? 'block' : 'hidden'}>
               <AISettings 
-                agnesApiKey={String(agnesApiKey || "")}
-                setAgnesApiKey={(key) => setSettingField('agnesApiKey', key)}
-                testConnection={testConnection}
-                testResult={testResult}
+                agnesApiKey=""
+                setAgnesApiKey={() => {}}
+                testConnection={async () => {}}
+                testResult={null}
                 accessPasscode={String(accessPasscode || "")}
                 setAccessPasscode={(code) => setSettingField('accessPasscode', code)}
                 setSettingField={setSettingField}

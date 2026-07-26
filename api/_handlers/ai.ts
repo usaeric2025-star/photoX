@@ -4,7 +4,8 @@ import { type Env } from '../_app.js';
 import * as v from 'valibot';
 import { db, furnitureItems, categories, tags, groups as groupsTable, groupCorrectionLogs, users } from '../_lib/db/index.js';
 import { eq, and, inArray, desc, sql } from 'drizzle-orm';
-import { getAIProvider, OpenRouterProvider, AgnesProvider, BaseAIProvider } from '../_lib/ai/providerFactory.js';
+import { getAIProvider, OpenRouterProvider, AgnesProvider, GeminiProvider, BaseAIProvider } from '../_lib/ai/providerFactory.js';
+import { DEFAULT_AI_MODELS } from '../../shared/aiModels.js';
 import { executeAITask } from '../_lib/ai/executor.js';
 import { processGroupAnalysis } from './ai/groupAnalysis.js';
 import { 
@@ -43,9 +44,11 @@ export const ai = new Hono<Env>()
     let provider;
     if (apiKey) {
         if (providerName === 'agnes') {
-            provider = new AgnesProvider({ apiKey, model: model || 'gemini-2.0-flash-exp' });
+            provider = new AgnesProvider({ apiKey, model: model || DEFAULT_AI_MODELS.agnes });
+        } else if (providerName === 'gemini') {
+            provider = new GeminiProvider({ apiKey, model: model || DEFAULT_AI_MODELS.gemini });
         } else {
-            provider = new OpenRouterProvider({ apiKey, model: model || 'google/gemini-2.5-flash-lite' });
+            provider = new OpenRouterProvider({ apiKey, model: model || DEFAULT_AI_MODELS.openrouter });
         }
     } else {
         provider = await getAIProvider(providerName, model);
@@ -72,7 +75,7 @@ export const ai = new Hono<Env>()
     const { task, imageUrl, prompt } = check.output;
     const provider = await getAIProvider('');
     const modelConfig = (provider as BaseAIProvider).getConfig().model;
-    const model = modelConfig || 'google/gemini-2.5-flash-lite';
+    const model = modelConfig || provider.defaultModel;
     
     const messages = imageUrl 
         ? [{ role: 'user', content: [{ type: 'image_url', image_url: { url: imageUrl } }, { type: 'text', text: prompt || 'Analyze this image' }]}]
@@ -130,7 +133,7 @@ export const ai = new Hono<Env>()
 
     const provider = await getAIProvider();
     const modelConfig = (provider as BaseAIProvider).getConfig().model;
-    const model = modelConfig || 'google/gemini-2.5-flash-lite';
+    const model = modelConfig || provider.defaultModel;
     
     const context = {
         categories: catRef.map(c => {
@@ -188,7 +191,7 @@ export const ai = new Hono<Env>()
     const { customModel, promptText } = check.output;
     const provider = await getAIProvider(undefined, customModel);
     const modelConfig = (provider as BaseAIProvider).getConfig().model;
-    const model = modelConfig || 'google/gemini-2.5-flash-lite';
+    const model = modelConfig || provider.defaultModel;
 
     const { data, rawText } = await executeAITask({
         task: 'translate',
@@ -216,7 +219,7 @@ export const ai = new Hono<Env>()
     const { base64Image, promptText, provider: providerName } = check.output;
     const provider = await getAIProvider(providerName);
     const modelConfig = (provider as BaseAIProvider).getConfig().model;
-    const model = modelConfig || 'google/gemini-2.5-flash-lite';
+    const model = modelConfig || provider.defaultModel;
 
     const messages = [{ 
         role: 'user', 
@@ -248,7 +251,7 @@ export const ai = new Hono<Env>()
     const prompt = AI_PROMPTS.REFINE_PHOTO(check.output.photoDetail);
     const provider = await getAIProvider();
     const modelConfig = (provider as BaseAIProvider).getConfig().model;
-    const model = modelConfig || 'google/gemini-2.5-flash-lite';
+    const model = modelConfig || provider.defaultModel;
 
     const { data, rawText } = await executeAITask({
         task: 'analyze-photo-v2',

@@ -1,8 +1,7 @@
 import React from "react";
 import { Icon } from '#src/components/ui/Icon.js';
 import { Tag } from '#src/types/index.js';
-import { useClickOutside, useLongPress } from '#src/hooks/core/index.js';
-import { motion, AnimatePresence } from "lite-sleek";
+import { useSettingsText } from '#src/hooks/useSettingsText.js';
 
 import { NativePopover } from '#src/components/ui/NativePopover.js';
 
@@ -17,7 +16,7 @@ interface TagItemProps {
 /**
  * TagItem
  * 
- * 顯示單個標籤項目，支持長按菜單（編輯、推薦、刪除）。
+ * 显示单个标签项目，支持长按菜单（编辑、推荐、删除）。
  */
 export function TagItem({
   tag,
@@ -26,6 +25,8 @@ export function TagItem({
   isPinned,
   togglePin,
 }: TagItemProps) {
+  const text = useSettingsText();
+
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     deleteTag(tag.id);
@@ -86,14 +87,14 @@ export function TagItem({
           onClick={handleEditClick}
           className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2 transition-colors w-full text-left"
         >
-          <Icon name="pencil" size={12} /> 编辑 / EDIT
+          <Icon name="pencil" size={12} /> {text.common.edit}
         </button>
         <button
           id={`menu-delete-tag-${tag.id}`}
           onClick={handleDeleteClick}
           className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2 transition-colors w-full text-left"
         >
-          <Icon name="trash-2" size={12} /> 删除
+          <Icon name="trash-2" size={12} /> {text.common.delete}
         </button>
       </div>
     </NativePopover>

@@ -1,5 +1,6 @@
 import { decrypt } from "../encryption.js";
 import { getServerEnv } from "../../../shared/envSchema.js";
+import { DEFAULT_AI_MODELS } from "../../../shared/aiModels.js";
 import { logger } from "../logger.js";
 import { db, secrets as secretsTable, settings as settingsTable } from '../../_lib/db/index.js';
 import { eq } from "drizzle-orm";
@@ -7,7 +8,7 @@ import { eq } from "drizzle-orm";
 const getModel = async (customModel?: string, providerName?: string): Promise<string> => {
     if (customModel) return customModel;
 
-    let targetProvider = providerName || 'openrouter';
+    let targetProvider = (providerName as keyof typeof DEFAULT_AI_MODELS) || 'openrouter';
 
     try {
         // First check secrets table for provider specific model
@@ -26,7 +27,7 @@ const getModel = async (customModel?: string, providerName?: string): Promise<st
         if ((env as Record<string, string | undefined>).DEFAULT_AI_MODEL) return (env as Record<string, string | undefined>).DEFAULT_AI_MODEL!;
     } catch {}
 
-    return targetProvider === 'openrouter' ? 'google/gemini-2.5-flash-lite' : targetProvider === 'agnes' ? 'gemini-2.0-flash-exp' : 'gemini-2.0-flash';
+    return DEFAULT_AI_MODELS[targetProvider] || DEFAULT_AI_MODELS.openrouter;
 };
 
 export interface AIResponse {
@@ -73,7 +74,7 @@ export abstract class BaseAIProvider {
 
 export class OpenRouterProvider extends BaseAIProvider {
     name = "openrouter";
-    defaultModel = "google/gemini-2.5-flash-lite";
+    defaultModel = DEFAULT_AI_MODELS.openrouter;
     baseUrl = "https://openrouter.ai/api/v1";
 
     async chat(messages: { role: string; content: unknown }[]): Promise<AIResponse> {
@@ -108,11 +109,15 @@ export class OpenRouterProvider extends BaseAIProvider {
 
 export class AgnesProvider extends BaseAIProvider {
     name = "agnes";
-    defaultModel = "gemini-2.0-flash-exp";
+    defaultModel = DEFAULT_AI_MODELS.agnes;
     baseUrl = "https://apihub.agnes-ai.com/v1";
 
     async chat(messages: { role: string; content: unknown }[]): Promise<AIResponse> {
         try {
+            let modelToUse = this.config.model || this.defaultModel;
+            if (modelToUse.startsWith('google/')) {
+                modelToUse = modelToUse.replace(/^google\//, '');
+            }
             // Agnes API uses OpenAI format, not Gemini's native format
             const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
@@ -121,7 +126,7 @@ export class AgnesProvider extends BaseAIProvider {
                     'Authorization': `Bearer ${this.config.apiKey}`
                 },
                 body: JSON.stringify({
-                    model: this.config.model || this.defaultModel,
+                    model: modelToUse,
                     messages
                 })
             });
@@ -145,28 +150,61 @@ export async function getAIProvider(providerName?: string, modelOverride?: strin
     const primary = await db.query.secrets.findFirst({
         where: eq(secretsTable.key, 'PRIMARY_AI_PROVIDER')
     });
-    let actualProvider = providerName || primary?.value as string || 'openrouter';
+    let requestedProvider = providerName || primary?.value as string || 'openrouter';
 
-    // 從 secrets 讀取統一格式的 API Key
-    let secret = await db.query.secrets.findFirst({
-        where: eq(secretsTable.key, actualProvider)
-    });
+    const getKeyForProvider = async (p: string): Promise<string> => {
+        const secret = await db.query.secrets.findFirst({
+            where: eq(secretsTable.key, p)
+        });
+        if (secret?.value) {
+            try {
+                const dec = decrypt(secret.value as string);
+                if (dec && dec.trim()) return dec.trim();
+            } catch {
+                // ignore decrypt error
+            }
+        }
+        if ((p === 'gemini' || p === 'agnes') && process.env.GEMINI_API_KEY) {
+            return process.env.GEMINI_API_KEY;
+        }
+        if (p === 'openrouter' && process.env.OPENROUTER_API_KEY) {
+            return process.env.OPENROUTER_API_KEY;
+        }
+        return '';
+    };
 
-    let apiKey = '';
-    
-    if (secret?.value) {
-        apiKey = decrypt(secret.value as string);
+    let actualProvider = requestedProvider;
+    let apiKey = await getKeyForProvider(actualProvider);
+
+    // 如果首选 Provider 未配置 Key，自动切到有可用 Key 的 Provider
+    if (!apiKey) {
+        const candidates = ['openrouter', 'agnes', 'gemini'].filter(p => p !== actualProvider);
+        for (const candidate of candidates) {
+            const candidateKey = await getKeyForProvider(candidate);
+            if (candidateKey) {
+                actualProvider = candidate;
+                apiKey = candidateKey;
+                logger.info(`[getAIProvider] ${requestedProvider} 未配置 Key，已自动回退到 ${actualProvider}`);
+                break;
+            }
+        }
     }
 
-    // Fallback logic for legacy settings table removed (all config should be in secrets)
-    if (!apiKey) throw new Error(`未配置 ${actualProvider} API 密鑰`);
+    if (!apiKey) throw new Error(`未配置 ${requestedProvider} API 密鑰`);
 
     let model = modelOverride;
-    if (model && actualProvider === 'openrouter' && !model.includes('/')) {
-        model = 'google/' + model;
-    }
     if (!model) {
         model = await getModel(undefined, actualProvider);
+    }
+
+    if (actualProvider === 'openrouter') {
+        if (model && !model.includes('/')) {
+            model = 'google/' + model;
+        }
+    } else if (actualProvider === 'gemini' || actualProvider === 'agnes') {
+        if (model && model.startsWith('google/')) {
+            model = model.replace(/^google\//, '');
+        }
     }
     
     logger.info(`[getAIProvider] Using ${actualProvider} with model: ${model}`);  
@@ -183,11 +221,16 @@ export async function getAIProvider(providerName?: string, modelOverride?: strin
 
 export class GeminiProvider extends BaseAIProvider {
     name = "gemini";
-    defaultModel = "gemini-2.0-flash";
+    defaultModel = DEFAULT_AI_MODELS.gemini;
     baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai";
 
     async chat(messages: { role: string; content: unknown }[]): Promise<AIResponse> {
         try {
+            let modelToUse = this.config.model || this.defaultModel;
+            if (modelToUse.startsWith('google/')) {
+                modelToUse = modelToUse.replace(/^google\//, '');
+            }
+
             const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
@@ -195,7 +238,7 @@ export class GeminiProvider extends BaseAIProvider {
                     'Authorization': `Bearer ${this.config.apiKey}`
                 },
                 body: JSON.stringify({
-                    model: this.config.model || this.defaultModel,
+                    model: modelToUse,
                     messages
                 })
             });

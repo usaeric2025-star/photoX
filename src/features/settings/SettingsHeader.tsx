@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '#src/components/ui/Icon.js';
 import { Button } from '#src/components/ui/Button.js';
-import { useTranslation } from '#src/hooks/index.js';
+import { useSettingsText } from '#src/hooks/useSettingsText.js';
 
 interface SettingsHeaderProps {
   hasChanges: boolean;
@@ -13,10 +13,10 @@ interface SettingsHeaderProps {
 /**
  * SettingsHeader
  * 
- * 設置頁面的頭部，包含標題、未儲存提示、儲存按鈕與關閉按鈕。
+ * 设置页面的头部，包含标题、未保存提示、保存按钮与关闭按钮。
  */
 export function SettingsHeader({ hasChanges, isSaving, onSave, onClose }: SettingsHeaderProps) {
-  const { t } = useTranslation();
+  const text = useSettingsText();
   
   return (
     <div className="px-6 py-4 flex items-center justify-between bg-white border-b border-slate-200 shrink-0 shadow-sm">
@@ -25,11 +25,11 @@ export function SettingsHeader({ hasChanges, isSaving, onSave, onClose }: Settin
           <Icon name="settings-2" size={18} className="stroke-[2.5]" />
         </div>
         <span className="font-black text-lg tracking-tight text-slate-800">
-          {t('systemSettings') || '系統設置 / Settings'}
+          {text.title}
         </span>
         {hasChanges && (
           <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full font-bold uppercase tracking-widest ">
-            {t('unsavedChanges') || '未儲存'}
+            {text.unsavedChanges}
           </span>
         )}
       </div>
@@ -42,16 +42,16 @@ export function SettingsHeader({ hasChanges, isSaving, onSave, onClose }: Settin
            variant="primary"
            className="h-10 px-4 rounded-full shadow-sm bg-brand-gold hover:bg-brand-gold/90 border-0"
            leftIcon={!isSaving && <Icon name="save" size={16} />}
-           title={t('saveSettings') || '儲存設置'}
+           title={text.common.save}
         >
-          {t('save') || '儲存'}
+          {text.common.save}
         </Button>
         
         <button 
           id="close-settings-btn"
           onClick={onClose}
           className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 shrink-0 border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100 shadow-sm cursor-pointer outline-none"
-          title={t('closeReturn') || '關閉'}
+          title={text.common.cancel}
         >
           <Icon name="x" size={20} />
         </button>

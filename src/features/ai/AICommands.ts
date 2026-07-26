@@ -93,24 +93,31 @@ export const analyzePhoto = async (photoId: string, imageUrl?: string, signal?: 
         tagNames: normalized.tagNames,
         tagIds: Array.isArray(parsed.tag_ids) ? (parsed.tag_ids as unknown[]).map(String) : [],
         dimensions: normalized.dimensions,
-        raw_result: normalized.rawResult
+        raw_result: normalized.rawResult,
+        itemCode: (parsed.itemCode || parsed.item_code) as string | undefined,
+        manualCode: (parsed.manualCode || parsed.manual_code) as string | undefined,
+        modelNumber: (parsed.modelNumber || parsed.model_number) as string | undefined
       };
     } catch (e: unknown) {
       const err = e as { name?: string; statusCode?: number; response?: { status?: number }; message?: string };
       lastError = err;
-      if (err.name === 'AbortError') throw new Error('请求已取消');
+      if (signal?.aborted || err.name === 'AbortError' || err.message?.includes('aborted') || err.message?.includes('取消')) {
+        const cancelErr = new Error('请求已取消');
+        cancelErr.name = 'AbortError';
+        throw cancelErr;
+      }
       
-      // If it's a 404/504 or common transient error, retry
+      // If it's a 404/429/502/503 or common transient error, retry
       const statusCode = err.statusCode || (err.response && err.response.status);
       const isTimeout = statusCode === 504 || err.message?.includes('timeout') || err.message?.includes('Timeout');
       if (isTimeout) {
         throw new Error('AI 服务响应超时，请稍后重试');
       }
-      const isTransient = statusCode === 404 || statusCode === 502 || statusCode === 503 || err.message?.includes('NOT_FOUND');
+      const isTransient = statusCode === 404 || statusCode === 429 || statusCode === 502 || statusCode === 503 || err.message?.includes('NOT_FOUND') || err.message?.includes('429') || err.message?.includes('Too Many Requests');
       
       if (isTransient && i < maxRetries) {
-        const delay = Math.pow(2, i) * 1000;
-        logger.warn(`[analyzePhoto] Attempt ${i + 1} failed with ${err.message}, retrying in ${delay}ms...`);
+        const delay = Math.pow(2, i) * 1200 + Math.random() * 500;
+        logger.warn(`[analyzePhoto] Attempt ${i + 1} failed with ${err.message}, retrying in ${Math.round(delay)}ms...`);
         await new Promise(res => setTimeout(res, delay));
         continue;
       }

@@ -1,4 +1,5 @@
 import { AppSettings } from '#src/types/index.js';
+import { DEFAULT_AI_MODELS } from '../../../shared/aiModels.js';
 import React, { useMemo } from 'react';
 import { useAppQuery, useAppMutation, queryClient } from '#lib/query/index.js';
 import { STALE_TIMES } from '#lib/query/config.js';
@@ -47,9 +48,9 @@ const SettingsService = {
         agnesApiKey: keysStatus.agnes ? '••••••••••••••••' : '',
         geminiApiKey: keysStatus.gemini ? '••••••••••••••••' : '',
         primaryAiProvider: (keysStatus.primaryProvider as string) || 'agnes',
-        openrouterModel: (keysStatus.openrouter_model as string) || 'google/gemini-2.5-flash',
-        agnesModel: (keysStatus.agnes_model as string) || 'gemini-2.0-flash-exp',
-        geminiModel: (keysStatus.gemini_model as string) || 'gemini-2.0-flash',
+        openrouterModel: (keysStatus.openrouter_model as string) || DEFAULT_AI_MODELS.openrouter,
+        agnesModel: (keysStatus.agnes_model as string) || DEFAULT_AI_MODELS.agnes,
+        geminiModel: (keysStatus.gemini_model as string) || DEFAULT_AI_MODELS.gemini,
       } as AppSettings;
     } catch (e) {
       ErrorFactory.handle(e, { context: 'fetchPublicSettings' });
@@ -77,28 +78,28 @@ const SettingsService = {
         if (key === 'ai_provider' || key === 'primaryAiProvider') return;
 
         if (key === 'openrouterApiKey' && typeof value === 'string') {
-          promises.push(api.admin.settings['save-key'].$post({ json: { provider: 'openrouter', apiKey: value } }));
+          promises.push(ErrorFactory.unwrap(api.admin.settings['save-key'].$post({ json: { provider: 'openrouter', apiKey: value } }), '保存 OpenRouter 密钥失败'));
           return;
         }
         if (key === 'agnesApiKey' && typeof value === 'string') {
-          promises.push(api.admin.settings['save-key'].$post({ json: { provider: 'agnes', apiKey: value } }));
+          promises.push(ErrorFactory.unwrap(api.admin.settings['save-key'].$post({ json: { provider: 'agnes', apiKey: value } }), '保存 Agnes 密钥失败'));
           return;
         }
         if (key === 'geminiApiKey' && typeof value === 'string') {
-          promises.push(api.admin.settings['save-key'].$post({ json: { provider: 'gemini', apiKey: value } }));
+          promises.push(ErrorFactory.unwrap(api.admin.settings['save-key'].$post({ json: { provider: 'gemini', apiKey: value } }), '保存 Gemini 密钥失败'));
           return;
         }
 
         if (key === 'openrouterModel' && typeof value === 'string') {
-          promises.push(api.admin.settings['save-model'].$post({ json: { provider: 'openrouter', model: value } }));
+          promises.push(ErrorFactory.unwrap(api.admin.settings['save-model'].$post({ json: { provider: 'openrouter', model: value } }), '保存 OpenRouter 模型失败'));
           return;
         }
         if (key === 'agnesModel' && typeof value === 'string') {
-          promises.push(api.admin.settings['save-model'].$post({ json: { provider: 'agnes', model: value } }));
+          promises.push(ErrorFactory.unwrap(api.admin.settings['save-model'].$post({ json: { provider: 'agnes', model: value } }), '保存 Agnes 模型失败'));
           return;
         }
         if (key === 'geminiModel' && typeof value === 'string') {
-          promises.push(api.admin.settings['save-model'].$post({ json: { provider: 'gemini', model: value } }));
+          promises.push(ErrorFactory.unwrap(api.admin.settings['save-model'].$post({ json: { provider: 'gemini', model: value } }), '保存 Gemini 模型失败'));
           return;
         }
 
@@ -108,14 +109,14 @@ const SettingsService = {
       });
       
       if (rawPayload.provider) {
-        promises.push(api.admin.settings['save-provider'].$post({
+        promises.push(ErrorFactory.unwrap(api.admin.settings['save-provider'].$post({
           json: { provider: String(rawPayload.provider) }
-        }));
+        }), '保存首选 AI 处理器失败'));
       }
       if (rawPayload.primaryAiProvider) {
-        promises.push(api.admin.settings['save-provider'].$post({
+        promises.push(ErrorFactory.unwrap(api.admin.settings['save-provider'].$post({
           json: { provider: String(rawPayload.primaryAiProvider) }
-        }));
+        }), '保存首选 AI 处理器失败'));
       }
       
       if (rawPayload.pinned_tags || rawPayload.hot_tags_count !== undefined) {
@@ -128,9 +129,9 @@ const SettingsService = {
 
       payload.updated_at = new Date().toISOString();
       
-      promises.push(api.admin.settings['save-settings'].$post({
+      promises.push(ErrorFactory.unwrap(api.admin.settings['save-settings'].$post({
         json: { settingsPayload: payload as Record<string, unknown> }
-      }));
+      }), '保存系统设置失败'));
 
       await Promise.all(promises);
       return true;

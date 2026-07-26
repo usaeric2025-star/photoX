@@ -8,6 +8,7 @@ import { useCopyToClipboard } from '#src/hooks/index.js';
 import { } from '#lib/store/index.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { usePhotoEditSessionContext } from './hooks/PhotoEditSession.js';
+import { AIService } from '#src/lib/ai/AIService.js';
 
 /**
  * AISourceTab
@@ -54,18 +55,39 @@ export function AISourceTab() {
 
   if (error || !aiResult) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-slate-50 border border-slate-200 border-dashed rounded-3xl mt-4">
-        <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 mb-4 border border-amber-100">
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-slate-50 border border-slate-200 border-dashed rounded-3xl mt-4 space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 border border-amber-100">
           <Icon name="info" className="w-6 h-6" />
         </div>
-        <h3 className="font-sans font-semibold text-slate-800 text-base mb-1">
-          {appLang === 'zh' ? '暂无 AI 识别原始记录' : 'No AI Analysis Log Found'}
-        </h3>
-        <p className="text-slate-500 text-xs max-w-sm font-sans mb-4">
-          {appLang === 'zh' 
-            ? '尚未为此照片保存原始 LLM 识别输出。您可以在「细节」页签下运行「AI 属性识别」后重新查看。' 
-            : 'No raw LLM output has been saved for this photo yet. Run "AI Analysis" in the DETAIL tab to generate it.'}
-        </p>
+        <div>
+          <h3 className="font-sans font-semibold text-slate-800 text-base mb-1">
+            {appLang === 'zh' ? '暂无 AI 识别原始记录' : 'No AI Analysis Log Found'}
+          </h3>
+          <p className="text-slate-500 text-xs max-w-sm font-sans">
+            {appLang === 'zh' 
+              ? '尚未为此照片保存原始 LLM 识别输出，或可尝试从系统记录中提取。' 
+              : 'No raw LLM output has been saved for this photo yet.'}
+          </p>
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              const res = await AIService.reExtract(photoId);
+              if (res && res.rawResult) {
+                await onReExtract(res.rawResult);
+              } else {
+                feedback.error(appLang === 'zh' ? '未找到可提取的 AI RAW 日志' : 'No raw AI log found');
+              }
+            } catch (e) {
+              ErrorFactory.handle(e as Error, { context: 'AI RAW 提取' });
+            }
+          }}
+          disabled={isReExtracting}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+        >
+          <Icon name="refresh-cw" className={`w-3.5 h-3.5 ${isReExtracting ? 'animate-spin' : ''}`} />
+          <span>{appLang === 'zh' ? '尝试 AI RAW 重新提取' : 'Try AI RAW Re-extraction'}</span>
+        </button>
       </div>
     );
   }
@@ -110,14 +132,15 @@ export function AISourceTab() {
             onClick={() => onReExtract(aiResult.rawResult)}
             disabled={isReExtracting}
             title={appLang === 'zh' ? '重新提取属性' : 'Re-extract Meta'}
-            className="flex items-center justify-center w-10 h-10 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold"
           >
-            <Icon name="refresh-cw" className={`w-4 h-4 ${isReExtracting ? 'animate-spin' : ''}`} />
+            <Icon name="refresh-cw" className={`w-3.5 h-3.5 ${isReExtracting ? 'animate-spin' : ''}`} />
+            <span>{appLang === 'zh' ? 'AI RAW 重新提取' : 'Re-extract RAW'}</span>
           </button>
           <button
             onClick={() => copy(formattedResult)}
             title={appLang === 'zh' ? '复制代码' : 'Copy Code'}
-            className={`flex items-center justify-center w-10 h-10 rounded-xl border transition-all ${
+            className={`flex items-center justify-center w-9 h-9 rounded-xl border transition-all ${
               copied
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-inner'
                 : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 active:scale-95 shadow-sm'

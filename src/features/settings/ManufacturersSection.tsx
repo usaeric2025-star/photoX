@@ -6,7 +6,8 @@ import { Manufacturer } from '#src/types/index.js';
 import { ManufacturerItem } from '#src/components/admin/ManufacturerItem.js';
 import { PromptDialog } from "#src/components/ui/PromptDialog.js";
 import { normalizeManufacturerName } from "#lib/utils.js";
-import { useTranslation, useManufacturers, useManufacturerMutations } from '#src/hooks/index.js';
+import { useManufacturers, useManufacturerMutations } from '#src/hooks/index.js';
+import { useSettingsText } from '#src/hooks/useSettingsText.js';
 import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import * as v from 'valibot';
 import { FormProvider } from '#lib/forms/useFormField.js';
@@ -19,7 +20,7 @@ interface ManufacturersSectionProps {
 /**
  * ManufacturersSection
  * 
- * 整合廠商列表的管理。
+ * 整合厂商列表的管理。
  */
 export function ManufacturersSection({
   cardClass,
@@ -29,24 +30,24 @@ export function ManufacturersSection({
   const manufacturerMutations = useManufacturerMutations();
   
   const [isAddOpen, addDialog] = useDisclosure(false);
-  const { t } = useTranslation();
+  const text = useSettingsText();
 
   const { submit: runAddManufacturer, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: v.object({ name: v.pipe(v.string(), v.minLength(1, t('manufacturerNameEmpty') || '廠商名稱不能為空')) }),
+    schema: v.object({ name: v.pipe(v.string(), v.minLength(1, '厂商名称不能为空')) }),
     mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeManufacturerName(name);
       if (!normalized) return;
       await manufacturerMutations.create.mutateAsync({ name: normalized });
     },
-    successMessage: t('addMfrSuccess'),
+    successMessage: text.common.success,
   });
 
   const { submit: runUpdateManufacturer, fieldErrors: updateFieldErrors, clearFieldError: updateClearFieldError } = useFormSubmit({
-    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1, t('manufacturerNameEmpty') || '廠商名稱不能為空')) }),
+    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1, '厂商名称不能为空')) }),
     mutationFn: async ({ id, name }: { id: string, name: string }) => {
       await manufacturerMutations.edit.mutateAsync({ id, updates: { name } });
     },
-    successMessage: t('updateSuccess'),
+    successMessage: text.common.success,
   });
 
   return (
@@ -54,10 +55,10 @@ export function ManufacturersSection({
       <div className="flex items-center justify-between">
         <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
           <div className="w-1.5 h-3.5 bg-brand-navy rounded-full"></div>
-          {t('manufacturersSettingsTitle') || '厂商列表 / Manufacturer List'}
+          {text.manufacturers.title}
         </h3>
         <span className="text-[10px] text-brand-navy/40 font-black uppercase">
-          {manufacturers.length} Items
+          {manufacturers.length} {text.categories.items}
         </span>
       </div>
 
@@ -70,7 +71,7 @@ export function ManufacturersSection({
            leftIcon={!isAdding && <Icon name="plus" size={16} />}
            variant="primary"
         >
-          {t('addManufacturer') || '新增厂商'}
+          {text.manufacturers.add}
         </Button>
       </div>
 
@@ -94,8 +95,8 @@ export function ManufacturersSection({
           open={isAddOpen}
           onOpenChange={addDialog.toggle}
           loading={isAdding}
-          title={t('newMfrTitle') || "新增厂商"}
-          description={t('mfrNamePlaceholder') || "输入厂商名称："}
+          title={text.manufacturers.add}
+          description={text.manufacturers.placeholder}
           onConfirm={async (name: string) => {
             if (!name.trim()) return false;
             await runAddManufacturer({ name });

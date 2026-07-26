@@ -9,6 +9,26 @@ import { Progress } from '#src/components/shared/Progress.js';
 import { Task } from '#lib/task-queue/types.js';
 import { scheduler } from '#lib/task-queue/scheduler.js';
 
+function toSafeString(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    if (typeof obj.message === 'string') return obj.message;
+    if (typeof obj.error === 'string') return obj.error;
+    if (obj.originalError && typeof (obj.originalError as { message?: string }).message === 'string') {
+      return (obj.originalError as { message: string }).message;
+    }
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return '[Object]';
+    }
+  }
+  return String(val);
+}
+
 function TaskItem({ task }: { task: Task }) {
   const { t } = useTranslation();
   const statusBg = {
@@ -37,7 +57,7 @@ function TaskItem({ task }: { task: Task }) {
   const progress = task.state.status === 'processing' ? task.state.progress : (task.state.status === 'completed' ? 1 : 0);
   const progressPercent = Math.min(100, Math.max(0, Math.round(progress * 100)));
   const results = (task.state.status === 'completed') ? task.state.result : null;
-  let message = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
+  let rawMessage = task.state.status === 'processing' ? task.state.message : (task.state.status === 'failed' ? task.state.error : undefined);
 
   if (task.state.status === 'completed' && task.type === 'upload' && Array.isArray(results)) {
     const typedResults = results as { success?: boolean; duplicate?: boolean }[];
@@ -51,9 +71,11 @@ function TaskItem({ task }: { task: Task }) {
     if (failCount > 0) parts.push(t('uploadFailed', failCount));
     
     if (parts.length > 0) {
-      message = parts.join('，');
+      rawMessage = parts.join('，');
     }
   }
+
+  const message = toSafeString(rawMessage);
 
   const failedItems = Array.isArray(results) ? (results as { success?: boolean }[]).filter((r) => !r.success) : [];
   const [showDetails, setShowDetails] = React.useState(false);
@@ -128,8 +150,8 @@ function TaskItem({ task }: { task: Task }) {
             return (
               <div key={idx} className="text-[9px] flex items-start gap-2 text-red-600 font-medium">
                 <span className="shrink-0">•</span>
-                <span className="truncate flex-1">{it.name}</span>
-                <span className="text-[8px] opacity-70 shrink-0">{it.error || '未知錯誤'}</span>
+                <span className="truncate flex-1">{toSafeString(it.name)}</span>
+                <span className="text-[8px] opacity-70 shrink-0">{toSafeString(it.error) || '未知錯誤'}</span>
               </div>
             );
           })}

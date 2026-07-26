@@ -15,6 +15,7 @@ import { useFormSubmit } from '#lib/forms/useFormSubmit.js';
 import { FormProvider } from '#lib/forms/useFormField.js';
 import * as v from 'valibot';
 import { useTags, useSettings, useTagMutations, useTranslation } from '#src/hooks/index.js';
+import { useSettingsText } from '#src/hooks/useSettingsText.js';
 import { useAtomValue } from "jotai";
 import { tasksAtom } from '#src/lib/task-queue/taskStore.js';
 import { executeTask } from '#lib/task-queue/index.js';
@@ -27,7 +28,7 @@ interface TagsSectionProps {
 /**
  * TagsSection
  * 
- * 整合標籤管理、熱門標籤設置與手動刷新。
+ * 整合标签管理、热门标签设置与手动刷新。
  */
 export function TagsSection({
   cardClass,
@@ -36,7 +37,7 @@ export function TagsSection({
   const { tags = [] } = useTags();
   const { settings, updateSettings } = useSettings();
   const tagMutations = useTagMutations();
-  const { t } = useTranslation();
+  const text = useSettingsText();
   
   const [isAddOpen, addDialog] = useDisclosure(false);
   const [isEditOpen, editDialog] = useDisclosure(false);
@@ -65,21 +66,21 @@ export function TagsSection({
   };
 
   const { submit: runAddTag, isLoading: isAdding, fieldErrors: addFieldErrors, clearFieldError: addClearFieldError } = useFormSubmit({
-    schema: v.object({ name: v.pipe(v.string(), v.minLength(1, t('tagNameEmpty') || '標籤名稱不能為空')) }),
+    schema: v.object({ name: v.pipe(v.string(), v.minLength(1, '标签名称不能为空')) }),
     mutationFn: async ({ name }: { name: string }) => {
       const normalized = normalizeTagName(name);
       if (!normalized) return;
       await tagMutations.create.mutateAsync({ name: normalized });
     },
-    successMessage: t('addTagSuccess') || '已新增標籤',
+    successMessage: '已新增标签',
   });
 
   const { submit: runUpdateTag, isLoading: isUpdating, fieldErrors: editFieldErrors, clearFieldError: editClearFieldError } = useFormSubmit({
-    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1, t('tagNameEmpty') || '標籤名稱不能為空')) }),
+    schema: v.object({ id: v.string(), name: v.pipe(v.string(), v.minLength(1, '标签名称不能为空')) }),
     mutationFn: async ({ id, name }: { id: string, name: string }) => {
       await tagMutations.edit.mutateAsync({ id, updates: { name } });
     },
-    successMessage: t('updateSuccess') || '已更新',
+    successMessage: '已更新标签',
   });
 
   const handleRefreshHotScores = async () => {
@@ -106,10 +107,10 @@ export function TagsSection({
       <div className="flex items-center justify-between">
         <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
           <div className="w-1.5 h-3.5 bg-brand-gold rounded-full"></div>
-          标签管理 / Tag Management
+          {text.tags.title}
         </h3>
         <span className="text-[10px] text-brand-navy/40 font-black uppercase">
-          {tags.length} Items
+          {tags.length} {text.categories.items}
         </span>
       </div>
 
@@ -122,14 +123,14 @@ export function TagsSection({
            leftIcon={!isAdding && <Icon name="plus" size={16} />}
            variant="primary"
         >
-          新增標籤 / Add Tag
+          {text.tags.add}
         </Button>
 
         <div className="flex flex-wrap items-center gap-3.5 bg-brand-navy/5 px-4 py-2 rounded-2xl border border-brand-navy/10">
           <div className="flex flex-col gap-0.5">
             <span className="text-[9px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
               <Icon name="heart" size={10} className="text-brand-gold fill-brand-gold" />
-              Hot Limit
+              {text.tags.hotMax}
             </span>
             <input
               id="hot-tags-count-input"
@@ -152,7 +153,7 @@ export function TagsSection({
 
           <div className="flex flex-col gap-0.5">
             <span className="text-[9px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
-              热度阈值 / Hot Threshold
+              {text.tags.hotThreshold}
             </span>
             <input
               id="hot-tag-threshold-input"
@@ -178,7 +179,7 @@ export function TagsSection({
             className="px-3 py-1.5 bg-brand-gold hover:bg-brand-gold/85 text-brand-navy font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1 cursor-pointer disabled:opacity-50"
            >
             <Icon name="refresh-cw" size={12} />
-            <span>刷新热门标签 / Refresh</span>
+            <span>{text.tags.refreshHot}</span>
           </button>
         </div>
       </div>
@@ -204,8 +205,8 @@ export function TagsSection({
           open={isAddOpen}
           onOpenChange={addDialog.toggle}
           loading={isAdding}
-          title="新增標籤"
-          description="輸入標籤名稱:"
+          title={text.tags.add}
+          description={text.tags.placeholder}
           onConfirm={async (name: string) => {
             if (!name.trim()) return false;
             await runAddTag({ name });
@@ -219,8 +220,8 @@ export function TagsSection({
           open={isEditOpen}
           onOpenChange={editDialog.toggle}
           loading={isUpdating}
-          title="編輯標籤名 / Edit Tag Name"
-          description="輸入新的標籤名稱 / Enter new tag name:"
+          title={text.tags.edit}
+          description={text.tags.editPromptDescription}
           defaultValue={editingTag?.name}
           onConfirm={async (newName: string) => {
             if (editingTag && newName.trim()) {
