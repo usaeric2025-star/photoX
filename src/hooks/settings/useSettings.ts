@@ -22,16 +22,34 @@ const SettingsService = {
   fetchPublic: async (): Promise<AppSettings> => {
     try {
       const settingsPromise = api.public.settings.$get();
-      const [settingsResponse] = await withTimeout(Promise.all([settingsPromise]), 10000, 'Initialize Settings & Auth APIs');
+      const keysPromise = api.admin.settings['get-keys'].$get().catch(() => null);
+      const [settingsResponse, keysResponse] = await withTimeout(Promise.all([settingsPromise, keysPromise]), 10000, 'Initialize Settings & Auth APIs');
       
       const settingsData = await ErrorFactory.unwrap<Partial<AppSettings>>(
         settingsResponse,
         'Initialize Settings & Auth APIs failed'
       );
 
+      let keysStatus: Record<string, unknown> = {};
+      if (keysResponse) {
+        try {
+          const keysRes = await ErrorFactory.unwrap<{ keysStatus?: Record<string, unknown> }>(keysResponse, 'Fetch keys status failed');
+          keysStatus = keysRes?.keysStatus || {};
+        } catch {
+          // ignore error fallback
+        }
+      }
+
       return {
-          app_name: 'photoX',
-        ...settingsData
+        app_name: 'photoX',
+        ...settingsData,
+        openrouterApiKey: keysStatus.openrouter ? '••••••••••••••••' : '',
+        agnesApiKey: keysStatus.agnes ? '••••••••••••••••' : '',
+        geminiApiKey: keysStatus.gemini ? '••••••••••••••••' : '',
+        primaryAiProvider: (keysStatus.primaryProvider as string) || 'agnes',
+        openrouterModel: (keysStatus.openrouter_model as string) || 'google/gemini-2.5-flash',
+        agnesModel: (keysStatus.agnes_model as string) || 'gemini-2.0-flash-exp',
+        geminiModel: (keysStatus.gemini_model as string) || 'gemini-2.0-flash',
       } as AppSettings;
     } catch (e) {
       ErrorFactory.handle(e, { context: 'fetchPublicSettings' });
@@ -47,6 +65,7 @@ const SettingsService = {
     try {
       const rawPayload = { ...settings };
       const payload: Record<string, unknown> = { id: 1 };
+      const promises: Promise<unknown>[] = [];
       
       if (rawPayload.agnes_api_key === "••••••••••••••••") delete rawPayload.agnes_api_key;
       if (rawPayload.openrouterApiKey === "••••••••••••••••") delete rawPayload.openrouterApiKey;
@@ -58,28 +77,28 @@ const SettingsService = {
         if (key === 'ai_provider' || key === 'primaryAiProvider') return;
 
         if (key === 'openrouterApiKey' && typeof value === 'string') {
-          void api.admin.settings['save-key'].$post({ json: { provider: 'openrouter', apiKey: value } });
+          promises.push(api.admin.settings['save-key'].$post({ json: { provider: 'openrouter', apiKey: value } }));
           return;
         }
         if (key === 'agnesApiKey' && typeof value === 'string') {
-          void api.admin.settings['save-key'].$post({ json: { provider: 'agnes', apiKey: value } });
+          promises.push(api.admin.settings['save-key'].$post({ json: { provider: 'agnes', apiKey: value } }));
           return;
         }
         if (key === 'geminiApiKey' && typeof value === 'string') {
-          void api.admin.settings['save-key'].$post({ json: { provider: 'gemini', apiKey: value } });
+          promises.push(api.admin.settings['save-key'].$post({ json: { provider: 'gemini', apiKey: value } }));
           return;
         }
 
         if (key === 'openrouterModel' && typeof value === 'string') {
-          void api.admin.settings['save-model'].$post({ json: { provider: 'openrouter', model: value } });
+          promises.push(api.admin.settings['save-model'].$post({ json: { provider: 'openrouter', model: value } }));
           return;
         }
         if (key === 'agnesModel' && typeof value === 'string') {
-          void api.admin.settings['save-model'].$post({ json: { provider: 'agnes', model: value } });
+          promises.push(api.admin.settings['save-model'].$post({ json: { provider: 'agnes', model: value } }));
           return;
         }
         if (key === 'geminiModel' && typeof value === 'string') {
-          void api.admin.settings['save-model'].$post({ json: { provider: 'gemini', model: value } });
+          promises.push(api.admin.settings['save-model'].$post({ json: { provider: 'gemini', model: value } }));
           return;
         }
 
@@ -89,14 +108,14 @@ const SettingsService = {
       });
       
       if (rawPayload.provider) {
-        void api.admin.settings['save-provider'].$post({
+        promises.push(api.admin.settings['save-provider'].$post({
           json: { provider: String(rawPayload.provider) }
-        });
+        }));
       }
       if (rawPayload.primaryAiProvider) {
-        void api.admin.settings['save-provider'].$post({
+        promises.push(api.admin.settings['save-provider'].$post({
           json: { provider: String(rawPayload.primaryAiProvider) }
-        });
+        }));
       }
       
       if (rawPayload.pinned_tags || rawPayload.hot_tags_count !== undefined) {
@@ -109,12 +128,11 @@ const SettingsService = {
 
       payload.updated_at = new Date().toISOString();
       
-      await ErrorFactory.unwrap<unknown>(
-        api.admin.settings['save-settings'].$post({
-          json: { settingsPayload: payload as Record<string, unknown> }
-        }),
-        '保存设置失败'
-      );
+      promises.push(api.admin.settings['save-settings'].$post({
+        json: { settingsPayload: payload as Record<string, unknown> }
+      }));
+
+      await Promise.all(promises);
       return true;
     } catch (err) {
       throw ErrorFactory.wrap(err instanceof Error ? err : new Error(String(err)), 'saveSettings');

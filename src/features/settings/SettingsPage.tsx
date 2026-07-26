@@ -137,7 +137,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
         />
       }
     >
-      <div className="pt-4">
+      <div className="pt-4 pb-12">
         <SettingsTabs activeTab={activeTab} onTabChange={handleTabChange} />
         
         <div className="space-y-6 mt-6">

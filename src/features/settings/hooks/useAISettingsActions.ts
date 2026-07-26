@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ErrorFactory } from '#lib/error/ErrorFactory.js';
 import { useSettings, useTranslation } from '#src/hooks/index.js';
 import { AppSettings } from '#src/types/index.js';
@@ -30,6 +30,15 @@ export function useAISettingsActions() {
 
   const [openrouterModel, setOpenrouterModel] = useState(String(settings?.openrouterModel || 'google/gemini-2.5-flash'));
   const [agnesModel, setAgnesModel] = useState(String(settings?.agnesModel || 'gemini-2.0-flash-exp'));
+
+  useEffect(() => {
+    if (settings?.openrouterApiKey) setLocalOpenRouterKey('••••••••••••••••');
+    if (settings?.agnesApiKey) setLocalAgnesKey('••••••••••••••••');
+    if (settings?.geminiApiKey) setLocalGeminiKey('••••••••••••••••');
+    if (settings?.openrouterModel) setOpenrouterModel(String(settings.openrouterModel));
+    if (settings?.agnesModel) setAgnesModel(String(settings.agnesModel));
+    if (settings?.geminiModel) setGeminiModel(String(settings.geminiModel));
+  }, [settings?.openrouterApiKey, settings?.agnesApiKey, settings?.geminiApiKey, settings?.openrouterModel, settings?.agnesModel, settings?.geminiModel]);
   
   const [isEditingOpenRouter, setIsEditingOpenRouter] = useState(false);
   const [isEditingAgnes, setIsEditingAgnes] = useState(false);

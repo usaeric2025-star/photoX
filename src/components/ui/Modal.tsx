@@ -165,12 +165,16 @@ export function Modal({
           <div className="px-6 pt-6 pb-2 flex flex-col gap-1 shrink-0">
             {title && (
               <h2 className="text-[20px] font-bold text-text-main tracking-tight">
-                {title}
+                {typeof title === 'string' ? title : String(title)}
               </h2>
             )}
             {description && (
               <p className="text-[14px] text-text-sub leading-relaxed">
-                {description}
+                {typeof description === 'string'
+                  ? description
+                  : typeof description === 'object' && description !== null && 'zh' in description
+                  ? String((description as Record<string, unknown>).zh || (description as Record<string, unknown>).en || '')
+                  : String(description)}
               </p>
             )}
           </div>

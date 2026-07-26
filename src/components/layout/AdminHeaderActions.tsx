@@ -47,6 +47,7 @@ export function AdminHeaderActions({
   const isStaff = user?.role === 'staff' || user?.id === 'staff-user';
 
   const menuItems = [
+    { id: 'publicView', icon: 'eye' as const, label: t('viewModePublic', '查看前台視圖'), onClick: handleAuthAction },
     ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) }] : []),
     ...(canAccessDiagnostics ? [
       { id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: () => setLocation(ADMIN_ROUTES.ERROR_LOGS) }

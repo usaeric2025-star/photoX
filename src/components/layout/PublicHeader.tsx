@@ -138,16 +138,14 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
         </button>
 
         {/* 切换至管理后台 / 员工工作台入口 - 统一尺寸 w-10 h-10，图标固定为 layout-dashboard */}
-        {(!user || hasAdminAccess) && (
-          <button
-            type="button"
-            onClick={handleAuthAction}
-            className={cn("w-10 h-10", theme.button)}
-            title={isStaff ? '进入员工工作台' : '进入管理后台'}
-          >
-            <Icon name="layout-dashboard" size={20} />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleAuthAction}
+          className={cn("w-10 h-10", theme.button)}
+          title={isStaff ? t('staffWorkspace', '員工工作台') : t('adminPanel', '管理後台')}
+        >
+          <Icon name="layout-dashboard" size={20} />
+        </button>
 
         {/* 菜单 (语言、功能导航、账号操作) */}
         <NativePopover
@@ -181,6 +179,13 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
             <div className="flex flex-col gap-0.5">
               {(() => {
                 const items = [];
+                items.push({
+                  id: 'toggleAdminMode',
+                  icon: 'layout-dashboard',
+                  label: isStaff ? (t('staffWorkspace', '員工工作台')) : (t('adminPanel', '管理後台')),
+                  onClick: handleAuthAction
+                });
+
                 if (hasAdminAccess && can('admin:dashboard:access')) {
                   items.push({
                     id: 'errorLogs',

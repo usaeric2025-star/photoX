@@ -106,10 +106,10 @@ function formatPhoto(photo: PhotoWithIncludes | undefined) {
         ...rest,
         category,
         group,
-        photoTags: tags.map((t) => ({ 
+        photoTags: Array.isArray(tags) ? tags.map((t) => ({ 
             tagId: t.tagId,
             tags: t.tag
-        }))
+        })) : []
     };
 }
 

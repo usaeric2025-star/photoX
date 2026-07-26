@@ -126,8 +126,8 @@ export const PhotoWallGrid = memo(function PhotoWallGrid({
         }
       },
       {
-        root: null, // 全局 viewport 相交判定，確保在任何嵌套容器中高可靠性觸發
-        rootMargin: '600px', // 提前 600px 觸發加載
+        root: null, // 使用视口相交判定，确保全局在任何容器中无缝触发加载下一页
+        rootMargin: '600px', // 提前 600px 触发加载
       }
     );
 
@@ -136,7 +136,7 @@ export const PhotoWallGrid = memo(function PhotoWallGrid({
     return () => {
       observer.disconnect();
     };
-  }, [hasMore, isLoading, isLoadingMore, handleLoadMore]);
+  }, [hasMore, isLoading, isLoadingMore, handleLoadMore, scrollParent]);
 
   const renderItem = useCallback((photo: PhotoListItem, index?: number) => (
     <div className="w-full h-full" data-photo-id={photo.id}>

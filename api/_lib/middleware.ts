@@ -78,7 +78,7 @@ export function setupMiddlewares(app: Hono<Env>, serverEnv: { NODE_ENV: string |
   });
 
   // Auth Middleware for Administrative Routes
-  app.use('/admin/*', async (c, next) => {
+  const handleAdminAuth = async (c: any, next: any) => {
       const path = c.req.path;
       if (path.includes('/admin/settings/get-keys') || path.includes('/admin/settings/get')) {
           await next();
@@ -95,7 +95,10 @@ export function setupMiddlewares(app: Hono<Env>, serverEnv: { NODE_ENV: string |
           appErr.traceId = traceId;
           return c.json(errorFactory.fail(appErr), 401);
       }
-  });
+  };
+
+  app.use('/admin/*', handleAdminAuth);
+  app.use('/api/admin/*', handleAdminAuth);
 
   // Protect all mutation endpoints (non-GET) that are not under /admin
   app.use('*', async (c, next) => {

@@ -45,7 +45,7 @@ export function StandardModalLayout({
         </header>
       )}
       
-      <main className="flex-1 overflow-y-auto w-full no-scrollbar px-4 sm:px-8 pb-8">
+      <main className="flex-1 overflow-y-auto w-full no-scrollbar px-4 sm:px-8 pb-28 sm:pb-36">
         {children}
       </main>
 

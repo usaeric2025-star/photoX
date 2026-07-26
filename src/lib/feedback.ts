@@ -45,7 +45,30 @@ export const feedback = {
       }
       
       const err = messageOrError as AppErrorLike & Record<string, unknown>;
-      userMessage = err.userMessage || err.message || userMessage;
+      const formatString = (val: unknown): string => {
+        if (!val) return '';
+        if (typeof val === 'string') return val;
+        if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+        if (typeof val === 'object' && val !== null) {
+          const obj = val as Record<string, unknown>;
+          if (typeof obj.zh === 'string') return obj.zh;
+          if (typeof obj.en === 'string') return obj.en;
+          if (typeof obj.message === 'string') return obj.message;
+          if (typeof obj.userMessage === 'string') return obj.userMessage;
+          try {
+            return JSON.stringify(val);
+          } catch {
+            return '[Object]';
+          }
+        }
+        return String(val);
+      };
+
+      if (err.userMessage) {
+        userMessage = formatString(err.userMessage);
+      } else if (err.message) {
+        userMessage = formatString(err.message);
+      }
 
       const extractSystemMsg = (e: unknown): string => {
         if (!e) return '';
