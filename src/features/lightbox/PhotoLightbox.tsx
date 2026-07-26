@@ -47,7 +47,7 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
   
   // Prioritize hookSlides (from store) if present, otherwise fallback to props
   const sourcePhotos = (hookSlides && hookSlides.length > 0) ? hookSlides : (props.photos && props.photos.length > 0 ? props.photos : []);
-  const currentIndex = props.initialIndex ?? hookIndex;
+  const currentIndex = hookIndex;
   const isOpen = props.isOpen ?? hookIsOpen;
   const onClose = props.onClose || hookClose;
   
@@ -203,6 +203,27 @@ export function PhotoLightbox(props: Partial<PhotoLightboxProps>) {
     if (finalSourcePhotos.length === 0 && isOpen) return [];
     return finalSourcePhotos.map(normalizeSlide);
   }, [finalSourcePhotos, isOpen, normalizeSlide]) as (Photo | { original: Photo })[];
+
+  // Sync props.initialIndex if explicitly passed on open
+  useEffect(() => {
+    if (isOpen && props.initialIndex !== undefined && props.initialIndex !== hookIndex) {
+      setLightboxIndex(props.initialIndex);
+    }
+  }, [isOpen, props.initialIndex, hookIndex, setLightboxIndex]);
+
+  // Synchronize hookIndex with queryPhotoId when photoId exists in effectivePhotos
+  useEffect(() => {
+    if (!isOpen || effectivePhotos.length === 0 || !queryPhotoId) return;
+
+    const foundIdx = effectivePhotos.findIndex((p) => {
+      const photoObj = ('original' in p ? p.original : p) as Photo;
+      return photoObj?.id === queryPhotoId;
+    });
+
+    if (foundIdx !== -1 && foundIdx !== hookIndex) {
+      setLightboxIndex(foundIdx);
+    }
+  }, [isOpen, queryPhotoId, effectivePhotos, hookIndex, setLightboxIndex]);
 
   const handleNext = hookNext;
   const handlePrev = hookPrev;

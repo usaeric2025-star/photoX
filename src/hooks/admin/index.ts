@@ -92,7 +92,21 @@ export function useAdminActions() {
 
   const handleBatchAiIdentifyTrigger = async (allPhotos?: { id: string; groupId?: string | null }[], ids?: string[]) => {
     const targetIds = ids || selectedIds;
-    let photosToProcess = Array.isArray(allPhotos) ? allPhotos : AdminService.getAllCachedPhotos(queryClient);
+    let photosToProcess = Array.isArray(allPhotos) && allPhotos.length > 0 ? allPhotos : AdminService.getAllCachedPhotos(queryClient);
+
+    if (!allPhotos || allPhotos.length === 0) {
+      try {
+        // @ts-ignore - Hono client indexing
+        const res = await api.photos.list.$post({ json: { page: '1', limit: '1000' } });
+        const data = await ErrorFactory.unwrap<{ items: Array<{ id: string; groupId?: string | null }> }>(res, 'Fetch Failed');
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
+          photosToProcess = data.items;
+        }
+      } catch (err) {
+        // Fallback to cached photos if API call fails
+      }
+    }
+
     if (photosToProcess.length === 0) {
       ErrorFactory.handle(t('selectPhotosToIdentify') || 'Select photos to identify', { context: 'batchAction' });
       return;

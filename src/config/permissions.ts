@@ -40,6 +40,7 @@ export const ROLE_PERMISSIONS: Record<string, Capability[]> = {
     'group:view',
     'photo:view-hidden',
     'photo:view-internal-info',
+    'system:settings',
   ],
   public: [
     'group:view',

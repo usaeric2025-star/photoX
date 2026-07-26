@@ -9,6 +9,8 @@ import { DiagDashboard } from './features/diagnostics/DiagDashboard.js';
 import { SettingsPage } from './features/settings/SettingsPage.js';
 import { AdminGroupDetailPage } from './features/group/AdminGroupDetail.js';
 import { AdminHeader } from './components/layout/AdminHeader.js';
+import { StaffHeader } from './components/layout/StaffHeader.js';
+import { usePermission } from '#src/hooks/index.js';
 import { AdminContainer } from './components/admin/AdminContainer.js';
 import { FilterBar } from './features/filters/index.js';
 import { UploadButton } from './components/shared/UploadButton.js';
@@ -41,9 +43,15 @@ import { TopLayer } from './components/ui/TopLayer.js';
 import { DialogContainer } from './components/layout/DialogContainer.js';
 
 function AdminGallery() {
+  const { role } = usePermission();
+
   return (
     <>
-      <AdminHeader className="border-b bg-white shadow-none" />
+      {role === 'staff' ? (
+        <StaffHeader className="border-b shadow-none" />
+      ) : (
+        <AdminHeader className="border-b shadow-none" />
+      )}
       <div className="flex-1 relative overflow-hidden flex flex-col">
         <FilterBar mode="admin" className="bg-white border-b shadow-none" />
         <div className="flex-1 relative  translate-z-0 overflow-hidden flex flex-col">

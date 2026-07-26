@@ -6,19 +6,18 @@ import { HeaderLogo, ModeSwitch, HeaderMenu, MenuItem } from './header/index.js'
 import { useAppLocation } from '#src/hooks/core/index.js';
 import { userAtom, totalCountAtom, signOut } from '#src/store/index.js';
 import { activeTaskCountAtom, isTaskDrawerOpen } from '#lib/store/index.js';
-import { useSettings, useAdminActions, useTranslation, useIsMultiSelect, useSelectionActions, usePermission } from '#src/hooks/index.js';
+import { useSettings, useAdminActions, useTranslation, useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { storage } from '#lib/storage.js';
 import { ADMIN_ROUTES } from '#src/constants/config.js';
 import { Theme } from '#src/types/index.js';
 
-interface AdminHeaderProps {
+interface StaffHeaderProps {
   className?: string;
 }
 
-export function AdminHeader({ className }: AdminHeaderProps) {
+export function StaffHeader({ className }: StaffHeaderProps) {
   const [, setLocation] = useAppLocation();
   const user = useAtomValue(userAtom);
-  const { can } = usePermission();
   const { handleBatchAiIdentifyTrigger, isAiAnalyzing } = useAdminActions();
   const { settings } = useSettings();
   const { t } = useTranslation();
@@ -28,9 +27,6 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const uiTotalCount = useAtomValue(totalCountAtom);
   const totalCount = uiTotalCount || 0;
   const setTaskDrawerOpen = useSetAtom(isTaskDrawerOpen);
-
-  const canAccessDiagnostics = can('admin:dashboard:access');
-  const canManageSystem = can('system:settings');
 
   const cachedSettings = React.useMemo(() => {
     try {
@@ -43,11 +39,11 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   const logoUrl = settings?.logoUrl || cachedSettings?.logoUrl || null;
 
   const theme: Theme = {
-    bg: "bg-slate-900 border-b border-indigo-900/50 text-slate-100 border-t-2 border-t-indigo-500 shadow-sm",
-    logoColor: "bg-indigo-600",
+    bg: "bg-slate-900 border-b border-emerald-900/50 text-slate-100 border-t-2 border-t-emerald-500 shadow-sm",
+    logoColor: "bg-emerald-600",
     logoText: "text-white font-bold",
     button: "bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700 hover:text-white transition-all outline-none rounded-lg flex items-center justify-center border",
-    buttonActive: "bg-indigo-600 text-white border-indigo-500 hover:bg-indigo-700 transition-all outline-none rounded-lg flex items-center justify-center border",
+    buttonActive: "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700 transition-all outline-none rounded-lg flex items-center justify-center border",
     badge: "bg-slate-800/90 border-slate-700 text-slate-300",
     badgeLabel: "text-slate-400",
     badgeVal: "text-white font-bold",
@@ -60,12 +56,12 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   };
 
   const menuItems: MenuItem[] = [
-    ...(canAccessDiagnostics ? [
-      { id: 'errorLogs', icon: 'file-text', label: t('errorLogs', '錯誤日誌'), onClick: () => setLocation(ADMIN_ROUTES.ERROR_LOGS) }
-    ] : []),
-    ...(canManageSystem ? [
-      { id: 'settings', icon: 'settings', label: t('settings', '系統設置'), onClick: () => setLocation(ADMIN_ROUTES.SETTINGS) }
-    ] : []),
+    {
+      id: 'settings',
+      icon: 'settings',
+      label: t('settings', '系統設置'),
+      onClick: () => setLocation(ADMIN_ROUTES.SETTINGS)
+    },
     {
       id: 'toPublic',
       icon: 'eye',
@@ -80,12 +76,12 @@ export function AdminHeader({ className }: AdminHeaderProps) {
         <HeaderLogo 
           logoUrl={logoUrl}
           totalCount={totalCount}
-          badge={{ text: 'Admin', variant: 'admin' }}
+          badge={{ text: 'Staff', variant: 'staff' }}
           theme={theme}
         />
         <div className="h-4 w-px bg-slate-700 mx-0.5 hidden lg:block shrink-0" />
         <h1 className="text-sm font-semibold text-slate-200 hidden lg:block truncate shrink-0">
-          {t('adminPanelTitle')}
+          {t('staffWorkspace', '員工工作台')}
         </h1>
       </div>
 
@@ -107,7 +103,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           title={t('aiSmartIdentify')}
         >
           {isAiAnalyzing ? (
-            <Icon name="loader" size={20} className="animate-spin text-indigo-400" />
+            <Icon name="loader" size={20} className="animate-spin text-emerald-400" />
           ) : (
             <Icon name="sparkles" size={20} />
           )}
@@ -139,7 +135,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           user={user}
           onSignOut={signOut}
           triggerStyle={theme.button}
-          userBadgeLabel="Admin"
+          userBadgeLabel="Staff"
         />
       </div>
     </header>

@@ -86,7 +86,9 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
           {virtualItems.map((virtualItem) => {
             const idx = virtualItem.index;
             const p = photos[idx];
+            if (!p) return null;
             const photoData = ('original' in p ? p.original : p) as Photo;
+            const photoId = photoData.id || '';
             const key = photoData.imageUrl || photoData.uri || '';
             const hash = photoData.imageHash;
             const thumb = getPhotoThumb(key, 'SM', hash);
@@ -95,7 +97,7 @@ export const LightboxThumbnails = memo(function LightboxThumbnails({
             
             return (
               <button
-                key={`${key}-${idx}`}
+                key={`${photoId || key}-${idx}`}
                 onClick={() => onSelect(idx)}
                 style={{
                   position: 'absolute',
