@@ -91,7 +91,13 @@ export function NativePopover({
         )}
         style={{ inset: 'auto' }}
       >
-        <div onClick={() => popoverRef.current?.hidePopover()}>
+        <div onClick={() => {
+          try {
+            popoverRef.current?.hidePopover();
+          } catch (e) {
+            // ignore
+          }
+        }}>
           {children}
         </div>
       </div>

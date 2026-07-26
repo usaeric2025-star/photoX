@@ -40,6 +40,9 @@ export function LoginScreen({ signIn }: LoginScreenProps) {
     }
 
     if (staffLogin(passcode, correctPasscode)) {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('preferred_mode', 'admin');
+      }
       feedback.success(t('staffLoginSuccess'));
     } else {
       feedback.error(t('wrongPassword'));

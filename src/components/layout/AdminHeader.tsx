@@ -38,16 +38,22 @@ export function AdminHeader({ className }: AdminHeaderProps) {
 
   const logoUrl = settings?.logoUrl || cachedSettings?.logoUrl || null;
 
+  const isStaff = user?.role === 'staff' || user?.id === 'staff-user';
+
   const theme = {
-    bg: "bg-white border-slate-200 text-slate-800",
-    logoColor: "bg-slate-800",
-    logoText: "text-slate-800 font-bold",
-    button: "bg-white hover:bg-slate-50 text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 transition-all outline-none rounded-lg flex items-center justify-center border",
-    buttonActive: "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-all outline-none rounded-lg flex items-center justify-center border",
-    badge: "bg-slate-50 border-slate-200 text-slate-600",
-    badgeLabel: "text-slate-500",
-    badgeVal: "text-slate-900 font-bold",
-    popoverTrigger: "bg-white hover:bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 border transition-all outline-none rounded-lg flex items-center justify-center"
+    bg: isStaff 
+      ? "bg-slate-900 border-b border-emerald-900/50 text-slate-100 border-t-2 border-t-emerald-500 shadow-sm" 
+      : "bg-slate-900 border-b border-indigo-900/50 text-slate-100 border-t-2 border-t-indigo-500 shadow-sm",
+    logoColor: isStaff ? "bg-emerald-600" : "bg-indigo-600",
+    logoText: "text-white font-bold",
+    button: "bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700 hover:text-white transition-all outline-none rounded-lg flex items-center justify-center border",
+    buttonActive: isStaff 
+      ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700 transition-all outline-none rounded-lg flex items-center justify-center border"
+      : "bg-indigo-600 text-white border-indigo-500 hover:bg-indigo-700 transition-all outline-none rounded-lg flex items-center justify-center border",
+    badge: "bg-slate-800/90 border-slate-700 text-slate-300",
+    badgeLabel: "text-slate-400",
+    badgeVal: "text-white font-bold",
+    popoverTrigger: "bg-slate-800/90 hover:bg-slate-700 border-slate-700 text-slate-200 hover:text-white border transition-all outline-none rounded-lg flex items-center justify-center"
   };
 
   return (
@@ -58,9 +64,9 @@ export function AdminHeader({ className }: AdminHeaderProps) {
           totalCount={totalCount}
           theme={theme as Theme}
         />
-        <div className="h-4 w-px bg-slate-200 mx-0.5 hidden lg:block shrink-0" />
-        <h1 className="text-sm font-semibold text-slate-900 hidden lg:block truncate shrink-0">
-          {t('adminPanelTitle')}
+        <div className="h-4 w-px bg-slate-700 mx-0.5 hidden lg:block shrink-0" />
+        <h1 className="text-sm font-semibold text-slate-200 hidden lg:block truncate shrink-0">
+          {isStaff ? '員工工作台' : t('adminPanelTitle')}
         </h1>
       </div>
       <div className="flex items-center gap-2 flex-nowrap shrink-0">

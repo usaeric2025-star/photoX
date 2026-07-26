@@ -190,8 +190,14 @@ export const initAuthListener = () => {
       setUser(mapped);
       setAuthLoading(false);
     } else {
-      setUser(null);
-      setToken(null);
+      const savedStaff = storage.get<User | null>(STORAGE_KEYS.STAFF_USER, null);
+      if (savedStaff) {
+        setUser(savedStaff);
+        setToken('staff-token');
+      } else {
+        setUser(null);
+        setToken(null);
+      }
       setAuthLoading(false);
     }
   });

@@ -1,8 +1,7 @@
 import { hc } from 'hono/client';
 import type { AppType } from '#api/_app.js';
-import { storage } from '#lib/storage.js';
+import { storage, STORAGE_KEYS } from '#lib/storage.js';
 import { tokenAtom } from '#src/store/index.js';
-import { ErrorFactory } from '#src/lib/error/index.js';
 import { getDefaultStore } from 'jotai';
 import { supabase } from '#lib/supabase.js';
 
@@ -14,31 +13,43 @@ const getBaseUrl = () => {
 
 const store = getDefaultStore();
 
+const resolveAuthToken = (): string | null => {
+  let token = store.get(tokenAtom);
+  if (token) return token;
+
+  // 1. Check for staff session in local storage
+  const savedStaff = storage.get(STORAGE_KEYS.STAFF_USER, null);
+  if (savedStaff) {
+    token = 'staff-token';
+    store.set(tokenAtom, token);
+    return token;
+  }
+
+  return null;
+};
+
 // Create the type-safe client with custom fetch for auth headers and global error handling
 const client = hc<AppType>(getBaseUrl(), {
   headers: () => {
     const headers: Record<string, string> = {};
-
-    // Check for Supabase session token (Admin mode)
-    const token = store.get(tokenAtom);
+    const token = resolveAuthToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
-      return headers;
     }
-
     return headers;
   },
   fetch: async (input, init) => {
     const options = init || {};
-    let token = store.get(tokenAtom);
+    let token = resolveAuthToken();
 
     if (!token) {
       try {
         const { data } = await supabase.auth.getSession();
         if (data?.session?.access_token) {
           token = data.session.access_token;
+          store.set(tokenAtom, token);
         }
-      } catch (err) {
+      } catch {
         // ignore fallback errors
       }
     }

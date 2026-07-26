@@ -23,12 +23,22 @@ export const queryClient = new QueryClient({
     queries: {
       gcTime: 1000 * 60 * 60 * 24, // 24 hours
       staleTime: 1000 * 60 * 5, // 5 minutes default
-      retry: 2,
+      retry: (failureCount, error) => {
+        if (failureCount >= 2) return false;
+        if (error) {
+          const errObj = error as unknown as Record<string, unknown>;
+          const msg = String(errObj.message || errObj.status || error);
+          if (msg.includes('401') || msg.includes('Unauthorized') || msg.includes('UNAUTHORIZED')) {
+            return false;
+          }
+        }
+        return true;
+      },
       refetchOnWindowFocus: false,
       refetchOnMount: true,
     },
     mutations: {
-      retry: 1,
+      retry: false,
     },
   },
 });

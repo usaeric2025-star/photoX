@@ -44,11 +44,11 @@ export function AdminHeaderActions({
   const canManageSystem = can('system:settings');
   const canAccessDiagnostics = can('admin:dashboard:access');
 
+  const isStaff = user?.role === 'staff' || user?.id === 'staff-user';
+
   const menuItems = [
-    { id: 'gallery', icon: 'image' as const, label: t('gallery', '相冊圖庫'), onClick: () => setLocation(ADMIN_ROUTES.HOME) },
     ...(canBatchEdit ? [{ id: 'batchEdit', icon: 'layers' as const, label: t('batchEdit', '批量編輯'), onClick: () => setLocation(ADMIN_ROUTES.BATCH_EDIT) }] : []),
     ...(canAccessDiagnostics ? [
-      { id: 'diagnostics', icon: 'activity' as const, label: t('diagnostics', '系統診斷'), onClick: () => setLocation(ADMIN_ROUTES.DIAGNOSTICS) },
       { id: 'errorLogs', icon: 'file-text' as const, label: t('errorLogs', '錯誤日誌'), onClick: () => setLocation(ADMIN_ROUTES.ERROR_LOGS) }
     ] : []),
     ...(canManageSystem ? [
@@ -58,15 +58,15 @@ export function AdminHeaderActions({
   ];
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0">
+    <div className="flex items-center gap-2 flex-nowrap shrink-0">
       {canBatchEdit && (
         <button
           type="button"
           onClick={toggleMode}
-          className={cn("w-9 h-9", multiSelect ? theme.buttonActive : theme.button)}
+          className={cn("w-10 h-10", multiSelect ? theme.buttonActive : theme.button)}
           title={multiSelect ? t('exitSelectMode') : t('selectModeToggle')}
         >
-          <Icon name="check-square" size={18} />
+          <Icon name="check-square" size={20} />
         </button>
       )}
       {canAiAnalyze && (
@@ -74,13 +74,13 @@ export function AdminHeaderActions({
           type="button"
           onClick={() => batchAiIdentify()}
           disabled={isAiAnalyzing}
-          className={cn("w-9 h-9 disabled:opacity-50 disabled:cursor-not-allowed", theme.button)}
+          className={cn("w-10 h-10 disabled:opacity-50 disabled:cursor-not-allowed", theme.button)}
           title={t('aiSmartIdentify')}
         >
           {isAiAnalyzing ? (
-            <Icon name="loader" size={18} className="animate-spin text-blue-600" />
+            <Icon name="loader" size={20} className="animate-spin text-blue-600" />
           ) : (
-            <Icon name="sparkles" size={18} className="" />
+            <Icon name="sparkles" size={20} className="" />
           )}
         </button>
       )}
@@ -88,12 +88,12 @@ export function AdminHeaderActions({
       <button
         type="button"
         onClick={() => { setTaskDrawerOpen(true); }}
-        className={cn("w-9 h-9 relative shrink-0", theme.button)}
+        className={cn("w-10 h-10 relative shrink-0", theme.button)}
         title={t('taskCenter')}
       >
-        <Icon name="activity" size={18} />
+        <Icon name="activity" size={20} />
         {taskCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] w-auto px-1 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-white animate-in zoom-in duration-300">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] w-auto px-1 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-slate-900 animate-in zoom-in duration-300">
             {taskCount > 99 ? '99+' : taskCount}
           </span>
         )}
@@ -103,10 +103,10 @@ export function AdminHeaderActions({
       <button
         type="button"
         onClick={handleAuthAction}
-        className={cn("w-9 h-9", theme.button)}
-        title={t('viewModePublic', '查看公開頁面')}
+        className={cn("w-10 h-10", theme.button)}
+        title={t('viewModePublic', '查看前台視圖')}
       >
-        <Icon name="eye" size={18} />
+        <Icon name="eye" size={20} />
       </button>
 
       <NativePopover
@@ -114,10 +114,10 @@ export function AdminHeaderActions({
         trigger={
           <button
             type="button"
-            className={cn("w-9 h-9", theme.button)}
+            className={cn("w-10 h-10", theme.button)}
             title={t('adminMenu', '管理菜單')}
           >
-            <Icon name="menu" size={18} />
+            <Icon name="menu" size={20} />
           </button>
         }
       >
