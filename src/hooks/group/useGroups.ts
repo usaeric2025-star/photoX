@@ -133,7 +133,7 @@ interface UseGroupDataOptions {
 }
 
 export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
-  const { search, category, tags, sort } = useFilters();
+  const { sort } = useFilters();
   const { group, isLoading: isGroupPending, error: groupError } = useGroupDetail(groupId, !!isAdmin);
   
   const {
@@ -148,7 +148,7 @@ export function useGroupData({ groupId, isAdmin }: UseGroupDataOptions) {
     mode: isAdmin ? 'admin' : 'public',
     categoryId: undefined,
     tagId: undefined,
-    searchQuery: search,
+    searchQuery: undefined,
     sortOrder: sort,
     onlyGroupsCover: false,
   });

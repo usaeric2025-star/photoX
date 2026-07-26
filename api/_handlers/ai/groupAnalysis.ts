@@ -2,7 +2,6 @@ import * as v from 'valibot';
 import { db, furnitureItems } from '../../_lib/db/index.js';
 import { inArray } from 'drizzle-orm';
 import { getAIProvider } from '../../_lib/ai/providerFactory.js';
-import { extractJSON } from '../../_lib/ai/utils.js';
 import { executeAITask } from '../../_lib/ai/executor.js';
 import { logger } from '../../_lib/logger.js';
 
@@ -19,37 +18,36 @@ export const GroupAnalysisSchema = v.object({
   }))
 });
 
-// 2. 強化提示詞
-const buildPrompt = (photoCount: number, photoList: string) => `你是一個專業的攝影作品分類專家。
+// 2. 簡化提示詞：基於名稱與編號進行精準分組合組
+const buildPrompt = (photoCount: number, photoList: string) => `你是一個專業的家具與產品分組合組專家。
 
 ## 任務
-分析以下 ${photoCount} 張照片，將它們分組為產品系列。
+請根據以下 ${photoCount} 張照片的【產品名稱】、【商品編號/型號】及相關文字信息，將屬於同一產品系列、同套家具或相近款式名稱的照片精準分組。
 
 ## ⚠️ 硬性要求（違反將導致處理失敗）
-1. **名稱規範**：name 必須為英文。
-2. **描述規範**：以中文為核心撰寫描述，並提供英文與馬來文翻譯。
-3. **多語言支援**：description 必須包含 中文 (zh)、英文 (en) 和 馬來文 (ms)。
-4. 輸出純 JSON，不要包含 Markdown 代碼塊、註釋或其他文字。
-5. 格式嚴格匹配以下 Schema：
+1. **名稱規範**：group 的 name 必須為簡短英文系列名稱或主題名稱（例如 "Nordic Dining Series", "Modern Living Set"）。
+2. **描述規範**：description 必須包含 中文 (zh)、英文 (en) 和 馬來文 (ms)。
+3. 輸出純 JSON，不要包含 Markdown 代碼塊或任何其他文字。
+4. 格式嚴格匹配以下 Schema：
    { 
      "groups": [
        { 
-         "name": "English Name", 
+         "name": "English Group Name", 
          "description": { "zh": "中文描述", "en": "English Description", "ms": "Penerangan Melayu" }, 
          "photoIds": ["UUID"] 
        }
      ] 
    }
-6. 完整性校驗：每張照片的 ID 回傳總數必須等於輸入的 ${photoCount} 個，且每個 ID 必須屬於輸入列表。
-7. 禁止使用「其他」「雜項」「未分類」等佔位詞。
-8. 合組數量建議 2-8 個，視內容而定。
+5. 完整性校驗：每張照片的 ID 回傳總數必須等於輸入的 ${photoCount} 個，且每個 ID 必須屬於輸入列表。
+6. 禁止使用「其他」「雜項」「未分類」等佔位詞。
+7. 合組數量建議 1-${Math.max(1, Math.min(8, photoCount))} 個，視名稱重複度与系列相似度而定。
 
-## 判斷標準
-- 視覺風格、拍攝場景一致 → 同一組
-- 同一產品不同角度、光影 → 同一組
-- 完全無關的主題 → 不同組
+## 判斷依據（重點根據名稱）
+- **名稱/系列相同或相近**（如："北歐橡木餐桌" 與 "北歐橡木餐椅" 歸為同一組）
+- **編號/型號前綴一致**（如："NOK-01" 與 "NOK-02" 歸為同一組）
+- 若名稱完全不同或無任何共通系列特徵，可單獨成組或歸入不同系列。
 
-## 照片列表
+## 待分組產品列表
 ${photoList}
 
 請輸出 JSON：`;
@@ -58,9 +56,11 @@ export async function processGroupAnalysis(photoIds: string[]) {
   if (photoIds.length === 0) throw new Error('Input photo IDs list is empty');
   
   const photos = await db.select({
-      id: furnitureItems.id,
-      name: furnitureItems.name,
-      description: furnitureItems.description
+    id: furnitureItems.id,
+    name: furnitureItems.name,
+    description: furnitureItems.description,
+    itemCode: furnitureItems.itemCode,
+    modelNumber: furnitureItems.modelNumber,
   })
   .from(furnitureItems)
   .where(inArray(furnitureItems.id, photoIds));
@@ -71,10 +71,10 @@ export async function processGroupAnalysis(photoIds: string[]) {
 
   const photoListText = photos.map((p) => {
     const nameObj = typeof p.name === 'object' ? (p.name as Record<string, string> | null) : null;
-    const descObj = typeof p.description === 'object' ? (p.description as Record<string, string> | null) : null;
     const name = nameObj?.zh || (typeof p.name === 'string' ? p.name : '');
-    const desc = descObj?.zh || (typeof p.description === 'string' ? p.description : '');
-    return `- ID: ${p.id} | Name: ${name || 'N/A'} | Desc: ${desc || 'N/A'}`;
+    const code = p.itemCode || p.modelNumber || '';
+
+    return `- ID: ${p.id} | 名称: ${name || '未命名'} | 编号: ${code || '无'}`;
   }).join('\n');
 
   const prompt = buildPrompt(photoIds.length, photoListText);
@@ -82,7 +82,7 @@ export async function processGroupAnalysis(photoIds: string[]) {
   const provider = await getAIProvider();
   const model = provider.getConfig().model || provider.defaultModel;
 
-// 封裝重試邏輯
+  // 封裝重試邏輯
   const callAIWithValidation = async (currentPrompt: string): Promise<v.InferOutput<typeof GroupAnalysisSchema>> => {
     let lastError: string | null = null;
     

@@ -236,6 +236,9 @@ export async function runBatchAnalysis({
     try {
       await analyzeAndSavePhoto(photo, allTags, categories, signal);
     } catch (err) {
+      if (signal?.aborted || (err instanceof Error && (err.name === 'AbortError' || err.message.includes('aborted') || err.message.includes('取消')))) {
+        return;
+      }
       ErrorFactory.handle(err, { context: `[AI Batch] Photo ${photo.id} error` });
     } finally {
       finishedCount++;

@@ -102,7 +102,11 @@ export const analyzePhoto = async (photoId: string, imageUrl?: string, signal?: 
       
       // If it's a 404/504 or common transient error, retry
       const statusCode = err.statusCode || (err.response && err.response.status);
-      const isTransient = statusCode === 404 || statusCode === 504 || statusCode === 502 || statusCode === 503 || err.message?.includes('timeout') || err.message?.includes('NOT_FOUND');
+      const isTimeout = statusCode === 504 || err.message?.includes('timeout') || err.message?.includes('Timeout');
+      if (isTimeout) {
+        throw new Error('AI 服务响应超时，请稍后重试');
+      }
+      const isTransient = statusCode === 404 || statusCode === 502 || statusCode === 503 || err.message?.includes('NOT_FOUND');
       
       if (isTransient && i < maxRetries) {
         const delay = Math.pow(2, i) * 1000;
