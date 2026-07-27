@@ -9,6 +9,8 @@ import { PhotoBatchUpdateReqSchema, PhotoUpdateReqSchema } from '../../../shared
 import { sanitizePhotoPayload } from './sanitize.js';
 import { errorFactory } from '../../_lib/error/factory.js';
 
+import { ensureUniqueItemCode } from '../../_lib/db/queries/photos.js';
+
 export const updateRoutes = new Hono()
   .post('/batch', async (c) => {
     const body = await c.req.json();
@@ -83,6 +85,15 @@ export const updateRoutes = new Hono()
         // Remove unupdatable keys
         delete mappedUpdates.id;
         delete mappedUpdates.createdAt;
+
+        if (mappedUpdates.itemCode && typeof mappedUpdates.itemCode === 'string') {
+            const uniqueCode = await ensureUniqueItemCode(id, mappedUpdates.itemCode);
+            if (uniqueCode) {
+                mappedUpdates.itemCode = uniqueCode;
+            } else {
+                delete mappedUpdates.itemCode;
+            }
+        }
 
         // Special handling for group cover
         if (updates.isGroupCover === true) {

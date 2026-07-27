@@ -1,7 +1,11 @@
 import React, { useState, memo } from 'react';
 import { AnimatePresence, motion } from 'lite-sleek';
+import { useQueryClient } from '@tanstack/react-query';
 import { Icon } from '#src/components/ui/Icon.js';
-import { usePhoto, usePhotoAIResult, usePermission, useAdminMode, useTranslation, useCategories } from '#src/hooks/index.js';
+import { usePhoto, usePhotoAIResult, usePermission, useAdminMode, useTranslation, useCategories, useTags } from '#src/hooks/index.js';
+import { useInvalidatePhotos } from '#src/hooks/photo/index.js';
+import { updatePhoto as updatePhotoStandalone } from '#src/hooks/photo/api.js';
+import { mapAnalysisToUpdates } from '#src/features/ai/orchestration.js';
 import { Photo } from '#src/types/photo.js';
 import { getLocalizedDisplay, translateDimensionLabelToEnglish } from '#src/utils/display.js';
 import { getTranslatedCategoryName } from '#src/utils/category.js';
@@ -39,6 +43,11 @@ export const LightboxInfo = memo(function LightboxInfo({
   const [activeTab, setActiveTab] = useState<InfoTab>('overview');
   const [copied, setCopied] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
+  const [isReExtracting, setIsReExtracting] = useState(false);
+
+  const { tags: allTags = [] } = useTags();
+  const { invalidateDetail, invalidateList, invalidateTags } = useInvalidatePhotos();
+  const queryClient = useQueryClient();
   
   const basePhotoData = ('original' in currentPhoto ? currentPhoto.original : currentPhoto) as Photo;
   const { data: fullPhotoData } = usePhoto(basePhotoData.id);
@@ -441,21 +450,41 @@ export const LightboxInfo = memo(function LightboxInfo({
                       {isAdmin && (
                         <button
                           type="button"
+                          disabled={isReExtracting}
                           onClick={async () => {
+                            if (isReExtracting) return;
                             try {
+                              setIsReExtracting(true);
                               const res = await AIService.reExtract(uuid);
-                              if (res) {
-                                feedback.success(lang === 'zh' ? 'RAW 属性已重新提取' : 'Re-extracted attributes from RAW');
+                              if (res && res.rawResult) {
+                                let parsed: unknown = res.rawResult;
+                                if (typeof parsed === 'string') {
+                                  const cleanRaw = parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                                  parsed = JSON.parse(cleanRaw);
+                                }
+                                const updates = await mapAnalysisToUpdates(parsed as import('#src/features/ai/orchestration.js').PhotoAnalysisResponse, allTags, categories);
+                                const updatePayload = {
+                                  ...updates,
+                                  tags: updates.resolvedTagIds || updates.tags,
+                                };
+                                await updatePhotoStandalone(uuid, updatePayload as Record<string, unknown>);
+                                invalidateDetail(uuid);
+                                invalidateList();
+                                invalidateTags();
+                                queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', uuid] });
+                                feedback.success(lang === 'zh' ? 'RAW 属性已重新提取并刷新' : 'Re-extracted & updated attributes from RAW');
                               } else {
-                                feedback.error(lang === 'zh' ? '提取失败' : 'Re-extraction failed');
+                                feedback.error(lang === 'zh' ? '未找到可提取的 AI RAW 日志' : 'No raw AI log found');
                               }
                             } catch (e) {
                               feedback.error(lang === 'zh' ? '提取失败' : 'Re-extraction failed');
+                            } finally {
+                              setIsReExtracting(false);
                             }
                           }}
-                          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/30 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm"
+                          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/30 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm disabled:opacity-50"
                         >
-                          <Icon name="refresh-cw" className="w-3.5 h-3.5 text-purple-300" />
+                          <Icon name="refresh-cw" className={`w-3.5 h-3.5 text-purple-300 ${isReExtracting ? 'animate-spin' : ''}`} />
                           <span>{lang === 'zh' ? 'AI RAW 重新提取属性' : 'Re-extract Meta from RAW'}</span>
                         </button>
                       )}

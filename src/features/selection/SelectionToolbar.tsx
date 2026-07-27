@@ -45,7 +45,7 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
   const isExiting = useIsExitingSelection();
   const { clearSelection, patch } = useSelectionActions();
   
-  const { deletePhoto, batchUpdate } = useAdminActions();
+  const { deletePhoto, batchUpdate, handleBatchAiIdentifyTrigger, isAiAnalyzing } = useAdminActions();
   const confirm = useConfirm();
   const { combine: combineMutation, removePhotos: removeMutation } = useGroupMutations();
   const [location, setLocation] = useAppLocation();
@@ -215,6 +215,8 @@ export function SelectionToolbar({ className = '', groupId: propGroupId }: { cla
           onBatchDelete={handleBatchDeleteClick}
           onBatchToggleHide={handleBatchToggleHide}
           isUpdating={batchUpdate.isPending}
+          onBatchAiIdentify={() => handleBatchAiIdentifyTrigger(undefined, selectedIds)}
+          isAiAnalyzing={isAiAnalyzing}
         />
       </div>
     </div>,

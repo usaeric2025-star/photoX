@@ -4,7 +4,7 @@ import { userAtom, signOut } from '#src/store/index.js';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { HeaderLogo, ModeSwitch, HeaderMenu, MenuItem } from './header/index.js';
-import { usePublicSettings, useTranslation, useInvalidatePhotos } from '#src/hooks/index.js';
+import { usePublicSettings, useTranslation, useInvalidatePhotos, useIsMultiSelect, useSelectionActions } from '#src/hooks/index.js';
 import { useAppLocation } from '#src/hooks/core/index.js';
 import { LoadingSpinner } from '#src/components/ui/feedback/LoadingSpinner.js';
 import { storage } from '#lib/storage.js';
@@ -53,6 +53,10 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
   const logoUrl = settings?.logoUrl || cachedSettings?.logoUrl || null;
 
   const isStaff = user?.role === 'staff' || user?.id === 'staff-user';
+  const isAdmin = user?.role === 'admin' || user?.id === 'admin-user';
+  const isManagementUser = Boolean(isStaff || isAdmin);
+  const isMultiSelect = useIsMultiSelect();
+  const { toggleMode } = useSelectionActions();
 
   const handleSwitchToAdmin = () => {
     sessionStorage.setItem('preferred_mode', 'admin');
@@ -76,6 +80,22 @@ export function PublicHeader({ totalCount, onRefresh, isRefreshing, className }:
       />
 
       <div className="flex items-center gap-2 flex-nowrap shrink-0">
+        {isManagementUser && (
+          <button
+            type="button"
+            onClick={toggleMode}
+            className={cn(
+              "w-10 h-10 shrink-0 border transition-all outline-none rounded-lg flex items-center justify-center shadow-xs",
+              isMultiSelect
+                ? "bg-indigo-600 text-white border-indigo-500 hover:bg-indigo-700"
+                : "bg-white hover:bg-slate-100 text-slate-600 border-slate-200 hover:text-slate-900"
+            )}
+            title={isMultiSelect ? t('exitSelectMode') : t('selectModeToggle')}
+          >
+            <Icon name="check-square" size={20} />
+          </button>
+        )}
+
         <button 
           type="button"
           onClick={handleRefresh}

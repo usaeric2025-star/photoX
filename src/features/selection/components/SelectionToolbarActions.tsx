@@ -18,6 +18,8 @@ interface SelectionToolbarActionsProps {
   onBatchDelete: () => void;
   onBatchToggleHide: (hide: boolean) => void;
   isUpdating: boolean;
+  onBatchAiIdentify: () => void;
+  isAiAnalyzing: boolean;
 }
 
 /**
@@ -40,6 +42,8 @@ export function SelectionToolbarActions({
   onBatchDelete,
   onBatchToggleHide,
   isUpdating,
+  onBatchAiIdentify,
+  isAiAnalyzing,
 }: SelectionToolbarActionsProps) {
   return (
     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -86,6 +90,24 @@ export function SelectionToolbarActions({
           </span>
         </button>
       )}
+
+      {/* AI 智能識別 */}
+      <button
+        id="batch-ai-btn"
+        onClick={(e) => { e.stopPropagation(); onBatchAiIdentify(); }}
+        disabled={selectedCount === 0 || isAnyPending || isAiAnalyzing}
+        className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-lg text-xs font-bold transition-all bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm outline-none"
+        title="AI 智能識別選取的照片"
+      >
+        {isAiAnalyzing ? (
+          <LoadingSpinner size="xs" className="text-purple-600 shrink-0" />
+        ) : (
+          <Icon name="sparkles" size={14} className="text-purple-600 shrink-0" />
+        )}
+        <span className="shrink-0">
+          {isMd ? 'AI 識別' : 'AI'}
+        </span>
+      </button>
 
       {/* 批量隱藏 */}
       <button

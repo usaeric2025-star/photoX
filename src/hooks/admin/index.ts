@@ -87,66 +87,86 @@ export function useAdminActions() {
   const { handleBatchAiAnalyze, isAiAnalyzing } = useAIBatchAnalysis();
   const selectedIds = useSelectedIds();
   const queryClient = useQueryClient();
+  const tasks = useAtomValue(tasksAtom);
+  const [isStartingBatchAi, setIsStartingBatchAi] = useState(false);
   const { auditResult, isAuditing, runAudit, deduplicate, runDailyCleanup } = useSystemMaintenance();
   const { performanceIssues, clearAudits } = usePerformanceAudit();
 
-  const handleBatchAiIdentifyTrigger = async (allPhotos?: { id: string; groupId?: string | null; metadata?: Record<string, unknown> }[], ids?: string[]) => {
-    const targetIds = ids || selectedIds;
-    let photosToProcess = Array.isArray(allPhotos) && allPhotos.length > 0 ? allPhotos : AdminService.getAllCachedPhotos(queryClient);
-
-    if (!allPhotos || allPhotos.length === 0) {
-      try {
-        // @ts-ignore - Hono client indexing
-        const res = await api.photos.list.$post({ json: { page: '1', limit: '1000' } });
-        const data = await ErrorFactory.unwrap<{ items: Array<{ id: string; groupId?: string | null; metadata?: Record<string, unknown> }> }>(res, 'Fetch Failed');
-        if (data && Array.isArray(data.items) && data.items.length > 0) {
-          photosToProcess = data.items;
-        }
-      } catch (err) {
-        // Fallback to cached photos if API call fails
+  const hasRunningAiTask = useMemo(() => {
+    let running = false;
+    tasks.forEach((task) => {
+      if (task.type === 'ai-analyze' && (task.state?.status === 'processing' || task.state?.status === 'queued')) {
+        running = true;
       }
-    }
+    });
+    return running;
+  }, [tasks]);
 
-    if (photosToProcess.length === 0) {
-      ErrorFactory.handle(t('selectPhotosToIdentify') || 'Select photos to identify', { context: 'batchAction' });
+  const isAiBatchBusy = isAiAnalyzing || isStartingBatchAi || hasRunningAiTask;
+
+  const handleBatchAiIdentifyTrigger = async (allPhotos?: { id: string; groupId?: string | null; metadata?: Record<string, unknown> }[], ids?: string[]) => {
+    if (isAiBatchBusy) {
+      feedback.info(t('aiTaskAlreadyRunning') || '已有 AI 識別任務在後台運行中，請稍候');
       return;
     }
-    const filteredPhotos = AdminService.filterPhotosWithGroups(photosToProcess, targetIds);
 
-    // 未选中特定照片时，自动过滤掉已被 AI 识别过的照片
-    let finalPhotosToProcess = filteredPhotos;
-    if (targetIds.length === 0) {
-      finalPhotosToProcess = filteredPhotos.filter((p: any) => {
-        const meta = p.metadata as Record<string, unknown> | undefined;
-        const hasAiMeta = Boolean(meta?.ai_updated_at || meta?.ai_raw || meta?.raw_result || meta?.ai_result);
-        const hasDescription = Boolean(
-          (typeof p.description === 'string' && p.description.trim().length > 0) ||
-          (p.description && typeof p.description === 'object' && Object.keys(p.description).length > 0)
-        );
-        const hasCategory = Boolean(p.categoryId || p.categoryName);
-        const hasTags = Boolean(Array.isArray(p.photoTags) && p.photoTags.length > 0);
-        
-        const isAnalyzed = hasAiMeta || (hasDescription && (hasCategory || hasTags));
-        return !isAnalyzed;
-      });
+    setIsStartingBatchAi(true);
+    try {
+      const targetIds = ids || selectedIds;
+      let photosToProcess = Array.isArray(allPhotos) && allPhotos.length > 0 ? allPhotos : AdminService.getAllCachedPhotos(queryClient);
 
+      if (!allPhotos || allPhotos.length === 0) {
+        try {
+          // @ts-ignore - Hono client indexing
+          const res = await api.photos.list.$post({ json: { page: '1', limit: '1000' } });
+          const data = await ErrorFactory.unwrap<{ items: Array<{ id: string; groupId?: string | null; metadata?: Record<string, unknown> }> }>(res, 'Fetch Failed');
+          if (data && Array.isArray(data.items) && data.items.length > 0) {
+            photosToProcess = data.items;
+          }
+        } catch (err) {
+          // Fallback to cached photos if API call fails
+        }
+      }
+
+      if (photosToProcess.length === 0) {
+        ErrorFactory.handle(t('selectPhotosToIdentify') || 'Select photos to identify', { context: 'batchAction' });
+        return;
+      }
+      const filteredPhotos = AdminService.filterPhotosWithGroups(photosToProcess, targetIds);
+
+      // 未选中特定照片时，自动过滤掉已被 AI 识别过的照片
+      let finalPhotosToProcess = filteredPhotos;
+      if (targetIds.length === 0) {
+        finalPhotosToProcess = filteredPhotos.filter((p: any) => {
+          const meta = p.metadata as Record<string, unknown> | undefined;
+          const hasAiMeta = Boolean(meta?.ai_updated_at || meta?.ai_raw || meta?.raw_result || meta?.ai_result);
+          const hasDescription = Boolean(
+            (typeof p.description === 'string' && p.description.trim().length > 0) ||
+            (p.description && typeof p.description === 'object' && Object.keys(p.description).length > 0)
+          );
+          const hasCategory = Boolean(p.categoryId || p.categoryName);
+          const hasTags = Boolean(Array.isArray(p.photoTags) && p.photoTags.length > 0);
+          
+          const isAnalyzed = hasAiMeta || (hasDescription && (hasCategory || hasTags));
+          return !isAnalyzed;
+        });
+
+        if (finalPhotosToProcess.length === 0) {
+          feedback.success(t('allPhotosAnalyzed') || `全量 ${filteredPhotos.length} 張照片均已完成 AI 識別`);
+          return;
+        }
+
+        if (finalPhotosToProcess.length < filteredPhotos.length) {
+          const skippedCount = filteredPhotos.length - finalPhotosToProcess.length;
+          feedback.info(`共 ${filteredPhotos.length} 張照片，已自動跳過 ${skippedCount} 張已識別照片，將識別剩餘 ${finalPhotosToProcess.length} 張`);
+        }
+      }
+      
       if (finalPhotosToProcess.length === 0) {
-        feedback.success(t('allPhotosAnalyzed') || `全量 ${filteredPhotos.length} 張照片均已完成 AI 識別`);
+        feedback.info(t('noPhotosToAnalyze') || '沒有需要識別的照片');
         return;
       }
 
-      if (finalPhotosToProcess.length < filteredPhotos.length) {
-        const skippedCount = filteredPhotos.length - finalPhotosToProcess.length;
-        feedback.info(`共 ${filteredPhotos.length} 張照片，已自動跳過 ${skippedCount} 張已識別照片，將識別剩餘 ${finalPhotosToProcess.length} 張`);
-      }
-    }
-    
-    if (finalPhotosToProcess.length === 0) {
-      feedback.info(t('noPhotosToAnalyze') || '沒有需要識別的照片');
-      return;
-    }
-
-    try {
       await feedback.promise(handleBatchAiAnalyze(finalPhotosToProcess as any), {
         loading: t('aiAnalyzing') || '正在啟動 AI 識別...',
         success: t('aiAnalyzeSuccess') || 'AI 識別任務已啟動',
@@ -154,6 +174,8 @@ export function useAdminActions() {
       });
     } catch (e) {
       // handled by feedback.promise
+    } finally {
+      setTimeout(() => setIsStartingBatchAi(false), 1000);
     }
   };
 
@@ -165,7 +187,7 @@ export function useAdminActions() {
     togglePin: togglePinMutation,
     handleBatchAiIdentifyTrigger,
     handleBatchAiAnalyze,
-    isAiAnalyzing,
+    isAiAnalyzing: isAiBatchBusy,
     isGrouping,
     auditResult,
     isAuditing,

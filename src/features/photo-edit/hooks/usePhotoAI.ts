@@ -30,9 +30,11 @@ const AIAnalysisSchema = v.object({
  */
 export function usePhotoEditAI() {
   const user = useAtomValue(userAtom);
-  const { form } = usePhotoEditSessionContext();
+  const session = usePhotoEditSessionContext();
+  const form = session.form;
+  const sessionPhotoId = session.photoId;
   const { modal, photoId: filterPhotoId } = useFilters();
-  const editPhotoId = modal === 'edit' ? filterPhotoId : null;
+  const editPhotoId = sessionPhotoId || (modal === 'edit' ? filterPhotoId : null);
   const { t } = useTranslation();
   const { updatePhoto } = useAdminActions();
   const { invalidateDetail, invalidateList, invalidateTags } = useInvalidatePhotos();
@@ -44,7 +46,7 @@ export function usePhotoEditAI() {
   const { submit: handleAiAnalyze, isLoading: isAnalyzing } = useFormSubmit({
     schema: AIAnalysisSchema,
     mutationFn: async ({ imageUrl }: { imageUrl: string }) => {
-      if (!editPhotoId) throw new Error('Missing editPhotoId');
+      if (!editPhotoId) throw new Error('Missing photoId');
       
       const rawResult = await AIService.analyze({ id: editPhotoId, thumbnailUrl: imageUrl });
       
@@ -71,8 +73,6 @@ export function usePhotoEditAI() {
       // 自動保存到後端 (including resolved tags if any)
       const savePayload = { ...updates };
       if (updates.resolvedTagIds) {
-        // We handle tag syncing separately or via updatePhoto if supported
-        // Here we just ensure the form has the right tags for the final commit
         const resolvedTagIds = updates.resolvedTagIds as Array<string | number>;
         const resolvedTags = resolvedTagIds.map((id: number | string) => allTags.find(t => String(t.id) === String(id))).filter((t): t is Tag => !!t);
         form.setFieldValue('tags', resolvedTags);
@@ -103,11 +103,26 @@ export function usePhotoEditAI() {
     return true;
   }, [handleAiAnalyze]);
 
-  const handleReExtract = useCallback(async (rawResult: unknown) => {
-    if (!editPhotoId) return;
+  const handleReExtract = useCallback(async (rawResult?: unknown) => {
+    if (!editPhotoId) {
+      feedback.error('缺少照片 ID，无法重新提取');
+      return;
+    }
     setIsReExtracting(true);
     try {
       let parsed: unknown = rawResult;
+      
+      // 如果没有直接传入 rawResult，尝试从后端获取
+      if (!parsed) {
+        const serverData = await AIService.reExtract(editPhotoId);
+        parsed = serverData?.rawResult || serverData;
+      }
+
+      if (!parsed) {
+        feedback.error('未找到可用于提取的 AI RAW 原始数据');
+        return;
+      }
+
       if (typeof parsed === 'string') {
         const cleanRaw = parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         parsed = JSON.parse(cleanRaw);
@@ -127,10 +142,16 @@ export function usePhotoEditAI() {
         }
       });
 
-      await updatePhoto.mutateAsync({ id: editPhotoId, updates });
+      const savePayload = {
+        ...updates,
+        tags: updates.resolvedTagIds || updates.tags,
+      };
+
+      await updatePhoto.mutateAsync({ id: editPhotoId, updates: savePayload });
       invalidateDetail(editPhotoId);
       invalidateList();
       invalidateTags();
+      queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', editPhotoId] });
       feedback.success(t('reExtractSuccess') || '重新提取成功');
     } catch (e) {
       ErrorFactory.handle(e as Error, { context: 'AI Re-extraction' });
@@ -138,7 +159,7 @@ export function usePhotoEditAI() {
     } finally {
       setIsReExtracting(false);
     }
-  }, [editPhotoId, allTags, categories, form, updatePhoto, invalidateDetail, invalidateList, t]);
+  }, [editPhotoId, allTags, categories, form, updatePhoto, invalidateDetail, invalidateList, invalidateTags, t]);
 
   return { handleAiAnalyze: onAnalyze, handleReExtract, isAnalyzing, isReExtracting };
 }

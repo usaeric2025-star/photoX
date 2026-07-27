@@ -1,5 +1,5 @@
 import { db, furnitureItems, aiAuditLogs, systemLogs, photoTags, categories, groups, tags as tagsTable } from '../index.js';
-import { eq, inArray, desc, sql } from 'drizzle-orm';
+import { eq, inArray, desc, sql, and, ne } from 'drizzle-orm';
 
 const photoInclude = {
     tags: {
@@ -144,7 +144,47 @@ export async function deletePhotos(ids: string[]) {
     return await db.delete(furnitureItems).where(inArray(furnitureItems.id, ids));
 }
 
+export async function ensureUniqueItemCode(photoId: string, itemCode: string): Promise<string | null> {
+    const trimmed = itemCode.trim();
+    if (!trimmed) return null;
+
+    const conflicts = await db.select({ id: furnitureItems.id })
+        .from(furnitureItems)
+        .where(and(
+            sql`LOWER(${furnitureItems.itemCode}) = LOWER(${trimmed})`,
+            ne(furnitureItems.id, photoId)
+        ))
+        .limit(1);
+
+    if (conflicts.length > 0) {
+        const suffix = photoId.replace(/-/g, '').slice(0, 4);
+        const candidate = `${trimmed}-${suffix}`;
+        const candConflicts = await db.select({ id: furnitureItems.id })
+            .from(furnitureItems)
+            .where(and(
+                sql`LOWER(${furnitureItems.itemCode}) = LOWER(${candidate})`,
+                ne(furnitureItems.id, photoId)
+            ))
+            .limit(1);
+
+        if (candConflicts.length > 0) {
+            const randSuffix = Math.floor(1000 + Math.random() * 9000).toString();
+            return `${trimmed}-${randSuffix}`;
+        }
+        return candidate;
+    }
+    return trimmed;
+}
+
 export async function updatePhoto(id: string, updates: Partial<typeof furnitureItems.$inferInsert>) {
+    if (updates.itemCode && typeof updates.itemCode === 'string') {
+        const uniqueCode = await ensureUniqueItemCode(id, updates.itemCode);
+        if (uniqueCode) {
+            updates.itemCode = uniqueCode;
+        } else {
+            delete updates.itemCode;
+        }
+    }
     return await db.update(furnitureItems)
         .set({ ...updates, updatedAt: new Date() })
         .where(eq(furnitureItems.id, id))
@@ -152,6 +192,15 @@ export async function updatePhoto(id: string, updates: Partial<typeof furnitureI
 }
 
 export async function updatePhotoWithTags(id: string, updates: Partial<typeof furnitureItems.$inferInsert>, tagIds?: number[]) {
+    if (updates.itemCode && typeof updates.itemCode === 'string') {
+        const uniqueCode = await ensureUniqueItemCode(id, updates.itemCode);
+        if (uniqueCode) {
+            updates.itemCode = uniqueCode;
+        } else {
+            delete updates.itemCode;
+        }
+    }
+
     return await db.transaction(async (tx) => {
         let result = null;
         if (Object.keys(updates).length > 0) {
@@ -171,6 +220,16 @@ export async function updatePhotoWithTags(id: string, updates: Partial<typeof fu
 
 export async function batchUpdatePhotos(ids: string[], updates: Partial<typeof furnitureItems.$inferInsert>) {
     if (ids.length === 0) return;
+    if (ids.length > 1 && updates.itemCode) {
+        delete updates.itemCode;
+    } else if (ids.length === 1 && updates.itemCode && typeof updates.itemCode === 'string') {
+        const uniqueCode = await ensureUniqueItemCode(ids[0], updates.itemCode);
+        if (uniqueCode) {
+            updates.itemCode = uniqueCode;
+        } else {
+            delete updates.itemCode;
+        }
+    }
     return await db.update(furnitureItems)
         .set({ ...updates, updatedAt: new Date() })
         .where(inArray(furnitureItems.id, ids))

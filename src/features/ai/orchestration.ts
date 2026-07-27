@@ -203,10 +203,11 @@ const analyzeAndSavePhoto = async (
     }
 
     const updates = await mapAnalysisToUpdates(analysisData, allTags, categories);
+    const { resolvedTagIds, ...cleanUpdates } = updates;
 
     const updateResult = await updatePhoto(photo.id, {
-      ...updates,
-      tags: updates.resolvedTagIds,
+      ...cleanUpdates,
+      tags: resolvedTagIds || updates.tags,
       metadata: {
         ...(photo.metadata as Record<string, unknown> || {}),
         ai_updated_at: new Date().toISOString(),

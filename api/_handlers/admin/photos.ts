@@ -17,6 +17,23 @@ import {
 } from '../../_lib/db/queries/photos.js';
 import { type aiAuditLogs, type systemLogs } from '../../_lib/db/index.js';
 
+const ALLOWED_FURNITURE_COLUMNS = new Set([
+    'userId', 'name', 'description', 'categoryId', 'manufacturerId', 'groupId', 
+    'isGroupCover', 'isPinned', 'imageUrl', 'imageHash', 'price', 'note', 'type', 
+    'isHidden', 'itemCode', 'manualCode', 'modelNumber', 'descriptionTranslations', 
+    'isAnalyzing', 'subCategory', 'dimensions', 'groupOrder', 'metadata', 'updatedAt', 'nameSearchable'
+]);
+
+function sanitizeFurnitureUpdates(updates: Record<string, unknown>): Partial<typeof furnitureItems.$inferInsert> {
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(updates)) {
+        if (ALLOWED_FURNITURE_COLUMNS.has(key)) {
+            result[key] = val;
+        }
+    }
+    return result as Partial<typeof furnitureItems.$inferInsert>;
+}
+
 export const adminPhotos = new Hono()
 .get("/:id/ai-result", async (c) => {
     const photoId = c.req.param('id');
@@ -82,9 +99,14 @@ export const adminPhotos = new Hono()
     const mappedUpdates = toCamelCaseKeys<Record<string, unknown>>(otherUpdates);
     delete mappedUpdates.createdAt;
 
-    const numericTagIds = tagIds ? tagIds.map(tid => Number(tid)).filter(tid => !isNaN(tid)) : undefined;
+    const sanitizedUpdates = sanitizeFurnitureUpdates(mappedUpdates);
 
-    await updatePhotoWithTags(id, mappedUpdates as Partial<typeof furnitureItems.$inferInsert>, numericTagIds);
+    const effectiveTagIds = tagIds || (body as any).resolvedTagIds || (body as any).resolved_tag_ids;
+    const numericTagIds = effectiveTagIds && Array.isArray(effectiveTagIds) 
+        ? effectiveTagIds.map(tid => Number(tid)).filter(tid => !isNaN(tid)) 
+        : undefined;
+
+    await updatePhotoWithTags(id, sanitizedUpdates, numericTagIds);
     await refreshPhotosView();
     return successResponse(c, null);
 })
@@ -128,8 +150,10 @@ export const adminPhotos = new Hono()
     const mappedUpdates = toCamelCaseKeys<Record<string, unknown>>(updates);
     delete mappedUpdates.createdAt;
 
-    if (Object.keys(mappedUpdates).length > 0) {
-        await batchUpdatePhotos(ids, mappedUpdates as Partial<typeof furnitureItems.$inferInsert>);
+    const sanitizedUpdates = sanitizeFurnitureUpdates(mappedUpdates);
+
+    if (Object.keys(sanitizedUpdates).length > 0) {
+        await batchUpdatePhotos(ids, sanitizedUpdates);
     }
 
     await refreshPhotosView();
