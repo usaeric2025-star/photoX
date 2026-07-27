@@ -105,6 +105,28 @@ export const updateTaskState = (taskId: string, state: Partial<Task['state']>) =
   }
 };
 
+export const removeTask = (taskId: string) => {
+  const current = store.get(tasksAtom);
+  if (current.has(taskId)) {
+    const newTasks = new Map(current);
+    newTasks.delete(taskId);
+    store.set(tasksAtom, newTasks);
+    saveTasksToStorage(newTasks);
+  }
+};
+
+export const clearFinishedTasks = () => {
+  const current = store.get(tasksAtom);
+  const newTasks = new Map<string, Task>();
+  current.forEach((task, id) => {
+    if (task.state?.status === 'queued' || task.state?.status === 'processing') {
+      newTasks.set(id, task);
+    }
+  });
+  store.set(tasksAtom, newTasks);
+  saveTasksToStorage(newTasks);
+};
+
 export const clearAll = () => {
   store.set(tasksAtom, new Map());
   saveTasksToStorage(new Map());

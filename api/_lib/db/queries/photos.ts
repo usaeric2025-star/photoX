@@ -208,10 +208,11 @@ export async function updatePhotoWithTags(id: string, updates: Partial<typeof fu
         }
 
         if (Array.isArray(tagIds)) {
+            const cleanTagIds = Array.from(new Set(tagIds.map(tid => Number(tid)).filter(tid => !isNaN(tid) && tid > 0)));
             await tx.delete(photoTags).where(eq(photoTags.photoId, id));
-            if (tagIds.length > 0) {
-                const tagInsertValues = tagIds.map(tid => ({ photoId: id, tagId: tid }));
-                await tx.insert(photoTags).values(tagInsertValues);
+            if (cleanTagIds.length > 0) {
+                const tagInsertValues = cleanTagIds.map(tid => ({ photoId: id, tagId: tid }));
+                await tx.insert(photoTags).values(tagInsertValues).onConflictDoNothing();
             }
         }
         return result;

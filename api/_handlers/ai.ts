@@ -173,10 +173,11 @@ export const ai = new Hono<Env>()
             return errorResponse(c, (data as { _error?: string })._error || 'AI analysis failed', 500);
         }
 
-        return successResponse(c, {
-            ...(typeof data === 'object' && data !== null ? data : { result: data }),
-            raw_result: rawText
-        });
+        const resultPayload = Array.isArray(data)
+            ? { ...(data[0] || {}), items: data, raw_result: rawText }
+            : { ...(typeof data === 'object' && data !== null ? data : { result: data }), raw_result: rawText };
+
+        return successResponse(c, resultPayload);
     } catch (err: unknown) {
         logger.error('[AI Analyze] Error or Timeout:', err);
         const errMsg = err instanceof Error ? err.message : String(err);

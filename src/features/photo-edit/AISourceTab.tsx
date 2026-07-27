@@ -73,8 +73,8 @@ export function AISourceTab() {
           onClick={async () => {
             try {
               const res = await AIService.reExtract(photoId);
-              if (res && res.rawResult) {
-                await onReExtract(res.rawResult);
+              if (res && (res.rawResult || res.parsedData)) {
+                await onReExtract(res.rawResult || res.parsedData || res);
               } else {
                 feedback.error(appLang === 'zh' ? '未找到可提取的 AI RAW 日志' : 'No raw AI log found');
               }

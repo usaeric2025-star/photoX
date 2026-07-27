@@ -115,7 +115,7 @@ export function usePhotoEditAI() {
       // 如果没有直接传入 rawResult，尝试从后端获取
       if (!parsed) {
         const serverData = await AIService.reExtract(editPhotoId);
-        parsed = serverData?.rawResult || serverData;
+        parsed = serverData?.rawResult || serverData?.parsedData || serverData;
       }
 
       if (!parsed) {
@@ -125,7 +125,11 @@ export function usePhotoEditAI() {
 
       if (typeof parsed === 'string') {
         const cleanRaw = parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        parsed = JSON.parse(cleanRaw);
+        try {
+          parsed = JSON.parse(cleanRaw);
+        } catch {
+          // Keep string if not strict JSON
+        }
       }
       
       const updates = await mapAnalysisToUpdates(parsed as import('#src/features/ai/orchestration.js').PhotoAnalysisResponse, allTags, categories);

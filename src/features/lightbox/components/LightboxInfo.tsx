@@ -456,11 +456,13 @@ export const LightboxInfo = memo(function LightboxInfo({
                             try {
                               setIsReExtracting(true);
                               const res = await AIService.reExtract(uuid);
-                              if (res && res.rawResult) {
-                                let parsed: unknown = res.rawResult;
+                              if (res && (res.rawResult || res.parsedData)) {
+                                let parsed: unknown = res.rawResult || res.parsedData || res;
                                 if (typeof parsed === 'string') {
                                   const cleanRaw = parsed.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                                  parsed = JSON.parse(cleanRaw);
+                                  try {
+                                    parsed = JSON.parse(cleanRaw);
+                                  } catch {}
                                 }
                                 const updates = await mapAnalysisToUpdates(parsed as import('#src/features/ai/orchestration.js').PhotoAnalysisResponse, allTags, categories);
                                 const updatePayload = {

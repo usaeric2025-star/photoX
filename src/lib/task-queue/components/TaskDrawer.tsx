@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import {  isTaskDrawerOpen, useTranslation } from '#src/hooks/index.js';
-import { tasksAtom, clearAll, addTask } from '#src/lib/task-queue/taskStore.js';
+import { tasksAtom, clearFinishedTasks, removeTask } from '#src/lib/task-queue/taskStore.js';
 import { cn } from '#lib/utils.js';
 import { Icon } from '#src/components/ui/Icon.js';
 import { TopLayer } from '#src/components/ui/TopLayer.js';
@@ -110,15 +110,30 @@ function TaskItem({ task }: { task: Task }) {
           </div>
         </div>
         <div className="shrink-0 flex flex-col items-end gap-1.5">
-          <span className={cn(
-            "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full select-none", 
-            task.state.status === 'completed' ? 'bg-green-100 text-green-700' :
-            task.state.status === 'failed' ? 'bg-red-100 text-red-700' :
-            task.state.status === 'processing' ? 'bg-blue-100 text-blue-700' :
-            'bg-slate-100 text-slate-600'
-          )}>
-            {statusLabels[task.state.status as keyof typeof statusLabels] || task.state.status}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className={cn(
+              "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full select-none", 
+              task.state.status === 'completed' ? 'bg-green-100 text-green-700' :
+              task.state.status === 'failed' ? 'bg-red-100 text-red-700' :
+              task.state.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+              'bg-slate-100 text-slate-600'
+            )}>
+              {statusLabels[task.state.status as keyof typeof statusLabels] || task.state.status}
+            </span>
+            {(task.state.status === 'completed' || task.state.status === 'failed' || task.state.status === 'cancelled') && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeTask(task.id);
+                }}
+                className="p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
+                title={t('delete')}
+              >
+                <Icon name="x" size={12} />
+              </button>
+            )}
+          </div>
           {(task.state.status === 'processing' || task.state.status === 'queued') && (
             <button
               type="button"
@@ -203,15 +218,13 @@ export function TaskDrawer() {
         <div className="p-4 border-b border-slate-100 h-16 flex items-center justify-between shrink-0">
           <span className="font-extrabold text-sm text-slate-800 uppercase tracking-tight">{t('taskQueue')}</span>
           <div className="flex items-center gap-1.5">
-            {tasks.some(t => t.state.status === 'completed' || t.state.status === 'failed') && (
+            {tasks.some(t => t.state?.status !== 'queued' && t.state?.status !== 'processing') && (
               <button 
                 type="button"
                 onClick={() => {
-                  const remaining = (Array.from(tasksMap.values()) as Task[]).filter(t => t.state?.status === 'queued' || t.state?.status === 'processing');
-                  clearAll();
-                  remaining.forEach(t => addTask(t));
+                  clearFinishedTasks();
                 }}
-                className="text-xs text-blue-500 hover:text-blue-600 font-bold px-2 py-1 select-none active:scale-95 transition-all"
+                className="text-xs text-blue-500 hover:text-blue-600 font-bold px-2 py-1 select-none active:scale-95 transition-all cursor-pointer"
               >
                 {t('clearHistory')}
               </button>

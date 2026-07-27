@@ -113,10 +113,57 @@ export function matchCategory(rawInput: unknown, categories: Category[]): number
  * Unifies the parsing logic used in both single analysis and batch processing.
  */
 export async function mapAnalysisToUpdates(
-  result: PhotoAnalysisResponse,
+  resultInput: PhotoAnalysisResponse | unknown,
   allTags: Tag[] = [],
   categories: Category[] = []
 ): Promise<Record<string, unknown>> {
+  let resultObj: Record<string, unknown> = (resultInput || {}) as Record<string, unknown>;
+
+  if (typeof resultInput === 'string') {
+    try {
+      const cleanRaw = resultInput.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      resultObj = JSON.parse(cleanRaw);
+    } catch {}
+  }
+
+  if (resultObj && typeof resultObj === 'object') {
+    if (resultObj.rawResult) {
+      if (typeof resultObj.rawResult === 'string') {
+        try {
+          const cleanRaw = resultObj.rawResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          const p = JSON.parse(cleanRaw);
+          resultObj = Array.isArray(p) ? (p[0] || {}) : { ...resultObj, ...p };
+        } catch {}
+      } else if (typeof resultObj.rawResult === 'object') {
+        const ro = resultObj.rawResult as Record<string, unknown>;
+        if (ro.raw_text && typeof ro.raw_text === 'string') {
+          try {
+            const cleanRaw = ro.raw_text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            const p = JSON.parse(cleanRaw);
+            resultObj = Array.isArray(p) ? (p[0] || {}) : { ...resultObj, ...p };
+          } catch {}
+        }
+      }
+    } else if (resultObj.raw_text && typeof resultObj.raw_text === 'string') {
+      try {
+        const cleanRaw = resultObj.raw_text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const p = JSON.parse(cleanRaw);
+        resultObj = Array.isArray(p) ? (p[0] || {}) : { ...resultObj, ...p };
+      } catch {}
+    } else if (resultObj.parsedData) {
+      const p = resultObj.parsedData;
+      if (typeof p === 'object' && p !== null) {
+        resultObj = Array.isArray(p) ? ((p[0] as Record<string, unknown>) || {}) : { ...resultObj, ...(p as Record<string, unknown>) };
+      }
+    }
+  }
+
+  if (Array.isArray(resultObj)) {
+    resultObj = (resultObj[0] || {}) as Record<string, unknown>;
+  }
+
+  const result = resultObj as PhotoAnalysisResponse;
+
   const { name: nameStr, description: descObj } = await mapAiToMultilingual(
     (result.name as string) || result.productName,
     (result.description as string) || result.productStory
@@ -166,10 +213,16 @@ export async function mapAnalysisToUpdates(
     return String(t).trim();
   }).filter(Boolean);
 
-  const tagIds = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
+  const directObjectTagIds: Array<string | number> = rawTagNames
+    .filter(t => typeof t === 'object' && t !== null && 'id' in (t as object))
+    .map(t => (t as { id: string | number }).id)
+    .filter(Boolean);
+
+  const rawTagIds = Array.isArray(result.tagIds) ? result.tagIds : (Array.isArray(result.tag_ids) ? result.tag_ids : []);
+  const combinedTagIds = [...rawTagIds, ...directObjectTagIds];
   
-  if (tagNames.length > 0 || tagIds.length > 0) {
-    const finalTagIds = await resolveTagNamesToIds([...tagIds, ...tagNames], allTags);
+  if (tagNames.length > 0 || combinedTagIds.length > 0) {
+    const finalTagIds = await resolveTagNamesToIds([...combinedTagIds.map(String), ...tagNames], allTags);
     if (finalTagIds.length > 0) {
       updates.resolvedTagIds = finalTagIds;
     }

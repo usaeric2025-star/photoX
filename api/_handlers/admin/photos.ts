@@ -27,7 +27,42 @@ const ALLOWED_FURNITURE_COLUMNS = new Set([
 function sanitizeFurnitureUpdates(updates: Record<string, unknown>): Partial<typeof furnitureItems.$inferInsert> {
     const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(updates)) {
-        if (ALLOWED_FURNITURE_COLUMNS.has(key)) {
+        if (!ALLOWED_FURNITURE_COLUMNS.has(key)) continue;
+
+        if (key === 'groupId') {
+            if (!val || val === 'null' || val === 'undefined' || (typeof val === 'string' && val.trim() === '')) {
+                result[key] = null;
+            } else {
+                result[key] = String(val).trim();
+            }
+        } else if (key === 'categoryId') {
+            if (val === null || val === undefined || val === '' || val === 'null') {
+                result[key] = null;
+            } else {
+                const num = Number(val);
+                result[key] = (!isNaN(num) && num > 0) ? num : null;
+            }
+        } else if (key === 'manufacturerId') {
+            if (val === null || val === undefined || val === '' || val === 'null') {
+                result[key] = null;
+            } else {
+                const num = Number(val);
+                result[key] = (!isNaN(num) && num > 0) ? num : null;
+            }
+        } else if (key === 'price') {
+            if (val === null || val === undefined || val === '') {
+                result[key] = null;
+            } else {
+                const num = Number(val);
+                result[key] = !isNaN(num) ? num : null;
+            }
+        } else if (key === 'itemCode' || key === 'manualCode' || key === 'modelNumber') {
+            if (!val || val === 'null' || val === 'undefined' || (typeof val === 'string' && val.trim() === '')) {
+                result[key] = null;
+            } else {
+                result[key] = String(val).trim();
+            }
+        } else {
             result[key] = val;
         }
     }
@@ -177,15 +212,46 @@ export const adminPhotos = new Hono()
     const { photoId } = check.output;
 
     const result = await getAiResultForPhoto(photoId);
-    if (result && result.source === 'audit_log') {
+    if (!result) return successResponse(c, null);
+
+    let rawResult = '';
+    let parsedData: unknown = null;
+
+    if (result.source === 'audit_log') {
         const auditLog = result.data as typeof aiAuditLogs.$inferSelect;
-        return successResponse(c, {
-            photoId,
-            rawResult: auditLog.rawOutput || auditLog.cleanedOutput || '',
-            parsedData: auditLog.cleanedOutput || null
-        });
+        parsedData = auditLog.cleanedOutput || null;
+
+        if (auditLog.rawOutput) {
+            let ro = auditLog.rawOutput;
+            if (typeof ro === 'object' && ro !== null && 'raw_text' in ro) {
+                ro = (ro as Record<string, unknown>).raw_text;
+            }
+            rawResult = typeof ro === 'object' ? JSON.stringify(ro, null, 2) : String(ro || '');
+        }
+        if (!rawResult && auditLog.cleanedOutput) {
+            rawResult = typeof auditLog.cleanedOutput === 'object' ? JSON.stringify(auditLog.cleanedOutput, null, 2) : String(auditLog.cleanedOutput);
+        }
+    } else if (result.source === 'system_log') {
+        const logRecord = result.data as typeof systemLogs.$inferSelect;
+        const metadata = (logRecord.metadata || {}) as Record<string, unknown>;
+        let rawOutput = metadata.raw_output || metadata.raw_result || metadata.rawText || metadata.text || metadata.ai_raw;
+        if (typeof rawOutput === 'object' && rawOutput !== null && 'raw_text' in rawOutput) {
+            rawOutput = (rawOutput as Record<string, unknown>).raw_text;
+        }
+        if (!rawOutput) {
+            rawOutput = metadata.parsed_data || metadata.cleaned_output || metadata.result;
+        }
+        rawResult = typeof rawOutput === 'object' ? JSON.stringify(rawOutput, null, 2) : (rawOutput as string) || '';
+        parsedData = metadata.parsed_data || metadata.cleaned_output || metadata.result || null;
+    } else if (result.source === 'metadata') {
+        const metadata = result.data as Record<string, unknown>;
+        rawResult = (metadata.ai_raw as string) || '';
     }
-    
-    return successResponse(c, null);
+
+    return successResponse(c, {
+        photoId,
+        rawResult,
+        parsedData
+    });
 });
 
