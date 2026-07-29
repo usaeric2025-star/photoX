@@ -32,9 +32,9 @@ export const listExtendedRoutes = new Hono()
                 !isAdminMode ? or(eq(furnitureItems.isHidden, false), isNull(furnitureItems.isHidden)) : undefined
             ))
             .orderBy(
+                sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`,
                 desc(furnitureItems.isGroupCover),
                 sql`case when ${furnitureItems.isPinned} = true then 0 else 1 end asc`,
-                asc(furnitureItems.isHidden),
                 desc(furnitureItems.createdAt),
                 asc(furnitureItems.id)
             );
@@ -108,6 +108,7 @@ export const listExtendedRoutes = new Hono()
             .leftJoin(categories, eq(furnitureItems.categoryId, categories.id))
             .where(baseCondition)
             .orderBy(
+                sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`,
                 desc(furnitureItems.isGroupCover),
                 sql`case when ${furnitureItems.isPinned} = true then 0 else 1 end asc`,
                 desc(furnitureItems.createdAt),

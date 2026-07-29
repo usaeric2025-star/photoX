@@ -1,11 +1,12 @@
-import React, { Ref } from 'react';
+import React, { Ref, useMemo } from 'react';
+import { useAtomValue } from 'jotai';
 import { cn } from '#lib/utils.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { useIsManagement, usePermission } from '#src/hooks/index.js';
 import { Image } from '#src/components/ui/Image.js';
 import { getPhotoThumb } from '#src/lib/image/thumbnailConfig.js';
 import { getLocalizedDisplay } from '#src/utils/display.js';
-import { useDescLang } from '#lib/store/index.js';
+import { useDescLang, tasksAtom } from '#lib/store/index.js';
 import { LocalErrorBoundary } from '#src/components/ui/feedback/LocalErrorBoundary.js';
 
 export interface PhotoCardBaseProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -39,6 +40,19 @@ export const PhotoCardBase = ({
   const isManagement = useIsManagement();
   const isHidden = !!item.isHidden && isManagement;
   const descLang = useDescLang();
+  const tasksMap = useAtomValue(tasksAtom);
+
+  const isAnalyzing = useMemo(() => {
+    if ((item as any).isAnalyzing) return true;
+    if (!tasksMap || tasksMap.size === 0) return false;
+    for (const task of tasksMap.values()) {
+      if (task.type === 'ai-analyze' && (task.state?.status === 'processing' || task.state?.status === 'queued')) {
+        const photoIds = (task.meta?.photoIds as string[]) || [];
+        if (photoIds.length === 0 || photoIds.includes(item.id)) return true;
+      }
+    }
+    return false;
+  }, [(item as any).isAnalyzing, item.id, tasksMap]);
 
   return (
     <LocalErrorBoundary name="PhotoCard">
@@ -64,6 +78,7 @@ export const PhotoCardBase = ({
           "transition-all duration-300 hover:shadow-md hover:border-slate-200 hover:-translate-y-0.5",
           "active:scale-[0.98]",
           isHidden && "opacity-80 grayscale-[0.3] ring-1 ring-danger",
+          isAnalyzing && "opacity-80 grayscale-[0.6] ring-2 ring-purple-500/60 shadow-md animate-pulse",
           isSelected && "ring-2 ring-primary bg-primary/10 shadow-lg",
           className
         )}
@@ -84,7 +99,8 @@ export const PhotoCardBase = ({
             priority={priority}
             className={cn(
               "w-full h-full object-cover object-center transition-transform duration-700 ease-out",
-              isHidden && "opacity-60"
+              isHidden && "opacity-60",
+              isAnalyzing && "grayscale opacity-75"
             )}
           />
           

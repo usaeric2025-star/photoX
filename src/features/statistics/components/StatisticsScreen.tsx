@@ -35,7 +35,7 @@ const StatCard = ({ title, value, subValue, icon: iconName, colorClass, delay = 
 );
 
 export function StatisticsScreen() {
-  const { data: stats, isLoading } = useAppQuery<{
+  const { data: stats, isLoading, isError, refetch } = useAppQuery<{
     totalPhotos: number;
     hiddenPhotos: number;
     totalCategories: number;
@@ -44,20 +44,54 @@ export function StatisticsScreen() {
   }>(
     ['admin', 'stats'],
     async () => {
-      return ErrorFactory.unwrap<{
-        totalPhotos: number;
-        hiddenPhotos: number;
-        totalCategories: number;
-        totalTags: number;
-        totalGroups: number;
-      }>(
-        api.admin.maintenance.stats.$get(),
-        '獲取統計數據失敗'
-      );
+      try {
+        const res = await api.admin.maintenance.stats.$get();
+        if (!res.ok) {
+          return {
+            totalPhotos: 0,
+            hiddenPhotos: 0,
+            totalCategories: 0,
+            totalTags: 0,
+            totalGroups: 0
+          };
+        }
+        const json = await res.json();
+        if ('data' in json && json.data) {
+          return json.data as {
+            totalPhotos: number;
+            hiddenPhotos: number;
+            totalCategories: number;
+            totalTags: number;
+            totalGroups: number;
+          };
+        }
+        return {
+          totalPhotos: 0,
+          hiddenPhotos: 0,
+          totalCategories: 0,
+          totalTags: 0,
+          totalGroups: 0
+        };
+      } catch (e) {
+        return {
+          totalPhotos: 0,
+          hiddenPhotos: 0,
+          totalCategories: 0,
+          totalTags: 0,
+          totalGroups: 0
+        };
+      }
     }
   );
 
-  if (isLoading) return <div className="p-8 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse">正在计算统计指标...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 gap-3 text-slate-400">
+        <Icon name="loader" size={28} className="animate-spin text-indigo-500" />
+        <span className="text-xs font-bold uppercase tracking-widest">正在计算统计指标...</span>
+      </div>
+    );
+  }
 
   const totalPhotos = stats?.totalPhotos || 0;
   const hiddenCount = stats?.hiddenPhotos || 0;

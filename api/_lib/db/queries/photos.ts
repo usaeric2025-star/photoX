@@ -1,5 +1,5 @@
 import { db, furnitureItems, aiAuditLogs, systemLogs, photoTags, categories, groups, tags as tagsTable } from '../index.js';
-import { eq, inArray, desc, sql, and, ne } from 'drizzle-orm';
+import { eq, inArray, desc, asc, sql, and, ne } from 'drizzle-orm';
 
 const photoInclude = {
     tags: {
@@ -53,7 +53,9 @@ export async function getPhotosList(params: PhotoQueryParams) {
         where: whereClause,
         limit,
         offset: (page - 1) * limit,
-        orderBy: sort === 'newest' ? [desc(furnitureItems.createdAt)] : [desc(furnitureItems.isPinned), desc(furnitureItems.createdAt)],
+        orderBy: sort === 'newest' 
+            ? [sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`, desc(furnitureItems.createdAt), asc(furnitureItems.id)] 
+            : [sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`, desc(furnitureItems.isPinned), desc(furnitureItems.createdAt), asc(furnitureItems.id)],
         with: photoInclude
     });
 

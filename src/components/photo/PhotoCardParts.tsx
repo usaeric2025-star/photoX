@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useAtomValue } from 'jotai';
 import { Icon } from '#src/components/ui/Icon.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { cn } from '#lib/utils.js';
 import { useTranslation, useIsManagement, usePermission } from '#src/hooks/index.js';
 import { getDisplayGroupCode } from '#src/utils/photo.js';
+import { tasksAtom } from '#lib/store/index.js';
 
 /**
- * Renders badges for photo status (pinned, hidden, group info)
+ * Renders badges for photo status (pinned, hidden, group info, ai analyzing)
  */
 export const PhotoStatusBadges = ({
   photo,
@@ -19,13 +21,34 @@ export const PhotoStatusBadges = ({
 }) => {
   const { t } = useTranslation();
   const isManagement = useIsManagement();
-  
+  const tasksMap = useAtomValue(tasksAtom);
+
+  const isAnalyzing = useMemo(() => {
+    if ((photo as any).isAnalyzing) return true;
+    if (!tasksMap || tasksMap.size === 0) return false;
+    for (const task of tasksMap.values()) {
+      if (task.type === 'ai-analyze' && (task.state?.status === 'processing' || task.state?.status === 'queued')) {
+        const photoIds = (task.meta?.photoIds as string[]) || [];
+        if (photoIds.length === 0 || photoIds.includes(photo.id)) return true;
+      }
+    }
+    return false;
+  }, [(photo as any).isAnalyzing, photo.id, tasksMap]);
+
   const shouldShowGroup = !hideGroupBadge && photo.groupId;
   const hiddenLabel = t('hidden');
   const coverLabel = t('cover');
 
   return (
-    <div className="absolute top-2 left-2 flex flex-col items-start gap-1 pointer-events-none select-none">
+    <div className="absolute top-2 left-2 flex flex-col items-start gap-1 pointer-events-none select-none z-10">
+
+      {/* AI Analyzing Badge */}
+      {isAnalyzing && (
+        <div className="bg-purple-600 text-white px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1 shadow-md animate-pulse">
+          <Icon name="sparkles" size={11} className="shrink-0 animate-spin" />
+          <span>AI 識別中...</span>
+        </div>
+      )}
 
       {/* Group Cover Badge */}
       {isManagement && photo.isGroupCover && isGroupDetail && (

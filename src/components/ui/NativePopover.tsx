@@ -20,6 +20,23 @@ export function NativePopover({
   const triggerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
+  const updatePosition = () => {
+    if (!popoverRef.current || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const top = rect.bottom + window.scrollY + 6;
+    let left = rect.left + window.scrollX;
+    
+    if (align === 'center') left = rect.left + window.scrollX + rect.width / 2;
+    else if (align === 'end') left = rect.right + window.scrollX;
+    
+    const popover = popoverRef.current;
+    popover.style.position = 'absolute';
+    popover.style.margin = '0';
+    popover.style.top = `${top}px`;
+    popover.style.left = `${left}px`;
+    popover.style.transform = align === 'center' ? 'translateX(-50%)' : align === 'end' ? 'translateX(-100%)' : 'none';
+  };
+
   // Use the modern 'popover' API
   const togglePopover = (e?: React.MouseEvent) => {
     if (e) {
@@ -33,6 +50,7 @@ export function NativePopover({
       if (isOpen) {
         popoverRef.current.hidePopover();
       } else {
+        updatePosition();
         popoverRef.current.showPopover();
       }
     } catch (err) {
@@ -51,19 +69,8 @@ export function NativePopover({
       setIsOpen(newState);
       onOpenChange?.(newState);
       
-      if (newState && triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect();
-        const top = rect.bottom + window.scrollY + 6;
-        let left = rect.left + window.scrollX;
-        
-        if (align === 'center') left = rect.left + window.scrollX + rect.width / 2;
-        else if (align === 'end') left = rect.right + window.scrollX;
-        
-        popover.style.position = 'absolute';
-        popover.style.margin = '0';
-        popover.style.top = `${top}px`;
-        popover.style.left = `${left}px`;
-        popover.style.transform = align === 'center' ? 'translateX(-50%)' : align === 'end' ? 'translateX(-100%)' : 'none';
+      if (newState) {
+        updatePosition();
       }
     };
 

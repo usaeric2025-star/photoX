@@ -4,7 +4,8 @@ import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCardBase } from './PhotoCardBase.js';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts.js';
 import { PinButton } from './PinButton.js';
-import { usePermission, usePerformance, useTranslation } from '#src/hooks/index.js';
+import { usePermission, usePerformance, useTranslation, useCategories } from '#src/hooks/index.js';
+import { getTranslatedCategoryName } from '#src/utils/category.js';
 import { useIsMultiSelect, useIsPhotoSelected } from '#src/hooks/index.js';
 import { useGrid } from '#src/context/GridContext.js';
 import { } from '#lib/store/index.js';
@@ -97,10 +98,21 @@ export const AdminPhotoCard = memo(function AdminPhotoCard({
     onClick
   });
 
+  const { categories = [] } = useCategories();
   const actualCanPin = canPin !== undefined ? canPin : (canPinGlobal !== undefined ? canPinGlobal : can('photo:toggle-pinned'));
 
   const isGroupCard = showGroupsCollapsed && photo.groupId && typeof photo.memberCount === 'number' && photo.memberCount > 1;
-  const displayCategoryName = photo.categoryDescription?.[appLang] || photo.categoryName || undefined;
+  const displayCategoryName = getTranslatedCategoryName(
+    photo.categoryId ?? undefined,
+    sharedCategories || categories,
+    appLang,
+    undefined,
+    undefined,
+    {
+      categoryDescription: photo.categoryDescription,
+      categoryName: photo.categoryName
+    }
+  ) || undefined;
 
   return (
     <PhotoCardBase

@@ -138,17 +138,19 @@ export function useAdminActions() {
       let finalPhotosToProcess = filteredPhotos;
       if (targetIds.length === 0) {
         finalPhotosToProcess = filteredPhotos.filter((p: any) => {
-          const meta = p.metadata as Record<string, unknown> | undefined;
-          const hasAiMeta = Boolean(meta?.ai_updated_at || meta?.ai_raw || meta?.raw_result || meta?.ai_result);
           const hasDescription = Boolean(
             (typeof p.description === 'string' && p.description.trim().length > 0) ||
-            (p.description && typeof p.description === 'object' && Object.keys(p.description).length > 0)
+            (p.description && typeof p.description === 'object' && Object.values(p.description).some((v: any) => typeof v === 'string' && v.trim().length > 0))
           );
-          const hasCategory = Boolean(p.categoryId || p.categoryName);
-          const hasTags = Boolean(Array.isArray(p.photoTags) && p.photoTags.length > 0);
+          const hasCategory = Boolean(p.categoryId || p.categoryName || p.category);
+          const hasTags = Boolean(
+            (Array.isArray(p.photoTags) && p.photoTags.length > 0) || 
+            (Array.isArray(p.tags) && p.tags.length > 0)
+          );
           
-          const isAnalyzed = hasAiMeta || (hasDescription && (hasCategory || hasTags));
-          return !isAnalyzed;
+          // 分類、標籤與描述皆不能空白；若任一項缺失/空白，即視為必須重新識別的項目
+          const isComplete = hasDescription && hasCategory && hasTags;
+          return !isComplete;
         });
 
         if (finalPhotosToProcess.length === 0) {

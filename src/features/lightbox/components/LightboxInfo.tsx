@@ -58,8 +58,18 @@ export const LightboxInfo = memo(function LightboxInfo({
   const uuid = photoData.id || PLACEHOLDERS.EMPTY_VAL;
   
   const { categories = [] } = useCategories();
-  const catNameFromHook = getTranslatedCategoryName(photoData.categoryId, categories, lang, uiTranslations);
-  const categoryName = catNameFromHook || photoData.categoryDescription?.[lang] || photoData.categoryName || '';
+  const categoryName = getTranslatedCategoryName(
+    photoData.categoryId ?? undefined,
+    categories,
+    lang,
+    uiTranslations,
+    undefined,
+    {
+      categoryDescription: photoData.categoryDescription as Record<string, string> | string | null,
+      categoryName: photoData.categoryName,
+      code: (photoData.category as any)?.code
+    }
+  );
   
   const rawTags = photoData.tags || (photoData as Record<string, unknown>).photoTags || (photoData as Record<string, unknown>).photo_tags || [];
   const tags = Array.isArray(rawTags) ? rawTags : [];

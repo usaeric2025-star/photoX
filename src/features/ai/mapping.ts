@@ -40,15 +40,7 @@ export async function mapAiToMultilingual(
     };
   } else {
     const descStr = String(rawDesc || '');
-    if (nameStr || descStr) {
-        try {
-          const translation = await translateFields(nameStr, descStr);
-          return translation;
-        } catch(err) {
-          ErrorFactory.capture(err);
-          descObj = { zh: descStr, en: descStr, ms: descStr };
-        }
-    }
+    descObj = { zh: descStr, en: descStr, ms: descStr };
   }
 
   return { name: nameStr, description: descObj };

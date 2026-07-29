@@ -309,39 +309,54 @@ export async function runBatchAnalysis({
     ErrorFactory.handle(err, { context: "[AI Batch] Failed to prefetch reference data", silent: true });
   }
 
+  let batchError: Error | null = null;
+
   // Simple concurrency pool
-  const processPhoto = async (photo: Photo, index: number) => {
-    if (signal?.aborted) return;
+  const processPhoto = async (photo: Photo) => {
+    if (signal?.aborted || batchError) return;
         
     try {
       await analyzeAndSavePhoto(photo, allTags, categories, signal);
+      finishedCount++;
+      const progress = Math.min(0.85, (finishedCount / totalPhotosToProcess) * 0.85);
+      onProgress(progress, `已完成 ${finishedCount}/${totalPhotosToProcess} 張照片分析`);
     } catch (err) {
       if (signal?.aborted || (err instanceof Error && (err.name === 'AbortError' || err.message.includes('aborted') || err.message.includes('取消')))) {
         return;
       }
-      ErrorFactory.handle(err, { context: `[AI Batch] Photo ${photo.id} error` });
-    } finally {
-      finishedCount++;
-      const progress = Math.min(0.85, (finishedCount / totalPhotosToProcess) * 0.85);
-      onProgress(progress, `已完成 ${finishedCount}/${totalPhotosToProcess} 張照片分析`);
+      const errorObj = err instanceof Error ? err : new Error(String(err) || '分析照片失敗');
+      batchError = errorObj;
+      queue.length = 0; // Empty the queue to halt all remaining pending photos
+      throw errorObj;
     }
   };
 
   // Simple concurrency pool using a sliding window with pacing
   const queue = [...targetPhotos];
   const workers = Array(Math.min(CONCURRENCY, queue.length)).fill(null).map(async () => {
-    while (queue.length > 0 && !signal?.aborted) {
+    while (queue.length > 0 && !signal?.aborted && !batchError) {
       const photo = queue.shift();
       if (photo) {
-        await processPhoto(photo, 0);
-        if (queue.length > 0 && !signal?.aborted) {
+        await processPhoto(photo);
+        if (queue.length > 0 && !signal?.aborted && !batchError) {
           await new Promise(r => setTimeout(r, 250)); // Pacing delay between batch tasks
         }
       }
     }
   });
 
-  await Promise.all(workers);
+  try {
+    await Promise.all(workers);
+  } catch (err) {
+    if (batchError) {
+      throw batchError;
+    }
+    throw err;
+  }
+
+  if (batchError) {
+    throw batchError;
+  }
 
   if (signal?.aborted) {
     throw new Error('User cancelled AI analysis');

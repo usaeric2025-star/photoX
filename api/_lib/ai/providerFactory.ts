@@ -42,6 +42,10 @@ export interface AIProviderConfig {
     model?: string;
 }
 
+export interface ChatOptions {
+    max_tokens?: number;
+}
+
 export abstract class BaseAIProvider {
     abstract name: string;
     abstract defaultModel: string;
@@ -69,7 +73,7 @@ export abstract class BaseAIProvider {
         }
     }
 
-    abstract chat(messages: { role: string; content: unknown }[]): Promise<AIResponse>;
+    abstract chat(messages: { role: string; content: unknown }[], options?: ChatOptions): Promise<AIResponse>;
 }
 
 export class OpenRouterProvider extends BaseAIProvider {
@@ -77,8 +81,10 @@ export class OpenRouterProvider extends BaseAIProvider {
     defaultModel = DEFAULT_AI_MODELS.openrouter;
     baseUrl = "https://openrouter.ai/api/v1";
 
-    async chat(messages: { role: string; content: unknown }[]): Promise<AIResponse> {
-        try {
+    async chat(messages: { role: string; content: unknown }[], options?: ChatOptions): Promise<AIResponse> {
+        let maxTokens = options?.max_tokens ?? 800;
+        
+        const makeRequest = async (tokensToUse: number) => {
             const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
@@ -89,12 +95,42 @@ export class OpenRouterProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: this.config.model || this.defaultModel,
-                    messages
+                    messages,
+                    max_tokens: tokensToUse,
+                    max_completion_tokens: tokensToUse
                 })
             });
 
             const data = await res.json() as { choices?: { message: { content: string } }[]; error?: { message: string } | string; usage?: Record<string, unknown> };
-            if (!res.ok) throw new Error((typeof data.error === 'string' ? data.error : data.error?.message) || res.statusText);
+            return { res, data };
+        };
+
+        try {
+            let { res, data } = await makeRequest(maxTokens);
+
+            if (!res.ok) {
+                const errorStr = (typeof data.error === 'string' ? data.error : data.error?.message) || res.statusText;
+                
+                // If OpenRouter rejects due to high max_tokens relative to credit balance, retry with lower max_tokens
+                if (errorStr.includes('fewer max_tokens') || errorStr.includes('more credits') || errorStr.includes('can only afford')) {
+                    const affordMatch = errorStr.match(/can only afford (\d+)/i);
+                    let affordable = affordMatch ? parseInt(affordMatch[1], 10) : Math.floor(maxTokens / 2);
+                    if (affordable > 50) {
+                        affordable = Math.max(100, affordable - 10);
+                        if (affordable < maxTokens) {
+                            const retryResult = await makeRequest(affordable);
+                            if (retryResult.res.ok) {
+                                res = retryResult.res;
+                                data = retryResult.data;
+                            }
+                        }
+                    }
+                }
+
+                if (!res.ok) {
+                    throw new Error((typeof data.error === 'string' ? data.error : data.error?.message) || res.statusText);
+                }
+            }
 
             return {
                 success: true,
@@ -112,12 +148,13 @@ export class AgnesProvider extends BaseAIProvider {
     defaultModel = DEFAULT_AI_MODELS.agnes;
     baseUrl = "https://apihub.agnes-ai.com/v1";
 
-    async chat(messages: { role: string; content: unknown }[]): Promise<AIResponse> {
+    async chat(messages: { role: string; content: unknown }[], options?: ChatOptions): Promise<AIResponse> {
         try {
             let modelToUse = this.config.model || this.defaultModel;
             if (modelToUse.startsWith('google/')) {
                 modelToUse = modelToUse.replace(/^google\//, '');
             }
+            const maxTokens = options?.max_tokens ?? 1200;
             // Agnes API uses OpenAI format, not Gemini's native format
             const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
@@ -127,7 +164,8 @@ export class AgnesProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: modelToUse,
-                    messages
+                    messages,
+                    max_tokens: maxTokens
                 })
             });
 
@@ -224,12 +262,13 @@ export class GeminiProvider extends BaseAIProvider {
     defaultModel = DEFAULT_AI_MODELS.gemini;
     baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai";
 
-    async chat(messages: { role: string; content: unknown }[]): Promise<AIResponse> {
+    async chat(messages: { role: string; content: unknown }[], options?: ChatOptions): Promise<AIResponse> {
         try {
             let modelToUse = this.config.model || this.defaultModel;
             if (modelToUse.startsWith('google/')) {
                 modelToUse = modelToUse.replace(/^google\//, '');
             }
+            const maxTokens = options?.max_tokens ?? 1200;
 
             const res = await this.fetchWithTimeout(`${this.baseUrl}/chat/completions`, {
                 method: 'POST',
@@ -239,7 +278,8 @@ export class GeminiProvider extends BaseAIProvider {
                 },
                 body: JSON.stringify({
                     model: modelToUse,
-                    messages
+                    messages,
+                    max_tokens: maxTokens
                 })
             });
 

@@ -14,12 +14,20 @@ export async function searchTags(keyword: string, limit: number = 100) {
 }
 
 export async function createTag(data: typeof tagsTable.$inferInsert) {
-    const [result] = await db.insert(tagsTable).values(data).returning();
+    const [result] = await db.insert(tagsTable).values(data).onConflictDoNothing({ target: tagsTable.name }).returning();
+    if (!result && data.name) {
+        const [existing] = await db.select().from(tagsTable).where(eq(tagsTable.name, data.name));
+        return existing;
+    }
     return result;
 }
 
 export async function batchCreateTags(data: (typeof tagsTable.$inferInsert)[]) {
-    return await db.insert(tagsTable).values(data).returning({ id: tagsTable.id, name: tagsTable.name });
+    if (!data || data.length === 0) return [];
+    await db.insert(tagsTable).values(data).onConflictDoNothing({ target: tagsTable.name });
+    const names = data.map(d => d.name).filter((n): n is string => Boolean(n));
+    if (names.length === 0) return [];
+    return await db.select({ id: tagsTable.id, name: tagsTable.name }).from(tagsTable).where(inArray(tagsTable.name, names));
 }
 
 export async function updateTag(id: number, updates: Partial<typeof tagsTable.$inferInsert>) {

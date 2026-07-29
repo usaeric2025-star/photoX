@@ -14,31 +14,70 @@ export function extractJSON<T = unknown>(str: string): T {
         throw new Error('No JSON found in response');
     }
     
-    // Balanced bracket matching to find the end of the first valid JSON block
+    // Balanced bracket matching while ignoring characters inside string literals
     let lastBracket = -1;
     let bracketCount = 0;
     const opening = isArray ? '[' : '{';
     const closing = isArray ? ']' : '}';
 
+    let inString = false;
+    let isEscaped = false;
+
     for (let i = firstBracket; i < str.length; i++) {
-        if (str[i] === opening) bracketCount++;
-        else if (str[i] === closing) {
-            bracketCount--;
-            if (bracketCount === 0) {
-                lastBracket = i;
-                break;
+        const char = str[i];
+
+        if (isEscaped) {
+            isEscaped = false;
+            continue;
+        }
+
+        if (char === '\\') {
+            isEscaped = true;
+            continue;
+        }
+
+        if (char === '"') {
+            inString = !inString;
+            continue;
+        }
+
+        if (!inString) {
+            if (char === opening) {
+                bracketCount++;
+            } else if (char === closing) {
+                bracketCount--;
+                if (bracketCount === 0) {
+                    lastBracket = i;
+                    break;
+                }
             }
         }
     }
 
-    // Fallback to lastIndexOf if balanced matching didn't find a complete block
-    // (though balanced matching is usually what we want for "extra characters after JSON" errors)
+    // Fallback to lastIndexOf if string literal balance matching didn't reach 0
     if (lastBracket === -1) {
         lastBracket = str.lastIndexOf(closing);
     }
     
+    // Attempt repair if missing closing bracket
     if (lastBracket === -1 || lastBracket < firstBracket) {
-        throw new Error('No closing bracket found in response');
+        let repairedStr = str.substring(firstBracket).trim();
+        // Remove trailing comma if any
+        if (repairedStr.endsWith(',')) {
+            repairedStr = repairedStr.slice(0, -1);
+        }
+        if (inString) {
+            repairedStr += '"';
+        }
+        while (bracketCount > 0) {
+            repairedStr += closing;
+            bracketCount--;
+        }
+        try {
+            return JSON.parse(repairedStr) as T;
+        } catch {
+            throw new Error('No closing bracket found in response');
+        }
     }
     
     const jsonStr = str.substring(firstBracket, lastBracket + 1);

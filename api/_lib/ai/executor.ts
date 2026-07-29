@@ -10,7 +10,7 @@ import { withTimeout } from "../utils/timeout.js";
  */
 interface AIProvider {
   name: string;
-  chat: (messages: { role: string; content: unknown }[]) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
+  chat: (messages: { role: string; content: unknown }[], options?: { max_tokens?: number }) => Promise<{ text?: string; error?: string; success: boolean; usage?: Record<string, unknown> }>;
 }
 
 /**
@@ -24,6 +24,7 @@ interface AITaskOptions {
   messages: { role: string; content: unknown }[];
   metadata?: Record<string, unknown>;
   shouldNormalize?: boolean;
+  maxTokens?: number;
 }
 
 export interface AIAuditData {
@@ -116,18 +117,18 @@ const saveAIAuditLog = async (data: AIAuditData): Promise<void> => {
  * 封裝：測速 + 審計日誌 + JSON 解析 + I18n 歸一化
  */
 export async function executeAITask(options: AITaskOptions) {
-  const { task, provider, model, messages, prompt, metadata, shouldNormalize = true } = options;
-  const maxRetries = 3;
+  const { task, provider, model, messages, prompt, metadata, shouldNormalize = true, maxTokens } = options;
+  const maxRetries = 1;
   let lastError: unknown = null;
   const startTime = Date.now();
 
   for (let i = 0; i <= maxRetries; i++) {
     try {
       const iterStartTime = Date.now();
-      // Apply 60s timeout for the external API call (P0: AI Timeout)
+      // Apply 35s timeout for the external API call
       const result = await withTimeout(
-        provider.chat(messages),
-        60000,
+        provider.chat(messages, { max_tokens: maxTokens }),
+        35000,
         `AI Provider [${provider.name}] Request`
       );
       const iterEndTime = Date.now();
@@ -148,8 +149,6 @@ export async function executeAITask(options: AITaskOptions) {
       logger.info(`AI Task: ${task}`, {
         model,
         provider: provider.name,
-        // Removed prompt and large response from general logs to prevent system_logs bloat
-        // Raw data is now exclusively handled by ai_audit_logs + R2
         response_summary: auditedResponse && typeof auditedResponse === 'string' 
             ? (auditedResponse.substring(0, 500) + (auditedResponse.length > 500 ? '...' : '')) 
             : '',
@@ -190,8 +189,8 @@ export async function executeAITask(options: AITaskOptions) {
         if (d.description) d.description = normalizeI18n(d.description);
       }
 
-        // 4. 保存審計日誌到 ai_audit_logs (阻塞式)
-      await saveAIAuditLog({
+      // 4. 保存審計日誌到 ai_audit_logs (非阻塞，加快 HTTP 響應)
+      saveAIAuditLog({
         photoId: metadata?.photoId as string | undefined,
         model: model,
         promptVersion: 'v1',
@@ -206,7 +205,7 @@ export async function executeAITask(options: AITaskOptions) {
         promptText: prompt,
         token_usage: result.usage,
         cost_est: (result.usage?.cost as number) || 0
-      });
+      }).catch(err => logger.error('[AIAudit] Async audit log save error:', err));
 
       return {
         data,

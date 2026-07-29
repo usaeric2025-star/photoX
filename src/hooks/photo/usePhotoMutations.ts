@@ -441,10 +441,12 @@ export function useAIBatchAnalysis() {
 
   const aiAnalyzeMutation = useAppMutation({
     mutationFn: async (photos: Photo[]) => {
+      const photoIds = photos.map(p => p.id);
       return createTask({
         label: t('aiAnalyze') || 'AI 識別中',
         type: 'ai-analyze',
         userId: user?.id,
+        meta: { photoIds },
         execute: async (signal, onProgress) => {
           return runBatchAnalysis({
             targetPhotos: photos,

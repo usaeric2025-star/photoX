@@ -3,7 +3,8 @@ import { Category, Tag } from '#src/types/index.js';
 import { PhotoListItem } from '#src/types/api.js';
 import { PhotoCardBase } from './PhotoCardBase.js';
 import { PhotoStatusBadges, PhotoCardInfo, PhotoSelectionIndicator } from './PhotoCardParts.js';
-import { usePerformance, useTranslation, useIsMultiSelect, useIsPhotoSelected } from '#src/hooks/index.js';
+import { usePerformance, useTranslation, useIsMultiSelect, useIsPhotoSelected, useCategories } from '#src/hooks/index.js';
+import { getTranslatedCategoryName } from '#src/utils/category.js';
 import { usePhotoCard } from '#src/hooks/photo/usePhotoCard.js';
 import { useGrid } from '#src/context/GridContext.js';
 import { Icon } from '#src/components/ui/Icon.js';
@@ -48,8 +49,19 @@ export const PublicPhotoCard = memo(function PublicPhotoCard({
     onClick
   });
 
+  const { categories = [] } = useCategories();
   const isGroupCard = showGroupsCollapsed && photo.groupId && typeof photo.memberCount === 'number' && photo.memberCount > 1;
-  const displayCategoryName = photo.categoryDescription?.[appLang] || photo.categoryName || undefined;
+  const displayCategoryName = getTranslatedCategoryName(
+    photo.categoryId ?? undefined,
+    sharedCategories || categories,
+    appLang,
+    undefined,
+    undefined,
+    {
+      categoryDescription: photo.categoryDescription,
+      categoryName: photo.categoryName
+    }
+  ) || undefined;
 
   return (
     <PhotoCardBase
