@@ -21,7 +21,7 @@ export interface PhotoQueryParams {
     groupId?: string;
     onlyGroupsCover?: boolean;
     onlyUngrouped?: boolean;
-    sort?: 'newest' | 'pinned';
+    sort?: 'newest' | 'oldest' | 'pinned';
 }
 
 export async function getPhotosList(params: PhotoQueryParams) {
@@ -53,9 +53,11 @@ export async function getPhotosList(params: PhotoQueryParams) {
         where: whereClause,
         limit,
         offset: (page - 1) * limit,
-        orderBy: sort === 'newest' 
-            ? [sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`, desc(furnitureItems.createdAt), asc(furnitureItems.id)] 
-            : [sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`, desc(furnitureItems.isPinned), desc(furnitureItems.createdAt), asc(furnitureItems.id)],
+        orderBy: sort === 'oldest'
+            ? [sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`, asc(furnitureItems.createdAt), asc(furnitureItems.id)]
+            : sort === 'pinned'
+            ? [sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`, desc(furnitureItems.isPinned), desc(furnitureItems.createdAt), asc(furnitureItems.id)]
+            : [sql`case when ${furnitureItems.isHidden} = true then 1 else 0 end asc`, desc(furnitureItems.createdAt), asc(furnitureItems.id)],
         with: photoInclude
     });
 

@@ -29,7 +29,9 @@ export const listRoutes = new Hono()
         groupId: params.groupId || undefined,
         onlyGroupsCover: params.onlyGroupsCover || undefined,
         onlyUngrouped: params.onlyUngrouped || undefined,
-        sort: (params.sortOrder === 'pinned' ? 'pinned' : 'newest')
+        sort: params.sortOrder === 'pinned' 
+          ? 'pinned' 
+          : (params.sortOrder === 'oldest' ? 'oldest' : 'newest')
       };
       const { items, total, nextCursor } = await getPhotosList(queryParams);
 

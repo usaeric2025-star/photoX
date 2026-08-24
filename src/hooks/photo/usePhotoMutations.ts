@@ -362,27 +362,6 @@ export function usePhotoMutations() {
           
           if (Array.isArray(results)) {
             const typedResults = results as { success?: boolean; duplicate?: boolean; id?: string }[];
-            // Trigger AI analysis for successful new uploads
-            const successfulIds = typedResults
-              .filter((r) => r.success && !r.duplicate && r.id)
-              .map((r) => r.id as string);
-            
-            if (successfulIds.length > 0) {
-              createTask({
-                id: generateId(),
-                type: 'ai-analyze',
-                label: t('aiAnalyze') || 'AI 識別中',
-                userId: user?.id,
-                execute: async (signal, onProgress) => {
-                  return runBatchAnalysis({
-                    targetPhotos: successfulIds.map(id => ({ id } as any)),
-                    onProgress,
-                    signal
-                  });
-                }
-              });
-            }
-
             const total = fileList.length;
             const successes = typedResults.filter((r) => r.success && !r.duplicate);
             const duplicates = typedResults.filter((r) => r.duplicate);
