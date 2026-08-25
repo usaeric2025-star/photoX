@@ -51,7 +51,16 @@ export const errorFactory = {
 
     // General error string detection
     const lowMsg = message.toLowerCase();
-    if (status === 500) {
+    const isDbOrNetworkError = 
+        lowMsg.includes('enotfound') || 
+        lowMsg.includes('econnrefused') || 
+        lowMsg.includes('tenant') || 
+        lowMsg.includes('failed query') ||
+        lowMsg.includes('postgres') ||
+        lowMsg.includes('pooler') ||
+        lowMsg.includes('database');
+
+    if (status === 500 && !isDbOrNetworkError) {
         if (lowMsg.includes('unauthorized') || lowMsg.includes('no credentials')) {
             code = ErrorCode.UNAUTHORIZED;
             status = 401;
@@ -65,6 +74,10 @@ export const errorFactory = {
             status = 404;
             category = ErrorCategory.BUSINESS;
         }
+    } else if (isDbOrNetworkError && (lowMsg.includes('tenant') || lowMsg.includes('enotfound') || lowMsg.includes('econnrefused'))) {
+        code = ErrorCode.DATABASE_ERROR;
+        status = 503;
+        category = ErrorCategory.NETWORK;
     }
     
     return new AppError({
